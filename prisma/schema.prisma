@@ -1,0 +1,176 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id             String   @id @default(cuid())
+  email          String   @unique
+  name           String
+  hashedPassword String
+  role           String   @default("ADMIN") // "ADMIN", "USER"
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model JobOrder {
+  id          String   @id @default(cuid())
+  jobNumber   String   @unique
+  productName String
+  drawingRef  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  materialRequests MaterialRequest[]
+}
+
+model MaterialRequest {
+  id               String   @id @default(cuid())
+  requestNumber    String   @unique
+  jobOrderId       String
+  jobOrder         JobOrder @relation(fields: [jobOrderId], references: [id])
+  
+  materialType     String   // "RAW_MATERIAL" or "CONSUMABLE"
+  itemName         String
+  description      String
+  quantity         Float
+  unit             String
+  
+  reasonForRequest String
+  requiredDate     DateTime
+  preferredSupplier String?
+  stockQtyInInventory Float  @default(0)
+  
+  urgencyLevel     String   @default("NORMAL") // "LOW", "NORMAL", "HIGH", "CRITICAL"
+  status           String   @default("PENDING") // "PENDING", "IN_PROCUREMENT", "ORDERED", "PARTIALLY_RECEIVED", "RECEIVED", "CANCELLED"
+  
+  requestedBy      String
+  requestedAt      DateTime @default(now())
+  
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  
+  procurementActions ProcurementAction[]
+  purchaseOrderItems PurchaseOrderItem[]
+  statusHistory      StatusHistory[]
+}
+
+model ProcurementAction {
+  id                String          @id @default(cuid())
+  materialRequestId String
+  materialRequest   MaterialRequest @relation(fields: [materialRequestId], references: [id])
+  
+  actionType        String  // "ASSIGNED", "QUOTATION_REQUESTED", "QUOTATION_RECEIVED", "PO_CREATED", "NOTE"
+  actionBy          String
+  actionDate        DateTime @default(now())
+  notes             String?
+  
+  quotationAmount   Float?
+  supplierName      String?
+  expectedDelivery  DateTime?
+  
+  createdAt         DateTime @default(now())
+}
+
+model PurchaseOrder {
+  id              String   @id @default(cuid())
+  poNumber        String   @unique
+  supplierName    String
+  supplierContact String?
+  
+  orderDate       DateTime @default(now())
+  expectedDelivery DateTime?
+  actualDelivery  DateTime?
+  
+  totalAmount     Float
+  status          String   @default("PENDING") // "PENDING", "SENT", "ACKNOWLEDGED", "PARTIALLY_DELIVERED", "DELIVERED", "CANCELLED"
+  
+  createdBy       String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  items           PurchaseOrderItem[]
+}
+
+model PurchaseOrderItem {
+  id                String          @id @default(cuid())
+  purchaseOrderId   String
+  purchaseOrder     PurchaseOrder   @relation(fields: [purchaseOrderId], references: [id])
+  
+  materialRequestId String
+  materialRequest   MaterialRequest @relation(fields: [materialRequestId], references: [id])
+  
+  orderedQuantity   Float
+  receivedQuantity  Float           @default(0)
+  unitPrice         Float
+  totalPrice        Float
+  
+  deliveryStatus    String          @default("PENDING") // "PENDING", "PARTIAL", "DELIVERED"
+  
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  
+  receipts          MaterialReceipt[]
+}
+
+model MaterialReceipt {
+  id                  String            @id @default(cuid())
+  purchaseOrderItemId String
+  purchaseOrderItem   PurchaseOrderItem @relation(fields: [purchaseOrderItemId], references: [id])
+  
+  receivedQuantity    Float
+  receivedDate        DateTime          @default(now())
+  receivedBy          String
+  
+  qualityStatus       String            @default("PENDING") // "PENDING", "APPROVED", "REJECTED"
+  storageLocation     String?
+  notes               String?
+  
+  createdAt           DateTime          @default(now())
+}
+
+model StatusHistory {
+  id                String          @id @default(cuid())
+  materialRequestId String
+  materialRequest   MaterialRequest @relation(fields: [materialRequestId], references: [id])
+  
+  oldStatus         String
+  newStatus         String
+  changedBy         String
+  changedAt         DateTime        @default(now())
+  notes             String?
+}
+
+model Supplier {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  contactPerson String?
+  email       String?
+  phone       String?
+  address     String?
+  rating      Float?
+  
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model InventoryItem {
+  id              String   @id @default(cuid())
+  itemName        String   @unique
+  description     String?
+  currentStock    Float
+  unit            String
+  minimumStock    Float    @default(0)
+  location        String?
+  
+  lastUpdated     DateTime @updatedAt
+  createdAt       DateTime @default(now())
+}
