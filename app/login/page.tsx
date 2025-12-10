@@ -3,6 +3,7 @@
 import { Suspense, useState, useEffect } from 'react'
 import { signIn, useSession } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import Image from 'next/image'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -47,9 +48,25 @@ function LoginForm() {
 
   return (
     <Card className="w-full max-w-md shadow-xl">
-      <CardHeader className="text-center">
-        <CardTitle className="text-2xl font-bold text-slate-900">Sign In</CardTitle>
-        <p className="text-sm text-slate-600">Secure access to the procurement system</p>
+      <CardHeader className="text-center space-y-4">
+        <div className="flex justify-center mb-2">
+          <div className="w-32 h-32">
+            <svg viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+              {/* BTC Logo (left side - blue box with white text) */}
+              <rect x="20" y="20" width="100" height="160" rx="8" fill="none" stroke="#001f7f" strokeWidth="4"/>
+              <text x="70" y="70" fontSize="80" fontWeight="bold" fill="#001f7f" textAnchor="middle" fontFamily="Arial, sans-serif">B</text>
+              <text x="70" y="130" fontSize="80" fontWeight="bold" fill="#001f7f" textAnchor="middle" fontFamily="Arial, sans-serif">T</text>
+              <text x="70" y="160" fontSize="60" fontWeight="bold" fill="#001f7f" textAnchor="middle" fontFamily="Arial, sans-serif">C</text>
+              
+              {/* NBTC Text (right side - red) */}
+              <text x="220" y="115" fontSize="100" fontWeight="bold" fill="#DC143C" fontFamily="Arial, sans-serif">NBTC</text>
+            </svg>
+          </div>
+        </div>
+        <div>
+          <CardTitle className="text-2xl font-bold text-slate-900">Sign In</CardTitle>
+          <p className="text-sm text-slate-600 mt-1">Procurement System</p>
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         {error && (
