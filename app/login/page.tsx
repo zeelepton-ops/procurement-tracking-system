@@ -13,8 +13,8 @@ function LoginForm() {
   const searchParams = useSearchParams()
   const { status } = useSession()
 
-  const [email, setEmail] = useState('admin@example.com')
-  const [password, setPassword] = useState('Admin@123')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -88,7 +88,7 @@ function LoginForm() {
             )}
           </Button>
         </form>
-        <p className="text-xs text-slate-500 text-center">Default admin: admin@example.com / Admin@123</p>
+        <p className="text-xs text-slate-500 text-center">Contact your administrator for login credentials</p>
       </CardContent>
     </Card>
   )

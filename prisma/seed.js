@@ -6,7 +6,7 @@ async function main() {
   console.log('🌱 Seeding database...')
 
   // Create default admin user
-  const adminEmail = 'admin@example.com'
+  const adminEmail = 'info@nbtcqatar.com'
   const adminPassword = 'Admin@123'
   const hashedPassword = await bcrypt.hash(adminPassword, 10)
 
@@ -21,7 +21,7 @@ async function main() {
     }
   })
 
-  console.log('✅ Created admin user (admin@example.com / Admin@123)')
+  console.log('✅ Created admin user (info@nbtcqatar.com / Admin@123)')
 
   // Clear existing data to avoid duplicates
   await prisma.materialReceipt.deleteMany()
