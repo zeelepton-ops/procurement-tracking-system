@@ -11,6 +11,8 @@ export async function GET() {
         id: true,
         email: true,
         name: true,
+        hashedPassword: true,
+        role: true,
       },
     })
 
@@ -19,13 +21,16 @@ export async function GET() {
       userCount,
       users,
       databaseUrl: process.env.DATABASE_URL ? 'SET' : 'NOT SET',
+      nodeEnv: process.env.NODE_ENV,
     })
   } catch (error: any) {
     return NextResponse.json(
       {
         status: 'error',
         message: error.message,
+        code: error.code,
         databaseUrl: process.env.DATABASE_URL ? 'SET' : 'NOT SET',
+        nodeEnv: process.env.NODE_ENV,
       },
       { status: 500 }
     )
