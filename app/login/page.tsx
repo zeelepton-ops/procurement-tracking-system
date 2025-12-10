@@ -50,17 +50,17 @@ function LoginForm() {
     <Card className="w-full max-w-md shadow-xl">
       <CardHeader className="text-center space-y-4">
         <div className="flex justify-center mb-2">
-          <div className="w-32 h-32">
-            <svg viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-              {/* BTC Logo (left side - blue box with white text) */}
-              <rect x="20" y="20" width="100" height="160" rx="8" fill="none" stroke="#001f7f" strokeWidth="4"/>
-              <text x="70" y="70" fontSize="80" fontWeight="bold" fill="#001f7f" textAnchor="middle" fontFamily="Arial, sans-serif">B</text>
-              <text x="70" y="130" fontSize="80" fontWeight="bold" fill="#001f7f" textAnchor="middle" fontFamily="Arial, sans-serif">T</text>
-              <text x="70" y="160" fontSize="60" fontWeight="bold" fill="#001f7f" textAnchor="middle" fontFamily="Arial, sans-serif">C</text>
-              
-              {/* NBTC Text (right side - red) */}
-              <text x="220" y="115" fontSize="100" fontWeight="bold" fill="#DC143C" fontFamily="Arial, sans-serif">NBTC</text>
-            </svg>
+          <div className="flex items-center gap-3 scale-75">
+            {/* BTC Logo Box */}
+            <div className="w-24 h-32 border-4 border-blue-900 rounded-lg flex flex-col items-center justify-center bg-white">
+              <div className="text-blue-900 font-bold text-2xl leading-tight text-center">
+                <div>B</div>
+                <div>T</div>
+                <div>C</div>
+              </div>
+            </div>
+            {/* NBTC Text */}
+            <div className="text-5xl font-bold text-red-600 tracking-tight">NBTC</div>
           </div>
         </div>
         <div>
