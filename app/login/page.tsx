@@ -48,19 +48,41 @@ function LoginForm() {
   return (
     <div className="w-full max-w-4xl shadow-xl rounded-lg overflow-hidden bg-white md:flex">
       {/* Logo Section - Left */}
-      <div className="w-full md:w-1/2 bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center p-8 md:p-12">
-        <svg width="200" height="150" viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg">
+      <div className="w-full md:w-1/2 bg-gray-50 flex flex-col items-center justify-center p-8 md:p-12 gap-6">
+        {/* NBTC Logo */}
+        <svg width="120" height="140" viewBox="0 0 120 140" xmlns="http://www.w3.org/2000/svg">
+          {/* Main blue rectangle */}
+          <rect x="8" y="8" width="80" height="105" rx="6" ry="6" fill="#001a66" stroke="#6b7280" strokeWidth="2" />
+          
+          {/* White letters BTC */}
+          <text x="48" y="50" fontSize="28" fontWeight="bold" textAnchor="middle" fill="white" fontFamily="Arial, sans-serif">B</text>
+          <text x="48" y="78" fontSize="28" fontWeight="bold" textAnchor="middle" fill="white" fontFamily="Arial, sans-serif">T</text>
+          <text x="48" y="106" fontSize="28" fontWeight="bold" textAnchor="middle" fill="white" fontFamily="Arial, sans-serif">C</text>
+          
+          {/* Red NBTC text */}
+          <text x="62" y="60" fontSize="22" fontWeight="bold" fill="#dc2626" fontFamily="Arial, sans-serif">NBTC</text>
+        </svg>
+        
+        {/* 50 Year Anniversary Logo */}
+        <svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
           <defs>
-            <linearGradient id="nbtcGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#1e40af" />
-              <stop offset="100%" stopColor="#1e3a8a" />
+            <linearGradient id="anniversary" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#a855f7" />
+              <stop offset="25%" stopColor="#ec4899" />
+              <stop offset="50%" stopColor="#f59e0b" />
+              <stop offset="75%" stopColor="#10b981" />
+              <stop offset="100%" stopColor="#0891b2" />
             </linearGradient>
           </defs>
-          <circle cx="100" cy="75" r="50" fill="url(#nbtcGrad)" opacity="0.15" />
-          <circle cx="100" cy="75" r="45" fill="none" stroke="#1e40af" strokeWidth="2" opacity="0.3" />
-          <text x="100" y="90" fontSize="40" fontWeight="bold" textAnchor="middle" fill="#1e40af" fontFamily="Arial, sans-serif">
-            NBTC
-          </text>
+          
+          {/* Circle background */}
+          <circle cx="50" cy="45" r="35" fill="none" stroke="url(#anniversary)" strokeWidth="3" />
+          
+          {/* 50 text */}
+          <text x="50" y="58" fontSize="32" fontWeight="bold" textAnchor="middle" fill="url(#anniversary)" fontFamily="Arial, sans-serif">50</text>
+          
+          {/* YEAR ANNIVERSARY text */}
+          <text x="50" y="78" fontSize="7" fontWeight="600" textAnchor="middle" fill="#0891b2" fontFamily="Arial, sans-serif">YEAR ANNIVERSARY</text>
         </svg>
       </div>
 
