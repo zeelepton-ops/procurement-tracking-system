@@ -50,43 +50,22 @@ function LoginForm() {
       {/* Logo Section - Left */}
       <div className="w-full md:w-1/2 bg-gray-50 flex flex-col items-center justify-center p-8 md:p-12 gap-8">
         {/* NBTC Logo */}
-        <svg width="200" height="120" viewBox="0 0 280 160" xmlns="http://www.w3.org/2000/svg">
-          {/* Navy blue box for BTC */}
-          <rect x="10" y="10" width="70" height="140" rx="8" fill="#001a4d" stroke="#667085" strokeWidth="2" />
-          <text x="45" y="50" fontSize="32" fontWeight="bold" fill="white" textAnchor="middle" fontFamily="Arial, sans-serif">B</text>
-          <text x="45" y="85" fontSize="32" fontWeight="bold" fill="white" textAnchor="middle" fontFamily="Arial, sans-serif">T</text>
-          <text x="45" y="120" fontSize="32" fontWeight="bold" fill="white" textAnchor="middle" fontFamily="Arial, sans-serif">C</text>
-          
-          {/* Red NBTC text */}
-          <text x="110" y="55" fontSize="58" fontWeight="900" fill="#dc2626" fontFamily="Arial Black, Arial, sans-serif">NBTC</text>
-        </svg>
+        <img 
+          src="/nbtc-logo.png" 
+          alt="NBTC Logo"
+          width={280}
+          height={100}
+          className="object-contain"
+        />
         
         {/* 50 Year Anniversary Logo */}
-        <svg width="140" height="140" viewBox="0 0 140 140" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <linearGradient id="rainbowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#8b5cf6" />
-              <stop offset="20%" stopColor="#d946ef" />
-              <stop offset="40%" stopColor="#ec4899" />
-              <stop offset="60%" stopColor="#f97316" />
-              <stop offset="80%" stopColor="#eab308" />
-              <stop offset="100%" stopColor="#10b981" />
-            </linearGradient>
-          </defs>
-          
-          {/* Circle with rainbow gradient */}
-          <circle cx="70" cy="70" r="55" fill="white" stroke="url(#rainbowGrad)" strokeWidth="8" />
-          
-          {/* Blue background circle */}
-          <circle cx="70" cy="70" r="48" fill="#f0f9ff" />
-          
-          {/* Purple 50 */}
-          <text x="70" y="80" fontSize="48" fontWeight="900" fill="#7c3aed" textAnchor="middle" fontFamily="Arial, sans-serif">50</text>
-          
-          {/* Year Anniversary text */}
-          <text x="70" y="108" fontSize="10" fontWeight="700" fill="#059669" textAnchor="middle" letterSpacing="2" fontFamily="Arial, sans-serif">YEAR</text>
-          <text x="70" y="122" fontSize="10" fontWeight="700" fill="#059669" textAnchor="middle" letterSpacing="2" fontFamily="Arial, sans-serif">ANNIVERSARY</text>
-        </svg>
+        <img 
+          src="/50-anniversary.png" 
+          alt="50 Year Anniversary"
+          width={200}
+          height={160}
+          className="object-contain"
+        />
       </div>
 
       {/* Sign In Form - Right */}
