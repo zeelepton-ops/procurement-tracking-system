@@ -3,7 +3,6 @@
 import { Suspense, useState, useEffect } from 'react'
 import { signIn, useSession } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import Image from 'next/image'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -50,13 +49,10 @@ function LoginForm() {
     <Card className="w-full max-w-md shadow-xl">
       <CardHeader className="text-center space-y-4">
         <div className="flex justify-center mb-4">
-          <Image
+          <img
             src="/nbtc-logo.png"
             alt="NBTC Logo"
-            width={300}
-            height={100}
-            priority
-            className="object-contain"
+            style={{ maxWidth: '300px', height: 'auto' }}
           />
         </div>
         <div>
