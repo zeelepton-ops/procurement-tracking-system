@@ -49,19 +49,15 @@ function LoginForm() {
   return (
     <Card className="w-full max-w-md shadow-xl">
       <CardHeader className="text-center space-y-4">
-        <div className="flex justify-center mb-2">
-          <div className="flex items-center gap-3 scale-75">
-            {/* BTC Logo Box */}
-            <div className="w-24 h-32 border-4 border-blue-900 rounded-lg flex flex-col items-center justify-center bg-white">
-              <div className="text-blue-900 font-bold text-2xl leading-tight text-center">
-                <div>B</div>
-                <div>T</div>
-                <div>C</div>
-              </div>
-            </div>
-            {/* NBTC Text */}
-            <div className="text-5xl font-bold text-red-600 tracking-tight">NBTC</div>
-          </div>
+        <div className="flex justify-center mb-4">
+          <Image
+            src="/nbtc-logo.png"
+            alt="NBTC Logo"
+            width={300}
+            height={100}
+            priority
+            className="object-contain"
+          />
         </div>
         <div>
           <CardTitle className="text-2xl font-bold text-slate-900">Sign In</CardTitle>
