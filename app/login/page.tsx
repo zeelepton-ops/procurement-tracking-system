@@ -50,9 +50,12 @@ function LoginForm() {
       {/* Logo Section - Left */}
       <div className="hidden md:flex md:w-1/2 bg-gradient-to-br from-blue-50 to-blue-100 items-center justify-center p-12">
         <img
-          src="/nbtc-logo.png"
+          src="/nbtc-logo.png?v=1"
           alt="NBTC Logo"
-          style={{ maxWidth: '300px', height: 'auto', objectFit: 'contain' }}
+          width="250"
+          height="150"
+          style={{ objectFit: 'contain' }}
+          onError={(e) => console.error('Image failed to load:', e)}
         />
       </div>
 
