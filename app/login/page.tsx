@@ -46,60 +46,65 @@ function LoginForm() {
   }
 
   return (
-    <Card className="w-full max-w-md shadow-xl">
-      <CardHeader className="text-center space-y-4">
-        <div className="flex justify-center mb-4">
-          <img
-            src="/nbtc-logo.png"
-            alt="NBTC Logo"
-            style={{ maxWidth: '300px', height: 'auto' }}
-          />
-        </div>
-        <div>
-          <CardTitle className="text-2xl font-bold text-slate-900">Sign In</CardTitle>
-          <p className="text-sm text-slate-600 mt-1">Procurement System</p>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {error && (
-          <div className="flex items-center gap-2 text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">
-            <AlertTriangle className="h-4 w-4" />
-            <span>{error}</span>
-          </div>
-        )}
-        <form className="space-y-4" onSubmit={handleSubmit}>
+    <div className="w-full max-w-4xl shadow-xl rounded-lg overflow-hidden bg-white flex">
+      {/* Logo Section - Left */}
+      <div className="hidden md:flex md:w-1/2 bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center p-12">
+        <img
+          src="/nbtc-logo.png"
+          alt="NBTC Logo"
+          style={{ maxWidth: '100%', height: 'auto' }}
+        />
+      </div>
+
+      {/* Sign In Form - Right */}
+      <Card className="w-full md:w-1/2 shadow-none border-0">
+        <CardHeader className="text-center space-y-4">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
-            <Input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
-              required
-            />
+            <CardTitle className="text-2xl font-bold text-slate-900">Sign In</CardTitle>
+            <p className="text-sm text-slate-600 mt-1">Procurement System</p>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Password</label>
-            <Input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Your password"
-              required
-            />
-          </div>
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? 'Signing in...' : (
-              <span className="flex items-center justify-center gap-2">
-                <LogIn className="h-4 w-4" />
-                Sign In
-              </span>
-            )}
-          </Button>
-        </form>
-        <p className="text-xs text-slate-500 text-center">Contact your administrator for login credentials</p>
-      </CardContent>
-    </Card>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {error && (
+            <div className="flex items-center gap-2 text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">
+              <AlertTriangle className="h-4 w-4" />
+              <span>{error}</span>
+            </div>
+          )}
+          <form className="space-y-4" onSubmit={handleSubmit}>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
+              <Input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Password</label>
+              <Input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Your password"
+                required
+              />
+            </div>
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? 'Signing in...' : (
+                <span className="flex items-center justify-center gap-2">
+                  <LogIn className="h-4 w-4" />
+                  Sign In
+                </span>
+              )}
+            </Button>
+          </form>
+          <p className="text-xs text-slate-500 text-center">Contact your administrator for login credentials</p>
+        </CardContent>
+      </Card>
+    </div>
   )
 }
 
