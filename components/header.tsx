@@ -28,26 +28,34 @@ export default function Header() {
           <div className="flex items-center gap-6">
             <Link href="/dashboard" className="flex items-center gap-3">
               {/* NBTC Logo */}
-              <img 
-                src="/nbtc-logo.png" 
-                alt="NBTC Logo"
-                width={40}
-                height={50}
-                className="object-contain"
-              />
+              <svg width="45" height="30" viewBox="0 0 280 160" xmlns="http://www.w3.org/2000/svg">
+                <rect x="10" y="10" width="70" height="140" rx="8" fill="#001a4d" stroke="#667085" strokeWidth="2" />
+                <text x="45" y="50" fontSize="32" fontWeight="bold" fill="white" textAnchor="middle" fontFamily="Arial, sans-serif">B</text>
+                <text x="45" y="85" fontSize="32" fontWeight="bold" fill="white" textAnchor="middle" fontFamily="Arial, sans-serif">T</text>
+                <text x="45" y="120" fontSize="32" fontWeight="bold" fill="white" textAnchor="middle" fontFamily="Arial, sans-serif">C</text>
+                <text x="110" y="55" fontSize="58" fontWeight="900" fill="#dc2626" fontFamily="Arial Black, Arial, sans-serif">NBTC</text>
+              </svg>
               <span className="text-xl font-bold text-slate-900">Procurement System</span>
             </Link>
             
             {/* 50 Year Anniversary Badge */}
-            <div className="hidden lg:flex items-center px-3 py-1 bg-gray-100 rounded-full">
-              <img 
-                src="/50-anniversary.png" 
-                alt="50 Years Anniversary"
-                width={30}
-                height={30}
-                className="object-contain"
-              />
-              <span className="ml-2 text-xs font-semibold text-gray-700">50 YEARS</span>
+            <div className="hidden lg:flex items-center px-3 py-2 bg-gradient-to-r from-purple-100 to-cyan-100 rounded-full border border-purple-200">
+              <svg width="32" height="32" viewBox="0 0 140 140" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <linearGradient id="rainbowGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#8b5cf6" />
+                    <stop offset="20%" stopColor="#d946ef" />
+                    <stop offset="40%" stopColor="#ec4899" />
+                    <stop offset="60%" stopColor="#f97316" />
+                    <stop offset="80%" stopColor="#eab308" />
+                    <stop offset="100%" stopColor="#10b981" />
+                  </linearGradient>
+                </defs>
+                <circle cx="70" cy="70" r="55" fill="white" stroke="url(#rainbowGrad2)" strokeWidth="8" />
+                <circle cx="70" cy="70" r="48" fill="#f0f9ff" />
+                <text x="70" y="80" fontSize="48" fontWeight="900" fill="#7c3aed" textAnchor="middle" fontFamily="Arial, sans-serif">50</text>
+              </svg>
+              <span className="ml-2 text-xs font-bold text-purple-700">50 YEARS</span>
             </div>
 
             <nav className="flex gap-1">
