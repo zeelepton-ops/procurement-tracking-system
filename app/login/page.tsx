@@ -48,42 +48,24 @@ function LoginForm() {
   return (
     <div className="w-full max-w-4xl shadow-xl rounded-lg overflow-hidden bg-white md:flex">
       {/* Logo Section - Left */}
-      <div className="w-full md:w-1/2 bg-gray-50 flex flex-col items-center justify-center p-8 md:p-12 gap-6">
+      <div className="w-full md:w-1/2 bg-gray-50 flex flex-col items-center justify-center p-8 md:p-12 gap-8">
         {/* NBTC Logo */}
-        <svg width="120" height="140" viewBox="0 0 120 140" xmlns="http://www.w3.org/2000/svg">
-          {/* Main blue rectangle */}
-          <rect x="8" y="8" width="80" height="105" rx="6" ry="6" fill="#001a66" stroke="#6b7280" strokeWidth="2" />
-          
-          {/* White letters BTC */}
-          <text x="48" y="50" fontSize="28" fontWeight="bold" textAnchor="middle" fill="white" fontFamily="Arial, sans-serif">B</text>
-          <text x="48" y="78" fontSize="28" fontWeight="bold" textAnchor="middle" fill="white" fontFamily="Arial, sans-serif">T</text>
-          <text x="48" y="106" fontSize="28" fontWeight="bold" textAnchor="middle" fill="white" fontFamily="Arial, sans-serif">C</text>
-          
-          {/* Red NBTC text */}
-          <text x="62" y="60" fontSize="22" fontWeight="bold" fill="#dc2626" fontFamily="Arial, sans-serif">NBTC</text>
-        </svg>
+        <img 
+          src="/nbtc-logo.png" 
+          alt="NBTC Logo"
+          width={120}
+          height={140}
+          className="object-contain"
+        />
         
         {/* 50 Year Anniversary Logo */}
-        <svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <linearGradient id="anniversary" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#a855f7" />
-              <stop offset="25%" stopColor="#ec4899" />
-              <stop offset="50%" stopColor="#f59e0b" />
-              <stop offset="75%" stopColor="#10b981" />
-              <stop offset="100%" stopColor="#0891b2" />
-            </linearGradient>
-          </defs>
-          
-          {/* Circle background */}
-          <circle cx="50" cy="45" r="35" fill="none" stroke="url(#anniversary)" strokeWidth="3" />
-          
-          {/* 50 text */}
-          <text x="50" y="58" fontSize="32" fontWeight="bold" textAnchor="middle" fill="url(#anniversary)" fontFamily="Arial, sans-serif">50</text>
-          
-          {/* YEAR ANNIVERSARY text */}
-          <text x="50" y="78" fontSize="7" fontWeight="600" textAnchor="middle" fill="#0891b2" fontFamily="Arial, sans-serif">YEAR ANNIVERSARY</text>
-        </svg>
+        <img 
+          src="/50-anniversary.png" 
+          alt="50 Years Anniversary"
+          width={100}
+          height={100}
+          className="object-contain"
+        />
       </div>
 
       {/* Sign In Form - Right */}
