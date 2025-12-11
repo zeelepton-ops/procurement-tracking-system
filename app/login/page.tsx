@@ -46,17 +46,18 @@ function LoginForm() {
   }
 
   return (
-    <div className="w-full max-w-4xl shadow-xl rounded-lg overflow-hidden bg-white flex">
+    <div className="w-full max-w-4xl shadow-xl rounded-lg overflow-hidden bg-white md:flex">
       {/* Logo Section - Left */}
-      <div className="hidden md:flex md:w-1/2 bg-gradient-to-br from-blue-50 to-blue-100 items-center justify-center p-12">
-        <img
-          src="/nbtc-logo.png?v=1"
-          alt="NBTC Logo"
-          width="250"
-          height="150"
-          style={{ objectFit: 'contain' }}
-          onError={(e) => console.error('Image failed to load:', e)}
-        />
+      <div className="w-full md:w-1/2 bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center p-8 md:p-12">
+        <div style={{ textAlign: 'center' }}>
+          <img
+            src="/nbtc-logo.png?v=2"
+            alt="NBTC Logo"
+            width="280"
+            height="180"
+            style={{ objectFit: 'contain', display: 'block', margin: '0 auto' }}
+          />
+        </div>
       </div>
 
       {/* Sign In Form - Right */}
