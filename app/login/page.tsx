@@ -48,11 +48,11 @@ function LoginForm() {
   return (
     <div className="w-full max-w-4xl shadow-xl rounded-lg overflow-hidden bg-white flex">
       {/* Logo Section - Left */}
-      <div className="hidden md:flex md:w-1/2 bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center p-12">
+      <div className="hidden md:flex md:w-1/2 bg-gradient-to-br from-blue-50 to-blue-100 items-center justify-center p-12">
         <img
           src="/nbtc-logo.png"
           alt="NBTC Logo"
-          style={{ maxWidth: '100%', height: 'auto' }}
+          style={{ maxWidth: '300px', height: 'auto', objectFit: 'contain' }}
         />
       </div>
 
