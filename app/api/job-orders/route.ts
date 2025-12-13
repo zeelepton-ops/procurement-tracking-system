@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
+import { canEditOrDelete } from '@/lib/permissions'
 
 export async function GET() {
   try {
@@ -27,6 +30,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const session = await getServerSession(authOptions)
     const body = await request.json()
     
     // Try creating with all fields first
@@ -43,7 +47,8 @@ export async function POST(request: Request) {
           priority: body.priority || 'MEDIUM',
           foreman: body.foreman || null,
           workScope: body.workScope || null,
-          qaQcInCharge: body.qaQcInCharge || null
+          qaQcInCharge: body.qaQcInCharge || null,
+          createdBy: session?.user?.email || 'unknown'
         }
       })
       
@@ -73,8 +78,85 @@ export async function POST(request: Request) {
   }
 }
 
+export async function PUT(request: Request) {
+  try {
+    const session = await getServerSession(authOptions)
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const body = await request.json()
+    const { id, ...updateData } = body
+
+    if (!id) {
+      return NextResponse.json({ error: 'Job order ID is required' }, { status: 400 })
+    }
+
+    const existingJobOrder = await prisma.jobOrder.findUnique({
+      where: { id }
+    })
+
+    if (!existingJobOrder) {
+      return NextResponse.json({ error: 'Job order not found' }, { status: 404 })
+    }
+
+    // Check permission
+    const userRole = session.user.role || 'USER'
+    if (!canEditOrDelete(existingJobOrder.createdAt, userRole)) {
+      return NextResponse.json({ 
+        error: 'You do not have permission to edit this job order. It can only be edited within 4 days or by an admin.' 
+      }, { status: 403 })
+    }
+
+    // Track changes
+    const changes: Record<string, any> = {}
+    Object.keys(updateData).forEach(key => {
+      if (updateData[key] !== (existingJobOrder as any)[key]) {
+        changes[key] = {
+          from: (existingJobOrder as any)[key],
+          to: updateData[key]
+        }
+      }
+    })
+
+    // Update job order
+    const updatedJobOrder = await prisma.jobOrder.update({
+      where: { id },
+      data: {
+        ...updateData,
+        lastEditedBy: session.user.email,
+        lastEditedAt: new Date()
+      }
+    })
+
+    // Record edit history
+    if (Object.keys(changes).length > 0) {
+      await prisma.jobOrderEditHistory.create({
+        data: {
+          jobOrderId: id,
+          editedBy: session.user.email || 'unknown',
+          changesMade: JSON.stringify(changes)
+        }
+      })
+    }
+
+    return NextResponse.json(updatedJobOrder)
+  } catch (error: any) {
+    console.error('Failed to update job order:', error)
+    return NextResponse.json({ 
+      error: 'Failed to update job order', 
+      details: error.message 
+    }, { status: 500 })
+  }
+}
+
 export async function DELETE(request: Request) {
   try {
+    const session = await getServerSession(authOptions)
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
 
@@ -87,12 +169,21 @@ export async function DELETE(request: Request) {
       select: {
         id: true,
         jobNumber: true,
-        isDeleted: true
+        isDeleted: true,
+        createdAt: true
       }
     })
 
     if (!jobOrder) {
       return NextResponse.json({ error: 'Job order not found' }, { status: 404 })
+    }
+
+    // Check permission
+    const userRole = session.user.role || 'USER'
+    if (!canEditOrDelete(jobOrder.createdAt, userRole)) {
+      return NextResponse.json({ 
+        error: 'You do not have permission to delete this job order. It can only be deleted within 4 days or by an admin.' 
+      }, { status: 403 })
     }
 
     if (jobOrder.isDeleted) {
@@ -161,7 +252,8 @@ export async function DELETE(request: Request) {
         where: { id },
         data: {
           isDeleted: true,
-          deletedAt: deletionDate
+          deletedAt: deletionDate,
+          deletedBy: session.user.email
         }
       })
     ])

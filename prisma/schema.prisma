@@ -35,10 +35,24 @@ model JobOrder {
   qaQcInCharge   String?
   isDeleted      Boolean  @default(false)
   deletedAt      DateTime?
+  deletedBy      String?
+  createdBy      String?
+  lastEditedBy   String?
+  lastEditedAt   DateTime?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   
   materialRequests MaterialRequest[]
+  editHistory      JobOrderEditHistory[]
+}
+
+model JobOrderEditHistory {
+  id          String   @id @default(cuid())
+  jobOrderId  String
+  jobOrder    JobOrder @relation(fields: [jobOrderId], references: [id], onDelete: Cascade)
+  editedBy    String
+  editedAt    DateTime @default(now())
+  changesMade String   // JSON string of changes
 }
 
 model MaterialRequest {
@@ -64,12 +78,29 @@ model MaterialRequest {
   requestedBy      String
   requestedAt      DateTime @default(now())
   
+  isDeleted        Boolean  @default(false)
+  deletedAt        DateTime?
+  deletedBy        String?
+  createdBy        String?
+  lastEditedBy     String?
+  lastEditedAt     DateTime?
+  
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
   
   procurementActions ProcurementAction[]
   purchaseOrderItems PurchaseOrderItem[]
   statusHistory      StatusHistory[]
+  editHistory        MaterialRequestEditHistory[]
+}
+
+model MaterialRequestEditHistory {
+  id                String          @id @default(cuid())
+  materialRequestId String
+  materialRequest   MaterialRequest @relation(fields: [materialRequestId], references: [id], onDelete: Cascade)
+  editedBy          String
+  editedAt          DateTime        @default(now())
+  changesMade       String          // JSON string of changes
 }
 
 model ProcurementAction {
@@ -86,7 +117,23 @@ model ProcurementAction {
   supplierName      String?
   expectedDelivery  DateTime?
   
+  isDeleted         Boolean  @default(false)
+  deletedAt         DateTime?
+  deletedBy         String?
+  lastEditedBy      String?
+  lastEditedAt      DateTime?
+  
   createdAt         DateTime @default(now())
+  editHistory       ProcurementActionEditHistory[]
+}
+
+model ProcurementActionEditHistory {
+  id                  String            @id @default(cuid())
+  procurementActionId String
+  procurementAction   ProcurementAction @relation(fields: [procurementActionId], references: [id], onDelete: Cascade)
+  editedBy            String
+  editedAt            DateTime          @default(now())
+  changesMade         String            // JSON string of changes
 }
 
 model PurchaseOrder {
