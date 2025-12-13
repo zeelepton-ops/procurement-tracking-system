@@ -169,210 +169,221 @@ export default function ProcurementTrackingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4">
       <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-slate-900 mb-2">Procurement Tracking</h1>
-          <p className="text-slate-600">Manage and track material request progress</p>
+        {/* Header */}
+        <div className="mb-3 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900 mb-0.5">Procurement Tracking</h1>
+            <p className="text-slate-600 text-sm">Manage and track material request progress</p>
+          </div>
+          <Button onClick={fetchRequests} variant="outline" size="sm">
+            Refresh
+          </Button>
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-2 mb-3">
           <Card>
-            <CardContent className="p-4">
+            <CardContent className="p-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-slate-600">Total Requests</p>
-                  <p className="text-2xl font-bold text-slate-900">{requests.length}</p>
+                  <p className="text-xs text-slate-600">Total</p>
+                  <p className="text-xl font-bold text-slate-900">{requests.length}</p>
                 </div>
-                <Package className="h-8 w-8 text-blue-600" />
+                <Package className="h-6 w-6 text-blue-600" />
               </div>
             </CardContent>
           </Card>
           
           <Card>
-            <CardContent className="p-4">
+            <CardContent className="p-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-slate-600">Pending</p>
-                  <p className="text-2xl font-bold text-yellow-600">
+                  <p className="text-xs text-slate-600">Pending</p>
+                  <p className="text-xl font-bold text-yellow-600">
                     {requests.filter(r => r.status === 'PENDING').length}
                   </p>
                 </div>
-                <Clock className="h-8 w-8 text-yellow-600" />
+                <Clock className="h-6 w-6 text-yellow-600" />
               </div>
             </CardContent>
           </Card>
           
           <Card>
-            <CardContent className="p-4">
+            <CardContent className="p-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-slate-600">In Progress</p>
-                  <p className="text-2xl font-bold text-blue-600">
+                  <p className="text-xs text-slate-600">In Progress</p>
+                  <p className="text-xl font-bold text-blue-600">
                     {requests.filter(r => ['IN_PROCUREMENT', 'ORDERED', 'PARTIALLY_RECEIVED'].includes(r.status)).length}
                   </p>
                 </div>
-                <TrendingUp className="h-8 w-8 text-blue-600" />
+                <TrendingUp className="h-6 w-6 text-blue-600" />
               </div>
             </CardContent>
           </Card>
           
           <Card>
-            <CardContent className="p-4">
+            <CardContent className="p-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-slate-600">Critical/Overdue</p>
-                  <p className="text-2xl font-bold text-red-600">
+                  <p className="text-xs text-slate-600">Critical</p>
+                  <p className="text-xl font-bold text-red-600">
                     {requests.filter(r => 
                       r.urgencyLevel === 'CRITICAL' || isOverdue(r.requiredDate)
                     ).length}
                   </p>
                 </div>
-                <AlertTriangle className="h-8 w-8 text-red-600" />
+                <AlertTriangle className="h-6 w-6 text-red-600" />
               </div>
             </CardContent>
           </Card>
         </div>
 
         {/* Filters */}
-        <Card className="mb-6">
-          <CardContent className="p-4">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <Input
-                placeholder="Search by request #, item, or job..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-              
-              <Select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
-                <option value="ALL">All Statuses</option>
-                <option value="PENDING">Pending</option>
-                <option value="IN_PROCUREMENT">In Procurement</option>
-                <option value="ORDERED">Ordered</option>
-                <option value="PARTIALLY_RECEIVED">Partially Received</option>
-                <option value="RECEIVED">Received</option>
-                <option value="CANCELLED">Cancelled</option>
-              </Select>
-              
-              <Select value={filterUrgency} onChange={(e) => setFilterUrgency(e.target.value)}>
-                <option value="ALL">All Urgencies</option>
-                <option value="CRITICAL">Critical</option>
-                <option value="HIGH">High</option>
-                <option value="NORMAL">Normal</option>
-                <option value="LOW">Low</option>
-              </Select>
-              
-              <Button onClick={fetchRequests} variant="outline">
-                Refresh
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="mb-3 grid grid-cols-1 md:grid-cols-4 gap-2">
+          <Input
+            placeholder="Search request #, item, job"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="h-9 text-sm"
+          />
+          
+          <select 
+            value={filterStatus} 
+            onChange={(e) => setFilterStatus(e.target.value)}
+            className="h-9 px-3 rounded-md border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="ALL">All Statuses</option>
+            <option value="PENDING">Pending</option>
+            <option value="IN_PROCUREMENT">In Procurement</option>
+            <option value="ORDERED">Ordered</option>
+            <option value="PARTIALLY_RECEIVED">Partially Received</option>
+            <option value="RECEIVED">Received</option>
+            <option value="CANCELLED">Cancelled</option>
+          </select>
+          
+          <select 
+            value={filterUrgency} 
+            onChange={(e) => setFilterUrgency(e.target.value)}
+            className="h-9 px-3 rounded-md border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="ALL">All Urgencies</option>
+            <option value="CRITICAL">Critical</option>
+            <option value="HIGH">High</option>
+            <option value="NORMAL">Normal</option>
+            <option value="LOW">Low</option>
+          </select>
+        </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
           {/* Requests List */}
-          <div className="space-y-4">
-            <h2 className="text-xl font-bold text-slate-900 mb-4">
-              Material Requests ({filteredRequests.length})
-            </h2>
-            
-            <div className="space-y-3 max-h-[700px] overflow-y-auto">
-              {filteredRequests.map((request) => {
-                const daysLeft = calculateDaysUntilRequired(request.requiredDate)
-                const overdue = isOverdue(request.requiredDate)
-                
-                return (
-                  <Card
-                    key={request.id}
-                    className={`cursor-pointer transition-all hover:shadow-md ${
-                      selectedRequest?.id === request.id ? 'ring-2 ring-blue-600' : ''
-                    }`}
-                    onClick={() => setSelectedRequest(request)}
-                  >
-                    <CardContent className="p-4">
-                      <div className="flex items-start justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          {getStatusIcon(request.status)}
-                          <div>
-                            <p className="font-semibold text-slate-900">{request.requestNumber}</p>
-                            <p className="text-sm text-slate-600">{request.jobOrder.jobNumber}</p>
+          <div className="lg:col-span-2 space-y-2">
+            <Card className="border border-slate-200">
+              <CardHeader className="py-2">
+                <div className="grid grid-cols-12 gap-2 text-[11px] font-semibold text-slate-600">
+                  <div className="col-span-3">Request # / Job #</div>
+                  <div className="col-span-3">Item / Qty</div>
+                  <div className="col-span-2">Required</div>
+                  <div className="col-span-2">Urgency</div>
+                  <div className="col-span-2">Status</div>
+                </div>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="divide-y divide-slate-200 max-h-[600px] overflow-y-auto">
+                  {filteredRequests.map((request) => {
+                    const daysLeft = calculateDaysUntilRequired(request.requiredDate)
+                    const overdue = isOverdue(request.requiredDate)
+                    
+                    return (
+                      <div
+                        key={request.id}
+                        className={`grid grid-cols-12 items-center gap-2 px-3 py-2 text-[12px] cursor-pointer hover:bg-blue-50 ${
+                          selectedRequest?.id === request.id ? 'bg-blue-50' : ''
+                        }`}
+                        onClick={() => setSelectedRequest(request)}
+                      >
+                        <div className="col-span-3">
+                          <div className="font-semibold text-slate-900">{request.requestNumber}</div>
+                          <div className="text-[11px] text-slate-500">JO-{request.jobOrder.jobNumber}</div>
+                        </div>
+                        <div className="col-span-3 truncate">
+                          <div className="font-medium text-slate-800 truncate">{request.itemName}</div>
+                          <div className="text-[11px] text-slate-500">{request.quantity} {request.unit}</div>
+                        </div>
+                        <div className="col-span-2">
+                          <div className={overdue ? 'text-red-600 font-semibold' : 'text-slate-600'}>
+                            {new Date(request.requiredDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
+                          </div>
+                          <div className={`text-[11px] ${overdue ? 'text-red-500' : 'text-slate-500'}`}>
+                            {overdue ? `${Math.abs(daysLeft)}d late` : `${daysLeft}d left`}
                           </div>
                         </div>
-                        <div className="flex flex-col items-end gap-1">
-                          <span className={`px-2 py-1 rounded text-xs font-medium border ${getUrgencyColor(request.urgencyLevel)}`}>
+                        <div className="col-span-2">
+                          <span className={`text-[11px] px-2 py-0.5 rounded-full font-semibold ${getUrgencyColor(request.urgencyLevel)}`}>
                             {request.urgencyLevel}
                           </span>
-                          <span className={`px-2 py-1 rounded text-xs font-medium border ${getStatusColor(request.status)}`}>
-                            {request.status.replace(/_/g, ' ')}
+                        </div>
+                        <div className="col-span-2">
+                          <span className={`text-[11px] px-2 py-0.5 rounded-full font-semibold ${getStatusColor(request.status)}`}>
+                            {request.status.replace(/_/g, ' ').substring(0, 12)}
                           </span>
                         </div>
                       </div>
-                      
-                      <p className="font-medium text-slate-800 mb-1">{request.itemName}</p>
-                      <p className="text-sm text-slate-600 mb-2">
-                        Qty: {request.quantity} {request.unit}
-                      </p>
-                      
-                      <div className="flex items-center justify-between text-sm">
-                        <span className={overdue ? 'text-red-600 font-medium' : 'text-slate-600'}>
-                          {overdue ? `Overdue by ${Math.abs(daysLeft)} days` : `${daysLeft} days left`}
-                        </span>
-                        <span className="text-slate-500">
-                          Required: {formatDate(request.requiredDate)}
-                        </span>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )
-              })}
-            </div>
+                    )
+                  })}
+                </div>
+              </CardContent>
+            </Card>
           </div>
 
           {/* Request Details & Actions */}
-          <div>
+          <div className="lg:col-span-1">
             {selectedRequest ? (
-              <Card className="sticky top-6">
-                <CardHeader className="bg-gradient-to-r from-blue-600 to-blue-700 text-white">
-                  <CardTitle>Request Details</CardTitle>
-                  <CardDescription className="text-blue-100">
+              <Card className="sticky top-4 border-blue-100">
+                <CardHeader className="bg-blue-50 py-3">
+                  <CardTitle className="text-lg text-blue-900">Details & Actions</CardTitle>
+                  <CardDescription className="text-sm">
                     {selectedRequest.requestNumber}
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="p-6 space-y-6">
+                <CardContent className="p-3 space-y-3 text-sm">
                   {/* Request Info */}
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     <div>
-                      <p className="text-sm text-slate-600">Item Name</p>
+                      <p className="text-xs text-slate-600">Item</p>
                       <p className="font-medium text-slate-900">{selectedRequest.itemName}</p>
                     </div>
                     
                     <div>
-                      <p className="text-sm text-slate-600">Description</p>
-                      <p className="text-slate-900">{selectedRequest.description}</p>
+                      <p className="text-xs text-slate-600">Description</p>
+                      <p className="text-slate-900 text-xs">{selectedRequest.description}</p>
                     </div>
                     
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <p className="text-sm text-slate-600">Quantity</p>
+                        <p className="text-xs text-slate-600">Quantity</p>
                         <p className="font-medium text-slate-900">
                           {selectedRequest.quantity} {selectedRequest.unit}
                         </p>
                       </div>
                       <div>
-                        <p className="text-sm text-slate-600">Job Order</p>
+                        <p className="text-xs text-slate-600">Job Order</p>
                         <p className="font-medium text-slate-900">{selectedRequest.jobOrder.jobNumber}</p>
                       </div>
                     </div>
                     
-                    <div>
-                      <p className="text-sm text-slate-600">Preferred Supplier</p>
-                      <p className="text-slate-900">{selectedRequest.preferredSupplier || 'Not specified'}</p>
-                    </div>
+                    {selectedRequest.preferredSupplier && (
+                      <div>
+                        <p className="text-xs text-slate-600">Supplier</p>
+                        <p className="text-slate-900">{selectedRequest.preferredSupplier}</p>
+                      </div>
+                    )}
                     
                     <div>
-                      <p className="text-sm text-slate-600">Requested By</p>
-                      <p className="text-slate-900">{selectedRequest.requestedBy} on {formatDate(selectedRequest.requestedAt)}</p>
+                      <p className="text-xs text-slate-600">Requested By</p>
+                      <p className="text-slate-900 text-xs">{selectedRequest.requestedBy}</p>
                     </div>
                   </div>
 
@@ -380,26 +391,30 @@ export default function ProcurementTrackingPage() {
 
                   {/* Action History */}
                   <div>
-                    <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
-                      <FileText className="h-4 w-4" />
-                      Action History
+                    <h3 className="font-semibold text-slate-900 text-sm mb-2 flex items-center gap-1">
+                      <FileText className="h-3 w-3" />
+                      History
                     </h3>
-                    <div className="space-y-2 max-h-40 overflow-y-auto">
-                      {selectedRequest.procurementActions.map((action) => (
-                        <div key={action.id} className="text-sm p-2 bg-slate-50 rounded border border-slate-200">
-                          <p className="font-medium text-slate-900">{action.actionType.replace(/_/g, ' ')}</p>
-                          <p className="text-slate-600">{action.notes}</p>
-                          {action.quotationAmount && (
-                            <p className="text-slate-700">Amount: ${action.quotationAmount}</p>
-                          )}
-                          {action.supplierName && (
-                            <p className="text-slate-700">Supplier: {action.supplierName}</p>
-                          )}
-                          <p className="text-xs text-slate-500">
-                            By {action.actionBy} on {formatDate(action.actionDate)}
-                          </p>
-                        </div>
-                      ))}
+                    <div className="space-y-1 max-h-32 overflow-y-auto">
+                      {selectedRequest.procurementActions.length === 0 ? (
+                        <p className="text-xs text-slate-500 italic">No actions yet</p>
+                      ) : (
+                        selectedRequest.procurementActions.map((action) => (
+                          <div key={action.id} className="text-xs p-2 bg-slate-50 rounded border border-slate-200">
+                            <p className="font-medium text-slate-900">{action.actionType.replace(/_/g, ' ')}</p>
+                            {action.notes && <p className="text-slate-600">{action.notes}</p>}
+                            {action.quotationAmount && (
+                              <p className="text-slate-700">Amt: ${action.quotationAmount}</p>
+                            )}
+                            {action.supplierName && (
+                              <p className="text-slate-700">Supplier: {action.supplierName}</p>
+                            )}
+                            <p className="text-[10px] text-slate-500 mt-1">
+                              {action.actionBy} • {new Date(action.actionDate).toLocaleDateString()}
+                            </p>
+                          </div>
+                        ))
+                      )}
                     </div>
                   </div>
 
@@ -407,18 +422,19 @@ export default function ProcurementTrackingPage() {
 
                   {/* Add Action */}
                   <div>
-                    <h3 className="font-semibold text-slate-900 mb-3">Add Action</h3>
-                    <form onSubmit={handleActionSubmit} className="space-y-4">
-                      <Select
+                    <h3 className="font-semibold text-slate-900 text-sm mb-2">Add Action</h3>
+                    <form onSubmit={handleActionSubmit} className="space-y-2">
+                      <select
                         value={actionForm.actionType}
                         onChange={(e) => setActionForm({ ...actionForm, actionType: e.target.value })}
+                        className="w-full h-8 px-2 rounded-md border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
                         <option value="NOTE">Add Note</option>
-                        <option value="ASSIGNED">Assign to Procurement</option>
-                        <option value="QUOTATION_REQUESTED">Request Quotation</option>
-                        <option value="QUOTATION_RECEIVED">Quotation Received</option>
-                        <option value="PO_CREATED">Purchase Order Created</option>
-                      </Select>
+                        <option value="ASSIGNED">Assign</option>
+                        <option value="QUOTATION_REQUESTED">Request Quote</option>
+                        <option value="QUOTATION_RECEIVED">Quote Received</option>
+                        <option value="PO_CREATED">PO Created</option>
+                      </select>
 
                       <Textarea
                         value={actionForm.notes}
@@ -426,6 +442,7 @@ export default function ProcurementTrackingPage() {
                         placeholder="Notes..."
                         rows={2}
                         required
+                        className="text-xs"
                       />
 
                       {actionForm.actionType === 'QUOTATION_RECEIVED' && (
@@ -434,30 +451,33 @@ export default function ProcurementTrackingPage() {
                             type="number"
                             value={actionForm.quotationAmount}
                             onChange={(e) => setActionForm({ ...actionForm, quotationAmount: e.target.value })}
-                            placeholder="Quotation Amount"
+                            placeholder="Amount"
                             step="0.01"
+                            className="h-8 text-xs"
                           />
                           <Input
                             value={actionForm.supplierName}
                             onChange={(e) => setActionForm({ ...actionForm, supplierName: e.target.value })}
-                            placeholder="Supplier Name"
+                            placeholder="Supplier"
+                            className="h-8 text-xs"
                           />
                         </>
                       )}
 
-                      <Select
+                      <select
                         value={actionForm.newStatus}
                         onChange={(e) => setActionForm({ ...actionForm, newStatus: e.target.value })}
+                        className="w-full h-8 px-2 rounded-md border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
-                        <option value="">Don't change status</option>
-                        <option value="IN_PROCUREMENT">Move to In Procurement</option>
-                        <option value="ORDERED">Mark as Ordered</option>
-                        <option value="PARTIALLY_RECEIVED">Partially Received</option>
-                        <option value="RECEIVED">Mark as Received</option>
-                        <option value="CANCELLED">Cancel Request</option>
-                      </Select>
+                        <option value="">Keep status</option>
+                        <option value="IN_PROCUREMENT">→ In Procurement</option>
+                        <option value="ORDERED">→ Ordered</option>
+                        <option value="PARTIALLY_RECEIVED">→ Partial</option>
+                        <option value="RECEIVED">→ Received</option>
+                        <option value="CANCELLED">→ Cancel</option>
+                      </select>
 
-                      <Button type="submit" className="w-full">
+                      <Button type="submit" className="w-full h-8 text-xs" size="sm">
                         Record Action
                       </Button>
                     </form>
@@ -465,10 +485,10 @@ export default function ProcurementTrackingPage() {
                 </CardContent>
               </Card>
             ) : (
-              <Card className="h-96 flex items-center justify-center">
+              <Card className="h-64 flex items-center justify-center">
                 <CardContent>
-                  <p className="text-slate-500 text-center">
-                    Select a request to view details and add actions
+                  <p className="text-slate-500 text-center text-sm">
+                    Select a request to view details
                   </p>
                 </CardContent>
               </Card>
