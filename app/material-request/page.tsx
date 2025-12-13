@@ -561,8 +561,8 @@ export default function MaterialRequestPage() {
             </Card>
           ) : (
             <Card className="border border-slate-200">
-              <CardHeader className="py-2">
-                <div className="grid grid-cols-14 gap-2 text-[11px] font-semibold text-slate-600">
+              <CardHeader className="py-2 px-3">
+                <div className="grid grid-cols-14 gap-2 text-[11px] font-semibold text-slate-600 min-w-[1200px]">
                   <div className="col-span-2">Request # / Job #</div>
                   <div className="col-span-3">Item / Description</div>
                   <div className="col-span-2">Qty / Unit</div>
@@ -573,12 +573,12 @@ export default function MaterialRequestPage() {
                   <div className="col-span-1">Edit</div>
                 </div>
               </CardHeader>
-              <CardContent className="p-0">
-                <div className="divide-y divide-slate-200">
+              <CardContent className="p-0 overflow-x-auto">
+                <div className="divide-y divide-slate-200 min-w-[1200px]">
                   {filteredRequests.map((req) => (
                     <div
                       key={req.id}
-                      className={`grid grid-cols-14 items-center gap-2 px-3 py-2 text-[12px] ${selectedRequest?.id === req.id ? 'bg-blue-50' : ''}`}
+                      className={`grid grid-cols-14 items-center gap-2 px-3 py-2 text-[12px] min-w-[1200px] ${selectedRequest?.id === req.id ? 'bg-blue-50' : ''}`}
                     >
                       <div className="col-span-2 cursor-pointer hover:bg-blue-100" onClick={() => setSelectedRequest(req)}>
                         <div className="font-semibold text-slate-900">{req.requestNumber}</div>
