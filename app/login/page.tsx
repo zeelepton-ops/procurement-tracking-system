@@ -49,21 +49,17 @@ function LoginForm() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 p-4">
       <div className="w-full max-w-md bg-white rounded-lg shadow-lg p-8">
         {/* Logo and Title Header */}
-        <div className="flex items-center justify-between gap-3 mb-8">
+        <div className="flex items-center justify-between gap-4 mb-8">
           <img 
             src="https://i.ibb.co/nMjzX2GS/Logo-NBTC-Transparent.png" 
             alt="NBTC Logo"
-            style={{ width: '70px', height: '70px', objectFit: 'contain' }}
+            style={{ width: '105px', height: '105px', objectFit: 'contain', flexShrink: 0 }}
           />
-          <div className="flex-1">
+          <div className="flex-1"></div>
+          <div className="text-right">
             <h1 className="text-2xl font-bold text-slate-900">Sign In</h1>
             <p className="text-sm text-slate-600">Procurement System</p>
           </div>
-          <img 
-            src="https://i.ibb.co/Q3zgx4sJ/50-years-Anniversary.png" 
-            alt="50 Year Anniversary"
-            style={{ width: '70px', height: '70px', objectFit: 'contain' }}
-          />
         </div>
 
         {/* Form */}
