@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
-import { AlertCircle, Package, Clock, AlertTriangle, Plus, X } from 'lucide-react'
+import { AlertCircle, Package, Clock, AlertTriangle, Plus, X, Trash2 } from 'lucide-react'
 
 interface JobOrder {
   id: string
@@ -41,6 +41,7 @@ interface MaterialRequest {
   status: string
   requestedBy: string
   requestedAt: string
+  createdAt: string
 }
 
 export default function MaterialRequestPage() {
@@ -50,12 +51,14 @@ export default function MaterialRequestPage() {
   const [loading, setLoading] = useState(false)
   const [showForm, setShowForm] = useState(false)
   const [selectedRequest, setSelectedRequest] = useState<MaterialRequest | null>(null)
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
   const [filters, setFilters] = useState({
     search: '',
     status: 'ALL',
     urgency: 'ALL'
   })
   const [success, setSuccess] = useState(false)
+  const [items, setItems] = useState<Array<{ itemName: string; description: string; quantity: string; unit: string; stockQty: string }>>([{ itemName: '', description: '', quantity: '', unit: 'PCS', stockQty: '0' }])
   
   const [formData, setFormData] = useState({
     jobOrderId: '',
@@ -145,7 +148,7 @@ export default function MaterialRequestPage() {
       const res = await fetch('/api/material-requests', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify({ ...formData, items })
       })
       
       if (res.ok) {
@@ -167,6 +170,7 @@ export default function MaterialRequestPage() {
           urgencyLevel: 'NORMAL',
           requestedBy: 'Production Team'
         })
+        setItems([{ itemName: '', description: '', quantity: '', unit: 'PCS', stockQty: '0' }])
         
         setTimeout(() => setSuccess(false), 3000)
       }
@@ -197,6 +201,45 @@ export default function MaterialRequestPage() {
       CRITICAL: 'bg-red-100 text-red-700'
     }
     return colors[urgency] || 'bg-blue-100 text-blue-700'
+  }
+
+  const handleDelete = async (id: string) => {
+    try {
+      setLoading(true)
+      const res = await fetch(`/api/material-requests?id=${id}`, {
+        method: 'DELETE'
+      })
+    
+      if (res.ok) {
+        fetchMaterialRequests()
+        if (selectedRequest?.id === id) {
+          setSelectedRequest(null)
+        }
+        setDeleteConfirm(null)
+      } else {
+        const error = await res.json()
+        alert(error.error || 'Failed to delete material request')
+      }
+    } catch (error) {
+      console.error('Failed to delete material request:', error)
+      alert('Failed to delete material request')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const addItemRow = () => {
+    setItems(prev => [...prev, { itemName: '', description: '', quantity: '', unit: 'PCS', stockQty: '0' }])
+  }
+
+  const removeItemRow = (index: number) => {
+    if (items.length > 1) {
+      setItems(prev => prev.filter((_, i) => i !== index))
+    }
+  }
+
+  const updateItemField = (index: number, field: keyof typeof items[0], value: string) => {
+    setItems(prev => prev.map((it, i) => i === index ? { ...it, [field]: value } : it))
   }
 
   return (
@@ -301,7 +344,7 @@ export default function MaterialRequestPage() {
                     required
                     className="mt-1"
                   >
-                    <option value="">Select Job Order</option>
+                      <option value="">Select</option>
                     {jobOrders.map(jo => (
                       <option key={jo.id} value={jo.id}>
                         {jo.jobNumber} - {jo.productName}
@@ -318,81 +361,85 @@ export default function MaterialRequestPage() {
                     required
                     className="mt-1"
                   >
-                    <option value="RAW_MATERIAL">Raw Material</option>
+                      <option value="RAW_MATERIAL">Raw</option>
                     <option value="CONSUMABLE">Consumable</option>
                   </Select>
                 </div>
               </div>
 
-              {/* Item Details */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div>
-                  <Label className="text-sm font-semibold">Item Name *</Label>
-                  <Input
-                    value={formData.itemName}
-                    onChange={(e) => handleItemNameChange(e.target.value)}
-                    placeholder="e.g., Steel Plate, Welding Rod"
-                    required
-                    className="mt-1 h-9"
-                  />
-                </div>
-
-                <div>
-                  <Label className="text-sm font-semibold">Current Stock</Label>
-                  <Input
-                    type="number"
-                    value={formData.stockQtyInInventory}
-                    onChange={(e) => setFormData({ ...formData, stockQtyInInventory: e.target.value })}
-                    placeholder="0"
-                    step="0.01"
-                    className="mt-1 h-9"
-                  />
-                </div>
-              </div>
-
+              {/* Multiple Items */}
               <div>
-                <Label className="text-sm font-semibold">Description *</Label>
-                <Textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="Detailed description, specifications, grade, etc."
-                  rows={2}
-                  required
-                  className="mt-1"
-                />
-              </div>
-
-              {/* Quantity */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div>
-                  <Label className="text-sm font-semibold">Quantity *</Label>
-                  <Input
-                    type="number"
-                    value={formData.quantity}
-                    onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
-                    placeholder="0"
-                    step="0.01"
-                    required
-                    className="mt-1 h-9"
-                  />
-                </div>
-
-                <div>
-                  <Label className="text-sm font-semibold">Unit *</Label>
-                  <Select
-                    value={formData.unit}
-                    onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
-                    required
-                    className="mt-1"
+                <Label className="text-sm font-semibold mb-2">Items *</Label>
+                <div className="space-y-2">
+                  <div className="grid grid-cols-12 gap-2 text-[11px] font-semibold text-slate-600 px-2">
+                    <div className="col-span-3">Item Name</div>
+                    <div className="col-span-4">Description</div>
+                    <div className="col-span-2">Qty</div>
+                    <div className="col-span-1">Unit</div>
+                    <div className="col-span-1">Stock</div>
+                    <div className="col-span-1"></div>
+                  </div>
+                  {items.map((item, idx) => (
+                    <div key={idx} className="grid grid-cols-12 gap-2">
+                      <Input
+                        value={item.itemName}
+                        onChange={(e) => updateItemField(idx, 'itemName', e.target.value)}
+                        placeholder="Item"
+                        className="col-span-3 h-8 text-xs"
+                        required
+                      />
+                      <Input
+                        value={item.description}
+                        onChange={(e) => updateItemField(idx, 'description', e.target.value)}
+                        placeholder="Description/Specs"
+                        className="col-span-4 h-8 text-xs"
+                        required
+                      />
+                      <Input
+                        type="number"
+                        value={item.quantity}
+                        onChange={(e) => updateItemField(idx, 'quantity', e.target.value)}
+                        placeholder="Qty"
+                        className="col-span-2 h-8 text-xs"
+                        step="0.01"
+                        required
+                      />
+                      <select
+                        value={item.unit}
+                        onChange={(e) => updateItemField(idx, 'unit', e.target.value)}
+                        className="col-span-1 h-8 px-1 rounded-md border border-slate-300 text-xs"
+                      >
+                        <option value="PCS">PCS</option>
+                        <option value="KG">KG</option>
+                        <option value="L">L</option>
+                        <option value="M">M</option>
+                        <option value="BOX">BOX</option>
+                      </select>
+                      <Input
+                        type="number"
+                        value={item.stockQty}
+                        onChange={(e) => updateItemField(idx, 'stockQty', e.target.value)}
+                        placeholder="0"
+                        className="col-span-1 h-8 text-xs"
+                        step="0.01"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeItemRow(idx)}
+                        disabled={items.length === 1}
+                        className="col-span-1 px-2 py-1 text-xs bg-red-50 text-red-600 rounded hover:bg-red-100 disabled:opacity-30 disabled:cursor-not-allowed"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={addItemRow}
+                    className="px-3 py-1.5 text-xs bg-blue-50 text-blue-700 rounded hover:bg-blue-100 font-medium"
                   >
-                    <option value="KG">Kilograms (KG)</option>
-                    <option value="TON">Tons</option>
-                    <option value="PCS">Pieces (PCS)</option>
-                    <option value="METER">Meters</option>
-                    <option value="LITER">Liters</option>
-                    <option value="BOX">Box</option>
-                    <option value="SET">Set</option>
-                  </Select>
+                    + Add Item
+                  </button>
                 </div>
               </div>
 
@@ -499,13 +546,15 @@ export default function MaterialRequestPage() {
           ) : (
             <Card className="border border-slate-200">
               <CardHeader className="py-2">
-                <div className="grid grid-cols-12 gap-2 text-[11px] font-semibold text-slate-600">
+                <div className="grid grid-cols-14 gap-2 text-[11px] font-semibold text-slate-600">
                   <div className="col-span-2">Request # / Job #</div>
                   <div className="col-span-3">Item / Description</div>
                   <div className="col-span-2">Qty / Unit</div>
                   <div className="col-span-2">Required Date</div>
                   <div className="col-span-1">Urgency</div>
                   <div className="col-span-2">Status</div>
+                  <div className="col-span-1">Action</div>
+                  <div className="col-span-1">Edit</div>
                 </div>
               </CardHeader>
               <CardContent className="p-0">
@@ -513,33 +562,71 @@ export default function MaterialRequestPage() {
                   {filteredRequests.map((req) => (
                     <div
                       key={req.id}
-                      className={`grid grid-cols-12 items-center gap-2 px-3 py-2 text-[12px] cursor-pointer hover:bg-blue-50 ${selectedRequest?.id === req.id ? 'bg-blue-50' : ''}`}
-                      onClick={() => setSelectedRequest(req)}
+                      className={`grid grid-cols-14 items-center gap-2 px-3 py-2 text-[12px] ${selectedRequest?.id === req.id ? 'bg-blue-50' : ''}`}
                     >
-                      <div className="col-span-2">
+                      <div className="col-span-2 cursor-pointer hover:bg-blue-100" onClick={() => setSelectedRequest(req)}>
                         <div className="font-semibold text-slate-900">{req.requestNumber}</div>
                         <div className="text-slate-500 text-[11px]">JO-{req.jobOrder.jobNumber}</div>
                       </div>
-                      <div className="col-span-3">
+                      <div className="col-span-3 cursor-pointer hover:bg-blue-100" onClick={() => setSelectedRequest(req)}>
                         <div className="font-medium text-slate-800 truncate">{req.itemName}</div>
                         <div className="text-slate-500 text-[11px] truncate">{req.description}</div>
                       </div>
-                      <div className="col-span-2">
+                      <div className="col-span-2 cursor-pointer hover:bg-blue-100" onClick={() => setSelectedRequest(req)}>
                         <span className="font-semibold">{req.quantity}</span> {req.unit}
                         <div className="text-slate-500 text-[11px]">Stock: {req.stockQtyInInventory}</div>
                       </div>
-                      <div className="col-span-2 text-slate-600">
+                      <div className="col-span-2 text-slate-600 cursor-pointer hover:bg-blue-100" onClick={() => setSelectedRequest(req)}>
                         {new Date(req.requiredDate).toLocaleDateString()}
                       </div>
-                      <div className="col-span-1">
+                      <div className="col-span-1 cursor-pointer hover:bg-blue-100" onClick={() => setSelectedRequest(req)}>
                         <span className={`text-[11px] px-2 py-0.5 rounded-full font-semibold ${getUrgencyColor(req.urgencyLevel)}`}>
                           {req.urgencyLevel}
                         </span>
                       </div>
-                      <div className="col-span-2">
+                      <div className="col-span-2 cursor-pointer hover:bg-blue-100" onClick={() => setSelectedRequest(req)}>
                         <span className={`text-[11px] px-2 py-0.5 rounded-full font-semibold ${getStatusColor(req.status)}`}>
                           {req.status.replace(/_/g, ' ')}
                         </span>
+                      </div>
+                      <div className="col-span-1">
+                        {deleteConfirm === req.id ? (
+                          <div className="flex gap-1">
+                            <button
+                              onClick={() => handleDelete(req.id)}
+                              className="px-2 py-0.5 bg-red-600 text-white text-[11px] rounded hover:bg-red-700"
+                              disabled={loading}
+                            >
+                              Delete
+                            </button>
+                            <button
+                              onClick={() => setDeleteConfirm(null)}
+                              className="px-2 py-0.5 bg-gray-300 text-gray-700 text-[11px] rounded hover:bg-gray-400"
+                              disabled={loading}
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setDeleteConfirm(req.id)
+                            }}
+                            className="p-1.5 text-red-600 hover:bg-red-50 rounded"
+                            title="Delete material request"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        )}
+                      </div>
+                      <div className="col-span-1">
+                        <button
+                          onClick={() => setSelectedRequest(req)}
+                          className="px-2 py-0.5 bg-blue-600 text-white text-[11px] rounded hover:bg-blue-700"
+                        >
+                          Edit
+                        </button>
                       </div>
                     </div>
                   ))}
