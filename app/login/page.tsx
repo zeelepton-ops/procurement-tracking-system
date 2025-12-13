@@ -46,26 +46,18 @@ function LoginForm() {
   }
 
   return (
-    <div className="w-full max-w-4xl shadow-xl rounded-lg overflow-hidden bg-white md:flex">
-      {/* Logo Section - Left */}
-      <div className="w-full md:w-1/2 bg-gray-50 flex flex-col items-center justify-center p-8 md:p-12 gap-8">
-        {/* 50 Year Anniversary Logo */}
-        <img 
-          src="https://i.ibb.co/Q3zgx4sJ/50-years-Anniversary.png" 
-          alt="50 Year Anniversary"
-          style={{ width: '200px', height: 'auto', maxHeight: '160px', objectFit: 'contain' }}
-        />
-        
-        {/* NBTC Logo */}
+    <div className="w-full max-w-6xl shadow-xl rounded-lg overflow-hidden bg-white flex flex-col md:flex-row items-center">
+      {/* NBTC Logo - Left */}
+      <div className="w-full md:w-1/4 bg-gray-50 flex items-center justify-center p-6">
         <img 
           src="https://i.ibb.co/nMjzX2GS/Logo-NBTC-Transparent.png" 
           alt="NBTC Logo"
-          style={{ width: '280px', height: 'auto', maxHeight: '100px', objectFit: 'contain' }}
+          style={{ width: '180px', height: 'auto', objectFit: 'contain' }}
         />
       </div>
 
-      {/* Sign In Form - Right */}
-      <Card className="w-full md:w-1/2 shadow-none border-0">
+      {/* Sign In Form - Center */}
+      <Card className="w-full md:w-2/4 shadow-none border-0">
         <CardHeader className="text-center space-y-4">
           <div>
             <CardTitle className="text-2xl font-bold text-slate-900">Sign In</CardTitle>
@@ -113,6 +105,15 @@ function LoginForm() {
           </form>
         </CardContent>
       </Card>
+
+      {/* 50 Year Anniversary Logo - Right */}
+      <div className="w-full md:w-1/4 bg-gray-50 flex items-center justify-center p-6">
+        <img 
+          src="https://i.ibb.co/Q3zgx4sJ/50-years-Anniversary.png" 
+          alt="50 Year Anniversary"
+          style={{ width: '180px', height: 'auto', objectFit: 'contain' }}
+        />
+      </div>
     </div>
   )
 }
