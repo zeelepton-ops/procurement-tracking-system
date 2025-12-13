@@ -46,7 +46,7 @@ function LoginForm() {
   }
 
   return (
-    <div className="w-full max-w-2xl shadow-xl rounded-lg overflow-hidden bg-white p-8">
+    <div className="w-full max-w-md shadow-xl rounded-lg overflow-hidden bg-white p-8">
       {/* Logo and Title - Left aligned NBTC, Center Title, Right aligned Anniversary */}
       <div className="flex items-center justify-between gap-4 mb-2">
         <img 
