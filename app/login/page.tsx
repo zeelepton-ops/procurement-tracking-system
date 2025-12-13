@@ -46,19 +46,19 @@ function LoginForm() {
   }
 
   return (
-    <div className="w-full max-w-md shadow-xl rounded-lg overflow-hidden bg-white p-8">
-      {/* Logo and Title - Inline */}
-      <div className="flex items-center justify-center gap-4 mb-6">
+    <div className="w-full max-w-2xl shadow-xl rounded-lg overflow-hidden bg-white p-8">
+      {/* Logo and Title - Left aligned NBTC, Center Title, Right aligned Anniversary */}
+      <div className="flex items-center justify-between gap-4 mb-8">
         <img 
           src="https://i.ibb.co/nMjzX2GS/Logo-NBTC-Transparent.png" 
           alt="NBTC Logo"
-          style={{ width: '80px', height: '80px', objectFit: 'contain' }}
+          style={{ width: '100px', height: '100px', objectFit: 'contain', flexShrink: 0 }}
         />
-        <h1 className="text-3xl font-bold text-slate-900">Sign In</h1>
+        <h1 className="text-3xl font-bold text-slate-900 flex-1 text-center">Sign In</h1>
         <img 
           src="https://i.ibb.co/Q3zgx4sJ/50-years-Anniversary.png" 
           alt="50 Year Anniversary"
-          style={{ width: '80px', height: '80px', objectFit: 'contain' }}
+          style={{ width: '100px', height: '100px', objectFit: 'contain', flexShrink: 0 }}
         />
       </div>
 
