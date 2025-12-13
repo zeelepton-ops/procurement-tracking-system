@@ -3,7 +3,6 @@
 import { Suspense, useState, useEffect } from 'react'
 import { signIn, useSession } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import Image from 'next/image'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -51,23 +50,17 @@ function LoginForm() {
       {/* Logo Section - Left */}
       <div className="w-full md:w-1/2 bg-gray-50 flex flex-col items-center justify-center p-8 md:p-12 gap-8">
         {/* NBTC Logo */}
-        <Image 
+        <img 
           src="/nbtc-logo.png" 
           alt="NBTC Logo"
-          width={280}
-          height={100}
-          className="object-contain"
-          priority
+          style={{ width: '280px', height: 'auto', maxHeight: '100px', objectFit: 'contain' }}
         />
         
         {/* 50 Year Anniversary Logo */}
-        <Image 
+        <img 
           src="/50-anniversary.png" 
           alt="50 Year Anniversary"
-          width={200}
-          height={160}
-          className="object-contain"
-          priority
+          style={{ width: '200px', height: 'auto', maxHeight: '160px', objectFit: 'contain' }}
         />
       </div>
 
