@@ -23,30 +23,20 @@ export default function Header() {
 
   return (
     <header className="bg-white border-b border-slate-200 sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-6 py-4">
+      <div className="max-w-7xl mx-auto px-4 py-2">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-6">
-            <Link href="/dashboard" className="flex items-center gap-3">
+          <div className="flex items-center gap-3">
+            <Link href="/dashboard" className="flex items-center gap-2">
               {/* NBTC Logo */}
               <img 
                 src="https://i.ibb.co/nMjzX2GS/Logo-NBTC-Transparent.png" 
                 alt="NBTC Logo"
-                style={{ width: '45px', height: 'auto', objectFit: 'contain' }}
+                style={{ width: '35px', height: 'auto', objectFit: 'contain' }}
               />
-              <span className="text-xl font-bold text-slate-900">Procurement System</span>
+              <span className="text-lg font-bold text-slate-900 whitespace-nowrap">Procurement System</span>
             </Link>
-            
-            {/* 50 Year Anniversary Badge */}
-            <div className="hidden lg:flex items-center px-3 py-2 bg-gradient-to-r from-purple-100 to-cyan-100 rounded-full border border-purple-200">
-              <img 
-                src="https://i.ibb.co/Q3zgx4sJ/50-years-Anniversary.png" 
-                alt="50 Year Anniversary"
-                style={{ width: '32px', height: 'auto', objectFit: 'contain' }}
-              />
-              <span className="ml-2 text-xs font-bold text-purple-700">50 YEARS</span>
-            </div>
 
-            <nav className="flex gap-1">
+            <nav className="flex gap-1 ml-4">
               {navItems.map((item) => {
                 const Icon = item.icon
                 const isActive = pathname === item.href
@@ -54,28 +44,29 @@ export default function Header() {
                   <Link
                     key={item.href}
                     href={item.href}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap ${
                       isActive
                         ? 'bg-blue-100 text-blue-700 font-medium'
                         : 'text-slate-600 hover:bg-slate-100'
                     }`}
                   >
-                    <Icon className="h-4 w-4" />
-                    {item.label}
+                    <Icon className="h-4 w-4 flex-shrink-0" />
+                    <span className="text-sm">{item.label}</span>
                   </Link>
                 )
               })}
             </nav>
           </div>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-slate-600">{session.user?.email}</span>
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-slate-600 hidden md:block">{session.user?.email}</span>
             <Button
               variant="outline"
               size="sm"
               onClick={() => signOut({ callbackUrl: '/login' })}
+              className="h-8 px-3"
             >
-              <LogOut className="h-4 w-4 mr-2" />
-              Logout
+              <LogOut className="h-4 w-4 mr-1.5" />
+              <span className="text-sm">Logout</span>
             </Button>
           </div>
         </div>
