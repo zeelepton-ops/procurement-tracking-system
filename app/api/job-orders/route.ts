@@ -14,9 +14,11 @@ export async function GET() {
       }
     })
     
-    return NextResponse.json(jobOrders)
+    return NextResponse.json(jobOrders || [])
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to fetch job orders' }, { status: 500 })
+    console.error('Failed to fetch job orders:', error)
+    // Return empty array on error instead of 500
+    return NextResponse.json([], { status: 200 })
   }
 }
 

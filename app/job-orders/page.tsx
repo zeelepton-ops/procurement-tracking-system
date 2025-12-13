@@ -55,11 +55,22 @@ export default function JobOrdersPage() {
   const fetchJobOrders = async () => {
     try {
       const res = await fetch('/api/job-orders')
+      if (!res.ok) {
+        throw new Error(`Failed to fetch job orders: ${res.status}`)
+      }
       const data = await res.json()
-      setJobOrders(data)
+      
+      // Ensure data is an array
+      if (Array.isArray(data)) {
+        setJobOrders(data)
+      } else {
+        console.error('Invalid response format:', data)
+        setJobOrders([])
+      }
       setLoading(false)
     } catch (error) {
       console.error('Failed to fetch job orders:', error)
+      setJobOrders([])
       setLoading(false)
     }
   }
