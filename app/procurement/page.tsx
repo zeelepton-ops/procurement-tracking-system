@@ -35,6 +35,13 @@ interface MaterialRequest {
     jobNumber: string
     productName: string
   }
+  items?: Array<{
+    id: string
+    itemName: string
+    description: string
+    quantity: number
+    unit: string
+  }>
   procurementActions: Array<{
     id: string
     actionType: string
