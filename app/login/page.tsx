@@ -51,14 +51,14 @@ function LoginForm() {
       <div className="w-full md:w-1/2 bg-gray-50 flex flex-col items-center justify-center p-8 md:p-12 gap-8">
         {/* NBTC Logo */}
         <img 
-          src="/nbtc-logo.png" 
+          src="https://app.nbtcqatar.com/nbtc-logo.png" 
           alt="NBTC Logo"
           style={{ width: '280px', height: 'auto', maxHeight: '100px', objectFit: 'contain' }}
         />
         
         {/* 50 Year Anniversary Logo */}
         <img 
-          src="/50-anniversary.png" 
+          src="https://app.nbtcqatar.com/50-anniversary.png" 
           alt="50 Year Anniversary"
           style={{ width: '200px', height: 'auto', maxHeight: '160px', objectFit: 'contain' }}
         />
