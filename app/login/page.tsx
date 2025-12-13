@@ -46,73 +46,62 @@ function LoginForm() {
   }
 
   return (
-    <div className="w-full max-w-4xl shadow-xl rounded-lg overflow-hidden bg-white flex flex-col md:flex-row items-center">
-      {/* NBTC Logo - Left */}
-      <div className="w-full md:w-1/4 bg-gray-50 flex items-center justify-center p-4">
+    <div className="w-full max-w-md shadow-xl rounded-lg overflow-hidden bg-white p-8">
+      {/* Logo and Title - Inline */}
+      <div className="flex items-center justify-center gap-4 mb-6">
         <img 
           src="https://i.ibb.co/nMjzX2GS/Logo-NBTC-Transparent.png" 
           alt="NBTC Logo"
-          style={{ width: '120px', height: 'auto', objectFit: 'contain' }}
+          style={{ width: '80px', height: '80px', objectFit: 'contain' }}
         />
-      </div>
-
-      {/* Sign In Form - Center */}
-      <Card className="w-full md:w-2/4 shadow-none border-0">
-        <CardHeader className="text-center space-y-4">
-          <div>
-            <CardTitle className="text-2xl font-bold text-slate-900">Sign In</CardTitle>
-            <p className="text-sm text-slate-600 mt-1">Procurement System</p>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {error && (
-            <div className="flex items-center gap-2 text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">
-              <AlertTriangle className="h-4 w-4" />
-              <span>{error}</span>
-            </div>
-          )}
-          <form className="space-y-4" onSubmit={handleSubmit}>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
-              <Input
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={loading}
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Password</label>
-              <Input
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                disabled={loading}
-                required
-              />
-            </div>
-            <Button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              {loading ? 'Signing in...' : 'Sign In'}
-              {!loading && <LogIn className="ml-2 h-4 w-4" />}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
-
-      {/* 50 Year Anniversary Logo - Right */}
-      <div className="w-full md:w-1/4 bg-gray-50 flex items-center justify-center p-4">
+        <h1 className="text-3xl font-bold text-slate-900">Sign In</h1>
         <img 
           src="https://i.ibb.co/Q3zgx4sJ/50-years-Anniversary.png" 
           alt="50 Year Anniversary"
-          style={{ width: '120px', height: 'auto', objectFit: 'contain' }}
+          style={{ width: '80px', height: '80px', objectFit: 'contain' }}
         />
+      </div>
+
+      {/* Sign In Form */}
+      <div className="space-y-4">
+        {error && (
+          <div className="flex items-center gap-2 text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">
+            <AlertTriangle className="h-4 w-4" />
+            <span>{error}</span>
+          </div>
+        )}
+        <form className="space-y-4" onSubmit={handleSubmit}>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
+            <Input
+              type="email"
+              placeholder="you@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              disabled={loading}
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Password</label>
+            <Input
+              type="password"
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              disabled={loading}
+              required
+            />
+          </div>
+          <Button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            {loading ? 'Signing in...' : 'Sign In'}
+            {!loading && <LogIn className="ml-2 h-4 w-4" />}
+          </Button>
+        </form>
       </div>
     </div>
   )
