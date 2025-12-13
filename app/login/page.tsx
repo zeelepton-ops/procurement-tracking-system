@@ -48,7 +48,7 @@ function LoginForm() {
   return (
     <div className="w-full max-w-2xl shadow-xl rounded-lg overflow-hidden bg-white p-8">
       {/* Logo and Title - Left aligned NBTC, Center Title, Right aligned Anniversary */}
-      <div className="flex items-center justify-between gap-4 mb-8">
+      <div className="flex items-center justify-between gap-4 mb-2">
         <img 
           src="https://i.ibb.co/nMjzX2GS/Logo-NBTC-Transparent.png" 
           alt="NBTC Logo"
@@ -61,6 +61,7 @@ function LoginForm() {
           style={{ width: '100px', height: '100px', objectFit: 'contain', flexShrink: 0 }}
         />
       </div>
+      <p className="text-sm text-slate-600 text-center mb-8">Procurement System</p>
 
       {/* Sign In Form */}
       <div className="space-y-4">
