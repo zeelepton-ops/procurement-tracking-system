@@ -46,63 +46,77 @@ function LoginForm() {
   }
 
   return (
-    <div className="w-full max-w-md shadow-xl rounded-lg overflow-hidden bg-white p-8">
-      {/* Logo and Title - Left aligned NBTC, Center Title, Right aligned Anniversary */}
-      <div className="flex items-center justify-between gap-4 mb-2">
-        <img 
-          src="https://i.ibb.co/nMjzX2GS/Logo-NBTC-Transparent.png" 
-          alt="NBTC Logo"
-          style={{ width: '100px', height: '100px', objectFit: 'contain', flexShrink: 0 }}
-        />
-        <h1 className="text-3xl font-bold text-slate-900 flex-1 text-center">Sign In</h1>
-        <img 
-          src="https://i.ibb.co/Q3zgx4sJ/50-years-Anniversary.png" 
-          alt="50 Year Anniversary"
-          style={{ width: '100px', height: '100px', objectFit: 'contain', flexShrink: 0 }}
-        />
-      </div>
-      <p className="text-sm text-slate-600 text-center mb-8">Procurement System</p>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 p-4">
+      <div className="w-full max-w-md bg-white rounded-lg shadow-lg p-8">
+        {/* Logo and Title Header */}
+        <div className="flex items-center justify-between gap-3 mb-8">
+          <img 
+            src="https://i.ibb.co/nMjzX2GS/Logo-NBTC-Transparent.png" 
+            alt="NBTC Logo"
+            style={{ width: '70px', height: '70px', objectFit: 'contain' }}
+          />
+          <div className="flex-1">
+            <h1 className="text-2xl font-bold text-slate-900">Sign In</h1>
+            <p className="text-sm text-slate-600">Procurement System</p>
+          </div>
+          <img 
+            src="https://i.ibb.co/Q3zgx4sJ/50-years-Anniversary.png" 
+            alt="50 Year Anniversary"
+            style={{ width: '70px', height: '70px', objectFit: 'contain' }}
+          />
+        </div>
 
-      {/* Sign In Form */}
-      <div className="space-y-4">
-        {error && (
-          <div className="flex items-center gap-2 text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">
-            <AlertTriangle className="h-4 w-4" />
-            <span>{error}</span>
-          </div>
-        )}
-        <form className="space-y-4" onSubmit={handleSubmit}>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
-            <Input
-              type="email"
-              placeholder="you@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+        {/* Form */}
+        <div className="space-y-4">
+          {error && (
+            <div className="flex items-center gap-2 text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">
+              <AlertTriangle className="h-4 w-4" />
+              <span>{error}</span>
+            </div>
+          )}
+          <form className="space-y-5" onSubmit={handleSubmit}>
+            <div>
+              <label className="block text-sm font-semibold text-slate-800 mb-2">Email or Username</label>
+              <Input
+                type="text"
+                placeholder="Enter your email or username"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={loading}
+                required
+                className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-slate-800 mb-2">Password</label>
+              <Input
+                type="password"
+                placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={loading}
+                required
+                className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <Button
+              type="submit"
               disabled={loading}
-              required
-            />
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-md transition-colors"
+            >
+              {loading ? 'Signing in...' : 'Sign In'}
+              {!loading && <LogIn className="ml-2 h-4 w-4" />}
+            </Button>
+          </form>
+
+          {/* Register Link */}
+          <div className="flex items-center justify-center gap-2 text-sm text-slate-600 mt-6 pt-6 border-t border-slate-200">
+            <span>Don't have an account?</span>
+            <a href="/register" className="text-blue-600 hover:text-blue-700 font-semibold">
+              Register here
+            </a>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Password</label>
-            <Input
-              type="password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              disabled={loading}
-              required
-            />
-          </div>
-          <Button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-          >
-            {loading ? 'Signing in...' : 'Sign In'}
-            {!loading && <LogIn className="ml-2 h-4 w-4" />}
-          </Button>
-        </form>
+        </div>
       </div>
     </div>
   )
