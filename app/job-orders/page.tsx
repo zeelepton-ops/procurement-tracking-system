@@ -31,6 +31,11 @@ export default function JobOrdersPage() {
   const [jobOrders, setJobOrders] = useState<JobOrder[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
+  const [filters, setFilters] = useState({
+    search: '',
+    priority: 'ALL'
+  })
+  const [selectedJob, setSelectedJob] = useState<JobOrder | null>(null)
   const [formData, setFormData] = useState({
     jobNumber: '',
     productName: '',
@@ -51,6 +56,20 @@ export default function JobOrdersPage() {
   useEffect(() => {
     fetchJobOrders()
   }, [])
+
+  const filteredOrders = jobOrders.filter((order) => {
+    const matchesSearch = filters.search
+      ? `${order.jobNumber} ${order.productName} ${order.clientName || ''} ${order.foreman || ''}`
+          .toLowerCase()
+          .includes(filters.search.toLowerCase())
+      : true
+
+    const matchesPriority = filters.priority === 'ALL'
+      ? true
+      : (order.priority || 'MEDIUM') === filters.priority
+
+    return matchesSearch && matchesPriority
+  })
 
   const fetchJobOrders = async () => {
     try {
@@ -149,10 +168,10 @@ export default function JobOrdersPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-4 flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-slate-900 mb-1">Job Orders</h1>
-            <p className="text-slate-600">Manage workshop job orders</p>
+            <h1 className="text-2xl font-bold text-slate-900 mb-0.5">Job Orders</h1>
+            <p className="text-slate-600 text-sm">Manage workshop job orders</p>
           </div>
           <Button 
             onClick={() => setShowForm(!showForm)}
@@ -171,6 +190,32 @@ export default function JobOrdersPage() {
               </>
             )}
           </Button>
+        </div>
+
+        {/* Filters */}
+        <div className="mb-4 grid grid-cols-1 md:grid-cols-3 gap-2">
+          <div>
+            <Label className="text-xs text-slate-600">Search</Label>
+            <Input
+              value={filters.search}
+              onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+              placeholder="Job #, description, client, foreman"
+              className="h-9 text-sm"
+            />
+          </div>
+          <div className="max-w-xs">
+            <Label className="text-xs text-slate-600">Priority</Label>
+            <select
+              value={filters.priority}
+              onChange={(e) => setFilters({ ...filters, priority: e.target.value })}
+              className="mt-1 h-9 w-full px-3 rounded-md border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="ALL">All</option>
+              <option value="HIGH">High</option>
+              <option value="MEDIUM">Medium</option>
+              <option value="LOW">Low</option>
+            </select>
+          </div>
         </div>
 
         {/* Create Form */}
@@ -368,124 +413,178 @@ export default function JobOrdersPage() {
         )}
 
         {/* Job Orders List */}
-        <div className="grid grid-cols-1 gap-3">
-          {jobOrders.length === 0 ? (
+        <div className="space-y-2">
+          {filteredOrders.length === 0 ? (
             <Card>
-              <CardContent className="py-12 text-center text-slate-500">
-                <Package className="h-12 w-12 mx-auto mb-4 text-slate-300" />
+              <CardContent className="py-10 text-center text-slate-500">
+                <Package className="h-10 w-10 mx-auto mb-3 text-slate-300" />
                 <p>No job orders found</p>
-                <p className="text-sm mt-2">Click "New Job Order" to create one</p>
+                <p className="text-xs mt-1">Adjust filters or create a new job order</p>
               </CardContent>
             </Card>
           ) : (
-            jobOrders.map((order) => (
-              <Card key={order.id} className="hover:shadow-lg transition-shadow">
-                <CardHeader className="pb-2 py-3">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-start gap-3">
-                      <div className="h-10 w-10 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
-                        <Package className="h-5 w-5 text-blue-600" />
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <CardTitle className="text-lg">JO-{order.jobNumber}</CardTitle>
-                          {order.priority && (
-                            <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${
-                              order.priority === 'HIGH' ? 'bg-red-100 text-red-700' :
-                              order.priority === 'MEDIUM' ? 'bg-yellow-100 text-yellow-700' :
-                              'bg-green-100 text-green-700'
-                            }`}>
-                              {order.priority}
-                            </span>
-                          )}
+            <Card className="border border-slate-200">
+              <CardHeader className="py-2">
+                <div className="grid grid-cols-12 gap-2 text-[11px] font-semibold text-slate-600">
+                  <div className="col-span-2">Job # / Priority</div>
+                  <div className="col-span-4">Description</div>
+                  <div className="col-span-2">Client / Foreman</div>
+                  <div className="col-span-2">Created</div>
+                  <div className="col-span-1 text-right">Materials</div>
+                  <div className="col-span-1 text-right">Actions</div>
+                </div>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="divide-y divide-slate-200">
+                  {filteredOrders.map((order) => (
+                    <div
+                      key={order.id}
+                      className={`grid grid-cols-12 items-center gap-2 px-3 py-2 text-[12px] cursor-pointer hover:bg-blue-50 ${selectedJob?.id === order.id ? 'bg-blue-50' : ''}`}
+                      onClick={() => setSelectedJob(order)}
+                    >
+                      <div className="col-span-2 flex items-center gap-2">
+                        <div className={`text-[11px] px-2 py-0.5 rounded-full font-semibold ${
+                          order.priority === 'HIGH' ? 'bg-red-100 text-red-700' :
+                          order.priority === 'MEDIUM' ? 'bg-yellow-100 text-yellow-700' :
+                          'bg-green-100 text-green-700'
+                        }`}>
+                          {order.priority || 'MEDIUM'}
                         </div>
-                        <CardDescription className="text-sm mt-0.5">
-                          {order.productName}
-                        </CardDescription>
-                        {order.clientName && (
-                          <p className="text-xs text-slate-500 mt-1">Client: {order.clientName}</p>
-                        )}
+                        <div className="font-semibold text-slate-900">JO-{order.jobNumber}</div>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {order._count && (
-                        <div className="text-right mr-3">
-                          <div className="text-xs text-slate-500">Materials</div>
-                          <div className="text-xl font-bold text-blue-600">
-                            {order._count.materialRequests}
+                      <div className="col-span-4 truncate" title={order.productName}>{order.productName}</div>
+                      <div className="col-span-2 truncate">
+                        {order.clientName && <span className="block text-slate-800 truncate">{order.clientName}</span>}
+                        {order.foreman && <span className="block text-slate-500 truncate">Foreman: {order.foreman}</span>}
+                      </div>
+                      <div className="col-span-2 text-slate-600">
+                        {new Date(order.createdAt).toLocaleDateString()}
+                      </div>
+                      <div className="col-span-1 text-right font-semibold text-blue-700">
+                        {order._count?.materialRequests ?? 0}
+                      </div>
+                      <div className="col-span-1 flex justify-end">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setDeleteConfirm(order.id)
+                          }}
+                          className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+
+                      {deleteConfirm === order.id && (
+                        <div className="col-span-12 bg-red-50 border border-red-200 rounded px-3 py-2 mt-2" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex items-center justify-between text-[12px] text-red-800">
+                            <p>Delete this job order?</p>
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => handleDelete(order.id)}
+                                className="h-7 text-xs"
+                              >
+                                Delete
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => setDeleteConfirm(null)}
+                                className="h-7 text-xs"
+                              >
+                                Cancel
+                              </Button>
+                            </div>
                           </div>
                         </div>
                       )}
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setDeleteConfirm(order.id)}
-                        className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
                     </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="py-2">
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
-                    {order.foreman && (
-                      <div>
-                        <span className="text-slate-500">Foreman:</span>
-                        <span className="ml-1 font-medium">{order.foreman}</span>
-                      </div>
-                    )}
-                    {order.contactPerson && (
-                      <div>
-                        <span className="text-slate-500">Contact:</span>
-                        <span className="ml-1 font-medium">{order.contactPerson}</span>
-                      </div>
-                    )}
-                    {order.lpoContractNo && (
-                      <div>
-                        <span className="text-slate-500">LPO:</span>
-                        <span className="ml-1 font-medium">{order.lpoContractNo}</span>
-                      </div>
-                    )}
-                    <div>
-                      <span className="text-slate-500">Created:</span>
-                      <span className="ml-1 font-medium">
-                        {new Date(order.createdAt).toLocaleDateString()}
-                      </span>
-                    </div>
-                  </div>
-                </CardContent>
-
-                {/* Delete Confirmation */}
-                {deleteConfirm === order.id && (
-                  <div className="bg-red-50 border-t border-red-200 px-4 py-3">
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm text-red-800">Are you sure you want to delete this job order?</p>
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => handleDelete(order.id)}
-                          className="h-7 text-xs"
-                        >
-                          Delete
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => setDeleteConfirm(null)}
-                          className="h-7 text-xs"
-                        >
-                          Cancel
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </Card>
-            ))
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           )}
         </div>
+
+        {/* Selected job details */}
+        {selectedJob && (
+          <Card className="mt-3 border-blue-100">
+            <CardHeader className="py-3 bg-blue-50">
+              <CardTitle className="text-lg text-blue-900">Job Order Details</CardTitle>
+              <CardDescription>JO-{selectedJob.jobNumber}</CardDescription>
+            </CardHeader>
+            <CardContent className="pt-3 text-sm text-slate-800 space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div>
+                  <div className="text-slate-500 text-xs">Priority</div>
+                  <div>{selectedJob.priority || 'MEDIUM'}</div>
+                </div>
+                <div>
+                  <div className="text-slate-500 text-xs">Client</div>
+                  <div>{selectedJob.clientName || '—'}</div>
+                </div>
+                <div>
+                  <div className="text-slate-500 text-xs">Foreman</div>
+                  <div>{selectedJob.foreman || '—'}</div>
+                </div>
+              </div>
+
+              <div>
+                <div className="text-slate-500 text-xs">Description</div>
+                <div>{selectedJob.productName}</div>
+              </div>
+
+              {selectedJob.workScope && (
+                <div>
+                  <div className="text-slate-500 text-xs">Work Scope</div>
+                  <div>{selectedJob.workScope}</div>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                {selectedJob.contactPerson && (
+                  <div>
+                    <div className="text-slate-500 text-xs">Contact Person</div>
+                    <div>{selectedJob.contactPerson}</div>
+                  </div>
+                )}
+                {selectedJob.phone && (
+                  <div>
+                    <div className="text-slate-500 text-xs">Phone</div>
+                    <div>{selectedJob.phone}</div>
+                  </div>
+                )}
+                {selectedJob.lpoContractNo && (
+                  <div>
+                    <div className="text-slate-500 text-xs">LPO / Contract</div>
+                    <div>{selectedJob.lpoContractNo}</div>
+                  </div>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {selectedJob.drawingRef && (
+                  <div>
+                    <div className="text-slate-500 text-xs">Drawing / Enquiry Ref</div>
+                    <div>{selectedJob.drawingRef}</div>
+                  </div>
+                )}
+                {selectedJob.qaQcInCharge && (
+                  <div>
+                    <div className="text-slate-500 text-xs">QA/QC In Charge</div>
+                    <div>{selectedJob.qaQcInCharge}</div>
+                  </div>
+                )}
+              </div>
+
+              <div className="text-xs text-slate-500">Created: {new Date(selectedJob.createdAt).toLocaleString()}</div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   )

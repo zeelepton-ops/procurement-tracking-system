@@ -4,6 +4,9 @@ import { prisma } from '@/lib/prisma'
 export async function GET() {
   try {
     const jobOrders = await prisma.jobOrder.findMany({
+      where: {
+        isDeleted: false
+      },
       orderBy: {
         createdAt: 'desc'
       },
@@ -79,13 +82,12 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'Job order ID is required' }, { status: 400 })
     }
 
-    // Check if job order has material requests
     const jobOrder = await prisma.jobOrder.findUnique({
       where: { id },
-      include: {
-        _count: {
-          select: { materialRequests: true }
-        }
+      select: {
+        id: true,
+        jobNumber: true,
+        isDeleted: true
       }
     })
 
@@ -93,18 +95,80 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'Job order not found' }, { status: 404 })
     }
 
-    if (jobOrder._count.materialRequests > 0) {
-      return NextResponse.json({ 
-        error: 'Cannot delete job order with existing material requests. Please delete material requests first.' 
+    if (jobOrder.isDeleted) {
+      return NextResponse.json({ message: 'Job order already deleted' }, { status: 200 })
+    }
+
+    const materialRequests = await prisma.materialRequest.findMany({
+      where: { jobOrderId: id },
+      select: { id: true, status: true }
+    })
+
+    // No related MRs: safe hard delete
+    if (materialRequests.length === 0) {
+      await prisma.jobOrder.delete({ where: { id } })
+      return NextResponse.json({ message: 'Job order deleted successfully' })
+    }
+
+    // If any MR is not fully received, block deletion
+    const hasUndelivered = materialRequests.some((mr) => mr.status !== 'RECEIVED')
+    if (hasUndelivered) {
+      return NextResponse.json({
+        error: 'Cannot delete job order with pending material requests. Deletion is only allowed when all related material requests are RECEIVED.'
       }, { status: 400 })
     }
 
-    await prisma.jobOrder.delete({
-      where: { id }
+    const deletionDate = new Date()
+    const deletionNote = `Linked job order ${jobOrder.jobNumber} deleted on ${deletionDate.toISOString()}. Material retained in stock.`
+
+    const receipts = await prisma.materialReceipt.findMany({
+      where: {
+        purchaseOrderItem: {
+          materialRequest: {
+            jobOrderId: id
+          }
+        }
+      },
+      select: { id: true, notes: true }
     })
 
-    return NextResponse.json({ message: 'Job order deleted successfully' })
+    await prisma.$transaction([
+      // Append remark to receipts so stock trace keeps the job link
+      ...receipts.map((receipt) =>
+        prisma.materialReceipt.update({
+          where: { id: receipt.id },
+          data: {
+            notes: receipt.notes
+              ? `${receipt.notes}\n${deletionNote}`
+              : deletionNote
+          }
+        })
+      ),
+      // Log in status history that the job was deleted
+      ...materialRequests.map((mr) =>
+        prisma.statusHistory.create({
+          data: {
+            materialRequestId: mr.id,
+            oldStatus: mr.status,
+            newStatus: mr.status,
+            changedBy: 'system',
+            notes: deletionNote
+          }
+        })
+      ),
+      // Soft-delete the job order so relations stay intact
+      prisma.jobOrder.update({
+        where: { id },
+        data: {
+          isDeleted: true,
+          deletedAt: deletionDate
+        }
+      })
+    ])
+
+    return NextResponse.json({ message: 'Job order deleted. Materials remain in stock with remark recorded.' })
   } catch (error) {
+    console.error('Failed to delete job order:', error)
     return NextResponse.json({ error: 'Failed to delete job order' }, { status: 500 })
   }
 }
