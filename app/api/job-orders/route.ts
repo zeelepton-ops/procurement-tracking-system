@@ -26,25 +26,47 @@ export async function POST(request: Request) {
   try {
     const body = await request.json()
     
-    const jobOrder = await prisma.jobOrder.create({
-      data: {
-        jobNumber: body.jobNumber,
-        productName: body.productName,
-        drawingRef: body.drawingRef || null,
-        clientName: body.clientName || null,
-        contactPerson: body.contactPerson || null,
-        phone: body.phone || null,
-        lpoContractNo: body.lpoContractNo || null,
-        priority: body.priority || 'MEDIUM',
-        foreman: body.foreman || null,
-        workScope: body.workScope || null,
-        qaQcInCharge: body.qaQcInCharge || null
+    // Try creating with all fields first
+    try {
+      const jobOrder = await prisma.jobOrder.create({
+        data: {
+          jobNumber: body.jobNumber,
+          productName: body.productName,
+          drawingRef: body.drawingRef || null,
+          clientName: body.clientName || null,
+          contactPerson: body.contactPerson || null,
+          phone: body.phone || null,
+          lpoContractNo: body.lpoContractNo || null,
+          priority: body.priority || 'MEDIUM',
+          foreman: body.foreman || null,
+          workScope: body.workScope || null,
+          qaQcInCharge: body.qaQcInCharge || null
+        }
+      })
+      
+      return NextResponse.json(jobOrder, { status: 201 })
+    } catch (dbError: any) {
+      // If new fields don't exist, try with old schema
+      if (dbError.code === 'P2009' || dbError.message?.includes('column') || dbError.message?.includes('Unknown field')) {
+        console.log('Database schema not migrated yet, using legacy fields only')
+        const jobOrder = await prisma.jobOrder.create({
+          data: {
+            jobNumber: body.jobNumber,
+            productName: body.productName,
+            drawingRef: body.drawingRef || null
+          }
+        })
+        
+        return NextResponse.json(jobOrder, { status: 201 })
       }
-    })
-    
-    return NextResponse.json(jobOrder, { status: 201 })
-  } catch (error) {
-    return NextResponse.json({ error: 'Failed to create job order' }, { status: 500 })
+      throw dbError
+    }
+  } catch (error: any) {
+    console.error('Failed to create job order:', error)
+    return NextResponse.json({ 
+      error: 'Failed to create job order', 
+      details: error.message 
+    }, { status: 500 })
   }
 }
 
