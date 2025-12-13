@@ -560,17 +560,17 @@ export default function MaterialRequestPage() {
               </CardContent>
             </Card>
           ) : (
-            <Card className="border border-slate-200">
-              <CardHeader className="py-2 px-3">
+            <Card className="border border-slate-200 overflow-hidden">
+              <CardHeader className="py-2 px-3 overflow-x-auto">
                 <div className="grid grid-cols-14 gap-2 text-[11px] font-semibold text-slate-600 min-w-[1200px]">
-                  <div className="col-span-2">Request # / Job #</div>
-                  <div className="col-span-3">Item / Description</div>
-                  <div className="col-span-2">Qty / Unit</div>
-                  <div className="col-span-2">Required Date</div>
-                  <div className="col-span-1">Urgency</div>
-                  <div className="col-span-2">Status</div>
-                  <div className="col-span-1">Action</div>
-                  <div className="col-span-1">Edit</div>
+                  <div className="col-span-2 whitespace-nowrap">Request # / Job #</div>
+                  <div className="col-span-3 whitespace-nowrap">Item / Description</div>
+                  <div className="col-span-2 whitespace-nowrap">Qty / Unit</div>
+                  <div className="col-span-2 whitespace-nowrap">Required Date</div>
+                  <div className="col-span-1 whitespace-nowrap">Urgency</div>
+                  <div className="col-span-2 whitespace-nowrap">Status</div>
+                  <div className="col-span-1 whitespace-nowrap">Action</div>
+                  <div className="col-span-1 whitespace-nowrap">Edit</div>
                 </div>
               </CardHeader>
               <CardContent className="p-0 overflow-x-auto">
