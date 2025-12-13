@@ -42,3 +42,5 @@ coverage/
 # Ignore temporary files
 *.tmp
 *.temp
+.vercel
+.env*.local
