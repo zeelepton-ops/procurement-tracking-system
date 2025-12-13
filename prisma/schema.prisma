@@ -15,7 +15,21 @@ model User {
   email          String   @unique
   name           String
   hashedPassword String
-  role           String   @default("ADMIN") // "ADMIN", "USER"
+  role           String   @default("USER") // "ADMIN", "USER", "MANAGER", "VIEWER"
+  
+  // Additional user details
+  qid            String?
+  joiningDate    DateTime?
+  department     String?
+  position       String?
+  phone          String?
+  
+  // Registration approval
+  status         String   @default("PENDING") // "PENDING", "APPROVED", "REJECTED"
+  approvedBy     String?
+  approvedAt     DateTime?
+  
+  isActive       Boolean  @default(true)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 }

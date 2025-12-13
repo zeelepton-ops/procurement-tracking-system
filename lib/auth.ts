@@ -24,13 +24,25 @@ export const authOptions: NextAuthOptions = {
         console.log('🔍 DATABASE_URL set:', !!process.env.DATABASE_URL)
 
         const user = await prisma.user.findUnique({
-          where: { email: credentials.email },
+          where: { email: credentials.email.toLowerCase() },
         })
 
         console.log('🔍 User found:', !!user)
         if (!user) {
           console.log('❌ User not found in database')
           return null
+        }
+
+        // Check if user account is approved
+        if (user.status !== 'APPROVED') {
+          console.log('❌ User account not approved, status:', user.status)
+          throw new Error(`Account ${user.status.toLowerCase()}, pending approval`)
+        }
+
+        // Check if user account is active
+        if (!user.isActive) {
+          console.log('❌ User account is inactive')
+          throw new Error('Account inactive')
         }
 
         const isValid = await bcrypt.compare(credentials.password, user.hashedPassword)

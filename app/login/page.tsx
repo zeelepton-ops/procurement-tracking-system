@@ -38,7 +38,15 @@ function LoginForm() {
     setLoading(false)
 
     if (result?.error) {
-      setError('Invalid email or password')
+      if (result.error.includes('pending approval')) {
+        setError('Your account is pending admin approval. Please wait for approval.')
+      } else if (result.error.includes('rejected')) {
+        setError('Your registration was rejected. Please contact admin.')
+      } else if (result.error.includes('inactive')) {
+        setError('Your account has been deactivated. Please contact admin.')
+      } else {
+        setError('Invalid email or password')
+      }
       return
     }
 
