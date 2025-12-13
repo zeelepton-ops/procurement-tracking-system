@@ -119,6 +119,10 @@ model MaterialRequestItem {
   quantity          Float
   unit              String
   stockQtyInInventory Float  @default(0)
+  reasonForRequest  String?
+  urgencyLevel      String  @default("NORMAL")
+  requiredDate      DateTime?
+  preferredSupplier String?
   
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt

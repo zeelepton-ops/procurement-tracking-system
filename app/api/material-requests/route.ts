@@ -69,7 +69,11 @@ export async function POST(request: Request) {
             description: item.description,
             quantity: parseFloat(item.quantity),
             unit: item.unit,
-            stockQtyInInventory: parseFloat(item.stockQty || '0')
+            stockQtyInInventory: parseFloat(item.stockQty || '0'),
+            reasonForRequest: item.reasonForRequest || null,
+            urgencyLevel: item.urgencyLevel || 'NORMAL',
+            requiredDate: item.requiredDate ? new Date(item.requiredDate) : null,
+            preferredSupplier: item.preferredSupplier || null
           }))
         } : undefined
       },

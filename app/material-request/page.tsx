@@ -58,7 +58,27 @@ export default function MaterialRequestPage() {
     urgency: 'ALL'
   })
   const [success, setSuccess] = useState(false)
-  const [items, setItems] = useState<Array<{ itemName: string; description: string; quantity: string; unit: string; stockQty: string }>>([{ itemName: '', description: '', quantity: '', unit: 'PCS', stockQty: '0' }])
+  const [items, setItems] = useState<Array<{ 
+    itemName: string; 
+    description: string; 
+    quantity: string; 
+    unit: string; 
+    stockQty: string;
+    reasonForRequest: string;
+    urgencyLevel: string;
+    requiredDate: string;
+    preferredSupplier: string;
+  }>>([{ 
+    itemName: '', 
+    description: '', 
+    quantity: '', 
+    unit: 'PCS', 
+    stockQty: '0',
+    reasonForRequest: '',
+    urgencyLevel: 'NORMAL',
+    requiredDate: '',
+    preferredSupplier: ''
+  }])
   
   const [formData, setFormData] = useState({
     jobOrderId: '',
@@ -170,7 +190,17 @@ export default function MaterialRequestPage() {
           urgencyLevel: 'NORMAL',
           requestedBy: 'Production Team'
         })
-        setItems([{ itemName: '', description: '', quantity: '', unit: 'PCS', stockQty: '0' }])
+        setItems([{ 
+          itemName: '', 
+          description: '', 
+          quantity: '', 
+          unit: 'PCS', 
+          stockQty: '0',
+          reasonForRequest: '',
+          urgencyLevel: 'NORMAL',
+          requiredDate: '',
+          preferredSupplier: ''
+        }])
         
         setTimeout(() => setSuccess(false), 3000)
       }
@@ -229,7 +259,17 @@ export default function MaterialRequestPage() {
   }
 
   const addItemRow = () => {
-    setItems(prev => [...prev, { itemName: '', description: '', quantity: '', unit: 'PCS', stockQty: '0' }])
+    setItems(prev => [...prev, { 
+      itemName: '', 
+      description: '', 
+      quantity: '', 
+      unit: 'PCS', 
+      stockQty: '0',
+      reasonForRequest: '',
+      urgencyLevel: 'NORMAL',
+      requiredDate: '',
+      preferredSupplier: ''
+    }])
   }
 
   const removeItemRow = (index: number) => {
@@ -370,29 +410,33 @@ export default function MaterialRequestPage() {
               {/* Multiple Items */}
               <div>
                 <Label className="text-sm font-semibold mb-2">Items *</Label>
-                <div className="space-y-2">
-                  <div className="grid grid-cols-12 gap-2 text-[11px] font-semibold text-slate-600 px-2">
-                    <div className="col-span-3">Item Name</div>
-                    <div className="col-span-4">Description</div>
-                    <div className="col-span-2">Qty</div>
-                    <div className="col-span-1">Unit</div>
-                    <div className="col-span-1">Stock</div>
-                    <div className="col-span-1"></div>
+                <div className="space-y-2 overflow-x-auto">
+                  <div className="grid grid-cols-[2fr_3fr_1fr_0.8fr_0.8fr_2fr_1fr_1.2fr_1.5fr_0.5fr] gap-2 text-[11px] font-semibold text-slate-600 px-2 min-w-[1400px]">
+                    <div>Item Name</div>
+                    <div>Description</div>
+                    <div>Qty</div>
+                    <div>Unit</div>
+                    <div>Stock</div>
+                    <div>Reason</div>
+                    <div>Urgency</div>
+                    <div>Req. Date</div>
+                    <div>Supplier</div>
+                    <div></div>
                   </div>
                   {items.map((item, idx) => (
-                    <div key={idx} className="grid grid-cols-12 gap-2">
+                    <div key={idx} className="grid grid-cols-[2fr_3fr_1fr_0.8fr_0.8fr_2fr_1fr_1.2fr_1.5fr_0.5fr] gap-2 min-w-[1400px]">
                       <Input
                         value={item.itemName}
                         onChange={(e) => updateItemField(idx, 'itemName', e.target.value)}
                         placeholder="Item"
-                        className="col-span-3 h-8 text-xs"
+                        className="h-8 text-xs"
                         required
                       />
                       <Input
                         value={item.description}
                         onChange={(e) => updateItemField(idx, 'description', e.target.value)}
                         placeholder="Description/Specs"
-                        className="col-span-4 h-8 text-xs"
+                        className="h-8 text-xs"
                         required
                       />
                       <Input
@@ -400,14 +444,14 @@ export default function MaterialRequestPage() {
                         value={item.quantity}
                         onChange={(e) => updateItemField(idx, 'quantity', e.target.value)}
                         placeholder="Qty"
-                        className="col-span-2 h-8 text-xs"
+                        className="h-8 text-xs"
                         step="0.01"
                         required
                       />
                       <select
                         value={item.unit}
                         onChange={(e) => updateItemField(idx, 'unit', e.target.value)}
-                        className="col-span-1 h-8 px-1 rounded-md border border-slate-300 text-xs"
+                        className="h-8 px-1 rounded-md border border-slate-300 text-xs"
                       >
                         <option value="PCS">PCS</option>
                         <option value="KG">KG</option>
@@ -420,14 +464,42 @@ export default function MaterialRequestPage() {
                         value={item.stockQty}
                         onChange={(e) => updateItemField(idx, 'stockQty', e.target.value)}
                         placeholder="0"
-                        className="col-span-1 h-8 text-xs"
+                        className="h-8 text-xs"
                         step="0.01"
+                      />
+                      <Input
+                        value={item.reasonForRequest}
+                        onChange={(e) => updateItemField(idx, 'reasonForRequest', e.target.value)}
+                        placeholder="Reason"
+                        className="h-8 text-xs"
+                      />
+                      <select
+                        value={item.urgencyLevel}
+                        onChange={(e) => updateItemField(idx, 'urgencyLevel', e.target.value)}
+                        className="h-8 px-1 rounded-md border border-slate-300 text-xs"
+                      >
+                        <option value="LOW">Low</option>
+                        <option value="NORMAL">Normal</option>
+                        <option value="HIGH">High</option>
+                        <option value="CRITICAL">Critical</option>
+                      </select>
+                      <Input
+                        type="date"
+                        value={item.requiredDate}
+                        onChange={(e) => updateItemField(idx, 'requiredDate', e.target.value)}
+                        className="h-8 text-xs"
+                      />
+                      <Input
+                        value={item.preferredSupplier}
+                        onChange={(e) => updateItemField(idx, 'preferredSupplier', e.target.value)}
+                        placeholder="Supplier"
+                        className="h-8 text-xs"
                       />
                       <button
                         type="button"
                         onClick={() => removeItemRow(idx)}
                         disabled={items.length === 1}
-                        className="col-span-1 px-2 py-1 text-xs bg-red-50 text-red-600 rounded hover:bg-red-100 disabled:opacity-30 disabled:cursor-not-allowed"
+                        className="px-2 py-1 text-xs bg-red-50 text-red-600 rounded hover:bg-red-100 disabled:opacity-30 disabled:cursor-not-allowed"
                       >
                         ×
                       </button>
@@ -443,70 +515,14 @@ export default function MaterialRequestPage() {
                 </div>
               </div>
 
-              {/* Reason and Dates */}
+              {/* Requested By */}
               <div>
-                <Label className="text-sm font-semibold">Reason for Request *</Label>
-                <Textarea
-                  value={formData.reasonForRequest}
-                  onChange={(e) => setFormData({ ...formData, reasonForRequest: e.target.value })}
-                  placeholder="Explain why this material is needed"
-                  rows={2}
-                  required
-                  className="mt-1"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <div>
-                  <Label className="text-sm font-semibold flex items-center gap-1">
-                    <Clock className="h-3 w-3" />
-                    Required Date *
-                  </Label>
-                  <Input
-                    type="date"
-                    value={formData.requiredDate}
-                    onChange={(e) => setFormData({ ...formData, requiredDate: e.target.value })}
-                    required
-                    className="mt-1 h-9"
-                  />
-                </div>
-
-                <div>
-                  <Label className="text-sm font-semibold flex items-center gap-1">
-                    <AlertTriangle className="h-3 w-3" />
-                    Urgency *
-                  </Label>
-                  <Select
-                    value={formData.urgencyLevel}
-                    onChange={(e) => setFormData({ ...formData, urgencyLevel: e.target.value })}
-                    required
-                    className="mt-1"
-                  >
-                    <option value="LOW">Low</option>
-                    <option value="NORMAL">Normal</option>
-                    <option value="HIGH">High</option>
-                    <option value="CRITICAL">Critical</option>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label className="text-sm font-semibold">Requested By *</Label>
-                  <Input
-                    value={formData.requestedBy}
-                    onChange={(e) => setFormData({ ...formData, requestedBy: e.target.value })}
-                    placeholder="Your name"
-                    required
-                    className="mt-1 h-9"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <Label className="text-sm font-semibold">Preferred Supplier</Label>
+                <Label className="text-sm font-semibold">Requested By *</Label>
                 <Input
-                  value={formData.preferredSupplier}
-                  onChange={(e) => setFormData({ ...formData, preferredSupplier: e.target.value })}
-                  placeholder="Optional"
+                  value={formData.requestedBy}
+                  onChange={(e) => setFormData({ ...formData, requestedBy: e.target.value })}
+                  placeholder="Your name"
+                  required
                   className="mt-1 h-9"
                 />
               </div>

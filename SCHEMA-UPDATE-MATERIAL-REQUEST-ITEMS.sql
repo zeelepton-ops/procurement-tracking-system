@@ -10,6 +10,10 @@ CREATE TABLE IF NOT EXISTS "MaterialRequestItem" (
   "quantity" DOUBLE PRECISION NOT NULL,
   "unit" TEXT NOT NULL,
   "stockQtyInInventory" DOUBLE PRECISION DEFAULT 0,
+  "reasonForRequest" TEXT,
+  "urgencyLevel" TEXT DEFAULT 'NORMAL',
+  "requiredDate" TIMESTAMP(3),
+  "preferredSupplier" TEXT,
   "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
   "updatedAt" TIMESTAMP(3) NOT NULL,
   CONSTRAINT "MaterialRequestItem_materialRequestId_fkey" 
