@@ -29,7 +29,7 @@ export default function Header() {
             <Link href="/dashboard" className="flex items-center gap-3">
               {/* NBTC Logo */}
               <img 
-                src="/nbtc-logo.png" 
+                src="https://i.ibb.co/FBwWTHX/nbtc-logo.png" 
                 alt="NBTC Logo"
                 width={45}
                 height={45}
@@ -41,7 +41,7 @@ export default function Header() {
             {/* 50 Year Anniversary Badge */}
             <div className="hidden lg:flex items-center px-3 py-2 bg-gradient-to-r from-purple-100 to-cyan-100 rounded-full border border-purple-200">
               <img 
-                src="/50-anniversary.png" 
+                src="https://i.ibb.co/9qY7FJZ/50-anniversary.png" 
                 alt="50 Year Anniversary"
                 width={32}
                 height={32}
