@@ -47,7 +47,7 @@ function LoginForm() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 p-4">
-      <div className="w-full max-w-md bg-white rounded-lg shadow-lg p-8">
+      <div className="w-full max-w-lg bg-white rounded-lg shadow-lg p-8">
         {/* Logo and Title Header */}
         <div className="flex items-center justify-between gap-4 mb-8">
           <img 
