@@ -21,12 +21,20 @@ model User {
 }
 
 model JobOrder {
-  id          String   @id @default(cuid())
-  jobNumber   String   @unique
-  productName String
-  drawingRef  String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id             String   @id @default(cuid())
+  jobNumber      String   @unique
+  productName    String
+  drawingRef     String?
+  clientName     String?
+  contactPerson  String?
+  phone          String?
+  lpoContractNo  String?
+  priority       String?  @default("MEDIUM") // HIGH, MEDIUM, LOW
+  foreman        String?
+  workScope      String?
+  qaQcInCharge   String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
   
   materialRequests MaterialRequest[]
 }
