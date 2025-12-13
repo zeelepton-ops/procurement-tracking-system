@@ -2,6 +2,7 @@
 
 import { useSession, signOut } from 'next-auth/react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Package, FileText, BarChart3, LogOut, Briefcase } from 'lucide-react'
@@ -28,20 +29,21 @@ export default function Header() {
           <div className="flex items-center gap-6">
             <Link href="/dashboard" className="flex items-center gap-3">
               {/* NBTC Logo */}
-              <img 
-                src="https://i.ibb.co/FBwWTHX/nbtc-logo.png" 
+              <Image 
+                src="/nbtc-logo.png" 
                 alt="NBTC Logo"
                 width={45}
                 height={45}
                 className="object-contain"
+                priority
               />
               <span className="text-xl font-bold text-slate-900">Procurement System</span>
             </Link>
             
             {/* 50 Year Anniversary Badge */}
             <div className="hidden lg:flex items-center px-3 py-2 bg-gradient-to-r from-purple-100 to-cyan-100 rounded-full border border-purple-200">
-              <img 
-                src="https://i.ibb.co/9qY7FJZ/50-anniversary.png" 
+              <Image 
+                src="/50-anniversary.png" 
                 alt="50 Year Anniversary"
                 width={32}
                 height={32}
