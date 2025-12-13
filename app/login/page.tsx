@@ -46,13 +46,13 @@ function LoginForm() {
   }
 
   return (
-    <div className="w-full max-w-6xl shadow-xl rounded-lg overflow-hidden bg-white flex flex-col md:flex-row items-center">
+    <div className="w-full max-w-4xl shadow-xl rounded-lg overflow-hidden bg-white flex flex-col md:flex-row items-center">
       {/* NBTC Logo - Left */}
-      <div className="w-full md:w-1/4 bg-gray-50 flex items-center justify-center p-6">
+      <div className="w-full md:w-1/4 bg-gray-50 flex items-center justify-center p-4">
         <img 
           src="https://i.ibb.co/nMjzX2GS/Logo-NBTC-Transparent.png" 
           alt="NBTC Logo"
-          style={{ width: '180px', height: 'auto', objectFit: 'contain' }}
+          style={{ width: '120px', height: 'auto', objectFit: 'contain' }}
         />
       </div>
 
@@ -107,11 +107,11 @@ function LoginForm() {
       </Card>
 
       {/* 50 Year Anniversary Logo - Right */}
-      <div className="w-full md:w-1/4 bg-gray-50 flex items-center justify-center p-6">
+      <div className="w-full md:w-1/4 bg-gray-50 flex items-center justify-center p-4">
         <img 
           src="https://i.ibb.co/Q3zgx4sJ/50-years-Anniversary.png" 
           alt="50 Year Anniversary"
-          style={{ width: '180px', height: 'auto', objectFit: 'contain' }}
+          style={{ width: '120px', height: 'auto', objectFit: 'contain' }}
         />
       </div>
     </div>
