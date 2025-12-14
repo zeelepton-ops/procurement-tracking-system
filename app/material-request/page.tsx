@@ -51,6 +51,8 @@ export default function MaterialRequestPage() {
   const [loading, setLoading] = useState(false)
   const [showForm, setShowForm] = useState(false)
   const [selectedRequest, setSelectedRequest] = useState<MaterialRequest | null>(null)
+  const [isEditing, setIsEditing] = useState(false)
+  const [editData, setEditData] = useState<any>({})
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
   const [filters, setFilters] = useState({
     search: '',
@@ -145,6 +147,49 @@ export default function MaterialRequestPage() {
 
     return matchesSearch && matchesStatus && matchesUrgency
   })
+
+  const startEdit = (req: any) => {
+    setSelectedRequest(req)
+    setIsEditing(true)
+    setEditData({
+      id: req.id,
+      description: req.description,
+      quantity: req.quantity,
+      unit: req.unit,
+      requiredDate: new Date(req.requiredDate).toISOString().slice(0,10),
+      urgencyLevel: req.urgencyLevel,
+      reasonForRequest: req.reasonForRequest,
+      preferredSupplier: req.preferredSupplier,
+      status: req.status
+    })
+  }
+
+  const saveEdit = async () => {
+    try {
+      setLoading(true)
+      const res = await fetch('/api/material-requests', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...editData,
+          requiredDate: new Date(editData.requiredDate)
+        })
+      })
+      if (res.ok) {
+        setIsEditing(false)
+        setSelectedRequest(null)
+        await fetchMaterialRequests()
+      } else {
+        const error = await res.json()
+        alert(error.error || 'Failed to save changes')
+      }
+    } catch (e) {
+      console.error('Failed to save changes:', e)
+      alert('Failed to save changes')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const handleItemNameChange = (itemName: string) => {
     const inventoryItem = inventory.find(item => item.itemName === itemName)
@@ -639,7 +684,7 @@ export default function MaterialRequestPage() {
                       </div>
                       <div className="w-[80px] flex-shrink-0">
                         <button
-                          onClick={() => setSelectedRequest(req)}
+                          onClick={() => startEdit(req)}
                           className="px-2 py-0.5 bg-blue-600 text-white text-[11px] rounded hover:bg-blue-700"
                         >
                           Edit
@@ -655,7 +700,7 @@ export default function MaterialRequestPage() {
         </div>
 
         {/* Selected request details */}
-        {selectedRequest && (
+        {selectedRequest && !isEditing && (
           <Card className="mt-3 border-blue-100">
             <CardHeader className="py-3 bg-blue-50">
               <CardTitle className="text-lg text-blue-900">Material Request Details</CardTitle>
@@ -726,6 +771,74 @@ export default function MaterialRequestPage() {
                     {selectedRequest.status.replace(/_/g, ' ')}
                   </span>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Edit form */}
+        {selectedRequest && isEditing && (
+          <Card className="mt-3 border-blue-100">
+            <CardHeader className="py-3 bg-blue-50">
+              <CardTitle className="text-lg text-blue-900">Edit Material Request</CardTitle>
+              <CardDescription>{selectedRequest.requestNumber}</CardDescription>
+            </CardHeader>
+            <CardContent className="pt-3 text-sm text-slate-800 space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div>
+                  <Label>Description</Label>
+                  <Input value={editData.description || ''} onChange={(e) => setEditData({ ...editData, description: e.target.value })} />
+                </div>
+                <div>
+                  <Label>Quantity</Label>
+                  <Input type="number" value={editData.quantity || ''} onChange={(e) => setEditData({ ...editData, quantity: parseFloat(e.target.value) })} />
+                </div>
+                <div>
+                  <Label>Unit</Label>
+                  <Select value={editData.unit || ''} onChange={(e) => setEditData({ ...editData, unit: e.target.value })}>
+                    <option value="KG">KG</option>
+                    <option value="METER">METER</option>
+                    <option value="PCS">PCS</option>
+                  </Select>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div>
+                  <Label>Required Date</Label>
+                  <Input type="date" value={editData.requiredDate || ''} onChange={(e) => setEditData({ ...editData, requiredDate: e.target.value })} />
+                </div>
+                <div>
+                  <Label>Urgency</Label>
+                  <Select value={editData.urgencyLevel || 'NORMAL'} onChange={(e) => setEditData({ ...editData, urgencyLevel: e.target.value })}>
+                    <option value="LOW">LOW</option>
+                    <option value="NORMAL">NORMAL</option>
+                    <option value="HIGH">HIGH</option>
+                    <option value="CRITICAL">CRITICAL</option>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Status</Label>
+                  <Select value={editData.status || 'PENDING'} onChange={(e) => setEditData({ ...editData, status: e.target.value })}>
+                    <option value="PENDING">PENDING</option>
+                    <option value="IN_PROCUREMENT">IN_PROCUREMENT</option>
+                    <option value="ORDERED">ORDERED</option>
+                    <option value="PARTIALLY_RECEIVED">PARTIALLY_RECEIVED</option>
+                    <option value="RECEIVED">RECEIVED</option>
+                    <option value="CANCELLED">CANCELLED</option>
+                  </Select>
+                </div>
+              </div>
+              <div>
+                <Label>Reason for Request</Label>
+                <Textarea value={editData.reasonForRequest || ''} onChange={(e) => setEditData({ ...editData, reasonForRequest: e.target.value })} />
+              </div>
+              <div>
+                <Label>Preferred Supplier</Label>
+                <Input value={editData.preferredSupplier || ''} onChange={(e) => setEditData({ ...editData, preferredSupplier: e.target.value })} />
+              </div>
+              <div className="flex gap-2">
+                <Button onClick={saveEdit} disabled={loading}>Save</Button>
+                <Button variant="secondary" onClick={() => { setIsEditing(false); setSelectedRequest(null) }}>Cancel</Button>
               </div>
             </CardContent>
           </Card>

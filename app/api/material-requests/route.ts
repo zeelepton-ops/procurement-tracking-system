@@ -241,3 +241,65 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: 'Failed to delete material request' }, { status: 500 })
   }
 }
+
+export async function PUT(request: Request) {
+  try {
+    const session = await getServerSession(authOptions)
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const body = await request.json()
+    const { id, ...updateData } = body
+
+    if (!id) {
+      return NextResponse.json({ error: 'Material request ID is required' }, { status: 400 })
+    }
+
+    const existing = await prisma.materialRequest.findUnique({ where: { id } })
+    if (!existing) {
+      return NextResponse.json({ error: 'Material request not found' }, { status: 404 })
+    }
+
+    const userRole = session.user.role || 'USER'
+    if (!canEditOrDelete(existing.createdAt, userRole)) {
+      return NextResponse.json({ 
+        error: 'You do not have permission to edit this material request. It can only be edited within 4 days or by an admin.' 
+      }, { status: 403 })
+    }
+
+    const changes: Record<string, any> = {}
+    Object.keys(updateData).forEach(key => {
+      if ((updateData as any)[key] !== (existing as any)[key]) {
+        changes[key] = {
+          from: (existing as any)[key],
+          to: (updateData as any)[key]
+        }
+      }
+    })
+
+    const updated = await prisma.materialRequest.update({
+      where: { id },
+      data: {
+        ...updateData,
+        lastEditedBy: session.user.email,
+        lastEditedAt: new Date()
+      }
+    })
+
+    if (Object.keys(changes).length > 0) {
+      await prisma.materialRequestEditHistory.create({
+        data: {
+          materialRequestId: id,
+          editedBy: session.user.email || 'unknown',
+          changesMade: JSON.stringify(changes)
+        }
+      })
+    }
+
+    return NextResponse.json(updated)
+  } catch (error: any) {
+    console.error('Failed to update material request:', error)
+    return NextResponse.json({ error: 'Failed to update material request', details: error.message }, { status: 500 })
+  }
+}
