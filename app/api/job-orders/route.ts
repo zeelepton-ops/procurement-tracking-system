@@ -201,16 +201,11 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ message: 'Job order deleted successfully' })
     }
 
-    // If any MR is not fully received, block deletion
-    const hasUndelivered = materialRequests.some((mr) => mr.status !== 'RECEIVED')
-    if (hasUndelivered) {
-      return NextResponse.json({
-        error: 'Cannot delete job order with pending material requests. Deletion is only allowed when all related material requests are RECEIVED.'
-      }, { status: 400 })
-    }
+    // Proceed with soft delete even if some material requests are not fully received
+    // This keeps stock and procurement trace intact while removing the job order from active lists
 
     const deletionDate = new Date()
-    const deletionNote = `Linked job order ${jobOrder.jobNumber} deleted on ${deletionDate.toISOString()}. Material retained in stock.`
+    const deletionNote = `Linked job order ${jobOrder.jobNumber} deleted on ${deletionDate.toISOString()}. Materials and requests remain for traceability.`
 
     const receipts = await prisma.materialReceipt.findMany({
       where: {
