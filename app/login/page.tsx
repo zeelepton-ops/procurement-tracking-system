@@ -3,6 +3,7 @@
 import { Suspense, useState, useEffect } from 'react'
 import { signIn, useSession } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -116,9 +117,9 @@ function LoginForm() {
           {/* Register Link */}
           <div className="flex items-center justify-center gap-2 text-sm text-slate-600 mt-6 pt-6 border-t border-slate-200">
             <span>Don't have an account?</span>
-            <a href="/register" className="text-blue-600 hover:text-blue-700 font-semibold">
+            <Link href="/register" className="text-blue-600 hover:text-blue-700 font-semibold">
               Register here
-            </a>
+            </Link>
           </div>
         </div>
       </div>
