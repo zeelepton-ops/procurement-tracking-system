@@ -135,8 +135,10 @@ export async function POST(request: Request) {
 export async function DELETE(request: Request) {
   try {
     const session = await getServerSession(authOptions)
+    console.log('Delete request - Session:', session?.user)
+    
     if (!session?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: 'Unauthorized - Please log in' }, { status: 401 })
     }
 
     const { searchParams } = new URL(request.url)
@@ -164,9 +166,18 @@ export async function DELETE(request: Request) {
 
     // Check permission
     const userRole = session.user.role || 'USER'
-    if (!canEditOrDelete(materialRequest.createdAt, userRole)) {
+    const createdAt = materialRequest.createdAt || new Date()
+    
+    console.log('Permission check:', { 
+      userRole, 
+      createdAt, 
+      canDelete: canEditOrDelete(createdAt, userRole) 
+    })
+    
+    if (!canEditOrDelete(createdAt, userRole)) {
+      const daysOld = Math.floor((new Date().getTime() - new Date(createdAt).getTime()) / (1000 * 60 * 60 * 24))
       return NextResponse.json({ 
-        error: 'You do not have permission to delete this material request. It can only be deleted within 4 days or by an admin.' 
+        error: `You do not have permission to delete this material request. It was created ${daysOld} days ago and can only be deleted within 4 days or by an admin.` 
       }, { status: 403 })
     }
 
