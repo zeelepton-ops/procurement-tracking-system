@@ -853,13 +853,27 @@ export default function JobOrdersPage() {
 
         {/* Edit Job Order Modal */}
         {editingJob && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50" onClick={() => setEditingJob(null)}>
-            <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-              <CardHeader className="bg-blue-50 py-3">
-                <CardTitle className="text-blue-900 text-lg">Edit Job Order</CardTitle>
-                <CardDescription>JO-{editingJob.jobNumber}</CardDescription>
-              </CardHeader>
-              <CardContent className="pt-4">
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 overflow-y-auto" onClick={() => setEditingJob(null)}>
+            <div className="w-full max-w-5xl my-8" onClick={(e) => e.stopPropagation()}>
+              <Card className="w-full">
+                <CardHeader className="bg-blue-50 py-3 sticky top-0 z-10">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="text-blue-900 text-lg">Edit Job Order</CardTitle>
+                      <CardDescription>JO-{editingJob.jobNumber}</CardDescription>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setEditingJob(null)}
+                      className="h-8 w-8 p-0"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-4 max-h-[calc(90vh-100px)] overflow-y-auto">
                 <form onSubmit={handleEditSubmit} className="space-y-4">
                   {/* Basic Information */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -1078,7 +1092,7 @@ export default function JobOrdersPage() {
                     </div>
                   )}
 
-                  <div className="flex gap-2 pt-2">
+                  <div className="flex gap-2 pt-2 sticky bottom-0 bg-white py-3 border-t">
                     <Button 
                       type="submit" 
                       disabled={submitting}
@@ -1102,6 +1116,7 @@ export default function JobOrdersPage() {
                 </form>
               </CardContent>
             </Card>
+            </div>
           </div>
         )}
       </div>
