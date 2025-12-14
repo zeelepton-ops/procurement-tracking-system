@@ -4,10 +4,39 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { canEditOrDelete } from '@/lib/permissions'
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    // Try to fetch with items, but fall back if items table doesn't exist yet
-    let includeItems = true
+    const { searchParams } = new URL(request.url)
+    const summary = searchParams.get('summary')
+    const page = parseInt(searchParams.get('page') || '1', 10)
+    const pageSize = parseInt(searchParams.get('pageSize') || '50', 10)
+    const skip = Math.max(0, (page - 1) * pageSize)
+
+    // Lightweight summary mode for faster list loading
+    if (summary) {
+      const requests = await prisma.materialRequest.findMany({
+        where: { isDeleted: false },
+        select: {
+          id: true,
+          requestNumber: true,
+          itemName: true,
+          description: true,
+          quantity: true,
+          unit: true,
+          stockQtyInInventory: true,
+          requiredDate: true,
+          urgencyLevel: true,
+          status: true,
+          jobOrder: { select: { jobNumber: true } }
+        },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: pageSize
+      })
+      return NextResponse.json(requests)
+    }
+
+    // Full payload (fallback)
     let requests
     
     try {
