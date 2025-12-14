@@ -22,6 +22,8 @@ interface JobOrder {
   workScope: string | null
   qaQcInCharge: string | null
   createdAt: string
+  lastEditedBy: string | null
+  lastEditedAt: string | null
   _count?: {
     materialRequests: number
   }
@@ -52,6 +54,20 @@ export default function JobOrdersPage() {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
+  const [editingJob, setEditingJob] = useState<JobOrder | null>(null)
+  const [editFormData, setEditFormData] = useState({
+    jobNumber: '',
+    productName: '',
+    drawingRef: '',
+    clientName: '',
+    contactPerson: '',
+    phone: '',
+    lpoContractNo: '',
+    priority: 'MEDIUM',
+    foreman: '',
+    workScope: '',
+    qaQcInCharge: ''
+  })
 
   useEffect(() => {
     fetchJobOrders()
@@ -150,6 +166,56 @@ export default function JobOrdersPage() {
       fetchJobOrders()
     } catch (err: any) {
       alert(err.message)
+    }
+  }
+
+  const handleEditClick = (job: JobOrder) => {
+    setEditingJob(job)
+    setEditFormData({
+      jobNumber: job.jobNumber,
+      productName: job.productName,
+      drawingRef: job.drawingRef || '',
+      clientName: job.clientName || '',
+      contactPerson: job.contactPerson || '',
+      phone: job.phone || '',
+      lpoContractNo: job.lpoContractNo || '',
+      priority: job.priority || 'MEDIUM',
+      foreman: job.foreman || '',
+      workScope: job.workScope || '',
+      qaQcInCharge: job.qaQcInCharge || ''
+    })
+  }
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!editingJob) return
+
+    setError('')
+    setSubmitting(true)
+
+    try {
+      const res = await fetch('/api/job-orders', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: editingJob.id,
+          ...editFormData
+        })
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to update job order')
+      }
+
+      setEditingJob(null)
+      setSelectedJob(data)
+      fetchJobOrders()
+    } catch (err: any) {
+      setError(err.message)
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -514,8 +580,21 @@ export default function JobOrdersPage() {
         {selectedJob && (
           <Card className="mt-3 border-blue-100">
             <CardHeader className="py-3 bg-blue-50">
-              <CardTitle className="text-lg text-blue-900">Job Order Details</CardTitle>
-              <CardDescription>JO-{selectedJob.jobNumber}</CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-lg text-blue-900">Job Order Details</CardTitle>
+                  <CardDescription>JO-{selectedJob.jobNumber}</CardDescription>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleEditClick(selectedJob)}
+                  className="h-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                >
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit
+                </Button>
+              </div>
             </CardHeader>
             <CardContent className="pt-3 text-sm text-slate-800 space-y-3">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -581,9 +660,189 @@ export default function JobOrdersPage() {
                 )}
               </div>
 
-              <div className="text-xs text-slate-500">Created: {new Date(selectedJob.createdAt).toLocaleString()}</div>
+              <div className="border-t pt-3 space-y-1">
+                <div className="text-xs text-slate-500">Created: {new Date(selectedJob.createdAt).toLocaleString()}</div>
+                {selectedJob.lastEditedBy && selectedJob.lastEditedAt && (
+                  <div className="text-xs text-blue-600">
+                    Last edited: {new Date(selectedJob.lastEditedAt).toLocaleString()} by {selectedJob.lastEditedBy}
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
+        )}
+
+        {/* Edit Job Order Modal */}
+        {editingJob && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50" onClick={() => setEditingJob(null)}>
+            <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+              <CardHeader className="bg-blue-50 py-3">
+                <CardTitle className="text-blue-900 text-lg">Edit Job Order</CardTitle>
+                <CardDescription>JO-{editingJob.jobNumber}</CardDescription>
+              </CardHeader>
+              <CardContent className="pt-4">
+                <form onSubmit={handleEditSubmit} className="space-y-4">
+                  {/* Basic Information */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div>
+                      <Label htmlFor="edit-jobNumber" className="text-sm font-semibold">Job Number *</Label>
+                      <Input
+                        id="edit-jobNumber"
+                        value={editFormData.jobNumber}
+                        onChange={(e) => setEditFormData({ ...editFormData, jobNumber: e.target.value })}
+                        required
+                        className="mt-1 h-9"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="edit-foreman" className="text-sm font-semibold">Foreman</Label>
+                      <Input
+                        id="edit-foreman"
+                        value={editFormData.foreman}
+                        onChange={(e) => setEditFormData({ ...editFormData, foreman: e.target.value })}
+                        className="mt-1 h-9"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="edit-priority" className="text-sm font-semibold">Priority *</Label>
+                      <select
+                        id="edit-priority"
+                        value={editFormData.priority}
+                        onChange={(e) => setEditFormData({ ...editFormData, priority: e.target.value })}
+                        required
+                        className="mt-1 h-9 w-full px-3 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="HIGH">HIGH</option>
+                        <option value="MEDIUM">MEDIUM</option>
+                        <option value="LOW">LOW</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Client Information */}
+                  <div className="border-t pt-4">
+                    <h3 className="text-sm font-bold text-slate-700 mb-3">Client Information</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div>
+                        <Label htmlFor="edit-clientName" className="text-sm font-semibold">Client Name *</Label>
+                        <Input
+                          id="edit-clientName"
+                          value={editFormData.clientName}
+                          onChange={(e) => setEditFormData({ ...editFormData, clientName: e.target.value })}
+                          required
+                          className="mt-1 h-9"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="edit-contactPerson" className="text-sm font-semibold">Contact Person</Label>
+                        <Input
+                          id="edit-contactPerson"
+                          value={editFormData.contactPerson}
+                          onChange={(e) => setEditFormData({ ...editFormData, contactPerson: e.target.value })}
+                          className="mt-1 h-9"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="edit-phone" className="text-sm font-semibold">Phone</Label>
+                        <Input
+                          id="edit-phone"
+                          value={editFormData.phone}
+                          onChange={(e) => setEditFormData({ ...editFormData, phone: e.target.value })}
+                          className="mt-1 h-9"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="edit-lpoContractNo" className="text-sm font-semibold">LPO / Contract No</Label>
+                        <Input
+                          id="edit-lpoContractNo"
+                          value={editFormData.lpoContractNo}
+                          onChange={(e) => setEditFormData({ ...editFormData, lpoContractNo: e.target.value })}
+                          className="mt-1 h-9"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Work Details */}
+                  <div className="border-t pt-4">
+                    <h3 className="text-sm font-bold text-slate-700 mb-3">Work Details</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div>
+                        <Label htmlFor="edit-productName" className="text-sm font-semibold">Product / Job Description *</Label>
+                        <Textarea
+                          id="edit-productName"
+                          value={editFormData.productName}
+                          onChange={(e) => setEditFormData({ ...editFormData, productName: e.target.value })}
+                          required
+                          className="mt-1"
+                          rows={3}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="edit-workScope" className="text-sm font-semibold">Work Scope</Label>
+                        <Textarea
+                          id="edit-workScope"
+                          value={editFormData.workScope}
+                          onChange={(e) => setEditFormData({ ...editFormData, workScope: e.target.value })}
+                          className="mt-1"
+                          rows={3}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                      <Label htmlFor="edit-drawingRef" className="text-sm font-semibold">Drawing / Enquiry Reference</Label>
+                      <Input
+                        id="edit-drawingRef"
+                        value={editFormData.drawingRef}
+                        onChange={(e) => setEditFormData({ ...editFormData, drawingRef: e.target.value })}
+                        className="mt-1 h-9"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="edit-qaQcInCharge" className="text-sm font-semibold">QA/QC In Charge</Label>
+                      <Input
+                        id="edit-qaQcInCharge"
+                        value={editFormData.qaQcInCharge}
+                        onChange={(e) => setEditFormData({ ...editFormData, qaQcInCharge: e.target.value })}
+                        className="mt-1 h-9"
+                      />
+                    </div>
+                  </div>
+
+                  {error && (
+                    <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded text-sm">
+                      {error}
+                    </div>
+                  )}
+
+                  <div className="flex gap-2 pt-2">
+                    <Button 
+                      type="submit" 
+                      disabled={submitting}
+                      className="bg-blue-600 hover:bg-blue-700"
+                      size="sm"
+                    >
+                      {submitting ? 'Saving...' : 'Save Changes'}
+                    </Button>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => {
+                        setEditingJob(null)
+                        setError('')
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
+          </div>
         )}
       </div>
     </div>
