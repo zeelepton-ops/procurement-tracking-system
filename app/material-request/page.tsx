@@ -561,53 +561,54 @@ export default function MaterialRequestPage() {
             </Card>
           ) : (
             <Card className="border border-slate-200 overflow-hidden">
-              <CardHeader className="py-2 px-3 overflow-x-auto">
-                <div className="grid grid-cols-14 gap-2 text-[11px] font-semibold text-slate-600 min-w-[1200px]">
-                  <div className="col-span-2 whitespace-nowrap">Request # / Job #</div>
-                  <div className="col-span-3 whitespace-nowrap">Item / Description</div>
-                  <div className="col-span-2 whitespace-nowrap">Qty / Unit</div>
-                  <div className="col-span-2 whitespace-nowrap">Required Date</div>
-                  <div className="col-span-1 whitespace-nowrap">Urgency</div>
-                  <div className="col-span-2 whitespace-nowrap">Status</div>
-                  <div className="col-span-1 whitespace-nowrap">Action</div>
-                  <div className="col-span-1 whitespace-nowrap">Edit</div>
-                </div>
-              </CardHeader>
-              <CardContent className="p-0 overflow-x-auto">
-                <div className="divide-y divide-slate-200 min-w-[1200px]">
+              <div className="overflow-x-auto">
+                <CardHeader className="py-2 px-3">
+                  <div className="flex items-center gap-2 text-[11px] font-semibold text-slate-600 min-w-[1200px]">
+                    <div className="w-[180px] flex-shrink-0">Request # / Job #</div>
+                    <div className="w-[280px] flex-shrink-0">Item / Description</div>
+                    <div className="w-[150px] flex-shrink-0">Qty / Unit</div>
+                    <div className="w-[120px] flex-shrink-0">Required Date</div>
+                    <div className="w-[80px] flex-shrink-0">Urgency</div>
+                    <div className="w-[150px] flex-shrink-0">Status</div>
+                    <div className="w-[80px] flex-shrink-0">Action</div>
+                    <div className="w-[80px] flex-shrink-0">Edit</div>
+                  </div>
+                </CardHeader>
+              <CardContent className="p-0">
+                <div className="divide-y divide-slate-200">
                   {filteredRequests.map((req) => (
                     <div
                       key={req.id}
-                      className={`grid grid-cols-14 items-center gap-2 px-3 py-2 text-[12px] min-w-[1200px] ${selectedRequest?.id === req.id ? 'bg-blue-50' : ''}`}
+                      className={`flex items-center gap-2 px-3 py-2 text-[12px] min-w-[1200px] ${selectedRequest?.id === req.id ? 'bg-blue-50' : ''}`}
                     >
-                      <div className="col-span-2 cursor-pointer hover:bg-blue-100" onClick={() => setSelectedRequest(req)}>
+                      <div className="w-[180px] flex-shrink-0 cursor-pointer hover:bg-blue-100" onClick={() => setSelectedRequest(req)}>
                         <div className="font-semibold text-slate-900">{req.requestNumber}</div>
-                        <div className="text-slate-500 text-[11px]">JO-{req.jobOrder.jobNumber}</div>
+                        <div className="text-slate-500 text-[11px]">{req.jobOrder?.jobNumber ? `JO-${req.jobOrder.jobNumber}` : 'N/A'}</div>
                       </div>
-                      <div className="col-span-3 cursor-pointer hover:bg-blue-100" onClick={() => setSelectedRequest(req)}>
+                      <div className="w-[280px] flex-shrink-0 cursor-pointer hover:bg-blue-100" onClick={() => setSelectedRequest(req)}>
                         <div className="font-medium text-slate-800 truncate">{req.itemName}</div>
                         <div className="text-slate-500 text-[11px] truncate">{req.description}</div>
                       </div>
-                      <div className="col-span-2 cursor-pointer hover:bg-blue-100" onClick={() => setSelectedRequest(req)}>
+                      <div className="w-[150px] flex-shrink-0 cursor-pointer hover:bg-blue-100" onClick={() => setSelectedRequest(req)}>
                         <span className="font-semibold">{req.quantity}</span> {req.unit}
                         <div className="text-slate-500 text-[11px]">Stock: {req.stockQtyInInventory}</div>
                       </div>
-                      <div className="col-span-2 text-slate-600 cursor-pointer hover:bg-blue-100" onClick={() => setSelectedRequest(req)}>
+                      <div className="w-[120px] flex-shrink-0 text-slate-600 cursor-pointer hover:bg-blue-100" onClick={() => setSelectedRequest(req)}>
                         {new Date(req.requiredDate).toLocaleDateString()}
                       </div>
-                      <div className="col-span-1 cursor-pointer hover:bg-blue-100" onClick={() => setSelectedRequest(req)}>
+                      <div className="w-[80px] flex-shrink-0 cursor-pointer hover:bg-blue-100" onClick={() => setSelectedRequest(req)}>
                         <span className={`text-[11px] px-2 py-0.5 rounded-full font-semibold ${getUrgencyColor(req.urgencyLevel)}`}>
                           {req.urgencyLevel}
                         </span>
                       </div>
-                      <div className="col-span-2 cursor-pointer hover:bg-blue-100" onClick={() => setSelectedRequest(req)}>
+                      <div className="w-[150px] flex-shrink-0 cursor-pointer hover:bg-blue-100" onClick={() => setSelectedRequest(req)}>
                         <span className={`text-[11px] px-2 py-0.5 rounded-full font-semibold ${getStatusColor(req.status)}`}>
                           {req.status.replace(/_/g, ' ')}
                         </span>
                       </div>
-                      <div className="col-span-1">
+                      <div className="w-[80px] flex-shrink-0">
                         {deleteConfirm === req.id ? (
-                          <div className="flex gap-1">
+                          <div className="flex flex-col gap-1">
                             <button
                               onClick={() => handleDelete(req.id)}
                               className="px-2 py-0.5 bg-red-600 text-white text-[11px] rounded hover:bg-red-700"
@@ -636,7 +637,7 @@ export default function MaterialRequestPage() {
                           </button>
                         )}
                       </div>
-                      <div className="col-span-1">
+                      <div className="w-[80px] flex-shrink-0">
                         <button
                           onClick={() => setSelectedRequest(req)}
                           className="px-2 py-0.5 bg-blue-600 text-white text-[11px] rounded hover:bg-blue-700"
@@ -648,6 +649,7 @@ export default function MaterialRequestPage() {
                   ))}
                 </div>
               </CardContent>
+              </div>
             </Card>
           )}
         </div>
