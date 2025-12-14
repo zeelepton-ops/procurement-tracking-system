@@ -9,6 +9,9 @@ const inter = Inter({ subsets: ['latin'] })
 export const metadata: Metadata = {
   title: 'Procurement Tracking System',
   description: 'Steel Production Factory - Material Request & Procurement Tracking',
+  icons: {
+    icon: '/favicon.svg',
+  },
 }
 
 export default function RootLayout({
