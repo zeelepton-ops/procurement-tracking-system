@@ -181,13 +181,7 @@ export async function DELETE(request: Request) {
       }, { status: 403 })
     }
 
-    // If no purchase orders, hard delete
-    if (materialRequest.purchaseOrderItems.length === 0) {
-      await prisma.materialRequest.delete({ where: { id } })
-      return NextResponse.json({ message: 'Material request deleted successfully' })
-    }
-
-    // If has purchase orders, soft delete
+    // Always soft delete to avoid FK constraint issues (status history, actions)
     const deletionDate = new Date()
     
     await prisma.$transaction([
