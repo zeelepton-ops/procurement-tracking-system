@@ -133,6 +133,7 @@ export async function PUT(request: Request) {
     })
 
     // Update job order and items in transaction
+    const userEmail = session.user.email || 'unknown'
     const updatedJobOrder = await prisma.$transaction(async (tx) => {
       // Delete existing items
       await tx.jobOrderItem.deleteMany({
@@ -144,7 +145,7 @@ export async function PUT(request: Request) {
         where: { id },
         data: {
           ...updateData,
-          lastEditedBy: session.user.email,
+          lastEditedBy: userEmail,
           lastEditedAt: new Date(),
           items: items && items.length > 0 ? {
             create: items.map((item: any) => ({
@@ -169,7 +170,7 @@ export async function PUT(request: Request) {
       await prisma.jobOrderEditHistory.create({
         data: {
           jobOrderId: id,
-          editedBy: session.user.email || 'unknown',
+          editedBy: userEmail,
           changesMade: JSON.stringify(changes)
         }
       })
