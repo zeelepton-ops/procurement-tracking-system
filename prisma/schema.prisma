@@ -58,6 +58,22 @@ model JobOrder {
   
   materialRequests MaterialRequest[]
   editHistory      JobOrderEditHistory[]
+  items            JobOrderItem[]
+}
+
+model JobOrderItem {
+  id           String   @id @default(cuid())
+  jobOrderId   String
+  jobOrder     JobOrder @relation(fields: [jobOrderId], references: [id], onDelete: Cascade)
+  
+  workDescription String
+  quantity        Float
+  unit            String
+  unitPrice       Float
+  totalPrice      Float  // quantity * unitPrice
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
 
 model JobOrderEditHistory {

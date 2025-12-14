@@ -24,9 +24,19 @@ interface JobOrder {
   createdAt: string
   lastEditedBy: string | null
   lastEditedAt: string | null
+  items?: JobOrderItem[]
   _count?: {
     materialRequests: number
   }
+}
+
+interface JobOrderItem {
+  id?: string
+  workDescription: string
+  quantity: number
+  unit: string
+  unitPrice: number
+  totalPrice: number
 }
 
 export default function JobOrdersPage() {
@@ -51,6 +61,9 @@ export default function JobOrdersPage() {
     workScope: '',
     qaQcInCharge: ''
   })
+  const [workItems, setWorkItems] = useState<JobOrderItem[]>([
+    { workDescription: '', quantity: 0, unit: 'PCS', unitPrice: 0, totalPrice: 0 }
+  ])
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
@@ -68,6 +81,9 @@ export default function JobOrdersPage() {
     workScope: '',
     qaQcInCharge: ''
   })
+  const [editWorkItems, setEditWorkItems] = useState<JobOrderItem[]>([
+    { workDescription: '', quantity: 0, unit: 'PCS', unitPrice: 0, totalPrice: 0 }
+  ])
 
   useEffect(() => {
     fetchJobOrders()
@@ -86,6 +102,40 @@ export default function JobOrdersPage() {
 
     return matchesSearch && matchesPriority
   })
+
+  const addWorkItem = () => {
+    setWorkItems([...workItems, { workDescription: '', quantity: 0, unit: 'PCS', unitPrice: 0, totalPrice: 0 }])
+  }
+
+  const removeWorkItem = (index: number) => {
+    setWorkItems(workItems.filter((_, i) => i !== index))
+  }
+
+  const updateWorkItem = (index: number, field: keyof JobOrderItem, value: any) => {
+    const updated = [...workItems]
+    updated[index] = { ...updated[index], [field]: value }
+    if (field === 'quantity' || field === 'unitPrice') {
+      updated[index].totalPrice = updated[index].quantity * updated[index].unitPrice
+    }
+    setWorkItems(updated)
+  }
+
+  const addEditWorkItem = () => {
+    setEditWorkItems([...editWorkItems, { workDescription: '', quantity: 0, unit: 'PCS', unitPrice: 0, totalPrice: 0 }])
+  }
+
+  const removeEditWorkItem = (index: number) => {
+    setEditWorkItems(editWorkItems.filter((_, i) => i !== index))
+  }
+
+  const updateEditWorkItem = (index: number, field: keyof JobOrderItem, value: any) => {
+    const updated = [...editWorkItems]
+    updated[index] = { ...updated[index], [field]: value }
+    if (field === 'quantity' || field === 'unitPrice') {
+      updated[index].totalPrice = updated[index].quantity * updated[index].unitPrice
+    }
+    setEditWorkItems(updated)
+  }
 
   const fetchJobOrders = async () => {
     try {
@@ -119,7 +169,10 @@ export default function JobOrdersPage() {
       const res = await fetch('/api/job-orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify({
+          ...formData,
+          items: workItems.filter(item => item.workDescription && item.quantity > 0)
+        })
       })
 
       const data = await res.json()
@@ -142,6 +195,7 @@ export default function JobOrdersPage() {
         workScope: '',
         qaQcInCharge: ''
       })
+      setWorkItems([{ workDescription: '', quantity: 0, unit: 'PCS', unitPrice: 0, totalPrice: 0 }])
       setShowForm(false)
       fetchJobOrders()
     } catch (err: any) {
@@ -184,6 +238,10 @@ export default function JobOrdersPage() {
       workScope: job.workScope || '',
       qaQcInCharge: job.qaQcInCharge || ''
     })
+    setEditWorkItems(job.items && job.items.length > 0 
+      ? job.items 
+      : [{ workDescription: '', quantity: 0, unit: 'PCS', unitPrice: 0, totalPrice: 0 }]
+    )
   }
 
   const handleEditSubmit = async (e: React.FormEvent) => {
@@ -199,7 +257,8 @@ export default function JobOrdersPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: editingJob.id,
-          ...editFormData
+          ...editFormData,
+          items: editWorkItems.filter(item => item.workDescription && item.quantity > 0)
         })
       })
 
@@ -433,6 +492,87 @@ export default function JobOrdersPage() {
                   </div>
                 </div>
 
+                {/* Work Items */}
+                <div className="border-t pt-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-bold text-slate-700">Work Items</h3>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={addWorkItem}
+                      className="h-7 text-xs"
+                    >
+                      <Plus className="h-3 w-3 mr-1" />
+                      Add Item
+                    </Button>
+                  </div>
+                  <div className="space-y-3">
+                    {workItems.map((item, index) => (
+                      <div key={index} className="grid grid-cols-12 gap-2 items-start bg-slate-50 p-3 rounded">
+                        <div className="col-span-5">
+                          <Label className="text-xs">Work Description *</Label>
+                          <Input
+                            value={item.workDescription}
+                            onChange={(e) => updateWorkItem(index, 'workDescription', e.target.value)}
+                            placeholder="e.g., Fabrication of MS Bollard"
+                            required
+                            className="mt-1 h-8 text-sm"
+                          />
+                        </div>
+                        <div className="col-span-2">
+                          <Label className="text-xs">Quantity *</Label>
+                          <Input
+                            type="number"
+                            value={item.quantity || ''}
+                            onChange={(e) => updateWorkItem(index, 'quantity', parseFloat(e.target.value) || 0)}
+                            required
+                            className="mt-1 h-8 text-sm"
+                          />
+                        </div>
+                        <div className="col-span-2">
+                          <Label className="text-xs">Unit *</Label>
+                          <Input
+                            value={item.unit}
+                            onChange={(e) => updateWorkItem(index, 'unit', e.target.value)}
+                            placeholder="PCS"
+                            required
+                            className="mt-1 h-8 text-sm"
+                          />
+                        </div>
+                        <div className="col-span-2">
+                          <Label className="text-xs">Unit Price</Label>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            value={item.unitPrice || ''}
+                            onChange={(e) => updateWorkItem(index, 'unitPrice', parseFloat(e.target.value) || 0)}
+                            className="mt-1 h-8 text-sm"
+                          />
+                        </div>
+                        <div className="col-span-1 flex items-end">
+                          {workItems.length > 1 && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removeWorkItem(index)}
+                              className="h-8 w-8 p-0 text-red-600 hover:bg-red-50"
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+                        {item.quantity > 0 && item.unitPrice > 0 && (
+                          <div className="col-span-12 text-xs text-slate-600">
+                            Total: {item.totalPrice.toFixed(2)} QAR
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
                 {error && (
                   <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded text-sm">
                     {error}
@@ -660,6 +800,45 @@ export default function JobOrdersPage() {
                 )}
               </div>
 
+              {/* Work Items Table */}
+              {selectedJob.items && selectedJob.items.length > 0 && (
+                <div className="border-t pt-3">
+                  <div className="text-sm font-semibold text-slate-700 mb-2">Work Items</div>
+                  <div className="border rounded-lg overflow-hidden">
+                    <table className="w-full text-xs">
+                      <thead className="bg-slate-100">
+                        <tr>
+                          <th className="text-left p-2 font-semibold">Description</th>
+                          <th className="text-right p-2 font-semibold">Qty</th>
+                          <th className="text-left p-2 font-semibold">Unit</th>
+                          <th className="text-right p-2 font-semibold">Unit Price</th>
+                          <th className="text-right p-2 font-semibold">Total</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y">
+                        {selectedJob.items.map((item, idx) => (
+                          <tr key={item.id || idx} className="hover:bg-slate-50">
+                            <td className="p-2">{item.workDescription}</td>
+                            <td className="p-2 text-right">{item.quantity}</td>
+                            <td className="p-2">{item.unit}</td>
+                            <td className="p-2 text-right">{item.unitPrice.toFixed(2)} QAR</td>
+                            <td className="p-2 text-right font-semibold">{item.totalPrice.toFixed(2)} QAR</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                      <tfoot className="bg-slate-50 border-t-2">
+                        <tr>
+                          <td colSpan={4} className="p-2 text-right font-bold">Grand Total:</td>
+                          <td className="p-2 text-right font-bold text-blue-600">
+                            {selectedJob.items.reduce((sum, item) => sum + item.totalPrice, 0).toFixed(2)} QAR
+                          </td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                </div>
+              )}
+
               <div className="border-t pt-3 space-y-1">
                 <div className="text-xs text-slate-500">Created: {new Date(selectedJob.createdAt).toLocaleString()}</div>
                 {selectedJob.lastEditedBy && selectedJob.lastEditedAt && (
@@ -809,6 +988,87 @@ export default function JobOrdersPage() {
                         onChange={(e) => setEditFormData({ ...editFormData, qaQcInCharge: e.target.value })}
                         className="mt-1 h-9"
                       />
+                    </div>
+                  </div>
+
+                  {/* Work Items */}
+                  <div className="border-t pt-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-sm font-bold text-slate-700">Work Items</h3>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={addEditWorkItem}
+                        className="h-7 text-xs"
+                      >
+                        <Plus className="h-3 w-3 mr-1" />
+                        Add Item
+                      </Button>
+                    </div>
+                    <div className="space-y-3">
+                      {editWorkItems.map((item, index) => (
+                        <div key={index} className="grid grid-cols-12 gap-2 items-start bg-slate-50 p-3 rounded">
+                          <div className="col-span-5">
+                            <Label className="text-xs">Work Description *</Label>
+                            <Input
+                              value={item.workDescription}
+                              onChange={(e) => updateEditWorkItem(index, 'workDescription', e.target.value)}
+                              placeholder="e.g., Fabrication of MS Bollard"
+                              required
+                              className="mt-1 h-8 text-sm"
+                            />
+                          </div>
+                          <div className="col-span-2">
+                            <Label className="text-xs">Quantity *</Label>
+                            <Input
+                              type="number"
+                              value={item.quantity || ''}
+                              onChange={(e) => updateEditWorkItem(index, 'quantity', parseFloat(e.target.value) || 0)}
+                              required
+                              className="mt-1 h-8 text-sm"
+                            />
+                          </div>
+                          <div className="col-span-2">
+                            <Label className="text-xs">Unit *</Label>
+                            <Input
+                              value={item.unit}
+                              onChange={(e) => updateEditWorkItem(index, 'unit', e.target.value)}
+                              placeholder="PCS"
+                              required
+                              className="mt-1 h-8 text-sm"
+                            />
+                          </div>
+                          <div className="col-span-2">
+                            <Label className="text-xs">Unit Price</Label>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              value={item.unitPrice || ''}
+                              onChange={(e) => updateEditWorkItem(index, 'unitPrice', parseFloat(e.target.value) || 0)}
+                              className="mt-1 h-8 text-sm"
+                            />
+                          </div>
+                          <div className="col-span-1 flex items-end">
+                            {editWorkItems.length > 1 && (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => removeEditWorkItem(index)}
+                                className="h-8 w-8 p-0 text-red-600 hover:bg-red-50"
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
+                          {item.quantity > 0 && item.unitPrice > 0 && (
+                            <div className="col-span-12 text-xs text-slate-600">
+                              Total: {item.totalPrice.toFixed(2)} QAR
+                            </div>
+                          )}
+                        </div>
+                      ))}
                     </div>
                   </div>
 

@@ -16,7 +16,8 @@ export async function GET() {
       include: {
         _count: {
           select: { materialRequests: true }
-        }
+        },
+        items: true
       }
     })
     
@@ -48,7 +49,19 @@ export async function POST(request: Request) {
           foreman: body.foreman || null,
           workScope: body.workScope || null,
           qaQcInCharge: body.qaQcInCharge || null,
-          createdBy: session?.user?.email || 'unknown'
+          createdBy: session?.user?.email || 'unknown',
+          items: body.items && body.items.length > 0 ? {
+            create: body.items.map((item: any) => ({
+              workDescription: item.workDescription,
+              quantity: parseFloat(item.quantity),
+              unit: item.unit,
+              unitPrice: parseFloat(item.unitPrice),
+              totalPrice: parseFloat(item.totalPrice)
+            }))
+          } : undefined
+        },
+        include: {
+          items: true
         }
       })
       
@@ -86,7 +99,7 @@ export async function PUT(request: Request) {
     }
 
     const body = await request.json()
-    const { id, ...updateData } = body
+    const { id, items, ...updateData } = body
 
     if (!id) {
       return NextResponse.json({ error: 'Job order ID is required' }, { status: 400 })
@@ -119,18 +132,40 @@ export async function PUT(request: Request) {
       }
     })
 
-    // Update job order
-    const updatedJobOrder = await prisma.jobOrder.update({
-      where: { id },
-      data: {
-        ...updateData,
-        lastEditedBy: session.user.email,
-        lastEditedAt: new Date()
-      }
+    // Update job order and items in transaction
+    const updatedJobOrder = await prisma.$transaction(async (tx) => {
+      // Delete existing items
+      await tx.jobOrderItem.deleteMany({
+        where: { jobOrderId: id }
+      })
+
+      // Update job order with new items
+      const updated = await tx.jobOrder.update({
+        where: { id },
+        data: {
+          ...updateData,
+          lastEditedBy: session.user.email,
+          lastEditedAt: new Date(),
+          items: items && items.length > 0 ? {
+            create: items.map((item: any) => ({
+              workDescription: item.workDescription,
+              quantity: parseFloat(item.quantity),
+              unit: item.unit,
+              unitPrice: parseFloat(item.unitPrice),
+              totalPrice: parseFloat(item.totalPrice)
+            }))
+          } : undefined
+        },
+        include: {
+          items: true
+        }
+      })
+
+      return updated
     })
 
     // Record edit history
-    if (Object.keys(changes).length > 0) {
+    if (Object.keys(changes).length > 0 || items) {
       await prisma.jobOrderEditHistory.create({
         data: {
           jobOrderId: id,
