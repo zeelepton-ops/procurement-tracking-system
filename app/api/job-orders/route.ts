@@ -50,6 +50,45 @@ export async function POST(request: Request) {
           }))
       : []
     
+    // Check for existing job number (including deleted)
+    const existingByNumber = await prisma.jobOrder.findUnique({ where: { jobNumber: body.jobNumber } })
+    if (existingByNumber && !existingByNumber.isDeleted) {
+      return NextResponse.json({ error: 'Job number already exists' }, { status: 409 })
+    }
+
+    // If exists but soft-deleted, restore it with new data
+    if (existingByNumber && existingByNumber.isDeleted) {
+      const restored = await prisma.$transaction(async (tx) => {
+        await tx.jobOrderItem.deleteMany({ where: { jobOrderId: existingByNumber.id } })
+
+        return tx.jobOrder.update({
+          where: { id: existingByNumber.id },
+          data: {
+            productName,
+            drawingRef: body.drawingRef || null,
+            clientName: body.clientName || null,
+            contactPerson: body.contactPerson || null,
+            phone: body.phone || null,
+            lpoContractNo: body.lpoContractNo || null,
+            priority: body.priority || 'MEDIUM',
+            foreman: body.foreman || null,
+            workScope: body.workScope || productName,
+            qaQcInCharge: body.qaQcInCharge || null,
+            createdBy: session?.user?.email || 'unknown',
+            isDeleted: false,
+            deletedAt: null,
+            deletedBy: null,
+            items: safeItems.length > 0 ? {
+              create: safeItems
+            } : undefined
+          },
+          include: { items: true }
+        })
+      })
+
+      return NextResponse.json(restored, { status: 201 })
+    }
+
     // Try creating with all fields first
     try {
       const jobOrder = await prisma.jobOrder.create({
