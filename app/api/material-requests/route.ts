@@ -77,9 +77,6 @@ export async function POST(request: Request) {
     if (!body.jobOrderId) {
       return NextResponse.json({ error: 'Job Order is required' }, { status: 400 })
     }
-    if (!body.requiredDate) {
-      return NextResponse.json({ error: 'Required Date is required' }, { status: 400 })
-    }
     
     // Generate request number
     const count = await prisma.materialRequest.count()
@@ -88,11 +85,19 @@ export async function POST(request: Request) {
     // Use first item as primary or fallback to legacy fields
     const firstItem = body.items && body.items.length > 0 ? body.items[0] : null
     
+    // Use first item's required date or fallback to legacy field or default to 7 days from now
+    const requiredDate = firstItem?.requiredDate 
+      ? new Date(firstItem.requiredDate)
+      : body.requiredDate 
+        ? new Date(body.requiredDate)
+        : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+    
     console.log('Creating material request with:', {
       requestNumber,
       jobOrderId: body.jobOrderId,
       hasItems: !!firstItem,
-      itemCount: body.items?.length || 0
+      itemCount: body.items?.length || 0,
+      requiredDate
     })
     
     const materialRequest = await prisma.materialRequest.create({
@@ -102,13 +107,13 @@ export async function POST(request: Request) {
         materialType: body.materialType,
         itemName: firstItem?.itemName || body.itemName || 'Multiple Items',
         description: firstItem?.description || body.description || 'See items list',
-        quantity: firstItem ? parseFloat(firstItem.quantity) : parseFloat(body.quantity),
+        quantity: firstItem ? parseFloat(firstItem.quantity) : parseFloat(body.quantity || '1'),
         unit: firstItem?.unit || body.unit || 'PCS',
-        reasonForRequest: body.reasonForRequest,
-        requiredDate: new Date(body.requiredDate),
-        preferredSupplier: body.preferredSupplier || null,
-        stockQtyInInventory: firstItem ? parseFloat(firstItem.stockQty || '0') : parseFloat(body.stockQtyInInventory) || 0,
-        urgencyLevel: body.urgencyLevel || 'NORMAL',
+        reasonForRequest: firstItem?.reasonForRequest || body.reasonForRequest || 'As required',
+        requiredDate,
+        preferredSupplier: firstItem?.preferredSupplier || body.preferredSupplier || null,
+        stockQtyInInventory: firstItem ? parseFloat(firstItem.stockQty || '0') : parseFloat(body.stockQtyInInventory || '0'),
+        urgencyLevel: firstItem?.urgencyLevel || body.urgencyLevel || 'NORMAL',
         requestedBy: body.requestedBy,
         createdBy: session?.user?.email || body.requestedBy,
         status: 'PENDING'
