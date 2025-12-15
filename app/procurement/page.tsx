@@ -44,6 +44,7 @@ interface MaterialRequest {
     stockQtyInInventory?: number
     urgencyLevel?: string | null
     requiredDate?: string | null
+    status?: string
   }>
   procurementActions: Array<{
     id: string
@@ -106,19 +107,18 @@ export default function ProcurementTrackingPage() {
     }
   }
 
-  const handleStatusChange = async (req: MaterialRequest, newStatus: string) => {
+  const handleStatusChange = async (req: MaterialRequest, itemId: string, newStatus: string, oldStatus: string) => {
     if (!newStatus) return
     try {
-      const res = await fetch('/api/procurement-actions', {
+      const res = await fetch('/api/item-status', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          itemId,
           materialRequestId: req.id,
-          actionType: 'STATUS_UPDATE',
-          actionBy: 'Procurement Team',
-          notes: `Status set to ${newStatus.replace(/_/g, ' ')}`,
-          oldStatus: req.status,
-          newStatus
+          newStatus,
+          oldStatus,
+          actionBy: 'Procurement Team'
         })
       })
       if (res.ok) {
@@ -349,6 +349,7 @@ export default function ProcurementTrackingPage() {
                       const daysLeft = calculateDaysUntilRequired(requiredDate)
                       const overdue = isOverdue(requiredDate)
                       const urgency = item.urgencyLevel || request.urgencyLevel
+                      const itemStatus = item.status || request.status
 
                       return (
                         <div
@@ -380,15 +381,18 @@ export default function ProcurementTrackingPage() {
                             </span>
                           </div>
                           <div className="col-span-2 flex items-center">
-                            <span className={`text-[11px] px-2 py-0.5 rounded-full font-semibold ${getStatusColor(request.status)}`}>
-                              {request.status.replace(/_/g, ' ').substring(0, 12)}
+                            <span className={`text-[11px] px-2 py-0.5 rounded-full font-semibold ${getStatusColor(itemStatus)}`}>
+                              {itemStatus.replace(/_/g, ' ').substring(0, 12)}
                             </span>
                           </div>
                           <div className="col-span-3 flex items-center" onClick={(e) => e.stopPropagation()}>
                             <select
-                              defaultValue=""
+                              value=""
                               className="w-[130px] h-7 px-2 rounded-md border border-slate-300 text-[11px] focus:outline-none focus:ring-2 focus:ring-blue-500"
-                              onChange={(e) => handleStatusChange(request, e.target.value)}
+                              onChange={(e) => {
+                                handleStatusChange(request, item.id, e.target.value, itemStatus)
+                                e.target.value = ''
+                              }}
                             >
                               <option value="">Change status</option>
                               {STATUS_OPTIONS.map((opt) => (

@@ -142,6 +142,7 @@ model MaterialRequestItem {
   urgencyLevel      String  @default("NORMAL")
   requiredDate      DateTime?
   preferredSupplier String?
+  status            String  @default("PENDING") // "PENDING", "IN_PROCUREMENT", "ORDERED", "PARTIALLY_RECEIVED", "RECEIVED", "CANCELLED"
   
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
