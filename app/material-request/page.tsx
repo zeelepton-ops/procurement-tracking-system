@@ -690,7 +690,7 @@ export default function MaterialRequestPage() {
                           <div className="text-slate-500 text-[11px]">Stock: {item.stockQtyInInventory}</div>
                         </div>
                         <div className="w-[120px] flex-shrink-0 text-slate-600 cursor-pointer hover:bg-blue-100" onClick={() => setSelectedRequest(req)}>
-                          {new Date(item.requiredDate).toLocaleDateString()}
+                          {item.requiredDate ? new Date(item.requiredDate).toLocaleDateString() : '-'}
                         </div>
                         <div className="w-[80px] flex-shrink-0 cursor-pointer hover:bg-blue-100" onClick={() => setSelectedRequest(req)}>
                           <span className={`text-[11px] px-2 py-0.5 rounded-full font-semibold ${getUrgencyColor(item.urgencyLevel)}`}>
