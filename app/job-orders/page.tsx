@@ -619,50 +619,64 @@ export default function JobOrdersPage() {
                       Add Item
                     </Button>
                   </div>
-                  <div className="space-y-3">
+                  
+                  {/* Header row - shown once */}
+                  <div className="grid grid-cols-12 gap-2 mb-2 px-3">
+                    <div className="col-span-5">
+                      <Label className="text-xs font-semibold text-slate-600">Work Description *</Label>
+                    </div>
+                    <div className="col-span-2">
+                      <Label className="text-xs font-semibold text-slate-600">Quantity *</Label>
+                    </div>
+                    <div className="col-span-2">
+                      <Label className="text-xs font-semibold text-slate-600">Unit *</Label>
+                    </div>
+                    <div className="col-span-2">
+                      <Label className="text-xs font-semibold text-slate-600">Unit Price</Label>
+                    </div>
+                    <div className="col-span-1"></div>
+                  </div>
+
+                  <div className="space-y-2">
                     {workItems.map((item, index) => (
-                      <div key={index} className="grid grid-cols-12 gap-2 items-start bg-slate-50 p-3 rounded">
+                      <div key={index} className="grid grid-cols-12 gap-2 items-center bg-slate-50 p-3 rounded">
                         <div className="col-span-5">
-                          <Label className="text-xs">Work Description *</Label>
                           <Input
                             value={item.workDescription}
                             onChange={(e) => updateWorkItem(index, 'workDescription', e.target.value)}
                             placeholder="e.g., Fabrication of MS Bollard"
                             required
-                            className="mt-1 h-8 text-sm"
+                            className="h-8 text-sm"
                           />
                         </div>
                         <div className="col-span-2">
-                          <Label className="text-xs">Quantity *</Label>
                           <Input
                             type="number"
                             value={item.quantity || ''}
                             onChange={(e) => updateWorkItem(index, 'quantity', parseFloat(e.target.value) || 0)}
                             required
-                            className="mt-1 h-8 text-sm"
+                            className="h-8 text-sm"
                           />
                         </div>
                         <div className="col-span-2">
-                          <Label className="text-xs">Unit *</Label>
                           <Input
                             value={item.unit}
                             onChange={(e) => updateWorkItem(index, 'unit', e.target.value)}
                             placeholder="PCS"
                             required
-                            className="mt-1 h-8 text-sm"
+                            className="h-8 text-sm"
                           />
                         </div>
                         <div className="col-span-2">
-                          <Label className="text-xs">Unit Price</Label>
                           <Input
                             type="number"
                             step="0.01"
                             value={item.unitPrice || ''}
                             onChange={(e) => updateWorkItem(index, 'unitPrice', parseFloat(e.target.value) || 0)}
-                            className="mt-1 h-8 text-sm"
+                            className="h-8 text-sm"
                           />
                         </div>
-                        <div className="col-span-1 flex items-end">
+                        <div className="col-span-1 flex items-center justify-center">
                           {workItems.length > 1 && (
                             <Button
                               type="button"
@@ -1224,50 +1238,64 @@ export default function JobOrdersPage() {
                         Add Item
                       </Button>
                     </div>
-                    <div className="space-y-3">
+                    
+                    {/* Header row - shown once */}
+                    <div className="grid grid-cols-12 gap-2 mb-2 px-3">
+                      <div className="col-span-5">
+                        <Label className="text-xs font-semibold text-slate-600">Work Description *</Label>
+                      </div>
+                      <div className="col-span-2">
+                        <Label className="text-xs font-semibold text-slate-600">Quantity *</Label>
+                      </div>
+                      <div className="col-span-2">
+                        <Label className="text-xs font-semibold text-slate-600">Unit *</Label>
+                      </div>
+                      <div className="col-span-2">
+                        <Label className="text-xs font-semibold text-slate-600">Unit Price</Label>
+                      </div>
+                      <div className="col-span-1"></div>
+                    </div>
+
+                    <div className="space-y-2">
                       {editWorkItems.map((item, index) => (
-                        <div key={index} className="grid grid-cols-12 gap-2 items-start bg-slate-50 p-3 rounded">
+                        <div key={index} className="grid grid-cols-12 gap-2 items-center bg-slate-50 p-3 rounded">
                           <div className="col-span-5">
-                            <Label className="text-xs">Work Description *</Label>
                             <Input
                               value={item.workDescription}
                               onChange={(e) => updateEditWorkItem(index, 'workDescription', e.target.value)}
                               placeholder="e.g., Fabrication of MS Bollard"
                               required
-                              className="mt-1 h-8 text-sm"
+                              className="h-8 text-sm"
                             />
                           </div>
                           <div className="col-span-2">
-                            <Label className="text-xs">Quantity *</Label>
                             <Input
                               type="number"
                               value={item.quantity || ''}
                               onChange={(e) => updateEditWorkItem(index, 'quantity', parseFloat(e.target.value) || 0)}
                               required
-                              className="mt-1 h-8 text-sm"
+                              className="h-8 text-sm"
                             />
                           </div>
                           <div className="col-span-2">
-                            <Label className="text-xs">Unit *</Label>
                             <Input
                               value={item.unit}
                               onChange={(e) => updateEditWorkItem(index, 'unit', e.target.value)}
                               placeholder="PCS"
                               required
-                              className="mt-1 h-8 text-sm"
+                              className="h-8 text-sm"
                             />
                           </div>
                           <div className="col-span-2">
-                            <Label className="text-xs">Unit Price</Label>
                             <Input
                               type="number"
                               step="0.01"
                               value={item.unitPrice || ''}
                               onChange={(e) => updateEditWorkItem(index, 'unitPrice', parseFloat(e.target.value) || 0)}
-                              className="mt-1 h-8 text-sm"
+                              className="h-8 text-sm"
                             />
                           </div>
-                          <div className="col-span-1 flex items-end">
+                          <div className="col-span-1 flex items-center justify-center">
                             {editWorkItems.length > 1 && (
                               <Button
                                 type="button"
