@@ -4,8 +4,23 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { canEditOrDelete } from '@/lib/permissions'
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url)
+    const jobNumberParam = searchParams.get('jobNumber')
+
+    // Direct lookup by job number (includes soft-deleted) for debugging/resolution
+    if (jobNumberParam) {
+      const jo = await prisma.jobOrder.findFirst({
+        where: { jobNumber: jobNumberParam },
+        include: { items: true }
+      })
+      if (!jo) {
+        return NextResponse.json({ message: 'Not found' }, { status: 404 })
+      }
+      return NextResponse.json(jo)
+    }
+
     const jobOrders = await prisma.jobOrder.findMany({
       where: {
         isDeleted: false
