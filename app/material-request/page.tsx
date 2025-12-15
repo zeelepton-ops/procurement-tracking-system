@@ -42,6 +42,17 @@ interface MaterialRequest {
   requestedBy: string
   requestedAt: string
   createdAt: string
+  items?: Array<{
+    itemName: string
+    description: string
+    quantity: number
+    unit: string
+    stockQtyInInventory: number
+    reasonForRequest?: string | null
+    urgencyLevel?: string | null
+    requiredDate?: string | null
+    preferredSupplier?: string | null
+  }>
 }
 
 export default function MaterialRequestPage() {
