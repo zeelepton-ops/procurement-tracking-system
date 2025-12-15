@@ -36,55 +36,27 @@ export async function GET(request: Request) {
       return NextResponse.json(requests)
     }
 
-    // Full payload (fallback)
-    let requests
-    
-    try {
-      requests = await prisma.materialRequest.findMany({
-        where: {
-          isDeleted: false
+    // Full payload (fallback) - temporarily without items until Prisma regenerates on Vercel
+    const requests = await prisma.materialRequest.findMany({
+      where: {
+        isDeleted: false
+      },
+      include: {
+        jobOrder: true,
+        procurementActions: {
+          orderBy: { actionDate: 'desc' },
+          take: 1
         },
-        include: {
-          jobOrder: true,
-          items: true,
-          procurementActions: {
-            orderBy: { actionDate: 'desc' },
-            take: 1
-          },
-          purchaseOrderItems: {
-            include: {
-              purchaseOrder: true
-            }
+        purchaseOrderItems: {
+          include: {
+            purchaseOrder: true
           }
-        },
-        orderBy: {
-          createdAt: 'desc'
         }
-      })
-    } catch (itemsError: any) {
-      // If items table doesn't exist, fetch without it
-      console.log('Items table may not exist yet, fetching without items:', itemsError.message)
-      requests = await prisma.materialRequest.findMany({
-        where: {
-          isDeleted: false
-        },
-        include: {
-          jobOrder: true,
-          procurementActions: {
-            orderBy: { actionDate: 'desc' },
-            take: 1
-          },
-          purchaseOrderItems: {
-            include: {
-              purchaseOrder: true
-            }
-          }
-        },
-        orderBy: {
-          createdAt: 'desc'
-        }
-      })
-    }
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    })
     
     return NextResponse.json(requests)
   } catch (error) {
@@ -139,24 +111,24 @@ export async function POST(request: Request) {
         urgencyLevel: body.urgencyLevel || 'NORMAL',
         requestedBy: body.requestedBy,
         createdBy: session?.user?.email || body.requestedBy,
-        status: 'PENDING',
-        items: body.items && body.items.length > 0 ? {
-          create: body.items.map((item: any) => ({
-            itemName: item.itemName,
-            description: item.description,
-            quantity: parseFloat(item.quantity),
-            unit: item.unit,
-            stockQtyInInventory: parseFloat(item.stockQty || '0'),
-            reasonForRequest: item.reasonForRequest || null,
-            urgencyLevel: item.urgencyLevel || 'NORMAL',
-            requiredDate: item.requiredDate ? new Date(item.requiredDate) : null,
-            preferredSupplier: item.preferredSupplier || null
-          }))
-        } : undefined
+        status: 'PENDING'
+        // TODO: Re-enable items after Vercel Prisma regenerates
+        // items: body.items && body.items.length > 0 ? {
+        //   create: body.items.map((item: any) => ({
+        //     itemName: item.itemName,
+        //     description: item.description,
+        //     quantity: parseFloat(item.quantity),
+        //     unit: item.unit,
+        //     stockQtyInInventory: parseFloat(item.stockQty || '0'),
+        //     reasonForRequest: item.reasonForRequest || null,
+        //     urgencyLevel: item.urgencyLevel || 'NORMAL',
+        //     requiredDate: item.requiredDate ? new Date(item.requiredDate) : null,
+        //     preferredSupplier: item.preferredSupplier || null
+        //   }))
+        // } : undefined
       },
       include: {
-        jobOrder: true,
-        items: true
+        jobOrder: true
       }
     })
     
