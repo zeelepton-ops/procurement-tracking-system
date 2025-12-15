@@ -33,13 +33,29 @@ export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions)
     const body = await request.json()
+    const productName = body.productName || body.workScope
+    if (!productName) {
+      return NextResponse.json({ error: 'Work scope is required' }, { status: 400 })
+    }
+
+    const safeItems = Array.isArray(body.items)
+      ? body.items
+          .filter((item: any) => item?.workDescription && Number(item?.quantity) > 0)
+          .map((item: any) => ({
+            workDescription: item.workDescription,
+            quantity: Number(item.quantity) || 0,
+            unit: item.unit || 'PCS',
+            unitPrice: Number(item.unitPrice) || 0,
+            totalPrice: Number(item.totalPrice) || (Number(item.quantity) || 0) * (Number(item.unitPrice) || 0)
+          }))
+      : []
     
     // Try creating with all fields first
     try {
       const jobOrder = await prisma.jobOrder.create({
         data: {
           jobNumber: body.jobNumber,
-          productName: body.productName,
+          productName,
           drawingRef: body.drawingRef || null,
           clientName: body.clientName || null,
           contactPerson: body.contactPerson || null,
@@ -47,17 +63,11 @@ export async function POST(request: Request) {
           lpoContractNo: body.lpoContractNo || null,
           priority: body.priority || 'MEDIUM',
           foreman: body.foreman || null,
-          workScope: body.workScope || null,
+          workScope: body.workScope || productName,
           qaQcInCharge: body.qaQcInCharge || null,
           createdBy: session?.user?.email || 'unknown',
-          items: body.items && body.items.length > 0 ? {
-            create: body.items.map((item: any) => ({
-              workDescription: item.workDescription,
-              quantity: parseFloat(item.quantity),
-              unit: item.unit,
-              unitPrice: parseFloat(item.unitPrice),
-              totalPrice: parseFloat(item.totalPrice)
-            }))
+          items: safeItems.length > 0 ? {
+            create: safeItems
           } : undefined
         },
         include: {
@@ -73,12 +83,16 @@ export async function POST(request: Request) {
         const jobOrder = await prisma.jobOrder.create({
           data: {
             jobNumber: body.jobNumber,
-            productName: body.productName,
+            productName,
             drawingRef: body.drawingRef || null
           }
         })
         
         return NextResponse.json(jobOrder, { status: 201 })
+      }
+
+      if (dbError.code === 'P2002') {
+        return NextResponse.json({ error: 'Job number already exists' }, { status: 409 })
       }
       throw dbError
     }
