@@ -99,12 +99,29 @@ export async function POST(request: Request) {
     const session = await getServerSession(authOptions)
     const body = await request.json()
     
+    console.log('POST /api/material-requests - Received body:', JSON.stringify(body, null, 2))
+    
+    // Validate required fields
+    if (!body.jobOrderId) {
+      return NextResponse.json({ error: 'Job Order is required' }, { status: 400 })
+    }
+    if (!body.requiredDate) {
+      return NextResponse.json({ error: 'Required Date is required' }, { status: 400 })
+    }
+    
     // Generate request number
     const count = await prisma.materialRequest.count()
     const requestNumber = `MR-${new Date().getFullYear()}-${String(count + 1).padStart(4, '0')}`
     
     // Use first item as primary or fallback to legacy fields
     const firstItem = body.items && body.items.length > 0 ? body.items[0] : null
+    
+    console.log('Creating material request with:', {
+      requestNumber,
+      jobOrderId: body.jobOrderId,
+      hasItems: !!firstItem,
+      itemCount: body.items?.length || 0
+    })
     
     const materialRequest = await prisma.materialRequest.create({
       data: {
@@ -143,6 +160,8 @@ export async function POST(request: Request) {
       }
     })
     
+    console.log('Material request created:', materialRequest.id)
+    
     // Create status history
     await prisma.statusHistory.create({
       data: {
@@ -156,8 +175,14 @@ export async function POST(request: Request) {
     
     return NextResponse.json(materialRequest, { status: 201 })
   } catch (error) {
-    console.error('Error creating material request:', error)
-    return NextResponse.json({ error: 'Failed to create material request' }, { status: 500 })
+    console.error('Error creating material request - Full error:', error)
+    console.error('Error name:', error instanceof Error ? error.name : 'unknown')
+    console.error('Error message:', error instanceof Error ? error.message : 'unknown')
+    console.error('Error stack:', error instanceof Error ? error.stack : 'unknown')
+    return NextResponse.json({ 
+      error: 'Failed to create material request',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 })
   }
 }
 
