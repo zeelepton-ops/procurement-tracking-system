@@ -914,9 +914,25 @@ export default function JobOrdersPage() {
                 <div>{selectedJob.productName}</div>
               </div>
 
+              {selectedJob.scopeOfWorks && (
+                <div>
+                  <div className="text-slate-500 text-xs mb-2">Scope of Works</div>
+                  <div className="flex flex-wrap gap-2">
+                    {(typeof selectedJob.scopeOfWorks === 'string' 
+                      ? JSON.parse(selectedJob.scopeOfWorks) 
+                      : selectedJob.scopeOfWorks
+                    ).map((item: string) => (
+                      <span key={item} className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        {item}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {selectedJob.workScope && (
                 <div>
-                  <div className="text-slate-500 text-xs">Work Scope</div>
+                  <div className="text-slate-500 text-xs">Additional Notes</div>
                   <div>{selectedJob.workScope}</div>
                 </div>
               )}
