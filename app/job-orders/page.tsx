@@ -1026,10 +1026,10 @@ export default function JobOrdersPage() {
 
         {/* Edit Job Order Modal */}
         {editingJob && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 overflow-y-auto" onClick={() => setEditingJob(null)}>
+          <div className="fixed inset-0 bg-black/50 flex items-start justify-center p-4 z-50 overflow-y-auto" onClick={() => setEditingJob(null)}>
             <div className="w-full max-w-5xl my-8" onClick={(e) => e.stopPropagation()}>
-              <Card className="w-full bg-white shadow-2xl">
-                <CardHeader className="bg-blue-50 py-3 sticky top-0 z-10 border-b border-blue-100">
+              <Card className="w-full bg-white shadow-2xl max-h-[95vh] flex flex-col">
+                <CardHeader className="bg-blue-50 py-3 flex-shrink-0 border-b border-blue-100">
                   <div className="flex items-center justify-between">
                     <div>
                       <CardTitle className="text-blue-900 text-lg">Edit Job Order</CardTitle>
@@ -1046,7 +1046,7 @@ export default function JobOrdersPage() {
                     </Button>
                   </div>
                 </CardHeader>
-                <CardContent className="pt-4 max-h-[calc(90vh-100px)] overflow-y-auto bg-white">
+                <CardContent className="pt-4 overflow-y-auto bg-white flex-1">
                 <form onSubmit={handleEditSubmit} className="space-y-4">
                   {/* Basic Information */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
