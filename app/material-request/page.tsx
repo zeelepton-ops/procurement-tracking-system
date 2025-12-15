@@ -693,8 +693,8 @@ export default function MaterialRequestPage() {
                           {item.requiredDate ? new Date(item.requiredDate).toLocaleDateString() : '-'}
                         </div>
                         <div className="w-[80px] flex-shrink-0 cursor-pointer hover:bg-blue-100" onClick={() => setSelectedRequest(req)}>
-                          <span className={`text-[11px] px-2 py-0.5 rounded-full font-semibold ${getUrgencyColor(item.urgencyLevel)}`}>
-                            {item.urgencyLevel}
+                          <span className={`text-[11px] px-2 py-0.5 rounded-full font-semibold ${getUrgencyColor(item.urgencyLevel || 'NORMAL')}`}>
+                            {item.urgencyLevel || 'NORMAL'}
                           </span>
                         </div>
                         <div className="w-[150px] flex-shrink-0 cursor-pointer hover:bg-blue-100" onClick={() => setSelectedRequest(req)}>
