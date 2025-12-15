@@ -151,15 +151,39 @@ export default function MaterialRequestPage() {
   const startEdit = (req: any) => {
     setSelectedRequest(req)
     setIsEditing(true)
+    
+    // Load items if they exist, otherwise create default item from main fields
+    const itemsToEdit = req.items && req.items.length > 0 
+      ? req.items.map((item: any) => ({
+          itemName: item.itemName,
+          description: item.description,
+          quantity: String(item.quantity),
+          unit: item.unit,
+          stockQty: String(item.stockQtyInInventory || 0),
+          reasonForRequest: item.reasonForRequest || '',
+          urgencyLevel: item.urgencyLevel || 'NORMAL',
+          requiredDate: item.requiredDate ? new Date(item.requiredDate).toISOString().slice(0,10) : '',
+          preferredSupplier: item.preferredSupplier || ''
+        }))
+      : [{
+          itemName: req.itemName,
+          description: req.description,
+          quantity: String(req.quantity),
+          unit: req.unit,
+          stockQty: String(req.stockQtyInInventory || 0),
+          reasonForRequest: req.reasonForRequest || '',
+          urgencyLevel: req.urgencyLevel || 'NORMAL',
+          requiredDate: new Date(req.requiredDate).toISOString().slice(0,10),
+          preferredSupplier: req.preferredSupplier || ''
+        }]
+    
+    setItems(itemsToEdit)
+    
     setEditData({
       id: req.id,
-      description: req.description,
-      quantity: req.quantity,
-      unit: req.unit,
-      requiredDate: new Date(req.requiredDate).toISOString().slice(0,10),
-      urgencyLevel: req.urgencyLevel,
-      reasonForRequest: req.reasonForRequest,
-      preferredSupplier: req.preferredSupplier,
+      jobOrderId: req.jobOrderId,
+      materialType: req.materialType,
+      requestedBy: req.requestedBy,
       status: req.status
     })
   }
@@ -172,7 +196,7 @@ export default function MaterialRequestPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...editData,
-          requiredDate: new Date(editData.requiredDate)
+          items
         })
       })
       if (res.ok) {
@@ -446,8 +470,12 @@ export default function MaterialRequestPage() {
                     required
                     className="mt-1"
                   >
-                      <option value="RAW_MATERIAL">Raw</option>
+                    <option value="RAW_MATERIAL">Raw Material</option>
                     <option value="CONSUMABLE">Consumable</option>
+                    <option value="MAINTENANCE">Maintenance</option>
+                    <option value="ASSET">Asset</option>
+                    <option value="STATIONARY">Stationary</option>
+                    <option value="GENERAL_REQUEST">General Request</option>
                   </Select>
                 </div>
               </div>
@@ -784,36 +812,19 @@ export default function MaterialRequestPage() {
               <CardDescription>{selectedRequest.requestNumber}</CardDescription>
             </CardHeader>
             <CardContent className="pt-3 text-sm text-slate-800 space-y-3">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
-                  <Label>Description</Label>
-                  <Input value={editData.description || ''} onChange={(e) => setEditData({ ...editData, description: e.target.value })} />
-                </div>
-                <div>
-                  <Label>Quantity</Label>
-                  <Input type="number" value={editData.quantity || ''} onChange={(e) => setEditData({ ...editData, quantity: parseFloat(e.target.value) })} />
-                </div>
-                <div>
-                  <Label>Unit</Label>
-                  <Select value={editData.unit || ''} onChange={(e) => setEditData({ ...editData, unit: e.target.value })}>
-                    <option value="KG">KG</option>
-                    <option value="METER">METER</option>
-                    <option value="PCS">PCS</option>
-                  </Select>
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <div>
-                  <Label>Required Date</Label>
-                  <Input type="date" value={editData.requiredDate || ''} onChange={(e) => setEditData({ ...editData, requiredDate: e.target.value })} />
-                </div>
-                <div>
-                  <Label>Urgency</Label>
-                  <Select value={editData.urgencyLevel || 'NORMAL'} onChange={(e) => setEditData({ ...editData, urgencyLevel: e.target.value })}>
-                    <option value="LOW">LOW</option>
-                    <option value="NORMAL">NORMAL</option>
-                    <option value="HIGH">HIGH</option>
-                    <option value="CRITICAL">CRITICAL</option>
+                  <Label>Material Type *</Label>
+                  <Select 
+                    value={editData.materialType || 'RAW_MATERIAL'} 
+                    onChange={(e) => setEditData({ ...editData, materialType: e.target.value })}
+                  >
+                    <option value="RAW_MATERIAL">Raw Material</option>
+                    <option value="CONSUMABLE">Consumable</option>
+                    <option value="MAINTENANCE">Maintenance</option>
+                    <option value="ASSET">Asset</option>
+                    <option value="STATIONARY">Stationary</option>
+                    <option value="GENERAL_REQUEST">General Request</option>
                   </Select>
                 </div>
                 <div>
@@ -828,14 +839,112 @@ export default function MaterialRequestPage() {
                   </Select>
                 </div>
               </div>
+
+              {/* Items Section */}
               <div>
-                <Label>Reason for Request</Label>
-                <Textarea value={editData.reasonForRequest || ''} onChange={(e) => setEditData({ ...editData, reasonForRequest: e.target.value })} />
+                <Label className="text-sm font-semibold mb-2">Items</Label>
+                <div className="space-y-2 overflow-x-auto">
+                  <div className="grid grid-cols-[2fr_3fr_1fr_0.8fr_0.8fr_2fr_1fr_1.2fr_1.5fr_0.5fr] gap-2 text-[11px] font-semibold text-slate-600 px-2 min-w-[1400px]">
+                    <div>Item Name</div>
+                    <div>Description</div>
+                    <div>Qty</div>
+                    <div>Unit</div>
+                    <div>Stock</div>
+                    <div>Reason</div>
+                    <div>Urgency</div>
+                    <div>Req. Date</div>
+                    <div>Supplier</div>
+                    <div></div>
+                  </div>
+                  {items.map((item, idx) => (
+                    <div key={idx} className="grid grid-cols-[2fr_3fr_1fr_0.8fr_0.8fr_2fr_1fr_1.2fr_1.5fr_0.5fr] gap-2 min-w-[1400px]">
+                      <Input
+                        value={item.itemName}
+                        onChange={(e) => updateItemField(idx, 'itemName', e.target.value)}
+                        placeholder="Item"
+                        className="h-8 text-xs"
+                      />
+                      <Input
+                        value={item.description}
+                        onChange={(e) => updateItemField(idx, 'description', e.target.value)}
+                        placeholder="Description/Specs"
+                        className="h-8 text-xs"
+                      />
+                      <Input
+                        type="number"
+                        value={item.quantity}
+                        onChange={(e) => updateItemField(idx, 'quantity', e.target.value)}
+                        placeholder="Qty"
+                        className="h-8 text-xs"
+                        step="0.01"
+                      />
+                      <select
+                        value={item.unit}
+                        onChange={(e) => updateItemField(idx, 'unit', e.target.value)}
+                        className="h-8 px-1 rounded-md border border-slate-300 text-xs"
+                      >
+                        <option value="PCS">PCS</option>
+                        <option value="KG">KG</option>
+                        <option value="L">L</option>
+                        <option value="M">M</option>
+                        <option value="BOX">BOX</option>
+                      </select>
+                      <Input
+                        type="number"
+                        value={item.stockQty}
+                        onChange={(e) => updateItemField(idx, 'stockQty', e.target.value)}
+                        placeholder="0"
+                        className="h-8 text-xs"
+                        step="0.01"
+                      />
+                      <Input
+                        value={item.reasonForRequest}
+                        onChange={(e) => updateItemField(idx, 'reasonForRequest', e.target.value)}
+                        placeholder="Reason"
+                        className="h-8 text-xs"
+                      />
+                      <select
+                        value={item.urgencyLevel}
+                        onChange={(e) => updateItemField(idx, 'urgencyLevel', e.target.value)}
+                        className="h-8 px-1 rounded-md border border-slate-300 text-xs"
+                      >
+                        <option value="LOW">Low</option>
+                        <option value="NORMAL">Normal</option>
+                        <option value="HIGH">High</option>
+                        <option value="CRITICAL">Critical</option>
+                      </select>
+                      <Input
+                        type="date"
+                        value={item.requiredDate}
+                        onChange={(e) => updateItemField(idx, 'requiredDate', e.target.value)}
+                        className="h-8 text-xs"
+                      />
+                      <Input
+                        value={item.preferredSupplier}
+                        onChange={(e) => updateItemField(idx, 'preferredSupplier', e.target.value)}
+                        placeholder="Supplier"
+                        className="h-8 text-xs"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeItemRow(idx)}
+                        disabled={items.length === 1}
+                        className="px-2 py-1 text-xs bg-red-50 text-red-600 rounded hover:bg-red-100 disabled:opacity-30 disabled:cursor-not-allowed"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={addItemRow}
+                    className="px-3 py-1.5 text-xs bg-blue-50 text-blue-700 rounded hover:bg-blue-100 font-medium"
+                  >
+                    + Add Item
+                  </button>
+                </div>
               </div>
-              <div>
-                <Label>Preferred Supplier</Label>
-                <Input value={editData.preferredSupplier || ''} onChange={(e) => setEditData({ ...editData, preferredSupplier: e.target.value })} />
-              </div>
+
               <div className="flex gap-2">
                 <Button onClick={saveEdit} disabled={loading}>Save</Button>
                 <Button variant="secondary" onClick={() => { setIsEditing(false); setSelectedRequest(null) }}>Cancel</Button>

@@ -36,13 +36,14 @@ export async function GET(request: Request) {
       return NextResponse.json(requests)
     }
 
-    // Full payload (fallback) - temporarily without items until Prisma regenerates on Vercel
+    // Full payload with items
     const requests = await prisma.materialRequest.findMany({
       where: {
         isDeleted: false
       },
       include: {
         jobOrder: true,
+        items: true,
         procurementActions: {
           orderBy: { actionDate: 'desc' },
           take: 1
@@ -116,24 +117,24 @@ export async function POST(request: Request) {
         urgencyLevel: firstItem?.urgencyLevel || body.urgencyLevel || 'NORMAL',
         requestedBy: body.requestedBy,
         createdBy: session?.user?.email || body.requestedBy,
-        status: 'PENDING'
-        // TODO: Re-enable items after Vercel Prisma regenerates
-        // items: body.items && body.items.length > 0 ? {
-        //   create: body.items.map((item: any) => ({
-        //     itemName: item.itemName,
-        //     description: item.description,
-        //     quantity: parseFloat(item.quantity),
-        //     unit: item.unit,
-        //     stockQtyInInventory: parseFloat(item.stockQty || '0'),
-        //     reasonForRequest: item.reasonForRequest || null,
-        //     urgencyLevel: item.urgencyLevel || 'NORMAL',
-        //     requiredDate: item.requiredDate ? new Date(item.requiredDate) : null,
-        //     preferredSupplier: item.preferredSupplier || null
-        //   }))
-        // } : undefined
+        status: 'PENDING',
+        items: body.items && body.items.length > 0 ? {
+          create: body.items.map((item: any) => ({
+            itemName: item.itemName,
+            description: item.description,
+            quantity: parseFloat(item.quantity),
+            unit: item.unit,
+            stockQtyInInventory: parseFloat(item.stockQty || '0'),
+            reasonForRequest: item.reasonForRequest || null,
+            urgencyLevel: item.urgencyLevel || 'NORMAL',
+            requiredDate: item.requiredDate ? new Date(item.requiredDate) : null,
+            preferredSupplier: item.preferredSupplier || null
+          }))
+        } : undefined
       },
       include: {
-        jobOrder: true
+        jobOrder: true,
+        items: true
       }
     })
     
@@ -252,13 +253,16 @@ export async function PUT(request: Request) {
     }
 
     const body = await request.json()
-    const { id, ...updateData } = body
+    const { id, items, ...updateData } = body
 
     if (!id) {
       return NextResponse.json({ error: 'Material request ID is required' }, { status: 400 })
     }
 
-    const existing = await prisma.materialRequest.findUnique({ where: { id } })
+    const existing = await prisma.materialRequest.findUnique({ 
+      where: { id },
+      include: { items: true }
+    })
     if (!existing) {
       return NextResponse.json({ error: 'Material request not found' }, { status: 404 })
     }
@@ -280,13 +284,56 @@ export async function PUT(request: Request) {
       }
     })
 
-    const updated = await prisma.materialRequest.update({
-      where: { id },
-      data: {
-        ...updateData,
-        lastEditedBy: session.user.email,
-        lastEditedAt: new Date()
-      }
+    // Use first item for main fields if items provided
+    const firstItem = items && items.length > 0 ? items[0] : null
+    const requiredDate = firstItem?.requiredDate 
+      ? new Date(firstItem.requiredDate)
+      : updateData.requiredDate 
+        ? new Date(updateData.requiredDate)
+        : existing.requiredDate
+
+    // Update material request and items in a transaction
+    const updated = await prisma.$transaction(async (tx) => {
+      // Delete existing items
+      await tx.materialRequestItem.deleteMany({
+        where: { materialRequestId: id }
+      })
+
+      // Update material request with new data
+      return await tx.materialRequest.update({
+        where: { id },
+        data: {
+          ...updateData,
+          itemName: firstItem?.itemName || updateData.itemName || existing.itemName,
+          description: firstItem?.description || updateData.description || existing.description,
+          quantity: firstItem ? parseFloat(firstItem.quantity) : (updateData.quantity ? parseFloat(updateData.quantity) : existing.quantity),
+          unit: firstItem?.unit || updateData.unit || existing.unit,
+          reasonForRequest: firstItem?.reasonForRequest || updateData.reasonForRequest || existing.reasonForRequest,
+          requiredDate,
+          preferredSupplier: firstItem?.preferredSupplier || updateData.preferredSupplier || existing.preferredSupplier,
+          stockQtyInInventory: firstItem ? parseFloat(firstItem.stockQty || '0') : (updateData.stockQtyInInventory ? parseFloat(updateData.stockQtyInInventory) : existing.stockQtyInInventory),
+          urgencyLevel: firstItem?.urgencyLevel || updateData.urgencyLevel || existing.urgencyLevel,
+          lastEditedBy: session.user.email,
+          lastEditedAt: new Date(),
+          items: items && items.length > 0 ? {
+            create: items.map((item: any) => ({
+              itemName: item.itemName,
+              description: item.description,
+              quantity: parseFloat(item.quantity),
+              unit: item.unit,
+              stockQtyInInventory: parseFloat(item.stockQty || '0'),
+              reasonForRequest: item.reasonForRequest || null,
+              urgencyLevel: item.urgencyLevel || 'NORMAL',
+              requiredDate: item.requiredDate ? new Date(item.requiredDate) : null,
+              preferredSupplier: item.preferredSupplier || null
+            }))
+          } : undefined
+        },
+        include: {
+          jobOrder: true,
+          items: true
+        }
+      })
     })
 
     if (Object.keys(changes).length > 0) {
