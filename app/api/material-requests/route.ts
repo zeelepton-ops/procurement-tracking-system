@@ -313,7 +313,7 @@ export async function PUT(request: Request) {
           preferredSupplier: firstItem?.preferredSupplier || updateData.preferredSupplier || existing.preferredSupplier,
           stockQtyInInventory: firstItem ? parseFloat(firstItem.stockQty || '0') : (updateData.stockQtyInInventory ? parseFloat(updateData.stockQtyInInventory) : existing.stockQtyInInventory),
           urgencyLevel: firstItem?.urgencyLevel || updateData.urgencyLevel || existing.urgencyLevel,
-          lastEditedBy: session.user.email,
+          lastEditedBy: session.user?.email || 'unknown',
           lastEditedAt: new Date(),
           items: items && items.length > 0 ? {
             create: items.map((item: any) => ({
