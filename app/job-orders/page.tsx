@@ -20,6 +20,7 @@ interface JobOrder {
   priority: string | null
   foreman: string | null
   workScope: string | null
+  scopeOfWorks?: string | string[] | null
   qaQcInCharge: string | null
   createdAt: string
   lastEditedBy: string | null
@@ -42,6 +43,27 @@ interface JobOrderItem {
   totalPrice: number
 }
 
+const SCOPE_OF_WORKS_OPTIONS = [
+  'Profiling/Cutting',
+  'Plate Rolling & Bending',
+  'Section Bending',
+  'Drilling & Machining',
+  'Storage Tanks & Silos',
+  'Pressure Vessels',
+  'Pipe Spools',
+  'Material Handling Eqpt.',
+  'Primary Structure',
+  'Secondary Steel',
+  'Pipe Supports',
+  'Abrasive Blasting',
+  'Industrial Coating',
+  'Lining Services',
+  'Galvanizing',
+  'Erection & Installation',
+  'Maintenance',
+  'NDT Testing'
+]
+
 export default function JobOrdersPage() {
   const [jobOrders, setJobOrders] = useState<JobOrder[]>([])
   const [deletedJobOrders, setDeletedJobOrders] = useState<JobOrder[]>([])
@@ -63,6 +85,7 @@ export default function JobOrdersPage() {
     priority: 'MEDIUM',
     foreman: '',
     workScope: '',
+    scopeOfWorks: [] as string[],
     qaQcInCharge: ''
   })
   const [workItems, setWorkItems] = useState<JobOrderItem[]>([
@@ -84,6 +107,7 @@ export default function JobOrdersPage() {
     priority: 'MEDIUM',
     foreman: '',
     workScope: '',
+    scopeOfWorks: [] as string[],
     qaQcInCharge: ''
   })
   const [editWorkItems, setEditWorkItems] = useState<JobOrderItem[]>([
@@ -277,6 +301,9 @@ export default function JobOrdersPage() {
 
   const handleEditClick = (job: JobOrder) => {
     setEditingJob(job)
+    const scopeOfWorks = job.scopeOfWorks ? 
+      (typeof job.scopeOfWorks === 'string' ? JSON.parse(job.scopeOfWorks) : job.scopeOfWorks) 
+      : []
     setEditFormData({
       jobNumber: job.jobNumber,
       productName: job.productName,
@@ -288,6 +315,7 @@ export default function JobOrdersPage() {
       priority: job.priority || 'MEDIUM',
       foreman: job.foreman || '',
       workScope: job.workScope || '',
+      scopeOfWorks: scopeOfWorks,
       qaQcInCharge: job.qaQcInCharge || ''
     })
     setEditWorkItems(job.items && job.items.length > 0 
@@ -494,19 +522,60 @@ export default function JobOrdersPage() {
                 {/* Work Scope only */}
                 <div className="border-t pt-4">
                   <h3 className="text-sm font-bold text-slate-700 mb-3">Work Details</h3>
+                  <div className="mb-4">
+                    <Label htmlFor="productName" className="text-sm font-semibold">Main Description *</Label>
+                    <Textarea
+                      id="productName"
+                      value={formData.productName}
+                      onChange={(e) => setFormData({ ...formData, productName: e.target.value })}
+                      placeholder="Main description of the job order"
+                      required
+                      className="mt-1"
+                      rows={2}
+                    />
+                  </div>
+
+                  <div className="mb-4">
+                    <Label className="text-sm font-semibold block mb-3">Scope of Works</Label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 bg-slate-50 p-3 rounded border border-slate-200">
+                      {SCOPE_OF_WORKS_OPTIONS.map((option) => (
+                        <div key={option} className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            id={`scope-${option}`}
+                            checked={formData.scopeOfWorks.includes(option)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setFormData({
+                                  ...formData,
+                                  scopeOfWorks: [...formData.scopeOfWorks, option]
+                                })
+                              } else {
+                                setFormData({
+                                  ...formData,
+                                  scopeOfWorks: formData.scopeOfWorks.filter(s => s !== option)
+                                })
+                              }
+                            }}
+                            className="rounded"
+                          />
+                          <label htmlFor={`scope-${option}`} className="text-sm cursor-pointer text-slate-700">
+                            {option}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
                   <div>
-                    <Label htmlFor="workScope" className="text-sm font-semibold">Work Scope *</Label>
+                    <Label htmlFor="workScope" className="text-sm font-semibold">Additional Notes</Label>
                     <Textarea
                       id="workScope"
                       value={formData.workScope}
-                      onChange={(e) => {
-                        const val = e.target.value
-                        setFormData({ ...formData, workScope: val, productName: val })
-                      }}
-                      placeholder="Describe the work scope"
-                      required
+                      onChange={(e) => setFormData({ ...formData, workScope: e.target.value })}
+                      placeholder="Any additional notes or specifications"
                       className="mt-1"
-                      rows={3}
+                      rows={2}
                     />
                   </div>
                 </div>
@@ -1045,18 +1114,58 @@ export default function JobOrdersPage() {
                   {/* Work Scope only */}
                   <div className="border-t pt-4">
                     <h3 className="text-sm font-bold text-slate-700 mb-3">Work Details</h3>
+                    <div className="mb-4">
+                      <Label htmlFor="edit-productName" className="text-sm font-semibold">Main Description *</Label>
+                      <Textarea
+                        id="edit-productName"
+                        value={editFormData.productName}
+                        onChange={(e) => setEditFormData({ ...editFormData, productName: e.target.value })}
+                        required
+                        className="mt-1"
+                        rows={2}
+                      />
+                    </div>
+
+                    <div className="mb-4">
+                      <Label className="text-sm font-semibold block mb-3">Scope of Works</Label>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 bg-slate-50 p-3 rounded border border-slate-200">
+                        {SCOPE_OF_WORKS_OPTIONS.map((option) => (
+                          <div key={option} className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              id={`edit-scope-${option}`}
+                              checked={editFormData.scopeOfWorks.includes(option)}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setEditFormData({
+                                    ...editFormData,
+                                    scopeOfWorks: [...editFormData.scopeOfWorks, option]
+                                  })
+                                } else {
+                                  setEditFormData({
+                                    ...editFormData,
+                                    scopeOfWorks: editFormData.scopeOfWorks.filter(s => s !== option)
+                                  })
+                                }
+                              }}
+                              className="rounded"
+                            />
+                            <label htmlFor={`edit-scope-${option}`} className="text-sm cursor-pointer text-slate-700">
+                              {option}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
                     <div>
-                      <Label htmlFor="edit-workScope" className="text-sm font-semibold">Work Scope *</Label>
+                      <Label htmlFor="edit-workScope" className="text-sm font-semibold">Additional Notes</Label>
                       <Textarea
                         id="edit-workScope"
                         value={editFormData.workScope}
-                        onChange={(e) => {
-                          const val = e.target.value
-                          setEditFormData({ ...editFormData, workScope: val, productName: val })
-                        }}
-                        required
+                        onChange={(e) => setEditFormData({ ...editFormData, workScope: e.target.value })}
                         className="mt-1"
-                        rows={3}
+                        rows={2}
                       />
                     </div>
                   </div>

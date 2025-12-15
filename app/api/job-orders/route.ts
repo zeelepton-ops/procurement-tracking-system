@@ -104,6 +104,7 @@ export async function POST(request: Request) {
             priority: body.priority || 'MEDIUM',
             foreman: body.foreman || null,
             workScope: body.workScope || productName,
+            scopeOfWorks: body.scopeOfWorks && body.scopeOfWorks.length > 0 ? JSON.stringify(body.scopeOfWorks) : null,
             qaQcInCharge: body.qaQcInCharge || null,
             createdBy: session?.user?.email || 'unknown',
             isDeleted: false,
@@ -134,6 +135,7 @@ export async function POST(request: Request) {
           priority: body.priority || 'MEDIUM',
           foreman: body.foreman || null,
           workScope: body.workScope || productName,
+          scopeOfWorks: body.scopeOfWorks && body.scopeOfWorks.length > 0 ? JSON.stringify(body.scopeOfWorks) : null,
           qaQcInCharge: body.qaQcInCharge || null,
           createdBy: session?.user?.email || 'unknown',
           items: safeItems.length > 0 ? {
@@ -229,6 +231,7 @@ export async function PUT(request: Request) {
         where: { id },
         data: {
           ...updateData,
+          scopeOfWorks: updateData.scopeOfWorks && updateData.scopeOfWorks.length > 0 ? JSON.stringify(updateData.scopeOfWorks) : null,
           lastEditedBy: userEmail,
           lastEditedAt: new Date(),
           items: items && items.length > 0 ? {

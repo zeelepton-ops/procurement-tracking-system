@@ -37,7 +37,7 @@ model User {
 model JobOrder {
   id             String   @id @default(cuid())
   jobNumber      String
-  productName    String
+  productName    String   // Main description
   drawingRef     String?
   clientName     String?
   contactPerson  String?
@@ -45,7 +45,8 @@ model JobOrder {
   lpoContractNo  String?
   priority       String?  @default("MEDIUM") // HIGH, MEDIUM, LOW
   foreman        String?
-  workScope      String?
+  workScope      String?  // Legacy field - kept for backwards compatibility
+  scopeOfWorks   String?  // JSON array of selected work types
   qaQcInCharge   String?
   isDeleted      Boolean  @default(false)
   deletedAt      DateTime?
