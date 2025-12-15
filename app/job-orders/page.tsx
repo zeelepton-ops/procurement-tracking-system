@@ -245,6 +245,7 @@ export default function JobOrdersPage() {
         priority: 'MEDIUM',
         foreman: '',
         workScope: '',
+        scopeOfWorks: [],
         qaQcInCharge: ''
       })
       setWorkItems([{ workDescription: '', quantity: 0, unit: 'PCS', unitPrice: 0, totalPrice: 0 }])
