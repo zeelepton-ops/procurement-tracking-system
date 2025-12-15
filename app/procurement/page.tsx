@@ -377,12 +377,12 @@ export default function ProcurementTrackingPage() {
                               {urgency}
                             </span>
                           </div>
-                          <div className="col-span-2">
+                          <div className="col-span-2 flex items-center">
                             <span className={`text-[11px] px-2 py-0.5 rounded-full font-semibold ${getStatusColor(request.status)}`}>
                               {request.status.replace(/_/g, ' ').substring(0, 12)}
                             </span>
                           </div>
-                          <div className="col-span-2" onClick={(e) => e.stopPropagation()}>
+                          <div className="col-span-2 flex items-center" onClick={(e) => e.stopPropagation()}>
                             <select
                               defaultValue=""
                               className="w-[130px] h-7 px-2 rounded-md border border-slate-300 text-[11px] focus:outline-none focus:ring-2 focus:ring-blue-500"
