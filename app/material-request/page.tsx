@@ -125,7 +125,7 @@ export default function MaterialRequestPage() {
 
   const fetchMaterialRequests = async () => {
     try {
-      const res = await fetch('/api/material-requests?summary=1&page=1&pageSize=50')
+      const res = await fetch('/api/material-requests?page=1&pageSize=50')
       const data = await res.json()
       if (Array.isArray(data)) {
         setMaterialRequests(data)
