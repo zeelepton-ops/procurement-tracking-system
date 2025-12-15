@@ -75,17 +75,23 @@ export async function POST(request: Request) {
           }))
       : []
     
-    // Check for existing job number (including deleted)
-    const existingByNumber = await prisma.jobOrder.findUnique({ where: { jobNumber: body.jobNumber } })
+    // Check for existing job number (both active and deleted)
+    const existingByNumber = await prisma.jobOrder.findFirst({
+      where: { jobNumber: body.jobNumber }
+    })
+
+    // If job exists and is ACTIVE (not deleted), reject it
     if (existingByNumber && !existingByNumber.isDeleted) {
       return NextResponse.json({ error: 'Job number already exists' }, { status: 409 })
     }
 
-    // If exists but soft-deleted, restore it with new data
+    // If job exists but is SOFT-DELETED, restore it transparently
     if (existingByNumber && existingByNumber.isDeleted) {
       const restored = await prisma.$transaction(async (tx) => {
+        // Delete old items
         await tx.jobOrderItem.deleteMany({ where: { jobOrderId: existingByNumber.id } })
 
+        // Restore and update the job
         return tx.jobOrder.update({
           where: { id: existingByNumber.id },
           data: {

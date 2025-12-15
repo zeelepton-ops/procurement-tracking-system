@@ -36,7 +36,7 @@ model User {
 
 model JobOrder {
   id             String   @id @default(cuid())
-  jobNumber      String   @unique
+  jobNumber      String
   productName    String
   drawingRef     String?
   clientName     String?
@@ -59,6 +59,8 @@ model JobOrder {
   materialRequests MaterialRequest[]
   editHistory      JobOrderEditHistory[]
   items            JobOrderItem[]
+
+  @@unique([jobNumber, isDeleted])
 }
 
 model JobOrderItem {
