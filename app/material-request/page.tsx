@@ -649,77 +649,90 @@ export default function MaterialRequestPage() {
                 </CardHeader>
               <CardContent className="p-0">
                 <div className="divide-y divide-slate-200">
-                  {filteredRequests.map((req) => (
-                    <div
-                      key={req.id}
-                      className={`flex items-center gap-2 px-3 py-2 text-[12px] min-w-[1200px] ${selectedRequest?.id === req.id ? 'bg-blue-50' : ''}`}
-                    >
-                      <div className="w-[180px] flex-shrink-0 cursor-pointer hover:bg-blue-100" onClick={() => setSelectedRequest(req)}>
-                        <div className="font-semibold text-slate-900">{req.requestNumber}</div>
-                        <div className="text-slate-500 text-[11px]">{req.jobOrder?.jobNumber ? `JO-${req.jobOrder.jobNumber}` : 'N/A'}</div>
-                      </div>
-                      <div className="w-[280px] flex-shrink-0 cursor-pointer hover:bg-blue-100" onClick={() => setSelectedRequest(req)}>
-                        <div className="font-medium text-slate-800 truncate">{req.itemName}</div>
-                        <div className="text-slate-500 text-[11px] truncate">{req.description}</div>
-                      </div>
-                      <div className="w-[150px] flex-shrink-0 cursor-pointer hover:bg-blue-100" onClick={() => setSelectedRequest(req)}>
-                        <span className="font-semibold">{req.quantity}</span> {req.unit}
-                        <div className="text-slate-500 text-[11px]">Stock: {req.stockQtyInInventory}</div>
-                      </div>
-                      <div className="w-[120px] flex-shrink-0 text-slate-600 cursor-pointer hover:bg-blue-100" onClick={() => setSelectedRequest(req)}>
-                        {new Date(req.requiredDate).toLocaleDateString()}
-                      </div>
-                      <div className="w-[80px] flex-shrink-0 cursor-pointer hover:bg-blue-100" onClick={() => setSelectedRequest(req)}>
-                        <span className={`text-[11px] px-2 py-0.5 rounded-full font-semibold ${getUrgencyColor(req.urgencyLevel)}`}>
-                          {req.urgencyLevel}
-                        </span>
-                      </div>
-                      <div className="w-[150px] flex-shrink-0 cursor-pointer hover:bg-blue-100" onClick={() => setSelectedRequest(req)}>
-                        <span className={`text-[11px] px-2 py-0.5 rounded-full font-semibold ${getStatusColor(req.status)}`}>
-                          {req.status?.replace(/_/g, ' ') || 'PENDING'}
-                        </span>
-                      </div>
-                      <div className="w-[80px] flex-shrink-0">
-                        {deleteConfirm === req.id ? (
-                          <div className="flex flex-col gap-1">
+                  {filteredRequests.map((req) => {
+                    // Show one row per item in the request
+                    const itemsToShow = req.items && req.items.length > 0 ? req.items : [{
+                      itemName: req.itemName,
+                      description: req.description,
+                      quantity: req.quantity,
+                      unit: req.unit,
+                      stockQtyInInventory: req.stockQtyInInventory,
+                      urgencyLevel: req.urgencyLevel,
+                      requiredDate: req.requiredDate
+                    }]
+                    
+                    return itemsToShow.map((item, idx) => (
+                      <div
+                        key={`${req.id}-${idx}`}
+                        className={`flex items-center gap-2 px-3 py-2 text-[12px] min-w-[1200px] ${selectedRequest?.id === req.id ? 'bg-blue-50' : ''}`}
+                      >
+                        <div className="w-[180px] flex-shrink-0 cursor-pointer hover:bg-blue-100" onClick={() => setSelectedRequest(req)}>
+                          <div className="font-semibold text-slate-900">{req.requestNumber}</div>
+                          <div className="text-slate-500 text-[11px]">{req.jobOrder?.jobNumber ? `JO-${req.jobOrder.jobNumber}` : 'N/A'}</div>
+                        </div>
+                        <div className="w-[280px] flex-shrink-0 cursor-pointer hover:bg-blue-100" onClick={() => setSelectedRequest(req)}>
+                          <div className="font-medium text-slate-800 truncate">{item.itemName}</div>
+                          <div className="text-slate-500 text-[11px] truncate">{item.description}</div>
+                        </div>
+                        <div className="w-[150px] flex-shrink-0 cursor-pointer hover:bg-blue-100" onClick={() => setSelectedRequest(req)}>
+                          <span className="font-semibold">{item.quantity}</span> {item.unit}
+                          <div className="text-slate-500 text-[11px]">Stock: {item.stockQtyInInventory}</div>
+                        </div>
+                        <div className="w-[120px] flex-shrink-0 text-slate-600 cursor-pointer hover:bg-blue-100" onClick={() => setSelectedRequest(req)}>
+                          {new Date(item.requiredDate).toLocaleDateString()}
+                        </div>
+                        <div className="w-[80px] flex-shrink-0 cursor-pointer hover:bg-blue-100" onClick={() => setSelectedRequest(req)}>
+                          <span className={`text-[11px] px-2 py-0.5 rounded-full font-semibold ${getUrgencyColor(item.urgencyLevel)}`}>
+                            {item.urgencyLevel}
+                          </span>
+                        </div>
+                        <div className="w-[150px] flex-shrink-0 cursor-pointer hover:bg-blue-100" onClick={() => setSelectedRequest(req)}>
+                          <span className={`text-[11px] px-2 py-0.5 rounded-full font-semibold ${getStatusColor(req.status)}`}>
+                            {req.status?.replace(/_/g, ' ') || 'PENDING'}
+                          </span>
+                        </div>
+                        <div className="w-[80px] flex-shrink-0">
+                          {deleteConfirm === req.id ? (
+                            <div className="flex flex-col gap-1">
+                              <button
+                                onClick={() => handleDelete(req.id)}
+                                className="px-2 py-0.5 bg-red-600 text-white text-[11px] rounded hover:bg-red-700"
+                                disabled={loading}
+                              >
+                                Delete
+                              </button>
+                              <button
+                                onClick={() => setDeleteConfirm(null)}
+                                className="px-2 py-0.5 bg-gray-300 text-gray-700 text-[11px] rounded hover:bg-gray-400"
+                                disabled={loading}
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          ) : (
                             <button
-                              onClick={() => handleDelete(req.id)}
-                              className="px-2 py-0.5 bg-red-600 text-white text-[11px] rounded hover:bg-red-700"
-                              disabled={loading}
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setDeleteConfirm(req.id)
+                              }}
+                              className="p-1.5 text-red-600 hover:bg-red-50 rounded"
+                              title="Delete material request"
                             >
-                              Delete
+                              <Trash2 className="h-4 w-4" />
                             </button>
-                            <button
-                              onClick={() => setDeleteConfirm(null)}
-                              className="px-2 py-0.5 bg-gray-300 text-gray-700 text-[11px] rounded hover:bg-gray-400"
-                              disabled={loading}
-                            >
-                              Cancel
-                            </button>
-                          </div>
-                        ) : (
+                          )}
+                        </div>
+                        <div className="w-[80px] flex-shrink-0">
                           <button
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              setDeleteConfirm(req.id)
-                            }}
-                            className="p-1.5 text-red-600 hover:bg-red-50 rounded"
-                            title="Delete material request"
+                            onClick={() => startEdit(req)}
+                            className="px-2 py-0.5 bg-blue-600 text-white text-[11px] rounded hover:bg-blue-700"
                           >
-                            <Trash2 className="h-4 w-4" />
+                            Edit
                           </button>
-                        )}
+                        </div>
                       </div>
-                      <div className="w-[80px] flex-shrink-0">
-                        <button
-                          onClick={() => startEdit(req)}
-                          className="px-2 py-0.5 bg-blue-600 text-white text-[11px] rounded hover:bg-blue-700"
-                        >
-                          Edit
-                        </button>
-                      </div>
-                    </div>
-                  ))}
+                    ))
+                  })}
                 </div>
               </CardContent>
               </div>
