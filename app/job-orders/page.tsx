@@ -439,33 +439,23 @@ export default function JobOrdersPage() {
                   </div>
                 </div>
 
-                {/* Work Scope & QA/QC */}
+                {/* Work Scope only */}
                 <div className="border-t pt-4">
                   <h3 className="text-sm font-bold text-slate-700 mb-3">Work Details</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div>
-                      <Label htmlFor="productName" className="text-sm font-semibold">Product / Job Description *</Label>
-                      <Textarea
-                        id="productName"
-                        value={formData.productName}
-                        onChange={(e) => setFormData({ ...formData, productName: e.target.value })}
-                        placeholder="e.g., SUPPLY, FABRICATION, GALVANIZING & PAINTING OF MS BOLLARD"
-                        required
-                        className="mt-1"
-                        rows={3}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="workScope" className="text-sm font-semibold">Work Scope</Label>
-                      <Textarea
-                        id="workScope"
-                        value={formData.workScope}
-                        onChange={(e) => setFormData({ ...formData, workScope: e.target.value })}
-                        placeholder="Design, Supply, Fabrication, Machining, Blasting, Painting, etc."
-                        className="mt-1"
-                        rows={3}
-                      />
-                    </div>
+                  <div>
+                    <Label htmlFor="workScope" className="text-sm font-semibold">Work Scope *</Label>
+                    <Textarea
+                      id="workScope"
+                      value={formData.workScope}
+                      onChange={(e) => {
+                        const val = e.target.value
+                        setFormData({ ...formData, workScope: val, productName: val })
+                      }}
+                      placeholder="Describe the work scope"
+                      required
+                      className="mt-1"
+                      rows={3}
+                    />
                   </div>
                 </div>
 
@@ -956,31 +946,22 @@ export default function JobOrdersPage() {
                     </div>
                   </div>
 
-                  {/* Work Details */}
+                  {/* Work Scope only */}
                   <div className="border-t pt-4">
                     <h3 className="text-sm font-bold text-slate-700 mb-3">Work Details</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <div>
-                        <Label htmlFor="edit-productName" className="text-sm font-semibold">Product / Job Description *</Label>
-                        <Textarea
-                          id="edit-productName"
-                          value={editFormData.productName}
-                          onChange={(e) => setEditFormData({ ...editFormData, productName: e.target.value })}
-                          required
-                          className="mt-1"
-                          rows={3}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="edit-workScope" className="text-sm font-semibold">Work Scope</Label>
-                        <Textarea
-                          id="edit-workScope"
-                          value={editFormData.workScope}
-                          onChange={(e) => setEditFormData({ ...editFormData, workScope: e.target.value })}
-                          className="mt-1"
-                          rows={3}
-                        />
-                      </div>
+                    <div>
+                      <Label htmlFor="edit-workScope" className="text-sm font-semibold">Work Scope *</Label>
+                      <Textarea
+                        id="edit-workScope"
+                        value={editFormData.workScope}
+                        onChange={(e) => {
+                          const val = e.target.value
+                          setEditFormData({ ...editFormData, workScope: val, productName: val })
+                        }}
+                        required
+                        className="mt-1"
+                        rows={3}
+                      />
                     </div>
                   </div>
 
