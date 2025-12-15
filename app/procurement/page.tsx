@@ -56,6 +56,15 @@ interface MaterialRequest {
   }>
 }
 
+const STATUS_OPTIONS = [
+  { value: 'PENDING', label: 'Pending' },
+  { value: 'IN_PROCUREMENT', label: 'In Procurement' },
+  { value: 'ORDERED', label: 'Ordered' },
+  { value: 'PARTIALLY_RECEIVED', label: 'Partial' },
+  { value: 'RECEIVED', label: 'Received' },
+  { value: 'CANCELLED', label: 'Cancelled' }
+]
+
 export default function ProcurementTrackingPage() {
   const [requests, setRequests] = useState<MaterialRequest[]>([])
   const [filteredRequests, setFilteredRequests] = useState<MaterialRequest[]>([])
@@ -94,6 +103,29 @@ export default function ProcurementTrackingPage() {
     } catch (error) {
       console.error('Failed to fetch requests:', error)
       setLoading(false)
+    }
+  }
+
+  const handleStatusChange = async (req: MaterialRequest, newStatus: string) => {
+    if (!newStatus) return
+    try {
+      const res = await fetch('/api/procurement-actions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          materialRequestId: req.id,
+          actionType: 'STATUS_UPDATE',
+          actionBy: 'Procurement Team',
+          notes: `Status set to ${newStatus.replace(/_/g, ' ')}`,
+          oldStatus: req.status,
+          newStatus
+        })
+      })
+      if (res.ok) {
+        await fetchRequests()
+      }
+    } catch (error) {
+      console.error('Failed to update status:', error)
     }
   }
 
@@ -287,12 +319,13 @@ export default function ProcurementTrackingPage() {
           <div className="lg:col-span-2 space-y-2">
             <Card className="border border-slate-200">
               <CardHeader className="py-2">
-                <div className="grid grid-cols-12 gap-2 text-[11px] font-semibold text-slate-600">
+                <div className="grid grid-cols-14 gap-2 text-[11px] font-semibold text-slate-600">
                   <div className="col-span-3">Request # / Job #</div>
                   <div className="col-span-3">Item / Qty</div>
                   <div className="col-span-2">Required</div>
                   <div className="col-span-2">Urgency</div>
                   <div className="col-span-2">Status</div>
+                  <div className="col-span-2">Update Status</div>
                 </div>
               </CardHeader>
               <CardContent className="p-0">
@@ -318,7 +351,7 @@ export default function ProcurementTrackingPage() {
                       return (
                         <div
                           key={`${request.id}-${item.id || idx}`}
-                          className={`grid grid-cols-12 items-center gap-2 px-3 py-2 text-[12px] cursor-pointer hover:bg-blue-50 ${
+                          className={`grid grid-cols-14 items-center gap-2 px-3 py-2 text-[12px] cursor-pointer hover:bg-blue-50 ${
                             selectedRequest?.id === request.id ? 'bg-blue-50' : ''
                           }`}
                           onClick={() => setSelectedRequest(request)}
@@ -348,6 +381,20 @@ export default function ProcurementTrackingPage() {
                             <span className={`text-[11px] px-2 py-0.5 rounded-full font-semibold ${getStatusColor(request.status)}`}>
                               {request.status.replace(/_/g, ' ').substring(0, 12)}
                             </span>
+                          </div>
+                          <div className="col-span-2" onClick={(e) => e.stopPropagation()}>
+                            <select
+                              defaultValue=""
+                              className="w-full h-7 px-2 rounded-md border border-slate-300 text-[11px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              onChange={(e) => handleStatusChange(request, e.target.value)}
+                            >
+                              <option value="">Change status</option>
+                              {STATUS_OPTIONS.map((opt) => (
+                                <option key={opt.value} value={opt.value}>
+                                  {opt.label}
+                                </option>
+                              ))}
+                            </select>
                           </div>
                         </div>
                       )
@@ -404,37 +451,6 @@ export default function ProcurementTrackingPage() {
                     <div>
                       <p className="text-xs text-slate-600">Requested By</p>
                       <p className="text-slate-900 text-xs">{selectedRequest.requestedBy}</p>
-                    </div>
-                  </div>
-
-                  <hr />
-
-                  {/* Action History */}
-                  <div>
-                    <h3 className="font-semibold text-slate-900 text-sm mb-2 flex items-center gap-1">
-                      <FileText className="h-3 w-3" />
-                      History
-                    </h3>
-                    <div className="space-y-1 max-h-32 overflow-y-auto">
-                      {selectedRequest.procurementActions.length === 0 ? (
-                        <p className="text-xs text-slate-500 italic">No actions yet</p>
-                      ) : (
-                        selectedRequest.procurementActions.map((action) => (
-                          <div key={action.id} className="text-xs p-2 bg-slate-50 rounded border border-slate-200">
-                            <p className="font-medium text-slate-900">{action.actionType.replace(/_/g, ' ')}</p>
-                            {action.notes && <p className="text-slate-600">{action.notes}</p>}
-                            {action.quotationAmount && (
-                              <p className="text-slate-700">Amt: ${action.quotationAmount}</p>
-                            )}
-                            {action.supplierName && (
-                              <p className="text-slate-700">Supplier: {action.supplierName}</p>
-                            )}
-                            <p className="text-[10px] text-slate-500 mt-1">
-                              {action.actionBy} • {new Date(action.actionDate).toLocaleDateString()}
-                            </p>
-                          </div>
-                        ))
-                      )}
                     </div>
                   </div>
 
@@ -502,6 +518,37 @@ export default function ProcurementTrackingPage() {
                       </Button>
                     </form>
                   </div>
+
+                    <hr />
+
+                    {/* Action History */}
+                    <div>
+                      <h3 className="font-semibold text-slate-900 text-sm mb-2 flex items-center gap-1">
+                        <FileText className="h-3 w-3" />
+                        History
+                      </h3>
+                      <div className="space-y-1 max-h-32 overflow-y-auto">
+                        {selectedRequest.procurementActions.length === 0 ? (
+                          <p className="text-xs text-slate-500 italic">No actions yet</p>
+                        ) : (
+                          selectedRequest.procurementActions.map((action) => (
+                            <div key={action.id} className="text-xs p-2 bg-slate-50 rounded border border-slate-200">
+                              <p className="font-medium text-slate-900">{action.actionType.replace(/_/g, ' ')}</p>
+                              {action.notes && <p className="text-slate-600">{action.notes}</p>}
+                              {action.quotationAmount && (
+                                <p className="text-slate-700">Amt: ${action.quotationAmount}</p>
+                              )}
+                              {action.supplierName && (
+                                <p className="text-slate-700">Supplier: {action.supplierName}</p>
+                              )}
+                              <p className="text-[10px] text-slate-500 mt-1">
+                                {action.actionBy} • {new Date(action.actionDate).toLocaleDateString()}
+                              </p>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
                 </CardContent>
               </Card>
             ) : (
