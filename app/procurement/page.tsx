@@ -41,6 +41,9 @@ interface MaterialRequest {
     description: string
     quantity: number
     unit: string
+    stockQtyInInventory?: number
+    urgencyLevel?: string | null
+    requiredDate?: string | null
   }>
   procurementActions: Array<{
     id: string
@@ -229,7 +232,51 @@ export default function ProcurementTrackingPage() {
                 <TrendingUp className="h-6 w-6 text-blue-600" />
               </div>
             </CardContent>
-          </Card>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <p className="text-xs text-slate-600">Request</p>
+                        <p className="font-medium text-slate-900">{selectedRequest.requestNumber}</p>
+                        <p className="text-[11px] text-slate-600">JO-{selectedRequest.jobOrder.jobNumber}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-600">Urgency / Status</p>
+                        <p>
+                          <span className={`text-[11px] px-2 py-0.5 rounded-full font-semibold ${getUrgencyColor(selectedRequest.urgencyLevel)}`}>
+                            {selectedRequest.urgencyLevel}
+                          </span>
+                          <span className={`ml-2 text-[11px] px-2 py-0.5 rounded-full font-semibold ${getStatusColor(selectedRequest.status)}`}>
+                            {selectedRequest.status.replace(/_/g, ' ')}
+                          </span>
+                        </p>
+                      </div>
+                    </div>
+
+                    <div>
+                      <p className="text-xs text-slate-600 mb-1">Items</p>
+                      <div className="space-y-1 bg-slate-50 border border-slate-100 rounded p-2 max-h-60 overflow-y-auto">
+                        {(selectedRequest.items && selectedRequest.items.length > 0 ? selectedRequest.items : [{
+                          id: `${selectedRequest.id}-main`,
+                          itemName: selectedRequest.itemName,
+                          description: selectedRequest.description,
+                          quantity: selectedRequest.quantity,
+                          unit: selectedRequest.unit,
+                          requiredDate: selectedRequest.requiredDate,
+                          urgencyLevel: selectedRequest.urgencyLevel
+                        }]).map((item) => (
+                          <div key={item.id} className="grid grid-cols-[1.4fr_2fr_0.8fr_0.8fr] gap-2 text-[12px]">
+                            <div className="font-medium text-slate-900 truncate">{item.itemName}</div>
+                            <div className="text-slate-700 truncate">{item.description}</div>
+                            <div className="text-slate-700">{item.quantity} {item.unit}</div>
+                            <div className="text-slate-600 text-right">
+                              {item.requiredDate ? new Date(item.requiredDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) : '-'}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
           
           <Card>
             <CardContent className="p-3">
@@ -299,46 +346,61 @@ export default function ProcurementTrackingPage() {
               </CardHeader>
               <CardContent className="p-0">
                 <div className="divide-y divide-slate-200 max-h-[600px] overflow-y-auto">
-                  {filteredRequests.map((request) => {
-                    const daysLeft = calculateDaysUntilRequired(request.requiredDate)
-                    const overdue = isOverdue(request.requiredDate)
-                    
-                    return (
-                      <div
-                        key={request.id}
-                        className={`grid grid-cols-12 items-center gap-2 px-3 py-2 text-[12px] cursor-pointer hover:bg-blue-50 ${
-                          selectedRequest?.id === request.id ? 'bg-blue-50' : ''
-                        }`}
-                        onClick={() => setSelectedRequest(request)}
-                      >
-                        <div className="col-span-3">
-                          <div className="font-semibold text-slate-900">{request.requestNumber}</div>
-                          <div className="text-[11px] text-slate-500">JO-{request.jobOrder.jobNumber}</div>
-                        </div>
-                        <div className="col-span-3 truncate">
-                          <div className="font-medium text-slate-800 truncate">{request.itemName}</div>
-                          <div className="text-[11px] text-slate-500">{request.quantity} {request.unit}</div>
-                        </div>
-                        <div className="col-span-2">
-                          <div className={overdue ? 'text-red-600 font-semibold' : 'text-slate-600'}>
-                            {new Date(request.requiredDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
+                  {filteredRequests.flatMap((request) => {
+                    const itemsToShow = request.items && request.items.length > 0 ? request.items : [{
+                      id: `${request.id}-main`,
+                      itemName: request.itemName,
+                      description: request.description,
+                      quantity: request.quantity,
+                      unit: request.unit,
+                      urgencyLevel: request.urgencyLevel,
+                      requiredDate: request.requiredDate,
+                      stockQtyInInventory: undefined
+                    }]
+
+                    return itemsToShow.map((item, idx) => {
+                      const requiredDate = item.requiredDate || request.requiredDate
+                      const daysLeft = calculateDaysUntilRequired(requiredDate)
+                      const overdue = isOverdue(requiredDate)
+                      const urgency = item.urgencyLevel || request.urgencyLevel
+
+                      return (
+                        <div
+                          key={`${request.id}-${item.id || idx}`}
+                          className={`grid grid-cols-12 items-center gap-2 px-3 py-2 text-[12px] cursor-pointer hover:bg-blue-50 ${
+                            selectedRequest?.id === request.id ? 'bg-blue-50' : ''
+                          }`}
+                          onClick={() => setSelectedRequest(request)}
+                        >
+                          <div className="col-span-3">
+                            <div className="font-semibold text-slate-900">{request.requestNumber}</div>
+                            <div className="text-[11px] text-slate-500">JO-{request.jobOrder.jobNumber}</div>
                           </div>
-                          <div className={`text-[11px] ${overdue ? 'text-red-500' : 'text-slate-500'}`}>
-                            {overdue ? `${Math.abs(daysLeft)}d late` : `${daysLeft}d left`}
+                          <div className="col-span-3 truncate">
+                            <div className="font-medium text-slate-800 truncate">{item.itemName}</div>
+                            <div className="text-[11px] text-slate-500">{item.quantity} {item.unit}</div>
+                          </div>
+                          <div className="col-span-2">
+                            <div className={overdue ? 'text-red-600 font-semibold' : 'text-slate-600'}>
+                              {requiredDate ? new Date(requiredDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) : '-'}
+                            </div>
+                            <div className={`text-[11px] ${overdue ? 'text-red-500' : 'text-slate-500'}`}>
+                              {requiredDate ? (overdue ? `${Math.abs(daysLeft)}d late` : `${daysLeft}d left`) : 'No date'}
+                            </div>
+                          </div>
+                          <div className="col-span-2">
+                            <span className={`text-[11px] px-2 py-0.5 rounded-full font-semibold ${getUrgencyColor(urgency)}`}>
+                              {urgency}
+                            </span>
+                          </div>
+                          <div className="col-span-2">
+                            <span className={`text-[11px] px-2 py-0.5 rounded-full font-semibold ${getStatusColor(request.status)}`}>
+                              {request.status.replace(/_/g, ' ').substring(0, 12)}
+                            </span>
                           </div>
                         </div>
-                        <div className="col-span-2">
-                          <span className={`text-[11px] px-2 py-0.5 rounded-full font-semibold ${getUrgencyColor(request.urgencyLevel)}`}>
-                            {request.urgencyLevel}
-                          </span>
-                        </div>
-                        <div className="col-span-2">
-                          <span className={`text-[11px] px-2 py-0.5 rounded-full font-semibold ${getStatusColor(request.status)}`}>
-                            {request.status.replace(/_/g, ' ').substring(0, 12)}
-                          </span>
-                        </div>
-                      </div>
-                    )
+                      )
+                    })
                   })}
                 </div>
               </CardContent>
