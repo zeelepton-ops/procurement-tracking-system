@@ -231,7 +231,9 @@ export default function ProcurementTrackingPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs text-slate-600">Total</p>
-                  <p className="text-xl font-bold text-slate-900">{requests.length}</p>
+                  <p className="text-xl font-bold text-slate-900">
+                    {requests.reduce((sum, r) => sum + (r.items?.length || 1), 0)}
+                  </p>
                 </div>
                 <Package className="h-6 w-6 text-blue-600" />
               </div>
@@ -321,11 +323,11 @@ export default function ProcurementTrackingPage() {
               <CardHeader className="py-2">
                 <div className="grid grid-cols-14 gap-1 text-[11px] font-semibold text-slate-600">
                   <div className="col-span-3">Request # / Job #</div>
-                  <div className="col-span-3">Item / Qty</div>
+                  <div className="col-span-2">Item / Qty</div>
                   <div className="col-span-2">Required</div>
                   <div className="col-span-2">Urgency</div>
                   <div className="col-span-2">Status</div>
-                  <div className="col-span-2">Update Status</div>
+                  <div className="col-span-3">Update Status</div>
                 </div>
               </CardHeader>
               <CardContent className="p-0">
@@ -360,7 +362,7 @@ export default function ProcurementTrackingPage() {
                             <div className="font-semibold text-slate-900">{request.requestNumber}</div>
                             <div className="text-[11px] text-slate-500">JO-{request.jobOrder.jobNumber}</div>
                           </div>
-                          <div className="col-span-3 truncate">
+                          <div className="col-span-2 truncate">
                             <div className="font-medium text-slate-800 truncate">{item.itemName}</div>
                             <div className="text-[11px] text-slate-500">{item.quantity} {item.unit}</div>
                           </div>
@@ -382,7 +384,7 @@ export default function ProcurementTrackingPage() {
                               {request.status.replace(/_/g, ' ').substring(0, 12)}
                             </span>
                           </div>
-                          <div className="col-span-2 flex items-center" onClick={(e) => e.stopPropagation()}>
+                          <div className="col-span-3 flex items-center" onClick={(e) => e.stopPropagation()}>
                             <select
                               defaultValue=""
                               className="w-[130px] h-7 px-2 rounded-md border border-slate-300 text-[11px] focus:outline-none focus:ring-2 focus:ring-blue-500"
