@@ -718,6 +718,7 @@ export default function JobOrdersPage() {
                         priority: 'MEDIUM',
                         foreman: '',
                         workScope: '',
+                        scopeOfWorks: [],
                         qaQcInCharge: ''
                       })
                     }}
