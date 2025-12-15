@@ -648,7 +648,7 @@ export default function MaterialRequestPage() {
                       </div>
                       <div className="w-[150px] flex-shrink-0 cursor-pointer hover:bg-blue-100" onClick={() => setSelectedRequest(req)}>
                         <span className={`text-[11px] px-2 py-0.5 rounded-full font-semibold ${getStatusColor(req.status)}`}>
-                          {req.status.replace(/_/g, ' ')}
+                          {req.status?.replace(/_/g, ' ') || 'PENDING'}
                         </span>
                       </div>
                       <div className="w-[80px] flex-shrink-0">
@@ -715,7 +715,7 @@ export default function MaterialRequestPage() {
                 </div>
                 <div>
                   <div className="text-slate-500 text-xs">Material Type</div>
-                  <div>{selectedRequest.materialType.replace(/_/g, ' ')}</div>
+                  <div>{selectedRequest.materialType?.replace(/_/g, ' ') || 'N/A'}</div>
                 </div>
                 <div>
                   <div className="text-slate-500 text-xs">Requested By</div>
@@ -768,7 +768,7 @@ export default function MaterialRequestPage() {
                 <div className="text-slate-500 text-xs">Current Status</div>
                 <div>
                   <span className={`text-sm px-3 py-1 rounded-full font-semibold ${getStatusColor(selectedRequest.status)}`}>
-                    {selectedRequest.status.replace(/_/g, ' ')}
+                    {selectedRequest.status?.replace(/_/g, ' ') || 'PENDING'}
                   </span>
                 </div>
               </div>
