@@ -385,7 +385,7 @@ export default function ProcurementTrackingPage() {
                           <div className="col-span-2" onClick={(e) => e.stopPropagation()}>
                             <select
                               defaultValue=""
-                              className="w-full h-7 px-2 rounded-md border border-slate-300 text-[11px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              className="w-[130px] h-7 px-2 rounded-md border border-slate-300 text-[11px] focus:outline-none focus:ring-2 focus:ring-blue-500"
                               onChange={(e) => handleStatusChange(request, e.target.value)}
                             >
                               <option value="">Change status</option>
