@@ -16,9 +16,17 @@ export async function GET(request: Request) {
         include: { items: true }
       })
       if (!jo) {
-        return NextResponse.json({ message: 'Not found' }, { status: 404 })
+        return NextResponse.json({ message: `Job number '${jobNumberParam}' not found`, found: false }, { status: 404 })
       }
-      return NextResponse.json(jo)
+      return NextResponse.json({ found: true, data: jo })
+    }
+
+    // Debug mode: list all job numbers with delete status
+    if (searchParams.get('debug') === 'true') {
+      const allJobs = await prisma.jobOrder.findMany({
+        select: { id: true, jobNumber: true, isDeleted: true, createdAt: true }
+      })
+      return NextResponse.json({ totalCount: allJobs.length, jobs: allJobs })
     }
 
     const jobOrders = await prisma.jobOrder.findMany({
