@@ -24,6 +24,9 @@ interface JobOrder {
   createdAt: string
   lastEditedBy: string | null
   lastEditedAt: string | null
+  isDeleted?: boolean
+  deletedAt?: string | null
+  deletedBy?: string | null
   items?: JobOrderItem[]
   _count?: {
     materialRequests: number
@@ -41,6 +44,7 @@ interface JobOrderItem {
 
 export default function JobOrdersPage() {
   const [jobOrders, setJobOrders] = useState<JobOrder[]>([])
+  const [deletedJobOrders, setDeletedJobOrders] = useState<JobOrder[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [filters, setFilters] = useState({
@@ -68,6 +72,7 @@ export default function JobOrdersPage() {
   const [error, setError] = useState('')
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
   const [editingJob, setEditingJob] = useState<JobOrder | null>(null)
+  const [restoring, setRestoring] = useState<string | null>(null)
   const [editFormData, setEditFormData] = useState({
     jobNumber: '',
     productName: '',
@@ -87,6 +92,7 @@ export default function JobOrdersPage() {
 
   useEffect(() => {
     fetchJobOrders()
+    fetchDeletedJobOrders()
   }, [])
 
   const filteredOrders = jobOrders.filter((order) => {
@@ -160,6 +166,28 @@ export default function JobOrdersPage() {
     }
   }
 
+  const fetchDeletedJobOrders = async () => {
+    try {
+      const res = await fetch('/api/job-orders?includeDeleted=true')
+      if (!res.ok) {
+        throw new Error(`Failed to fetch deleted job orders: ${res.status}`)
+      }
+      const data = await res.json()
+      
+      // Filter only deleted jobs
+      if (Array.isArray(data)) {
+        const deleted = data.filter((job: JobOrder) => (job as any).isDeleted)
+        setDeletedJobOrders(deleted)
+      } else {
+        console.error('Invalid response format:', data)
+        setDeletedJobOrders([])
+      }
+    } catch (error) {
+      console.error('Failed to fetch deleted job orders:', error)
+      setDeletedJobOrders([])
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
@@ -218,8 +246,32 @@ export default function JobOrdersPage() {
 
       setDeleteConfirm(null)
       fetchJobOrders()
+      fetchDeletedJobOrders()
     } catch (err: any) {
       alert(err.message)
+    }
+  }
+
+  const handleRestore = async (id: string) => {
+    try {
+      setRestoring(id)
+      const res = await fetch('/api/job-orders', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, action: 'restore' })
+      })
+
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || 'Failed to restore job order')
+      }
+
+      setRestoring(null)
+      fetchJobOrders()
+      fetchDeletedJobOrders()
+    } catch (err: any) {
+      alert(err.message)
+      setRestoring(null)
     }
   }
 
@@ -705,6 +757,50 @@ export default function JobOrdersPage() {
             </Card>
           )}
         </div>
+
+        {/* Deleted Job Orders Section */}
+        {deletedJobOrders.length > 0 && (
+          <Card className="mt-6 border-amber-200 bg-amber-50">
+            <CardHeader className="py-3 bg-amber-100">
+              <CardTitle className="text-amber-900 text-lg">Deleted Job Orders ({deletedJobOrders.length})</CardTitle>
+              <CardDescription className="text-amber-700">Soft-deleted records that can be restored</CardDescription>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="divide-y divide-amber-200">
+                {deletedJobOrders.map((order) => (
+                  <div
+                    key={order.id}
+                    className="grid grid-cols-12 items-center gap-2 px-3 py-2 text-[12px] hover:bg-amber-100"
+                  >
+                    <div className="col-span-2">
+                      <div className="font-semibold text-amber-900">JO-{order.jobNumber}</div>
+                      <div className="text-[10px] text-amber-700">Deleted</div>
+                    </div>
+                    <div className="col-span-4 truncate text-amber-800">{order.productName}</div>
+                    <div className="col-span-3 truncate text-amber-700">
+                      {order.clientName && <span className="block truncate">{order.clientName}</span>}
+                      {order.foreman && <span className="block text-[11px]">Foreman: {order.foreman}</span>}
+                    </div>
+                    <div className="col-span-2 text-amber-700">
+                      {new Date(order.createdAt).toLocaleDateString()}
+                    </div>
+                    <div className="col-span-1 flex justify-end">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleRestore(order.id)}
+                        disabled={restoring === order.id}
+                        className="h-7 text-[11px] text-green-600 hover:text-green-700 hover:bg-green-50 border-green-300"
+                      >
+                        {restoring === order.id ? 'Restoring...' : 'Restore'}
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Selected job details */}
         {selectedJob && (

@@ -29,10 +29,12 @@ export async function GET(request: Request) {
       return NextResponse.json({ totalCount: allJobs.length, jobs: allJobs })
     }
 
+    // Include soft-deleted if requested
+    const includeDeleted = searchParams.get('includeDeleted') === 'true'
+    const whereClause = includeDeleted ? {} : { isDeleted: false }
+
     const jobOrders = await prisma.jobOrder.findMany({
-      where: {
-        isDeleted: false
-      },
+      where: whereClause,
       orderBy: {
         createdAt: 'desc'
       },
@@ -369,5 +371,53 @@ export async function DELETE(request: Request) {
   } catch (error) {
     console.error('Failed to delete job order:', error)
     return NextResponse.json({ error: 'Failed to delete job order' }, { status: 500 })
+  }
+}
+export async function PATCH(request: Request) {
+  try {
+    const session = await getServerSession(authOptions)
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const body = await request.json()
+    const { id, action } = body
+
+    if (!id) {
+      return NextResponse.json({ error: 'Job order ID is required' }, { status: 400 })
+    }
+
+    const jobOrder = await prisma.jobOrder.findUnique({
+      where: { id },
+      include: { items: true }
+    })
+
+    if (!jobOrder) {
+      return NextResponse.json({ error: 'Job order not found' }, { status: 404 })
+    }
+
+    // Restore soft-deleted job order
+    if (action === 'restore') {
+      if (!jobOrder.isDeleted) {
+        return NextResponse.json({ error: 'Job order is not deleted' }, { status: 400 })
+      }
+
+      const restored = await prisma.jobOrder.update({
+        where: { id },
+        data: {
+          isDeleted: false,
+          deletedAt: null,
+          deletedBy: null
+        },
+        include: { items: true }
+      })
+
+      return NextResponse.json(restored)
+    }
+
+    return NextResponse.json({ error: 'Invalid action' }, { status: 400 })
+  } catch (error: any) {
+    console.error('Failed to update job order:', error)
+    return NextResponse.json({ error: 'Failed to update job order' }, { status: 500 })
   }
 }
