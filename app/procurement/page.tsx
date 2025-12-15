@@ -314,12 +314,12 @@ export default function ProcurementTrackingPage() {
           </select>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-2">
           {/* Requests List */}
           <div className="lg:col-span-2 space-y-2">
             <Card className="border border-slate-200">
               <CardHeader className="py-2">
-                <div className="grid grid-cols-14 gap-2 text-[11px] font-semibold text-slate-600">
+                <div className="grid grid-cols-14 gap-1 text-[11px] font-semibold text-slate-600">
                   <div className="col-span-3">Request # / Job #</div>
                   <div className="col-span-3">Item / Qty</div>
                   <div className="col-span-2">Required</div>
@@ -351,7 +351,7 @@ export default function ProcurementTrackingPage() {
                       return (
                         <div
                           key={`${request.id}-${item.id || idx}`}
-                          className={`grid grid-cols-14 items-center gap-2 px-3 py-2 text-[12px] cursor-pointer hover:bg-blue-50 ${
+                          className={`grid grid-cols-14 items-center gap-1 px-3 py-2 text-[12px] cursor-pointer hover:bg-blue-50 ${
                             selectedRequest?.id === request.id ? 'bg-blue-50' : ''
                           }`}
                           onClick={() => setSelectedRequest(request)}
