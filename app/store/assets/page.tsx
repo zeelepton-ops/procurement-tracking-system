@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Loading } from '@/components/ui/loading'
+import { LoadingSpinner } from '@/components/ui/loading'
 
 interface Asset {
   id: string
@@ -121,7 +121,7 @@ export default function AssetsPage() {
             </CardHeader>
             <CardContent>
               {loading ? (
-                <div className="py-6 text-center text-slate-500"><Loading size="sm" /> Loading…</div>
+                <div className="py-6 text-center text-slate-500"><LoadingSpinner className="h-5 w-5 inline" /> Loading…</div>
               ) : error ? (
                 <div className="text-red-600 text-sm">{error}</div>
               ) : assets.length === 0 ? (
