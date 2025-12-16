@@ -15,7 +15,6 @@ interface Asset {
   category: string | null
   status: string | null
   location: string | null
-  quantity: number | null
   dateOfPurchase: string | null
   manufacturer: string | null
   updatedAt?: string
@@ -28,7 +27,6 @@ const emptyAsset: Asset = {
   category: null,
   status: null,
   location: null,
-  quantity: null,
   dateOfPurchase: null,
   manufacturer: null,
 }
@@ -65,9 +63,38 @@ export default function AssetsPage() {
   const [exporting, setExporting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [draft, setDraft] = useState<Asset>(emptyAsset)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [filterCategory, setFilterCategory] = useState('')
+  const [filterLocation, setFilterLocation] = useState('')
+  const [sortBy, setSortBy] = useState('code')
   const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   const isEditing = useMemo(() => Boolean(draft.id), [draft.id])
+
+  const filteredAssets = useMemo(() => {
+    let result = assets.filter((asset) => {
+      const matchesSearch = searchTerm === '' || 
+        asset.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        asset.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (asset.manufacturer?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false)
+      const matchesCategory = filterCategory === '' || asset.category === filterCategory
+      const matchesLocation = filterLocation === '' || asset.location === filterLocation
+      return matchesSearch && matchesCategory && matchesLocation
+    })
+
+    if (sortBy === 'name') {
+      result = result.sort((a, b) => a.name.localeCompare(b.name))
+    } else if (sortBy === 'category') {
+      result = result.sort((a, b) => (a.category || '').localeCompare(b.category || ''))
+    } else {
+      result = result.sort((a, b) => a.code.localeCompare(b.code))
+    }
+
+    return result
+  }, [assets, searchTerm, filterCategory, filterLocation, sortBy])
+
+  const uniqueCategories = useMemo(() => [...new Set(assets.map((a) => a.category).filter((v): v is string => Boolean(v)))].sort(), [assets])
+  const uniqueLocations = useMemo(() => [...new Set(assets.map((a) => a.location).filter((v): v is string => Boolean(v)))].sort(), [assets])
 
   const load = async () => {
     setLoading(true)
@@ -97,7 +124,7 @@ export default function AssetsPage() {
         Code: a.code,
         Name: a.name,
         Category: a.category || '',
-        Quantity: a.quantity ?? '',
+        'Category Prefix': a.category ? CATEGORY_PREFIX[a.category] : (a.code ? a.code.slice(0,2) : ''),
         'Date of Purchase': a.dateOfPurchase ? new Date(a.dateOfPurchase).toLocaleDateString() : '',
         Manufacturer: a.manufacturer || '',
         Status: a.status || '',
@@ -137,7 +164,6 @@ export default function AssetsPage() {
           category: pick('category', 'Category'),
           status: pick('status', 'Status') || 'ACTIVE',
           location: pick('location', 'Location'),
-          quantity: pick('quantity', 'Quantity', 'Qty'),
           dateOfPurchase: pick('dateOfPurchase', 'Date of Purchase', 'Purchase Date', 'DateOfPurchase'),
           manufacturer: pick('manufacturer', 'Manufacturer', 'Mfg'),
         }
@@ -149,7 +175,6 @@ export default function AssetsPage() {
         category?: string | null
         status?: string | null
         location?: string | null
-        quantity?: number | null
         dateOfPurchase?: string | null
         manufacturer?: string | null
       }>
@@ -182,7 +207,6 @@ export default function AssetsPage() {
         status: draft.status || null,
         location: draft.location || null,
         category: draft.category || null,
-        quantity: draft.quantity || null,
         dateOfPurchase: draft.dateOfPurchase || null,
         manufacturer: draft.manufacturer || null,
       }
@@ -263,6 +287,47 @@ export default function AssetsPage() {
           <Card className="lg:col-span-2">
             <CardHeader>
               <CardTitle>Asset List</CardTitle>
+              <div className="mt-4 space-y-2">
+                <div className="grid grid-cols-4 gap-2">
+                  <Input
+                    type="text"
+                    placeholder="Search by code, name or manufacturer..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="text-sm"
+                  />
+                  <select
+                    value={filterCategory}
+                    onChange={(e) => setFilterCategory(e.target.value)}
+                    className="px-3 py-2 border border-slate-200 rounded text-sm"
+                  >
+                    <option value="">All Categories</option>
+                    {uniqueCategories.map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                  <select
+                    value={filterLocation}
+                    onChange={(e) => setFilterLocation(e.target.value)}
+                    className="px-3 py-2 border border-slate-200 rounded text-sm"
+                  >
+                    <option value="">All Locations</option>
+                    {uniqueLocations.map(l => <option key={l} value={l}>{l}</option>)}
+                  </select>
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="px-3 py-2 border border-slate-200 rounded text-sm"
+                  >
+                    <option value="code">Sort by Code</option>
+                    <option value="name">Sort by Name</option>
+                    <option value="category">Sort by Category</option>
+                  </select>
+                </div>
+                {(searchTerm || filterCategory || filterLocation) && (
+                  <div className="text-sm text-slate-600">
+                    Showing {filteredAssets.length} of {assets.length} assets
+                  </div>
+                )}
+              </div>
             </CardHeader>
             <CardContent>
               {loading ? (
@@ -279,7 +344,7 @@ export default function AssetsPage() {
                         <th className="py-2 pr-3">Code</th>
                         <th className="py-2 pr-3">Name</th>
                         <th className="py-2 pr-3">Category</th>
-                        <th className="py-2 pr-3">Qty</th>
+                        <th className="py-2 pr-3">Category Prefix</th>
                         <th className="py-2 pr-3">Purchase Date</th>
                         <th className="py-2 pr-3">Manufacturer</th>
                         <th className="py-2 pr-3">Status</th>
@@ -288,12 +353,12 @@ export default function AssetsPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
-                      {assets.map((asset) => (
+                      {filteredAssets.map((asset) => (
                         <tr key={asset.id} className="align-top">
                           <td className="py-2 pr-3 font-medium text-slate-900">{asset.code}</td>
                           <td className="py-2 pr-3">{asset.name}</td>
                           <td className="py-2 pr-3">{asset.category || '—'}</td>
-                          <td className="py-2 pr-3">{asset.quantity ?? '—'}</td>
+                          <td className="py-2 pr-3">{asset.category ? CATEGORY_PREFIX[asset.category] : (asset.code ? asset.code.slice(0,2) : '—')}</td>
                           <td className="py-2 pr-3">{asset.dateOfPurchase ? new Date(asset.dateOfPurchase).toLocaleDateString() : '—'}</td>
                           <td className="py-2 pr-3">{asset.manufacturer || '—'}</td>
                           <td className="py-2 pr-3">{asset.status || '—'}</td>
@@ -393,12 +458,11 @@ export default function AssetsPage() {
 
                 <div className="grid grid-cols-3 gap-3">
                   <div className="space-y-1">
-                    <Label htmlFor="quantity">Quantity</Label>
+                    <Label htmlFor="categoryPrefix">Category Prefix</Label>
                     <Input
-                      id="quantity"
-                      type="number"
-                      value={draft.quantity ?? ''}
-                      onChange={(e) => setDraft({ ...draft, quantity: e.target.value ? parseInt(e.target.value) : null })}
+                      id="categoryPrefix"
+                      readOnly
+                      value={draft.category ? CATEGORY_PREFIX[draft.category] : (draft.code ? draft.code.slice(0,2) : '')}
                     />
                   </div>
                   <div className="space-y-1">

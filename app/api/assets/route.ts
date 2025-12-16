@@ -10,14 +10,15 @@ async function ensureAssetTable() {
       "category" TEXT,
       "location" TEXT,
       "status" TEXT DEFAULT 'ACTIVE',
-      "quantity" INTEGER,
-      "dateOfPurchase" TIMESTAMP(3),
-      "manufacturer" TEXT,
       "isActive" BOOLEAN NOT NULL DEFAULT TRUE,
       "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
       "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
       CONSTRAINT "Asset_pkey" PRIMARY KEY ("id")
     );`
+    // Ensure new columns exist on older databases
+    await prisma.$executeRaw`ALTER TABLE "Asset" ADD COLUMN IF NOT EXISTS "quantity" INTEGER;`
+    await prisma.$executeRaw`ALTER TABLE "Asset" ADD COLUMN IF NOT EXISTS "dateOfPurchase" TIMESTAMP(3);`
+    await prisma.$executeRaw`ALTER TABLE "Asset" ADD COLUMN IF NOT EXISTS "manufacturer" TEXT;`
     await prisma.$executeRaw`CREATE UNIQUE INDEX IF NOT EXISTS "Asset_code_key" ON "Asset"("code");`
   } catch (error) {
     console.error('Failed to ensure Asset table exists:', error)
