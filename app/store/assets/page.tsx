@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { LoadingSpinner } from '@/components/ui/loading'
+import { Edit2, Trash2 } from 'lucide-react'
 
 interface Asset {
   id: string
@@ -252,9 +253,9 @@ export default function AssetsPage() {
                           <td className="py-2 pr-3">{asset.status || '—'}</td>
                           <td className="py-2 pr-3">{asset.location || '—'}</td>
                           <td className="py-2 pr-3 text-slate-500">{asset.updatedAt ? new Date(asset.updatedAt).toLocaleDateString() : '—'}</td>
-                          <td className="py-2 pr-3 space-x-2">
-                            <Button variant="outline" size="sm" onClick={() => handleEdit(asset)}>Edit</Button>
-                            <Button variant="destructive" size="sm" onClick={() => handleDelete(asset.id)}>Delete</Button>
+                          <td className="py-2 pr-3 space-x-2 flex items-center">
+                            <button onClick={() => handleEdit(asset)} className="p-1 hover:bg-blue-100 rounded text-blue-600 hover:text-blue-700" title="Edit"><Edit2 size={16} /></button>
+                            <button onClick={() => handleDelete(asset.id)} className="p-1 hover:bg-red-100 rounded text-red-600 hover:text-red-700" title="Delete"><Trash2 size={16} /></button>
                           </td>
                         </tr>
                       ))}

@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { LoadingSpinner } from '@/components/ui/loading'
+import { Edit2, Trash2 } from 'lucide-react'
 
 interface InventoryItem {
   id: string
@@ -224,8 +225,8 @@ export default function InventoryPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <Card className="lg:col-span-2">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-2">
+          <Card className="lg:col-span-3">
             <CardHeader>
               <CardTitle>Items</CardTitle>
             </CardHeader>
@@ -261,9 +262,9 @@ export default function InventoryPage() {
                           <td className="py-1 pr-3">{item.minimumStock ?? '—'}</td>
                           <td className="py-1 pr-3">{item.location || '—'}</td>
                           <td className="py-1 pr-3 text-slate-500">{item.updatedAt ? new Date(item.updatedAt).toLocaleDateString() : '—'}</td>
-                          <td className="py-1 pr-3 space-x-1">
-                            <Button variant="outline" size="sm" onClick={() => handleEdit(item)}>Edit</Button>
-                            <Button variant="destructive" size="sm" onClick={() => handleDelete(item.id)}>Delete</Button>
+                          <td className="py-1 pr-3 space-x-2 flex items-center">
+                            <button onClick={() => handleEdit(item)} className="p-1 hover:bg-blue-100 rounded text-blue-600 hover:text-blue-700" title="Edit"><Edit2 size={16} /></button>
+                            <button onClick={() => handleDelete(item.id)} className="p-1 hover:bg-red-100 rounded text-red-600 hover:text-red-700" title="Delete"><Trash2 size={16} /></button>
                           </td>
                         </tr>
                       ))}
