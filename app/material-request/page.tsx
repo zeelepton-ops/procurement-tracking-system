@@ -23,11 +23,23 @@ interface InventoryItem {
   unit: string
 }
 
+interface Asset {
+  id: string
+  code: string
+  name: string
+  category?: string
+  location?: string
+  status?: string
+}
+
 interface MaterialRequest {
   id: string
   requestNumber: string
-  jobOrderId: string
-  jobOrder: JobOrder
+  jobOrderId?: string
+  jobOrder?: JobOrder
+  assetId?: string
+  asset?: Asset
+  requestContext: string
   materialType: string
   itemName: string
   description: string
@@ -52,11 +64,13 @@ interface MaterialRequest {
     urgencyLevel?: string | null
     requiredDate?: string | null
     preferredSupplier?: string | null
+    inventoryItemId?: string | null
   }>
 }
 
 export default function MaterialRequestPage() {
   const [jobOrders, setJobOrders] = useState<JobOrder[]>([])
+  const [assets, setAssets] = useState<Asset[]>([])
   const [inventory, setInventory] = useState<InventoryItem[]>([])
   const [materialRequests, setMaterialRequests] = useState<MaterialRequest[]>([])
   const [loading, setLoading] = useState(false)
@@ -94,7 +108,9 @@ export default function MaterialRequestPage() {
   }])
   
   const [formData, setFormData] = useState({
+    requestContext: 'JOB_ORDER',
     jobOrderId: '',
+    assetId: '',
     materialType: 'RAW_MATERIAL',
     itemName: '',
     description: '',
@@ -110,6 +126,7 @@ export default function MaterialRequestPage() {
 
   useEffect(() => {
     fetchJobOrders()
+    fetchAssets()
     fetchInventory()
     fetchMaterialRequests()
   }, [])
@@ -121,6 +138,16 @@ export default function MaterialRequestPage() {
       setJobOrders(data)
     } catch (error) {
       console.error('Failed to fetch job orders:', error)
+    }
+  }
+
+  const fetchAssets = async () => {
+    try {
+      const res = await fetch('/api/assets')
+      const data = await res.json()
+      setAssets(data)
+    } catch (error) {
+      console.error('Failed to fetch assets:', error)
     }
   }
 
@@ -454,22 +481,19 @@ export default function MaterialRequestPage() {
           </CardHeader>
           <CardContent className="p-4">
             <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Job Order Selection */}
+              {/* Request Context Selection */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
-                  <Label className="text-sm font-semibold">Job Order *</Label>
+                  <Label className="text-sm font-semibold">Request For *</Label>
                   <Select
-                    value={formData.jobOrderId}
-                    onChange={(e) => setFormData({ ...formData, jobOrderId: e.target.value })}
-                    required
+                    value={formData.requestContext}
+                    onChange={(e) => setFormData({ ...formData, requestContext: e.target.value, jobOrderId: '', assetId: '' })}
                     className="mt-1"
                   >
-                      <option value="">Select</option>
-                    {jobOrders.map(jo => (
-                      <option key={jo.id} value={jo.id}>
-                        {jo.jobNumber} - {jo.productName}
-                      </option>
-                    ))}
+                    <option value="JOB_ORDER">Job Order</option>
+                    <option value="WORKSHOP">Workshop</option>
+                    <option value="MACHINERY">Machinery (Asset)</option>
+                    <option value="MAINTENANCE">Maintenance</option>
                   </Select>
                 </div>
 
@@ -485,10 +509,51 @@ export default function MaterialRequestPage() {
                     <option value="CONSUMABLE">Consumable</option>
                     <option value="MAINTENANCE">Maintenance</option>
                     <option value="ASSET">Asset</option>
+                    <option value="INVENTORY">Inventory</option>
                     <option value="STATIONARY">Stationary</option>
-                    <option value="GENERAL_REQUEST">General Request</option>
                   </Select>
                 </div>
+              </div>
+
+              {/* Conditional Selection based on Context */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {formData.requestContext === 'JOB_ORDER' && (
+                  <div>
+                    <Label className="text-sm font-semibold">Job Order *</Label>
+                    <Select
+                      value={formData.jobOrderId}
+                      onChange={(e) => setFormData({ ...formData, jobOrderId: e.target.value })}
+                      required
+                      className="mt-1"
+                    >
+                      <option value="">Select</option>
+                      {jobOrders.map(jo => (
+                        <option key={jo.id} value={jo.id}>
+                          {jo.jobNumber} - {jo.productName}
+                        </option>
+                      ))}
+                    </Select>
+                  </div>
+                )}
+                
+                {formData.requestContext === 'MACHINERY' && (
+                  <div>
+                    <Label className="text-sm font-semibold">Asset/Machinery *</Label>
+                    <Select
+                      value={formData.assetId}
+                      onChange={(e) => setFormData({ ...formData, assetId: e.target.value })}
+                      required
+                      className="mt-1"
+                    >
+                      <option value="">Select Asset</option>
+                      {assets.map(asset => (
+                        <option key={asset.id} value={asset.id}>
+                          {asset.code} - {asset.name}
+                        </option>
+                      ))}
+                    </Select>
+                  </div>
+                )}
               </div>
 
               {/* Multiple Items */}

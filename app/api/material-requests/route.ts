@@ -74,9 +74,13 @@ export async function POST(request: Request) {
     
     console.log('POST /api/material-requests - Received body:', JSON.stringify(body, null, 2))
     
-    // Validate required fields
-    if (!body.jobOrderId) {
-      return NextResponse.json({ error: 'Job Order is required' }, { status: 400 })
+    // Validate required fields - either jobOrderId or assetId based on context
+    const requestContext = body.requestContext || 'JOB_ORDER'
+    if (requestContext === 'JOB_ORDER' && !body.jobOrderId) {
+      return NextResponse.json({ error: 'Job Order is required for JOB_ORDER context' }, { status: 400 })
+    }
+    if (requestContext === 'MACHINERY' && !body.assetId) {
+      return NextResponse.json({ error: 'Asset is required for MACHINERY context' }, { status: 400 })
     }
     
     // Generate request number
@@ -104,7 +108,9 @@ export async function POST(request: Request) {
     const materialRequest = await prisma.materialRequest.create({
       data: {
         requestNumber,
-        jobOrderId: body.jobOrderId,
+        requestContext,
+        jobOrderId: body.jobOrderId || null,
+        assetId: body.assetId || null,
         materialType: body.materialType,
         itemName: firstItem?.itemName || body.itemName || 'Multiple Items',
         description: firstItem?.description || body.description || 'See items list',
@@ -128,12 +134,14 @@ export async function POST(request: Request) {
             reasonForRequest: item.reasonForRequest || null,
             urgencyLevel: item.urgencyLevel || 'NORMAL',
             requiredDate: item.requiredDate ? new Date(item.requiredDate) : null,
-            preferredSupplier: item.preferredSupplier || null
+            preferredSupplier: item.preferredSupplier || null,
+            inventoryItemId: item.inventoryItemId || null
           }))
         } : undefined
       },
       include: {
         jobOrder: true,
+        asset: true,
         items: true
       }
     })

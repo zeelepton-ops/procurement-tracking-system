@@ -91,8 +91,11 @@ model JobOrderEditHistory {
 model MaterialRequest {
   id               String   @id @default(cuid())
   requestNumber    String   @unique
-  jobOrderId       String
-  jobOrder         JobOrder @relation(fields: [jobOrderId], references: [id])
+  requestContext   String   @default("JOB_ORDER") // "JOB_ORDER", "WORKSHOP", "MACHINERY", "MAINTENANCE"
+  jobOrderId       String?
+  jobOrder         JobOrder? @relation(fields: [jobOrderId], references: [id])
+  assetId          String?
+  asset            Asset?   @relation(fields: [assetId], references: [id])
   
   materialType     String   // "RAW_MATERIAL" or "CONSUMABLE"
   itemName         String
@@ -142,6 +145,8 @@ model MaterialRequestItem {
   urgencyLevel      String  @default("NORMAL")
   requiredDate      DateTime?
   preferredSupplier String?
+  inventoryItemId   String?
+  inventoryItem     InventoryItem? @relation(fields: [inventoryItemId], references: [id])
   status            String  @default("PENDING") // "PENDING", "IN_PROCUREMENT", "ORDERED", "PARTIALLY_RECEIVED", "RECEIVED", "CANCELLED"
   
   createdAt         DateTime @default(now())
@@ -284,4 +289,18 @@ model InventoryItem {
   
   lastUpdated     DateTime @updatedAt
   createdAt       DateTime @default(now())
+  materialRequestItems MaterialRequestItem[]
+}
+
+model Asset {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  name        String
+  category    String?
+  location    String?
+  status      String?  @default("ACTIVE")
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  materialRequests MaterialRequest[]
 }
