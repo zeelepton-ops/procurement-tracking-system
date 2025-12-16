@@ -42,3 +42,43 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Failed to create asset' }, { status: 500 })
   }
 }
+
+export async function PUT(request: Request) {
+  try {
+    const body = await request.json()
+    const { id, ...data } = body
+    if (!id) return NextResponse.json({ error: 'ID is required' }, { status: 400 })
+
+    const asset = await prisma.asset.update({
+      where: { id },
+      data: {
+        code: data.code,
+        name: data.name,
+        category: data.category || null,
+        location: data.location || null,
+        status: data.status || 'ACTIVE',
+        isActive: data.isActive ?? true
+      }
+    })
+
+    return NextResponse.json(asset)
+  } catch (error: any) {
+    if (error.code === 'P2002') {
+      return NextResponse.json({ error: 'Asset code already exists' }, { status: 400 })
+    }
+    return NextResponse.json({ error: 'Failed to update asset' }, { status: 500 })
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const id = searchParams.get('id')
+    if (!id) return NextResponse.json({ error: 'ID is required' }, { status: 400 })
+
+    await prisma.asset.delete({ where: { id } })
+    return NextResponse.json({ message: 'Deleted' })
+  } catch (error) {
+    return NextResponse.json({ error: 'Failed to delete asset' }, { status: 500 })
+  }
+}

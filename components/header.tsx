@@ -4,7 +4,7 @@ import { useSession, signOut } from 'next-auth/react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { Package, FileText, BarChart3, LogOut, Briefcase, Users } from 'lucide-react'
+import { Package, FileText, BarChart3, LogOut, Briefcase, Users, Boxes } from 'lucide-react'
 
 export default function Header() {
   const { data: session } = useSession()
@@ -19,6 +19,7 @@ export default function Header() {
     { href: '/job-orders', label: 'Job Orders', icon: Briefcase },
     { href: '/material-request', label: 'Material Requests', icon: FileText },
     { href: '/procurement', label: 'Procurement', icon: Package },
+    { href: '/store', label: 'Store', icon: Boxes },
   ]
 
   // Add Users link for admin only
