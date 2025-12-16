@@ -10,6 +10,9 @@ async function ensureAssetTable() {
       "category" TEXT,
       "location" TEXT,
       "status" TEXT DEFAULT 'ACTIVE',
+      "quantity" INTEGER,
+      "dateOfPurchase" TIMESTAMP(3),
+      "manufacturer" TEXT,
       "isActive" BOOLEAN NOT NULL DEFAULT TRUE,
       "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
       "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -24,10 +27,12 @@ async function ensureAssetTable() {
 export async function GET() {
   try {
     await ensureAssetTable()
-    const assets = await prisma.asset.findMany({
-      where: { isActive: true },
-      orderBy: { code: 'asc' }
-    })
+    const assets = await prisma.$queryRaw<any[]>`
+      SELECT "id", "code", "name", "category", "location", "status", "quantity", "dateOfPurchase", "manufacturer", "isActive", "createdAt", "updatedAt"
+      FROM "Asset"
+      WHERE "isActive" = TRUE
+      ORDER BY "code" ASC
+    `
     return NextResponse.json(assets)
   } catch (error) {
     console.error('Failed to fetch assets:', error)
@@ -39,13 +44,13 @@ export async function POST(request: Request) {
   try {
     await ensureAssetTable()
     const body = await request.json()
-    const { code, name, category, location, status } = body
+    const { code, name, category, location, status, quantity, dateOfPurchase, manufacturer } = body
 
     if (!code || !name) {
       return NextResponse.json({ error: 'Code and name are required' }, { status: 400 })
     }
 
-    const asset = await prisma.asset.create({
+    const created = await prisma.asset.create({
       data: {
         code,
         name,
@@ -54,8 +59,20 @@ export async function POST(request: Request) {
         status: status || 'ACTIVE'
       }
     })
-
-    return NextResponse.json(asset, { status: 201 })
+    // Persist extended fields via raw SQL
+    await prisma.$executeRaw`
+      UPDATE "Asset"
+      SET "quantity" = ${quantity ?? null},
+          "dateOfPurchase" = ${dateOfPurchase ? new Date(dateOfPurchase) : null},
+          "manufacturer" = ${manufacturer ?? null}
+      WHERE "id" = ${created.id}
+    `
+    // Return full row including extended fields
+    const assetFull = await prisma.$queryRaw<any>`
+      SELECT "id", "code", "name", "category", "location", "status", "quantity", "dateOfPurchase", "manufacturer", "isActive", "createdAt", "updatedAt"
+      FROM "Asset" WHERE "id" = ${created.id} LIMIT 1
+    `
+    return NextResponse.json(Array.isArray(assetFull) ? assetFull[0] : assetFull, { status: 201 })
   } catch (error: any) {
     console.error('Failed to create asset:', error)
     if (error.code === 'P2002') {
@@ -72,7 +89,7 @@ export async function PUT(request: Request) {
     const { id, ...data } = body
     if (!id) return NextResponse.json({ error: 'ID is required' }, { status: 400 })
 
-    const asset = await prisma.asset.update({
+    const updated = await prisma.asset.update({
       where: { id },
       data: {
         code: data.code,
@@ -83,8 +100,19 @@ export async function PUT(request: Request) {
         isActive: data.isActive ?? true
       }
     })
-
-    return NextResponse.json(asset)
+    // Update extended fields via raw SQL
+    await prisma.$executeRaw`
+      UPDATE "Asset"
+      SET "quantity" = ${data.quantity ?? null},
+          "dateOfPurchase" = ${data.dateOfPurchase ? new Date(data.dateOfPurchase) : null},
+          "manufacturer" = ${data.manufacturer ?? null}
+      WHERE "id" = ${id}
+    `
+    const assetFull = await prisma.$queryRaw<any>`
+      SELECT "id", "code", "name", "category", "location", "status", "quantity", "dateOfPurchase", "manufacturer", "isActive", "createdAt", "updatedAt"
+      FROM "Asset" WHERE "id" = ${id} LIMIT 1
+    `
+    return NextResponse.json(Array.isArray(assetFull) ? assetFull[0] : assetFull)
   } catch (error: any) {
     if (error.code === 'P2002') {
       return NextResponse.json({ error: 'Asset code already exists' }, { status: 400 })

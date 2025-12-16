@@ -22,10 +22,10 @@ export async function POST(req: NextRequest) {
       // Update the MaterialRequestItem status
       await prisma.materialRequestItem.update({
         where: { id: itemId },
-        data: { 
+        data: {
           status: newStatus,
           updatedAt: new Date()
-        }
+        } as any
       })
     }
 

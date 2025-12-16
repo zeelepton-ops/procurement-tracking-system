@@ -38,9 +38,41 @@ export default function InventoryPage() {
   const [exporting, setExporting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [draft, setDraft] = useState<InventoryItem>(emptyItem)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [filterLocation, setFilterLocation] = useState('')
+  const [sortBy, setSortBy] = useState('name')
   const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   const isEditing = useMemo(() => Boolean(draft.id), [draft.id])
+
+  const filteredItems = useMemo(() => {
+    let result = items.filter((item) => {
+      const matchesSearch = searchTerm === '' || 
+        item.itemName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (item.description?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false)
+      const matchesLocation = filterLocation === '' || item.location === filterLocation
+      return matchesSearch && matchesLocation
+    })
+
+    if (sortBy === 'qty') {
+      result = result.sort((a, b) => a.currentStock - b.currentStock)
+    } else if (sortBy === 'reorder') {
+      result = result.sort((a, b) => {
+        const ratioA = a.minimumStock ? a.currentStock / a.minimumStock : Infinity
+        const ratioB = b.minimumStock ? b.currentStock / b.minimumStock : Infinity
+        return ratioA - ratioB
+      })
+    } else {
+      result = result.sort((a, b) => a.itemName.localeCompare(b.itemName))
+    }
+
+    return result
+  }, [items, searchTerm, filterLocation, sortBy])
+
+  const uniqueLocations = useMemo(
+    () => [...new Set(items.map((i) => i.location).filter((v): v is string => Boolean(v)))].sort(),
+    [items]
+  )
 
   const load = async () => {
     setLoading(true)
@@ -229,6 +261,39 @@ export default function InventoryPage() {
           <Card className="lg:col-span-3">
             <CardHeader>
               <CardTitle>Items</CardTitle>
+              <div className="mt-4 space-y-2">
+                <div className="grid grid-cols-3 gap-2">
+                  <Input
+                    type="text"
+                    placeholder="Search by name or description..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="text-sm"
+                  />
+                  <select
+                    value={filterLocation}
+                    onChange={(e) => setFilterLocation(e.target.value)}
+                    className="px-3 py-2 border border-slate-200 rounded text-sm"
+                  >
+                    <option value="">All Locations</option>
+                    {uniqueLocations.map(l => <option key={l} value={l}>{l}</option>)}
+                  </select>
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="px-3 py-2 border border-slate-200 rounded text-sm"
+                  >
+                    <option value="name">Sort by Name</option>
+                    <option value="qty">Sort by Qty (Low to High)</option>
+                    <option value="reorder">Sort by Reorder Level (Near to Far)</option>
+                  </select>
+                </div>
+                {(searchTerm || filterLocation) && (
+                  <div className="text-sm text-slate-600">
+                    Showing {filteredItems.length} of {items.length} items
+                  </div>
+                )}
+              </div>
             </CardHeader>
             <CardContent>
               {loading ? (
@@ -246,14 +311,14 @@ export default function InventoryPage() {
                         <th className="py-1 pr-3">Description</th>
                         <th className="py-1 pr-3">Qty</th>
                         <th className="py-1 pr-3">Unit</th>
-                        <th className="py-1 pr-3">Min</th>
+                        <th className="py-1 pr-3">Reorder Level</th>
                         <th className="py-1 pr-3">Location</th>
                         <th className="py-1 pr-3">Updated</th>
                         <th className="py-1 pr-3">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
-                      {items.map((item) => (
+                      {filteredItems.map((item) => (
                         <tr key={item.id} className="align-top">
                           <td className="py-1 pr-3 font-medium text-slate-900">{item.itemName}</td>
                           <td className="py-1 pr-3 text-xs text-slate-600 max-w-xs truncate">{item.description || '—'}</td>

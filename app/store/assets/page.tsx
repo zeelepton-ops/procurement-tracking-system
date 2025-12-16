@@ -15,6 +15,9 @@ interface Asset {
   category: string | null
   status: string | null
   location: string | null
+  quantity: number | null
+  dateOfPurchase: string | null
+  manufacturer: string | null
   updatedAt?: string
 }
 
@@ -25,6 +28,33 @@ const emptyAsset: Asset = {
   category: null,
   status: null,
   location: null,
+  quantity: null,
+  dateOfPurchase: null,
+  manufacturer: null,
+}
+
+const CATEGORY_PREFIX: Record<string, string> = {
+  'BUILDING & FACILITY': '10',
+  'FURNITURES & FIXTURES': '20',
+  'IT & COMM': '30',
+  'VEHICLES': '40',
+  'TOOLS': '50',
+  'HEAVY MACHINERY': '60',
+  'HEAVY EQUIPMENT': '70',
+}
+const getNextCodeForCategory = (category: string | null, assets: Asset[], excludeId?: string) => {
+  if (!category) return ''
+  const prefix = CATEGORY_PREFIX[category]
+  if (!prefix) return ''
+  const max = assets.reduce((acc, asset) => {
+    if (!asset.code || !asset.code.startsWith(prefix)) return acc
+    if (excludeId && asset.id === excludeId) return acc
+    const suffix = asset.code.slice(prefix.length)
+    const num = parseInt(suffix, 10)
+    return Number.isFinite(num) ? Math.max(acc, num) : acc
+  }, 0)
+  const next = max + 1
+  return `${prefix}${String(next).padStart(3, '0')}`
 }
 
 export default function AssetsPage() {
@@ -67,9 +97,11 @@ export default function AssetsPage() {
         Code: a.code,
         Name: a.name,
         Category: a.category || '',
+        Quantity: a.quantity ?? '',
+        'Date of Purchase': a.dateOfPurchase ? new Date(a.dateOfPurchase).toLocaleDateString() : '',
+        Manufacturer: a.manufacturer || '',
         Status: a.status || '',
         Location: a.location || '',
-        UpdatedAt: a.updatedAt || '',
       }))
       const wb = XLSX.utils.book_new()
       const ws = XLSX.utils.json_to_sheet(rows)
@@ -105,6 +137,9 @@ export default function AssetsPage() {
           category: pick('category', 'Category'),
           status: pick('status', 'Status') || 'ACTIVE',
           location: pick('location', 'Location'),
+          quantity: pick('quantity', 'Quantity', 'Qty'),
+          dateOfPurchase: pick('dateOfPurchase', 'Date of Purchase', 'Purchase Date', 'DateOfPurchase'),
+          manufacturer: pick('manufacturer', 'Manufacturer', 'Mfg'),
         }
       }
 
@@ -114,6 +149,9 @@ export default function AssetsPage() {
         category?: string | null
         status?: string | null
         location?: string | null
+        quantity?: number | null
+        dateOfPurchase?: string | null
+        manufacturer?: string | null
       }>
 
       for (const payload of payloads) {
@@ -144,6 +182,9 @@ export default function AssetsPage() {
         status: draft.status || null,
         location: draft.location || null,
         category: draft.category || null,
+        quantity: draft.quantity || null,
+        dateOfPurchase: draft.dateOfPurchase || null,
+        manufacturer: draft.manufacturer || null,
       }
 
       const res = await fetch('/api/assets', {
@@ -238,9 +279,11 @@ export default function AssetsPage() {
                         <th className="py-2 pr-3">Code</th>
                         <th className="py-2 pr-3">Name</th>
                         <th className="py-2 pr-3">Category</th>
+                        <th className="py-2 pr-3">Qty</th>
+                        <th className="py-2 pr-3">Purchase Date</th>
+                        <th className="py-2 pr-3">Manufacturer</th>
                         <th className="py-2 pr-3">Status</th>
                         <th className="py-2 pr-3">Location</th>
-                        <th className="py-2 pr-3">Updated</th>
                         <th className="py-2 pr-3">Actions</th>
                       </tr>
                     </thead>
@@ -250,9 +293,11 @@ export default function AssetsPage() {
                           <td className="py-2 pr-3 font-medium text-slate-900">{asset.code}</td>
                           <td className="py-2 pr-3">{asset.name}</td>
                           <td className="py-2 pr-3">{asset.category || '—'}</td>
+                          <td className="py-2 pr-3">{asset.quantity ?? '—'}</td>
+                          <td className="py-2 pr-3">{asset.dateOfPurchase ? new Date(asset.dateOfPurchase).toLocaleDateString() : '—'}</td>
+                          <td className="py-2 pr-3">{asset.manufacturer || '—'}</td>
                           <td className="py-2 pr-3">{asset.status || '—'}</td>
                           <td className="py-2 pr-3">{asset.location || '—'}</td>
-                          <td className="py-2 pr-3 text-slate-500">{asset.updatedAt ? new Date(asset.updatedAt).toLocaleDateString() : '—'}</td>
                           <td className="py-2 pr-3 space-x-2 flex items-center">
                             <button onClick={() => handleEdit(asset)} className="p-1 hover:bg-blue-100 rounded text-blue-600 hover:text-blue-700" title="Edit"><Edit2 size={16} /></button>
                             <button onClick={() => handleDelete(asset.id)} className="p-1 hover:bg-red-100 rounded text-red-600 hover:text-red-700" title="Delete"><Trash2 size={16} /></button>
@@ -272,15 +317,50 @@ export default function AssetsPage() {
             </CardHeader>
             <CardContent>
               <form className="space-y-3" onSubmit={handleSubmit}>
-                <div className="space-y-1">
-                  <Label htmlFor="code">Code</Label>
-                  <Input
-                    id="code"
-                    required
-                    value={draft.code}
-                    onChange={(e) => setDraft({ ...draft, code: e.target.value })}
-                  />
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label htmlFor="code">Code</Label>
+                    <Input
+                      id="code"
+                      required
+                      value={draft.code}
+                      onChange={(e) => setDraft({ ...draft, code: e.target.value })}
+                      placeholder="10xxxx / 20xxxx / 30xxxx..."
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="category">Category</Label>
+                    <select
+                      id="category"
+                      className="w-full px-3 py-2 border border-slate-200 rounded text-sm"
+                      value={draft.category ?? ''}
+                      onChange={(e) => {
+                        const category = e.target.value || null
+                        setDraft((prev) => {
+                          let code = prev.code
+                          if (category) {
+                            const nextCode = getNextCodeForCategory(category, assets, prev.id)
+                            const prefix = CATEGORY_PREFIX[category]
+                            if (!code || (prefix && !code.startsWith(prefix))) {
+                              code = nextCode || `${prefix}000`
+                            }
+                          }
+                          return { ...prev, category, code }
+                        })
+                      }}
+                    >
+                      <option value="">Select category</option>
+                      <option value="BUILDING & FACILITY">BUILDING & FACILITY (10xxx)</option>
+                      <option value="FURNITURES & FIXTURES">FURNITURES & FIXTURES (20xxx)</option>
+                      <option value="IT & COMM">IT & COMM (30xxx)</option>
+                      <option value="VEHICLES">VEHICLES (40xxx)</option>
+                      <option value="TOOLS">TOOLS (50xxx)</option>
+                      <option value="HEAVY MACHINERY">HEAVY MACHINERY (60xxx)</option>
+                      <option value="HEAVY EQUIPMENT">HEAVY EQUIPMENT (70xxx)</option>
+                    </select>
+                  </div>
                 </div>
+                <p className="text-xs text-slate-500">Category codes start with: 10/20/30/40/50/60/70 for the categories above.</p>
 
                 <div className="space-y-1">
                   <Label htmlFor="name">Name</Label>
@@ -292,7 +372,7 @@ export default function AssetsPage() {
                   />
                 </div>
 
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
                     <Label htmlFor="status">Status</Label>
                     <Input
@@ -302,19 +382,40 @@ export default function AssetsPage() {
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label htmlFor="category">Category</Label>
-                    <Input
-                      id="category"
-                      value={draft.category ?? ''}
-                      onChange={(e) => setDraft({ ...draft, category: e.target.value })}
-                    />
-                  </div>
-                  <div className="space-y-1">
                     <Label htmlFor="location">Location</Label>
                     <Input
                       id="location"
                       value={draft.location ?? ''}
                       onChange={(e) => setDraft({ ...draft, location: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="space-y-1">
+                    <Label htmlFor="quantity">Quantity</Label>
+                    <Input
+                      id="quantity"
+                      type="number"
+                      value={draft.quantity ?? ''}
+                      onChange={(e) => setDraft({ ...draft, quantity: e.target.value ? parseInt(e.target.value) : null })}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="dateOfPurchase">Date of Purchase</Label>
+                    <Input
+                      id="dateOfPurchase"
+                      type="date"
+                      value={draft.dateOfPurchase ? draft.dateOfPurchase.split('T')[0] : ''}
+                      onChange={(e) => setDraft({ ...draft, dateOfPurchase: e.target.value || null })}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="manufacturer">Manufacturer</Label>
+                    <Input
+                      id="manufacturer"
+                      value={draft.manufacturer ?? ''}
+                      onChange={(e) => setDraft({ ...draft, manufacturer: e.target.value })}
                     />
                   </div>
                 </div>
