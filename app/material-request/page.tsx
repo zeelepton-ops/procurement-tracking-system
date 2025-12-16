@@ -75,6 +75,7 @@ export default function MaterialRequestPage() {
   const [materialRequests, setMaterialRequests] = useState<MaterialRequest[]>([])
   const [loading, setLoading] = useState(false)
   const [importing, setImporting] = useState(false)
+  const [exporting, setExporting] = useState(false)
   const [showForm, setShowForm] = useState(false)
   const [selectedRequest, setSelectedRequest] = useState<MaterialRequest | null>(null)
   const [isEditing, setIsEditing] = useState(false)
@@ -203,6 +204,37 @@ export default function MaterialRequestPage() {
     } finally {
       setImporting(false)
       if (importInputRef.current) importInputRef.current.value = ''
+    }
+  }
+
+  const handleExportRequests = async () => {
+    if (!materialRequests.length) return
+    setExporting(true)
+    try {
+      const XLSX = await import('xlsx')
+      const rows = materialRequests.map((mr) => ({
+        RequestNumber: mr.requestNumber,
+        Context: mr.requestContext,
+        JobOrder: mr.jobOrder?.jobNumber || '',
+        Asset: mr.asset?.code || '',
+        ItemName: mr.itemName,
+        Description: mr.description,
+        Quantity: mr.quantity,
+        Unit: mr.unit,
+        Urgency: mr.urgencyLevel,
+        Status: mr.status,
+        RequiredDate: mr.requiredDate,
+        RequestedBy: mr.requestedBy,
+      }))
+      const wb = XLSX.utils.book_new()
+      const ws = XLSX.utils.json_to_sheet(rows)
+      XLSX.utils.book_append_sheet(wb, ws, 'MaterialRequests')
+      XLSX.writeFile(wb, 'material-requests.xlsx')
+    } catch (error) {
+      console.error('Failed to export material requests:', error)
+      alert('Export failed')
+    } finally {
+      setExporting(false)
     }
   }
 
@@ -496,6 +528,14 @@ export default function MaterialRequestPage() {
               disabled={importing}
             >
               {importing ? 'Importing…' : 'Import Excel'}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportRequests}
+              disabled={exporting || materialRequests.length === 0}
+            >
+              {exporting ? 'Exporting…' : 'Export Excel'}
             </Button>
             <Button 
               onClick={() => setShowForm(!showForm)}

@@ -34,6 +34,7 @@ export default function InventoryPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [importing, setImporting] = useState(false)
+  const [exporting, setExporting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [draft, setDraft] = useState<InventoryItem>(emptyItem)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
@@ -58,6 +59,31 @@ export default function InventoryPage() {
   useEffect(() => {
     load()
   }, [])
+
+  const handleExport = async () => {
+    if (!items.length) return
+    setExporting(true)
+    try {
+      const XLSX = await import('xlsx')
+      const rows = items.map((item) => ({
+        Name: item.itemName,
+        Quantity: item.currentStock,
+        Unit: item.unit,
+        Minimum: item.minimumStock ?? '',
+        Location: item.location || '',
+        Description: item.description || '',
+        UpdatedAt: item.updatedAt || '',
+      }))
+      const wb = XLSX.utils.book_new()
+      const ws = XLSX.utils.json_to_sheet(rows)
+      XLSX.utils.book_append_sheet(wb, ws, 'Inventory')
+      XLSX.writeFile(wb, 'inventory.xlsx')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Export failed')
+    } finally {
+      setExporting(false)
+    }
+  }
 
   const handleImport = async (file: File | null) => {
     if (!file) return
@@ -165,7 +191,7 @@ export default function InventoryPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 p-4">
-      <div className="max-w-7xl mx-auto space-y-4">
+      <div className="max-w-7xl mx-auto space-y-2">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-slate-900">Inventory</h1>
@@ -187,6 +213,14 @@ export default function InventoryPage() {
             >
               {importing ? 'Importing…' : 'Import Excel'}
             </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExport}
+              disabled={exporting || loading || items.length === 0}
+            >
+              {exporting ? 'Exporting…' : 'Export Excel'}
+            </Button>
           </div>
         </div>
 
@@ -207,25 +241,27 @@ export default function InventoryPage() {
                   <table className="min-w-full text-sm">
                     <thead>
                       <tr className="text-left text-slate-600">
-                        <th className="py-2 pr-3">Name</th>
-                        <th className="py-2 pr-3">Qty</th>
-                        <th className="py-2 pr-3">Unit</th>
-                        <th className="py-2 pr-3">Min</th>
-                        <th className="py-2 pr-3">Location</th>
-                        <th className="py-2 pr-3">Updated</th>
-                        <th className="py-2 pr-3">Actions</th>
+                        <th className="py-1 pr-3">Name</th>
+                        <th className="py-1 pr-3">Description</th>
+                        <th className="py-1 pr-3">Qty</th>
+                        <th className="py-1 pr-3">Unit</th>
+                        <th className="py-1 pr-3">Min</th>
+                        <th className="py-1 pr-3">Location</th>
+                        <th className="py-1 pr-3">Updated</th>
+                        <th className="py-1 pr-3">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
                       {items.map((item) => (
                         <tr key={item.id} className="align-top">
-                          <td className="py-2 pr-3 font-medium text-slate-900">{item.itemName}</td>
-                          <td className="py-2 pr-3">{item.currentStock}</td>
-                          <td className="py-2 pr-3">{item.unit}</td>
-                          <td className="py-2 pr-3">{item.minimumStock ?? '—'}</td>
-                          <td className="py-2 pr-3">{item.location || '—'}</td>
-                          <td className="py-2 pr-3 text-slate-500">{item.updatedAt ? new Date(item.updatedAt).toLocaleDateString() : '—'}</td>
-                          <td className="py-2 pr-3 space-x-2">
+                          <td className="py-1 pr-3 font-medium text-slate-900">{item.itemName}</td>
+                          <td className="py-1 pr-3 text-xs text-slate-600 max-w-xs truncate">{item.description || '—'}</td>
+                          <td className="py-1 pr-3">{item.currentStock}</td>
+                          <td className="py-1 pr-3">{item.unit}</td>
+                          <td className="py-1 pr-3">{item.minimumStock ?? '—'}</td>
+                          <td className="py-1 pr-3">{item.location || '—'}</td>
+                          <td className="py-1 pr-3 text-slate-500">{item.updatedAt ? new Date(item.updatedAt).toLocaleDateString() : '—'}</td>
+                          <td className="py-1 pr-3 space-x-1">
                             <Button variant="outline" size="sm" onClick={() => handleEdit(item)}>Edit</Button>
                             <Button variant="destructive" size="sm" onClick={() => handleDelete(item.id)}>Delete</Button>
                           </td>

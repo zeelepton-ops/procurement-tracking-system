@@ -32,12 +32,12 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-4 py-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Link href="/dashboard" className="flex items-center gap-2">
+            <Link href="/dashboard" className="flex items-center gap-2 -ml-2">
               {/* NBTC Logo */}
               <img 
                 src="https://i.ibb.co/nMjzX2GS/Logo-NBTC-Transparent.png" 
                 alt="NBTC Logo"
-                style={{ width: '35px', height: 'auto', objectFit: 'contain' }}
+                style={{ width: '70px', height: 'auto', objectFit: 'contain' }}
               />
               <span className="text-lg font-bold text-slate-900 whitespace-nowrap">Procurement System</span>
             </Link>

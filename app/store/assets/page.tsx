@@ -31,6 +31,7 @@ export default function AssetsPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [importing, setImporting] = useState(false)
+  const [exporting, setExporting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [draft, setDraft] = useState<Asset>(emptyAsset)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
@@ -55,6 +56,30 @@ export default function AssetsPage() {
   useEffect(() => {
     load()
   }, [])
+
+  const handleExport = async () => {
+    if (!assets.length) return
+    setExporting(true)
+    try {
+      const XLSX = await import('xlsx')
+      const rows = assets.map((a) => ({
+        Code: a.code,
+        Name: a.name,
+        Category: a.category || '',
+        Status: a.status || '',
+        Location: a.location || '',
+        UpdatedAt: a.updatedAt || '',
+      }))
+      const wb = XLSX.utils.book_new()
+      const ws = XLSX.utils.json_to_sheet(rows)
+      XLSX.utils.book_append_sheet(wb, ws, 'Assets')
+      XLSX.writeFile(wb, 'assets.xlsx')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Export failed')
+    } finally {
+      setExporting(false)
+    }
+  }
 
   const handleImport = async (file: File | null) => {
     if (!file) return
@@ -180,6 +205,14 @@ export default function AssetsPage() {
               disabled={importing || loading}
             >
               {importing ? 'Importing…' : 'Import Excel'}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExport}
+              disabled={exporting || loading || assets.length === 0}
+            >
+              {exporting ? 'Exporting…' : 'Export Excel'}
             </Button>
           </div>
         </div>
