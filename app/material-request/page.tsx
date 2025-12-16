@@ -174,8 +174,14 @@ export default function MaterialRequestPage() {
   }
 
   const filteredRequests = materialRequests.filter((req) => {
+    const contextLabel = req.requestContext === 'MACHINERY' && req.asset 
+      ? req.asset.code 
+      : req.jobOrder 
+        ? req.jobOrder.jobNumber 
+        : req.requestContext || 'Unknown'
+    
     const matchesSearch = filters.search
-      ? `${req.requestNumber} ${req.itemName} ${req.description} ${req.jobOrder.jobNumber}`
+      ? `${req.requestNumber} ${req.itemName} ${req.description} ${contextLabel}`
           .toLowerCase()
           .includes(filters.search.toLowerCase())
       : true
@@ -284,7 +290,9 @@ export default function MaterialRequestPage() {
         fetchMaterialRequests()
         // Reset form
         setFormData({
+          requestContext: 'JOB_ORDER',
           jobOrderId: '',
+          assetId: '',
           materialType: 'RAW_MATERIAL',
           itemName: '',
           description: '',
@@ -744,7 +752,13 @@ export default function MaterialRequestPage() {
                       >
                         <div className="w-[180px] flex-shrink-0 cursor-pointer hover:bg-blue-100" onClick={() => setSelectedRequest(req)}>
                           <div className="font-semibold text-slate-900">{req.requestNumber}</div>
-                          <div className="text-slate-500 text-[11px]">{req.jobOrder?.jobNumber ? `JO-${req.jobOrder.jobNumber}` : 'N/A'}</div>
+                          {req.requestContext === 'MACHINERY' && req.asset ? (
+                            <div className="text-slate-500 text-[11px]">{req.asset.code}</div>
+                          ) : req.jobOrder ? (
+                            <div className="text-slate-500 text-[11px]">JO-{req.jobOrder.jobNumber}</div>
+                          ) : (
+                            <div className="text-slate-500 text-[11px]">{req.requestContext}</div>
+                          )}
                         </div>
                         <div className="w-[280px] flex-shrink-0 cursor-pointer hover:bg-blue-100" onClick={() => setSelectedRequest(req)}>
                           <div className="font-medium text-slate-800 truncate">{item.itemName}</div>
@@ -826,9 +840,20 @@ export default function MaterialRequestPage() {
             <CardContent className="pt-3 text-sm text-slate-800 space-y-3">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div>
-                  <div className="text-slate-500 text-xs">Job Order</div>
-                  <div>JO-{selectedRequest.jobOrder.jobNumber}</div>
-                  <div className="text-xs text-slate-600">{selectedRequest.jobOrder.productName}</div>
+                  <div className="text-slate-500 text-xs">Request For</div>
+                  {selectedRequest.requestContext === 'MACHINERY' && selectedRequest.asset ? (
+                    <>
+                      <div>{selectedRequest.asset.code} - {selectedRequest.asset.name}</div>
+                      <div className="text-xs text-slate-600">{selectedRequest.asset.location || 'N/A'}</div>
+                    </>
+                  ) : selectedRequest.jobOrder ? (
+                    <>
+                      <div>JO-{selectedRequest.jobOrder.jobNumber}</div>
+                      <div className="text-xs text-slate-600">{selectedRequest.jobOrder.productName}</div>
+                    </>
+                  ) : (
+                    <div className="text-xs">{selectedRequest.requestContext || 'N/A'}</div>
+                  )}
                 </div>
                 <div>
                   <div className="text-slate-500 text-xs">Material Type</div>
