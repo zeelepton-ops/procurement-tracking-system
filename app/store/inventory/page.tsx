@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -33,8 +33,10 @@ export default function InventoryPage() {
   const [items, setItems] = useState<InventoryItem[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [importing, setImporting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [draft, setDraft] = useState<InventoryItem>(emptyItem)
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   const isEditing = useMemo(() => Boolean(draft.id), [draft.id])
 
@@ -56,6 +58,59 @@ export default function InventoryPage() {
   useEffect(() => {
     load()
   }, [])
+
+  const handleImport = async (file: File | null) => {
+    if (!file) return
+    setImporting(true)
+    setError(null)
+    try {
+      const XLSX = await import('xlsx')
+      const data = await file.arrayBuffer()
+      const workbook = XLSX.read(data, { type: 'array' })
+      const sheet = workbook.Sheets[workbook.SheetNames[0]]
+      const rows = XLSX.utils.sheet_to_json<Record<string, any>>(sheet, { defval: '' })
+
+      const pick = (row: Record<string, any>, keys: string[]) =>
+        keys.map((k) => row[k]).find((v) => v !== undefined && v !== null && String(v).trim() !== '')
+
+      const payloads = rows
+        .map((row) => {
+          const itemName = pick(row, ['itemName', 'Item Name', 'Name'])
+          if (!itemName) return null
+          return {
+            itemName: String(itemName).trim(),
+            currentStock: Number(pick(row, ['currentStock', 'Current Stock', 'Quantity', 'Qty']) || 0),
+            unit: String(pick(row, ['unit', 'Unit']) || 'PCS'),
+            minimumStock: Number(pick(row, ['minimumStock', 'Min', 'Minimum']) || 0),
+            location: pick(row, ['location', 'Location']) || null,
+            description: pick(row, ['description', 'Description']) || null,
+          }
+        })
+        .filter(Boolean) as Array<{
+          itemName: string
+          currentStock: number
+          unit: string
+          minimumStock: number
+          location: string | null
+          description: string | null
+        }>
+
+      for (const payload of payloads) {
+        await fetch('/api/inventory', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
+      }
+
+      await load()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Import failed')
+    } finally {
+      setImporting(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -115,6 +170,23 @@ export default function InventoryPage() {
           <div>
             <h1 className="text-2xl font-bold text-slate-900">Inventory</h1>
             <p className="text-slate-600 text-sm">Create, edit, and remove stock items.</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".xlsx,.xls"
+              className="hidden"
+              onChange={(e) => handleImport(e.target.files?.[0] ?? null)}
+            />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={importing || loading}
+            >
+              {importing ? 'Importing…' : 'Import Excel'}
+            </Button>
           </div>
         </div>
 

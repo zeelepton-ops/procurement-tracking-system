@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -74,6 +74,7 @@ export default function MaterialRequestPage() {
   const [inventory, setInventory] = useState<InventoryItem[]>([])
   const [materialRequests, setMaterialRequests] = useState<MaterialRequest[]>([])
   const [loading, setLoading] = useState(false)
+  const [importing, setImporting] = useState(false)
   const [showForm, setShowForm] = useState(false)
   const [selectedRequest, setSelectedRequest] = useState<MaterialRequest | null>(null)
   const [isEditing, setIsEditing] = useState(false)
@@ -123,6 +124,7 @@ export default function MaterialRequestPage() {
     urgencyLevel: 'NORMAL',
     requestedBy: 'Production Team'
   })
+  const importInputRef = useRef<HTMLInputElement | null>(null)
 
   useEffect(() => {
     fetchJobOrders()
@@ -130,6 +132,79 @@ export default function MaterialRequestPage() {
     fetchInventory()
     fetchMaterialRequests()
   }, [])
+
+  const handleImportRequests = async (file: File | null) => {
+    if (!file) return
+    setImporting(true)
+    try {
+      const XLSX = await import('xlsx')
+      const buffer = await file.arrayBuffer()
+      const workbook = XLSX.read(buffer, { type: 'array' })
+      const sheet = workbook.Sheets[workbook.SheetNames[0]]
+      const rows = XLSX.utils.sheet_to_json<Record<string, any>>(sheet, { defval: '' })
+
+      const normalize = (row: Record<string, any>) => {
+        const pick = (...keys: string[]) => keys
+          .map((k) => row[k])
+          .find((v) => v !== undefined && v !== null && String(v).trim() !== '')
+
+        const itemName = pick('itemName', 'Item Name', 'Item')
+        if (!itemName) return null
+
+        const quantity = Number(pick('quantity', 'Quantity', 'Qty') || 1)
+        const unit = String(pick('unit', 'Unit') || 'PCS')
+        const requiredDateRaw = pick('requiredDate', 'Required Date')
+        const requiredDate = requiredDateRaw ? new Date(requiredDateRaw) : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+
+        return {
+          requestContext: pick('requestContext', 'Context') || 'WORKSHOP',
+          jobOrderId: pick('jobOrderId', 'JobOrderId', 'jobOrderId') || null,
+          assetId: pick('assetId', 'AssetId', 'assetId') || null,
+          materialType: pick('materialType', 'Material Type') || 'RAW_MATERIAL',
+          itemName: String(itemName).trim(),
+          description: pick('description', 'Description') || 'Imported item',
+          quantity,
+          unit,
+          reasonForRequest: pick('reasonForRequest', 'Reason', 'Reason For Request') || 'Imported via Excel',
+          requiredDate: requiredDate.toISOString(),
+          preferredSupplier: pick('preferredSupplier', 'Supplier') || null,
+          stockQtyInInventory: Number(pick('stockQtyInInventory', 'StockQty', 'Stock Qty') || 0),
+          urgencyLevel: pick('urgencyLevel', 'Urgency') || 'NORMAL',
+          requestedBy: pick('requestedBy', 'Requested By') || 'Import',
+          items: [
+            {
+              itemName: String(itemName).trim(),
+              description: pick('description', 'Description') || 'Imported item',
+              quantity,
+              unit,
+              stockQtyInInventory: Number(pick('stockQtyInInventory', 'StockQty', 'Stock Qty') || 0),
+              reasonForRequest: pick('reasonForRequest', 'Reason', 'Reason For Request') || 'Imported via Excel',
+              urgencyLevel: pick('urgencyLevel', 'Urgency') || 'NORMAL',
+              requiredDate: requiredDate.toISOString(),
+              preferredSupplier: pick('preferredSupplier', 'Supplier') || null,
+            },
+          ],
+        }
+      }
+
+      const payloads = rows.map(normalize).filter(Boolean) as Array<Record<string, any>>
+      for (const payload of payloads) {
+        await fetch('/api/material-requests', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
+      }
+
+      await fetchMaterialRequests()
+    } catch (error) {
+      console.error('Failed to import material requests:', error)
+      alert('Import failed. Please verify the Excel columns.')
+    } finally {
+      setImporting(false)
+      if (importInputRef.current) importInputRef.current.value = ''
+    }
+  }
 
   const fetchJobOrders = async () => {
     try {
@@ -406,23 +481,40 @@ export default function MaterialRequestPage() {
             <h1 className="text-2xl font-bold text-slate-900 mb-0.5">Material Requests</h1>
             <p className="text-slate-600 text-sm">Request and track materials for job orders</p>
           </div>
-          <Button 
-            onClick={() => setShowForm(!showForm)}
-            className="bg-blue-600 hover:bg-blue-700"
-            size="sm"
-          >
-            {showForm ? (
-              <>
-                <X className="h-4 w-4 mr-2" />
-                Cancel
-              </>
-            ) : (
-              <>
-                <Plus className="h-4 w-4 mr-2" />
-                New Request
-              </>
-            )}
-          </Button>
+          <div className="flex items-center gap-2">
+            <input
+              ref={importInputRef}
+              type="file"
+              accept=".xlsx,.xls"
+              className="hidden"
+              onChange={(e) => handleImportRequests(e.target.files?.[0] ?? null)}
+            />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => importInputRef.current?.click()}
+              disabled={importing}
+            >
+              {importing ? 'Importing…' : 'Import Excel'}
+            </Button>
+            <Button 
+              onClick={() => setShowForm(!showForm)}
+              className="bg-blue-600 hover:bg-blue-700"
+              size="sm"
+            >
+              {showForm ? (
+                <>
+                  <X className="h-4 w-4 mr-2" />
+                  Cancel
+                </>
+              ) : (
+                <>
+                  <Plus className="h-4 w-4 mr-2" />
+                  New Request
+                </>
+              )}
+            </Button>
+          </div>
         </div>
 
         {success && (

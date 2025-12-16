@@ -1,8 +1,29 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
+async function ensureAssetTable() {
+  try {
+    await prisma.$executeRaw`CREATE TABLE IF NOT EXISTS "Asset" (
+      "id" TEXT NOT NULL,
+      "code" TEXT NOT NULL,
+      "name" TEXT NOT NULL,
+      "category" TEXT,
+      "location" TEXT,
+      "status" TEXT DEFAULT 'ACTIVE',
+      "isActive" BOOLEAN NOT NULL DEFAULT TRUE,
+      "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT "Asset_pkey" PRIMARY KEY ("id")
+    );`
+    await prisma.$executeRaw`CREATE UNIQUE INDEX IF NOT EXISTS "Asset_code_key" ON "Asset"("code");`
+  } catch (error) {
+    console.error('Failed to ensure Asset table exists:', error)
+  }
+}
+
 export async function GET() {
   try {
+    await ensureAssetTable()
     const assets = await prisma.asset.findMany({
       where: { isActive: true },
       orderBy: { code: 'asc' }
@@ -16,6 +37,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    await ensureAssetTable()
     const body = await request.json()
     const { code, name, category, location, status } = body
 
@@ -45,6 +67,7 @@ export async function POST(request: Request) {
 
 export async function PUT(request: Request) {
   try {
+    await ensureAssetTable()
     const body = await request.json()
     const { id, ...data } = body
     if (!id) return NextResponse.json({ error: 'ID is required' }, { status: 400 })
@@ -72,6 +95,7 @@ export async function PUT(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
+    await ensureAssetTable()
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
     if (!id) return NextResponse.json({ error: 'ID is required' }, { status: 400 })
