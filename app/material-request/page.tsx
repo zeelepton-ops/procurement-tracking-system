@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
+import Autocomplete, { Suggestion } from '@/components/ui/autocomplete'
 import { AlertCircle, Package, Clock, AlertTriangle, Plus, X, Trash2 } from 'lucide-react'
 
 interface JobOrder {
@@ -279,6 +280,26 @@ export default function MaterialRequestPage() {
       console.error('Failed to fetch material requests:', error)
     }
   }
+
+  // Build suggestion list for per-item reasons: Job Orders, Assets, Inventory and static options
+  const reasonSuggestions = useMemo(() => {
+    const staticOptions: Suggestion[] = [
+      { label: 'Job orders', type: 'option' },
+      { label: 'Workshop', type: 'option' },
+      { label: 'Maintenance', type: 'option' },
+      { label: 'Asset Names', type: 'option' },
+      { label: 'Machinery', type: 'option' },
+      { label: 'from inventory', type: 'option' },
+      { label: 'general', type: 'option' },
+    ]
+
+    const jobOrderOptions: Suggestion[] = jobOrders.map(j => ({ id: j.id, label: `${j.jobNumber} — ${j.productName}`, meta: j.drawingRef || '', type: 'job' }))
+    const assetOptions: Suggestion[] = assets.map(a => ({ id: a.id, label: `${a.code} — ${a.name}`, meta: a.category || a.location || '', type: 'asset' }))
+    const inventoryOptions: Suggestion[] = inventory.map(i => ({ id: i.id, label: i.itemName, meta: `${i.currentStock} ${i.unit}`, type: 'inventory' }))
+
+    // Prioritize job orders and assets, then inventory, then static
+    return [...jobOrderOptions, ...assetOptions, ...inventoryOptions, ...staticOptions]
+  }, [jobOrders, assets, inventory])
 
   const filteredRequests = materialRequests.filter((req) => {
     const contextLabel = req.requestContext === 'MACHINERY' && req.asset 
@@ -628,15 +649,7 @@ export default function MaterialRequestPage() {
               {/* Multiple Items */}
               <div>
                 <Label className="text-sm font-semibold mb-2">Items *</Label>
-                <datalist id="reason-options">
-                  <option value="Job orders" />
-                  <option value="Workshop" />
-                  <option value="Maintenance" />
-                  <option value="Asset Names" />
-                  <option value="Machinery" />
-                  <option value="from inventory" />
-                  <option value="general" />
-                </datalist>
+                {/* Suggestions will be provided via Autocomplete component built from jobOrders, assets and inventory */}
                 <div className="space-y-2 overflow-x-auto">
                   <div className="grid grid-cols-[2fr_3fr_1fr_0.8fr_0.8fr_2fr_1fr_1.2fr_1.5fr_0.5fr] gap-2 text-[11px] font-semibold text-slate-600 px-2 min-w-[1400px]">
                     <div>Item Name</div>
@@ -694,12 +707,12 @@ export default function MaterialRequestPage() {
                         className="h-8 text-xs"
                         step="0.01"
                       />
-                      <Input
-                        list="reason-options"
+                      <Autocomplete
                         value={item.reasonForRequest}
-                        onChange={(e) => updateItemField(idx, 'reasonForRequest', e.target.value)}
-                        placeholder="Reason"
-                        className="h-8 text-xs"
+                        onChange={(val) => updateItemField(idx, 'reasonForRequest', val)}
+                        suggestions={reasonSuggestions}
+                        placeholder="Reason (try Job orders, Machinery, Inventory...)"
+                        className="h-8"
                       />
                       <select
                         value={item.urgencyLevel}
