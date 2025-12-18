@@ -74,14 +74,8 @@ export async function POST(request: Request) {
     
     console.log('POST /api/material-requests - Received body:', JSON.stringify(body, null, 2))
     
-    // Validate required fields - either jobOrderId or assetId based on context
-    const requestContext = body.requestContext || 'JOB_ORDER'
-    if (requestContext === 'JOB_ORDER' && !body.jobOrderId) {
-      return NextResponse.json({ error: 'Job Order is required for JOB_ORDER context' }, { status: 400 })
-    }
-    if (requestContext === 'MACHINERY' && !body.assetId) {
-      return NextResponse.json({ error: 'Asset is required for MACHINERY context' }, { status: 400 })
-    }
+    // Validation relaxed: jobOrderId and assetId are optional during creation; per-item reason/context should be used when appropriate
+    const requestContext = body.requestContext || 'WORKSHOP'
     
     // Generate request number
     const count = await prisma.materialRequest.count()

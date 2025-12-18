@@ -110,7 +110,7 @@ export default function MaterialRequestPage() {
   }])
   
   const [formData, setFormData] = useState({
-    requestContext: 'JOB_ORDER',
+    requestContext: 'WORKSHOP',
     jobOrderId: '',
     assetId: '',
     materialType: 'RAW_MATERIAL',
@@ -397,7 +397,7 @@ export default function MaterialRequestPage() {
         fetchMaterialRequests()
         // Reset form
         setFormData({
-          requestContext: 'JOB_ORDER',
+          requestContext: 'WORKSHOP',
           jobOrderId: '',
           assetId: '',
           materialType: 'RAW_MATERIAL',
@@ -621,84 +621,22 @@ export default function MaterialRequestPage() {
           </CardHeader>
           <CardContent className="p-4">
             <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Request Context Selection */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div>
-                  <Label className="text-sm font-semibold">Request For *</Label>
-                  <Select
-                    value={formData.requestContext}
-                    onChange={(e) => setFormData({ ...formData, requestContext: e.target.value, jobOrderId: '', assetId: '' })}
-                    className="mt-1"
-                  >
-                    <option value="JOB_ORDER">Job Order</option>
-                    <option value="WORKSHOP">Workshop</option>
-                    <option value="MACHINERY">Machinery (Asset)</option>
-                    <option value="MAINTENANCE">Maintenance</option>
-                  </Select>
-                </div>
+              {/* Request For and Material Type moved to per-item inputs; removed from top-level form per UX change */}
 
-                <div>
-                  <Label className="text-sm font-semibold">Material Type *</Label>
-                  <Select
-                    value={formData.materialType}
-                    onChange={(e) => setFormData({ ...formData, materialType: e.target.value })}
-                    required
-                    className="mt-1"
-                  >
-                    <option value="RAW_MATERIAL">Raw Material</option>
-                    <option value="CONSUMABLE">Consumable</option>
-                    <option value="MAINTENANCE">Maintenance</option>
-                    <option value="ASSET">Asset</option>
-                    <option value="INVENTORY">Inventory</option>
-                    <option value="STATIONARY">Stationary</option>
-                  </Select>
-                </div>
-              </div>
-
-              {/* Conditional Selection based on Context */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {formData.requestContext === 'JOB_ORDER' && (
-                  <div>
-                    <Label className="text-sm font-semibold">Job Order *</Label>
-                    <Select
-                      value={formData.jobOrderId}
-                      onChange={(e) => setFormData({ ...formData, jobOrderId: e.target.value })}
-                      required
-                      className="mt-1"
-                    >
-                      <option value="">Select</option>
-                      {jobOrders.map(jo => (
-                        <option key={jo.id} value={jo.id}>
-                          {jo.jobNumber} - {jo.productName}
-                        </option>
-                      ))}
-                    </Select>
-                  </div>
-                )}
-                
-                {formData.requestContext === 'MACHINERY' && (
-                  <div>
-                    <Label className="text-sm font-semibold">Asset/Machinery *</Label>
-                    <Select
-                      value={formData.assetId}
-                      onChange={(e) => setFormData({ ...formData, assetId: e.target.value })}
-                      required
-                      className="mt-1"
-                    >
-                      <option value="">Select Asset</option>
-                      {assets.map(asset => (
-                        <option key={asset.id} value={asset.id}>
-                          {asset.code} - {asset.name}
-                        </option>
-                      ))}
-                    </Select>
-                  </div>
-                )}
-              </div>
+              {/* Context-specific selection removed — individual line items capture reasons and context now */}
 
               {/* Multiple Items */}
               <div>
                 <Label className="text-sm font-semibold mb-2">Items *</Label>
+                <datalist id="reason-options">
+                  <option value="Job orders" />
+                  <option value="Workshop" />
+                  <option value="Maintenance" />
+                  <option value="Asset Names" />
+                  <option value="Machinery" />
+                  <option value="from inventory" />
+                  <option value="general" />
+                </datalist>
                 <div className="space-y-2 overflow-x-auto">
                   <div className="grid grid-cols-[2fr_3fr_1fr_0.8fr_0.8fr_2fr_1fr_1.2fr_1.5fr_0.5fr] gap-2 text-[11px] font-semibold text-slate-600 px-2 min-w-[1400px]">
                     <div>Item Name</div>
@@ -757,6 +695,7 @@ export default function MaterialRequestPage() {
                         step="0.01"
                       />
                       <Input
+                        list="reason-options"
                         value={item.reasonForRequest}
                         onChange={(e) => updateItemField(idx, 'reasonForRequest', e.target.value)}
                         placeholder="Reason"
