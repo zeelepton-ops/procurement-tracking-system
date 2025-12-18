@@ -287,35 +287,35 @@ export default function AssetsPage() {
           <Card className="lg:col-span-2">
             <CardHeader>
               <CardTitle>Asset List</CardTitle>
-              <div className="mt-4 space-y-2">
-                <div className="grid grid-cols-4 gap-2">
+              <div className="mt-4">
+                <div className="flex items-center gap-2">
                   <Input
                     type="text"
                     placeholder="Search by code, name or manufacturer..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="text-sm"
+                    className="text-sm flex-1 min-w-0"
                   />
                   <select
                     value={filterCategory}
                     onChange={(e) => setFilterCategory(e.target.value)}
-                    className="px-3 py-2 border border-slate-200 rounded text-sm"
+                    className="px-3 py-2 border border-slate-200 rounded text-sm w-44 shrink-0"
                   >
                     <option value="">All Categories</option>
-                    {uniqueCategories.map(c => <option key={c} value={c}>{c}</option>)}
+                    {uniqueCategories.map((c) => <option key={c} value={c}>{c}</option>)}
                   </select>
                   <select
                     value={filterLocation}
                     onChange={(e) => setFilterLocation(e.target.value)}
-                    className="px-3 py-2 border border-slate-200 rounded text-sm"
+                    className="px-3 py-2 border border-slate-200 rounded text-sm w-44 shrink-0"
                   >
                     <option value="">All Locations</option>
-                    {uniqueLocations.map(l => <option key={l} value={l}>{l}</option>)}
+                    {uniqueLocations.map((l) => <option key={l} value={l}>{l}</option>)}
                   </select>
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value)}
-                    className="px-3 py-2 border border-slate-200 rounded text-sm"
+                    className="px-3 py-2 border border-slate-200 rounded text-sm w-40 shrink-0"
                   >
                     <option value="code">Sort by Code</option>
                     <option value="name">Sort by Name</option>
@@ -323,7 +323,7 @@ export default function AssetsPage() {
                   </select>
                 </div>
                 {(searchTerm || filterCategory || filterLocation) && (
-                  <div className="text-sm text-slate-600">
+                  <div className="text-sm text-slate-600 mt-2">
                     Showing {filteredAssets.length} of {assets.length} assets
                   </div>
                 )}
@@ -338,32 +338,32 @@ export default function AssetsPage() {
                 <div className="text-sm text-slate-600">No assets yet.</div>
               ) : (
                 <div className="overflow-x-auto">
-                  <table className="min-w-full text-sm">
+                  <table className="min-w-full text-xs">
                     <thead>
-                      <tr className="text-left text-slate-600">
-                        <th className="py-2 pr-3">Code</th>
-                        <th className="py-2 pr-3">Name</th>
-                        <th className="py-2 pr-3">Category</th>
-                        <th className="py-2 pr-3">Category Prefix</th>
-                        <th className="py-2 pr-3">Purchase Date</th>
-                        <th className="py-2 pr-3">Manufacturer</th>
-                        <th className="py-2 pr-3">Status</th>
-                        <th className="py-2 pr-3">Location</th>
+                      <tr className="text-left text-slate-600 text-xs">
+                        <th className="py-1 pr-2 whitespace-nowrap">Code</th>
+                        <th className="py-1 pr-2 whitespace-nowrap">Name</th>
+                        <th className="py-1 pr-2 whitespace-nowrap">Category</th>
+                        <th className="py-1 pr-2 whitespace-nowrap">Category Prefix</th>
+                        <th className="py-1 pr-2 whitespace-nowrap">Purchase Date</th>
+                        <th className="py-1 pr-2 whitespace-nowrap">Manufacturer</th>
+                        <th className="py-1 pr-2 whitespace-nowrap">Status</th>
+                        <th className="py-1 pr-2 whitespace-nowrap">Location</th>
                         <th className="py-2 pr-3">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
                       {filteredAssets.map((asset) => (
                         <tr key={asset.id} className="align-top">
-                          <td className="py-2 pr-3 font-medium text-slate-900">{asset.code}</td>
-                          <td className="py-2 pr-3">{asset.name}</td>
-                          <td className="py-2 pr-3">{asset.category || '—'}</td>
-                          <td className="py-2 pr-3">{asset.category ? CATEGORY_PREFIX[asset.category] : (asset.code ? asset.code.slice(0,2) : '—')}</td>
-                          <td className="py-2 pr-3">{asset.dateOfPurchase ? new Date(asset.dateOfPurchase).toLocaleDateString() : '—'}</td>
-                          <td className="py-2 pr-3">{asset.manufacturer || '—'}</td>
-                          <td className="py-2 pr-3">{asset.status || '—'}</td>
-                          <td className="py-2 pr-3">{asset.location || '—'}</td>
-                          <td className="py-2 pr-3 space-x-2 flex items-center">
+                          <td className="py-1 pr-2 font-medium text-slate-900">{asset.code}</td>
+                          <td className="py-1 pr-2">{asset.name}</td>
+                          <td className="py-1 pr-2">{asset.category || '—'}</td>
+                          <td className="py-1 pr-2">{asset.category ? CATEGORY_PREFIX[asset.category] : (asset.code ? asset.code.slice(0,2) : '—')}</td>
+                          <td className="py-1 pr-2">{asset.dateOfPurchase ? new Date(asset.dateOfPurchase).toLocaleDateString() : '—'}</td>
+                          <td className="py-1 pr-2">{asset.manufacturer || '—'}</td>
+                          <td className="py-1 pr-2">{asset.status || '—'}</td>
+                          <td className="py-1 pr-2">{asset.location || '—'}</td>
+                          <td className="py-1 pr-2 space-x-2 flex items-center">
                             <button onClick={() => handleEdit(asset)} className="p-1 hover:bg-blue-100 rounded text-blue-600 hover:text-blue-700" title="Edit"><Edit2 size={16} /></button>
                             <button onClick={() => handleDelete(asset.id)} className="p-1 hover:bg-red-100 rounded text-red-600 hover:text-red-700" title="Delete"><Trash2 size={16} /></button>
                           </td>
