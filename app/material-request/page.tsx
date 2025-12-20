@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
+import Autocomplete from '@/components/ui/autocomplete'
 
 import { AlertCircle, Package, Clock, AlertTriangle, Plus, X, Trash2 } from 'lucide-react'
 
@@ -15,6 +16,7 @@ interface JobOrder {
   jobNumber: string
   productName: string
   drawingRef: string | null
+  clientName?: string | null
 }
 
 interface InventoryItem {
@@ -689,51 +691,21 @@ export default function MaterialRequestPage() {
                         className="h-8 text-xs"
                         step="0.01"
                       />
-                      <select
-                        value={item.reasonForRequest}
-                        onChange={(e) => updateItemField(idx, 'reasonForRequest', e.target.value)}
-                        className="h-8 px-1 rounded-md border border-slate-300 text-xs"
-                      >
-                        <option value="">Select Reason</option>
-                        {jobOrders.length > 0 && (
-                          <optgroup label="Job Orders">
-                            {jobOrders.map(j => (
-                              <option key={`job-${j.id}`} value={`${j.jobNumber} - ${j.productName}`}>{`${j.jobNumber} - ${j.productName}`}</option>
-                            ))}
-                          </optgroup>
-                        )}
-                        {assets.length > 0 && (
-                          <optgroup label="Assets">
-                            {assets.map(a => (
-                              <option key={`asset-${a.id}`} value={`${a.code} - ${a.name}`}>{`${a.code} - ${a.name}`}</option>
-                            ))}
-                          </optgroup>
-                        )}
-                        {inventory.length > 0 && (
-                          <optgroup label="Inventory">
-                            {inventory.map(i => (
-                              <option key={`inv-${i.id}`} value={i.itemName}>{i.itemName}</option>
-                            ))}
-                          </optgroup>
-                        )}
-                        {/* Editable Reason input with type-ahead suggestions; Other options first, then Job Orders then Assets */}
                       <Autocomplete
                         value={item.reasonForRequest}
                         onChange={(val) => updateItemField(idx, 'reasonForRequest', val)}
                         suggestions={[
-                          // static other options first
                           { label: 'Workshop', type: 'other' },
                           { label: 'Maintenance', type: 'other' },
                           { label: 'General', type: 'other' },
-                          // job orders (will be appended programmatically below)
                           ...jobOrders.map(j => ({ id: j.id, label: `${j.jobNumber} - ${j.clientName || j.productName}`, meta: j.productName, type: 'job' })),
-                          // assets last
                           ...assets.map(a => ({ id: a.id, label: `${a.code} - ${a.name}`, meta: a.category || a.location || '', type: 'asset' })),
                         ]}
                         placeholder="Reason (type to search or enter text)"
                         inputClassName="h-8 px-1 rounded-md border border-slate-300 text-xs"
                         className="w-full"
                       />
+
                       <select
                         value={item.urgencyLevel}
                         onChange={(e) => updateItemField(idx, 'urgencyLevel', e.target.value)}
