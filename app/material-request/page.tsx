@@ -648,7 +648,7 @@ export default function MaterialRequestPage() {
                     <div></div>
                   </div>
                   {items.map((item, idx) => (
-                    <div key={idx} className="grid grid-cols-[2fr_3fr_1fr_0.8fr_0.8fr_2fr_1fr_1.2fr_1.5fr_0.5fr] gap-2 min-w-[1400px]">
+                    <div key={idx} className="grid grid-cols-[1.5fr_3fr_0.5fr_0.4fr_0.4fr_2fr_1fr_1.2fr_1.125fr_0.5fr] gap-2 min-w-[1400px]">
                       <Input
                         value={item.itemName}
                         onChange={(e) => updateItemField(idx, 'itemName', e.target.value)}
@@ -1034,7 +1034,7 @@ export default function MaterialRequestPage() {
               <div>
                 <Label className="text-sm font-semibold mb-2">Items</Label>
                 <div className="space-y-2 overflow-x-auto">
-                  <div className="grid grid-cols-[2fr_3fr_1fr_0.8fr_0.8fr_2fr_1fr_1.2fr_1.5fr_0.5fr] gap-2 text-[11px] font-semibold text-slate-600 px-2 min-w-[1400px]">
+                  <div className="grid grid-cols-[1.5fr_3fr_0.5fr_0.4fr_0.4fr_2fr_1fr_1.2fr_1.125fr_0.5fr] gap-2 text-[11px] font-semibold text-slate-600 px-2 min-w-[1400px]">
                     <div>Item Name</div>
                     <div>Description</div>
                     <div>Qty</div>
@@ -1047,7 +1047,7 @@ export default function MaterialRequestPage() {
                     <div></div>
                   </div>
                   {items.map((item, idx) => (
-                    <div key={idx} className="grid grid-cols-[2fr_3fr_1fr_0.8fr_0.8fr_2fr_1fr_1.2fr_1.5fr_0.5fr] gap-2 min-w-[1400px]">
+                    <div key={idx} className="grid grid-cols-[1.5fr_3fr_0.5fr_0.4fr_0.4fr_2fr_1fr_1.2fr_1.125fr_0.5fr] gap-2 min-w-[1400px]">
                       <Input
                         value={item.itemName}
                         onChange={(e) => updateItemField(idx, 'itemName', e.target.value)}
