@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
-import Autocomplete, { Suggestion } from '@/components/ui/autocomplete'
+import { Suggestion } from '@/components/ui/autocomplete'
 import { AlertCircle, Package, Clock, AlertTriangle, Plus, X, Trash2 } from 'lucide-react'
 
 interface JobOrder {
@@ -707,13 +707,16 @@ export default function MaterialRequestPage() {
                         className="h-8 text-xs"
                         step="0.01"
                       />
-                      <Autocomplete
+                      <select
                         value={item.reasonForRequest}
-                        onChange={(val) => updateItemField(idx, 'reasonForRequest', val)}
-                        suggestions={reasonSuggestions}
-                        placeholder="Reason (try Job orders, Machinery, Inventory...)"
-                        className="h-8"
-                      />
+                        onChange={(e) => updateItemField(idx, 'reasonForRequest', e.target.value)}
+                        className="h-8 px-1 rounded-md border border-slate-300 text-xs"
+                      >
+                        <option value="">Select Reason</option>
+                        {reasonSuggestions.map((s, i) => (
+                          <option key={`${s.type || 'opt'}-${s.id ?? i}-${i}`} value={s.label}>{s.label}</option>
+                        ))}
+                      </select>
                       <select
                         value={item.urgencyLevel}
                         onChange={(e) => updateItemField(idx, 'urgencyLevel', e.target.value)}
