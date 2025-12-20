@@ -19,7 +19,9 @@ export default function Autocomplete({ value, onChange, suggestions, placeholder
   const [open, setOpen] = useState(false)
   const [activeIndex, setActiveIndex] = useState(-1)
   const [filtered, setFiltered] = useState<Suggestion[]>([])
-  const containerRef = useRef<HTMLDivElement | null>(null)
+  const inputRef = useRef<HTMLInputElement | null>(null)
+  const menuRef = useRef<HTMLUListElement | null>(null)
+  const [position, setPosition] = useState<{ left: number; top: number; width: number } | null>(null)
 
   useEffect(() => {
     const q = (value || '').trim().toLowerCase()
@@ -37,14 +39,38 @@ export default function Autocomplete({ value, onChange, suggestions, placeholder
     setActiveIndex(-1)
   }, [value, suggestions])
 
+  // update menu position based on input rect
+  const updatePosition = () => {
+    if (!inputRef.current) return
+    const rect = inputRef.current.getBoundingClientRect()
+    setPosition({ left: rect.left + window.scrollX, top: rect.bottom + window.scrollY, width: rect.width })
+  }
+
+  // handle outside clicks (works even though menu is rendered in body)
   useEffect(() => {
     const onDocClick = (e: MouseEvent) => {
-      if (!containerRef.current) return
-      if (!containerRef.current.contains(e.target as Node)) setOpen(false)
+      const target = e.target as Node
+      if (inputRef.current && inputRef.current.contains(target)) return
+      if (menuRef.current && menuRef.current.contains(target)) return
+      setOpen(false)
     }
     document.addEventListener('click', onDocClick)
     return () => document.removeEventListener('click', onDocClick)
   }, [])
+
+  // update position when open and on resize/scroll
+  useEffect(() => {
+    if (!open) return
+    updatePosition()
+    const onScroll = () => updatePosition()
+    const onResize = () => updatePosition()
+    window.addEventListener('scroll', onScroll, true)
+    window.addEventListener('resize', onResize)
+    return () => {
+      window.removeEventListener('scroll', onScroll, true)
+      window.removeEventListener('resize', onResize)
+    }
+  }, [open, filtered])
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'ArrowDown') {
@@ -68,38 +94,56 @@ export default function Autocomplete({ value, onChange, suggestions, placeholder
   const select = (s: Suggestion) => {
     onChange(s.label)
     setOpen(false)
+    inputRef.current?.focus()
   }
 
   return (
-    <div ref={containerRef} className={cn('relative', className)}>
+    <div className={cn('relative', className)}>
       <input
+        ref={inputRef}
         value={value}
         onChange={(e) => { onChange(e.target.value); setOpen(true) }}
         onFocus={() => setOpen(filtered.length > 0)}
         onKeyDown={onKeyDown}
         placeholder={placeholder}
         className={cn('h-8 px-1 rounded-md border border-slate-300 text-xs', inputClassName)}
+        aria-expanded={open}
+        aria-haspopup="listbox"
       />
 
-      {open && filtered.length > 0 && (
-        <ul role="listbox" className="absolute z-50 mt-1 w-full bg-white rounded-md border border-slate-200 shadow-sm max-h-56 overflow-auto text-sm">
-          {filtered.map((s, i) => (
-            <li
-              key={`${s.type || 's'}-${s.id ?? s.label}-${i}`}
-              role="option"
-              aria-selected={i === activeIndex}
-              onMouseDown={(e) => { e.preventDefault(); select(s) }}
-              onMouseEnter={() => setActiveIndex(i)}
-              className={`px-3 py-2 cursor-pointer flex justify-between items-center ${i === activeIndex ? 'bg-blue-50' : 'hover:bg-slate-50'}`}
+      {open && filtered.length > 0 && position && typeof document !== 'undefined' && (
+        // Render menu to document.body via portal so it can escape overflow clipping
+        // eslint-disable-next-line react/no-unknown-property
+        (function renderPortal() {
+          const content = (
+            <ul
+              ref={menuRef}
+              role="listbox"
+              className="bg-white rounded-md border border-slate-200 shadow-sm max-h-56 overflow-auto text-sm"
+              style={{ position: 'absolute', left: position.left, top: position.top, width: position.width, zIndex: 9999 }}
             >
-              <div>
-                <div className="font-medium text-slate-800">{s.label}</div>
-                {s.meta && <div className="text-xs text-slate-500">{s.meta}</div>}
-              </div>
-              {s.type && <div className="text-xs text-slate-400 ml-2">{s.type}</div>}
-            </li>
-          ))}
-        </ul>
+              {filtered.map((s, i) => (
+                <li
+                  key={`${s.type || 's'}-${s.id ?? s.label}-${i}`}
+                  role="option"
+                  aria-selected={i === activeIndex}
+                  onMouseDown={(e) => { e.preventDefault(); select(s) }}
+                  onMouseEnter={() => setActiveIndex(i)}
+                  className={`px-3 py-2 cursor-pointer flex justify-between items-center ${i === activeIndex ? 'bg-blue-50' : 'hover:bg-slate-50'}`}
+                >
+                  <div>
+                    <div className="font-medium text-slate-800">{s.label}</div>
+                    {s.meta && <div className="text-xs text-slate-500">{s.meta}</div>}
+                  </div>
+                  {s.type && <div className="text-xs text-slate-400 ml-2">{s.type}</div>}
+                </li>
+              ))}
+            </ul>
+          )
+          // eslint-disable-next-line @typescript-eslint/no-var-requires
+          const { createPortal } = require('react-dom')
+          return createPortal(content, document.body)
+        })()
       )}
     </div>
   )
