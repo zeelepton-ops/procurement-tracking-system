@@ -16,6 +16,8 @@ interface JobOrder {
   clientName: string | null
   contactPerson: string | null
   phone: string | null
+  clientContactPerson: string | null
+  clientContactPhone: string | null
   lpoContractNo: string | null
   priority: string | null
   foreman: string | null
@@ -80,7 +82,9 @@ export default function JobOrdersPage() {
     drawingRef: '',
     clientName: '',
     contactPerson: '',
-    phone: '',
+    phone: '+974 ',
+    clientContactPerson: '',
+    clientContactPhone: '+974 ',
     lpoContractNo: '',
     priority: 'MEDIUM',
     foreman: '',
@@ -102,7 +106,9 @@ export default function JobOrdersPage() {
     drawingRef: '',
     clientName: '',
     contactPerson: '',
-    phone: '',
+    phone: '+974 ',
+    clientContactPerson: '',
+    clientContactPhone: '+974 ',
     lpoContractNo: '',
     priority: 'MEDIUM',
     foreman: '',
@@ -240,7 +246,9 @@ export default function JobOrdersPage() {
         drawingRef: '',
         clientName: '',
         contactPerson: '',
-        phone: '',
+        phone: '+974 ',
+        clientContactPerson: '',
+        clientContactPhone: '+974 ',
         lpoContractNo: '',
         priority: 'MEDIUM',
         foreman: '',
@@ -311,7 +319,9 @@ export default function JobOrdersPage() {
       drawingRef: job.drawingRef || '',
       clientName: job.clientName || '',
       contactPerson: job.contactPerson || '',
-      phone: job.phone || '',
+      phone: job.phone || '+974 ',
+      clientContactPerson: job.clientContactPerson || '',
+      clientContactPhone: job.clientContactPhone || '+974 ',
       lpoContractNo: job.lpoContractNo || '',
       priority: job.priority || 'MEDIUM',
       foreman: job.foreman || '',
@@ -474,8 +484,8 @@ export default function JobOrdersPage() {
 
                 {/* Client Information */}
                 <div className="border-t pt-4">
-                  <h3 className="text-sm font-bold text-slate-700 mb-3">Client Information</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <h3 className="text-sm font-bold text-slate-700 mb-3">Client & NBTC Contact Information</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <div>
                       <Label htmlFor="clientName" className="text-sm font-semibold">Client Name *</Label>
                       <Input
@@ -488,22 +498,42 @@ export default function JobOrdersPage() {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="contactPerson" className="text-sm font-semibold">Contact Person</Label>
+                      <Label htmlFor="contactPerson" className="text-sm font-semibold">NBTC's Contact Person</Label>
                       <Input
                         id="contactPerson"
                         value={formData.contactPerson}
                         onChange={(e) => setFormData({ ...formData, contactPerson: e.target.value })}
-                        placeholder="e.g., LENIN.M"
+                        placeholder="e.g., NBTC Rep"
                         className="mt-1 h-9"
                       />
                     </div>
                     <div>
-                      <Label htmlFor="phone" className="text-sm font-semibold">Phone</Label>
+                      <Label htmlFor="phone" className="text-sm font-semibold">NBTC's Contact Phone No.</Label>
                       <Input
                         id="phone"
                         value={formData.phone}
                         onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                         placeholder="+974 5508 7272"
+                        className="mt-1 h-9"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="clientContactPerson" className="text-sm font-semibold">Client's Contact Person</Label>
+                      <Input
+                        id="clientContactPerson"
+                        value={formData.clientContactPerson}
+                        onChange={(e) => setFormData({ ...formData, clientContactPerson: e.target.value })}
+                        placeholder="e.g., LENIN.M"
+                        className="mt-1 h-9"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="clientContactPhone" className="text-sm font-semibold">Client's Phone No.</Label>
+                      <Input
+                        id="clientContactPhone"
+                        value={formData.clientContactPhone}
+                        onChange={(e) => setFormData({ ...formData, clientContactPhone: e.target.value })}
+                        placeholder="+974 55xx xxxx"
                         className="mt-1 h-9"
                       />
                     </div>
@@ -727,7 +757,9 @@ export default function JobOrdersPage() {
                         drawingRef: '',
                         clientName: '',
                         contactPerson: '',
-                        phone: '',
+                        phone: '+974 ',
+                        clientContactPerson: '',
+                        clientContactPhone: '+974 ',
                         lpoContractNo: '',
                         priority: 'MEDIUM',
                         foreman: '',
@@ -954,14 +986,26 @@ export default function JobOrdersPage() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 {selectedJob.contactPerson && (
                   <div>
-                    <div className="text-slate-500 text-xs">Contact Person</div>
+                    <div className="text-slate-500 text-xs">NBTC's Contact Person</div>
                     <div>{selectedJob.contactPerson}</div>
                   </div>
                 )}
                 {selectedJob.phone && (
                   <div>
-                    <div className="text-slate-500 text-xs">Phone</div>
+                    <div className="text-slate-500 text-xs">NBTC's Contact Phone No.</div>
                     <div>{selectedJob.phone}</div>
+                  </div>
+                )}
+                {selectedJob.clientContactPerson && (
+                  <div>
+                    <div className="text-slate-500 text-xs">Client's Contact Person</div>
+                    <div>{selectedJob.clientContactPerson}</div>
+                  </div>
+                )}
+                {selectedJob.clientContactPhone && (
+                  <div>
+                    <div className="text-slate-500 text-xs">Client's Phone No.</div>
+                    <div>{selectedJob.clientContactPhone}</div>
                   </div>
                 )}
                 {selectedJob.lpoContractNo && (
@@ -1101,8 +1145,8 @@ export default function JobOrdersPage() {
 
                   {/* Client Information */}
                   <div className="border-t pt-4">
-                    <h3 className="text-sm font-bold text-slate-700 mb-3">Client Information</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <h3 className="text-sm font-bold text-slate-700 mb-3">Client & NBTC Contact Information</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                       <div>
                         <Label htmlFor="edit-clientName" className="text-sm font-semibold">Client Name *</Label>
                         <Input
@@ -1114,7 +1158,7 @@ export default function JobOrdersPage() {
                         />
                       </div>
                       <div>
-                        <Label htmlFor="edit-contactPerson" className="text-sm font-semibold">Contact Person</Label>
+                        <Label htmlFor="edit-contactPerson" className="text-sm font-semibold">NBTC's Contact Person</Label>
                         <Input
                           id="edit-contactPerson"
                           value={editFormData.contactPerson}
@@ -1123,11 +1167,29 @@ export default function JobOrdersPage() {
                         />
                       </div>
                       <div>
-                        <Label htmlFor="edit-phone" className="text-sm font-semibold">Phone</Label>
+                        <Label htmlFor="edit-phone" className="text-sm font-semibold">NBTC's Contact Phone No.</Label>
                         <Input
                           id="edit-phone"
                           value={editFormData.phone}
                           onChange={(e) => setEditFormData({ ...editFormData, phone: e.target.value })}
+                          className="mt-1 h-9"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="edit-clientContactPerson" className="text-sm font-semibold">Client's Contact Person</Label>
+                        <Input
+                          id="edit-clientContactPerson"
+                          value={editFormData.clientContactPerson}
+                          onChange={(e) => setEditFormData({ ...editFormData, clientContactPerson: e.target.value })}
+                          className="mt-1 h-9"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="edit-clientContactPhone" className="text-sm font-semibold">Client's Phone No.</Label>
+                        <Input
+                          id="edit-clientContactPhone"
+                          value={editFormData.clientContactPhone}
+                          onChange={(e) => setEditFormData({ ...editFormData, clientContactPhone: e.target.value })}
                           className="mt-1 h-9"
                         />
                       </div>

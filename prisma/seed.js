@@ -39,7 +39,11 @@ async function main() {
     data: {
       jobNumber: 'JO-2024-001',
       productName: 'Steel Tank - 5000L',
-      drawingRef: 'DWG-ST-5000-001'
+      drawingRef: 'DWG-ST-5000-001',
+      contactPerson: 'NBTC Contact',
+      phone: '+974 4411 2233',
+      clientContactPerson: 'Client Rep A',
+      clientContactPhone: '+974 5555 1111'
     }
   })
 
@@ -47,7 +51,11 @@ async function main() {
     data: {
       jobNumber: 'JO-2024-002',
       productName: 'Steel Frame Structure',
-      drawingRef: 'DWG-SFS-2024-002'
+      drawingRef: 'DWG-SFS-2024-002',
+      contactPerson: 'NBTC Contact',
+      phone: '+974 4411 2244',
+      clientContactPerson: 'Client Rep B',
+      clientContactPhone: '+974 5555 2222'
     }
   })
 
@@ -55,7 +63,11 @@ async function main() {
     data: {
       jobNumber: 'JO-2024-003',
       productName: 'Pressure Vessel',
-      drawingRef: 'DWG-PV-2024-003'
+      drawingRef: 'DWG-PV-2024-003',
+      contactPerson: 'NBTC Contact',
+      phone: '+974 4411 2255',
+      clientContactPerson: 'Client Rep C',
+      clientContactPhone: '+974 5555 3333'
     }
   })
 

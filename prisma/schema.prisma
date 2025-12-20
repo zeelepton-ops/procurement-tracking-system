@@ -42,6 +42,8 @@ model JobOrder {
   clientName     String?
   contactPerson  String?
   phone          String?
+  clientContactPerson String?
+  clientContactPhone  String?
   lpoContractNo  String?
   priority       String?  @default("MEDIUM") // HIGH, MEDIUM, LOW
   foreman        String?
