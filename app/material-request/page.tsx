@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
-import { Suggestion } from '@/components/ui/autocomplete'
+
 import { AlertCircle, Package, Clock, AlertTriangle, Plus, X, Trash2 } from 'lucide-react'
 
 interface JobOrder {
@@ -281,25 +281,7 @@ export default function MaterialRequestPage() {
     }
   }
 
-  // Build suggestion list for per-item reasons: Job Orders, Assets, Inventory and static options
-  const reasonSuggestions = useMemo(() => {
-    const staticOptions: Suggestion[] = [
-      { label: 'Job orders', type: 'option' },
-      { label: 'Workshop', type: 'option' },
-      { label: 'Maintenance', type: 'option' },
-      { label: 'Asset Names', type: 'option' },
-      { label: 'Machinery', type: 'option' },
-      { label: 'from inventory', type: 'option' },
-      { label: 'general', type: 'option' },
-    ]
 
-    const jobOrderOptions: Suggestion[] = jobOrders.map(j => ({ id: j.id, label: `${j.jobNumber} — ${j.productName}`, meta: j.drawingRef || '', type: 'job' }))
-    const assetOptions: Suggestion[] = assets.map(a => ({ id: a.id, label: `${a.code} — ${a.name}`, meta: a.category || a.location || '', type: 'asset' }))
-    const inventoryOptions: Suggestion[] = inventory.map(i => ({ id: i.id, label: i.itemName, meta: `${i.currentStock} ${i.unit}`, type: 'inventory' }))
-
-    // Prioritize job orders and assets, then inventory, then static
-    return [...jobOrderOptions, ...assetOptions, ...inventoryOptions, ...staticOptions]
-  }, [jobOrders, assets, inventory])
 
   const filteredRequests = materialRequests.filter((req) => {
     const contextLabel = req.requestContext === 'MACHINERY' && req.asset 
@@ -713,9 +695,32 @@ export default function MaterialRequestPage() {
                         className="h-8 px-1 rounded-md border border-slate-300 text-xs"
                       >
                         <option value="">Select Reason</option>
-                        {reasonSuggestions.map((s, i) => (
-                          <option key={`${s.type || 'opt'}-${s.id ?? i}-${i}`} value={s.label}>{s.label}</option>
-                        ))}
+                        {jobOrders.length > 0 && (
+                          <optgroup label="Job Orders">
+                            {jobOrders.map(j => (
+                              <option key={`job-${j.id}`} value={`${j.jobNumber} - ${j.productName}`}>{`${j.jobNumber} - ${j.productName}`}</option>
+                            ))}
+                          </optgroup>
+                        )}
+                        {assets.length > 0 && (
+                          <optgroup label="Assets">
+                            {assets.map(a => (
+                              <option key={`asset-${a.id}`} value={`${a.code} - ${a.name}`}>{`${a.code} - ${a.name}`}</option>
+                            ))}
+                          </optgroup>
+                        )}
+                        {inventory.length > 0 && (
+                          <optgroup label="Inventory">
+                            {inventory.map(i => (
+                              <option key={`inv-${i.id}`} value={i.itemName}>{i.itemName}</option>
+                            ))}
+                          </optgroup>
+                        )}
+                        <optgroup label="Other">
+                          <option value="Workshop">Workshop</option>
+                          <option value="Maintenance">Maintenance</option>
+                          <option value="general">General</option>
+                        </optgroup>
                       </select>
                       <select
                         value={item.urgencyLevel}
