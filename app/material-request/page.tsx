@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Select } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import Autocomplete from '@/components/ui/autocomplete'
+import { useSession } from 'next-auth/react'
 
 import { AlertCircle, Package, Clock, AlertTriangle, Plus, X, Trash2 } from 'lucide-react'
 
@@ -89,6 +90,7 @@ export default function MaterialRequestPage() {
     status: 'ALL',
     urgency: 'ALL'
   })
+  const { data: session, status } = useSession()
   const [success, setSuccess] = useState(false)
   const [items, setItems] = useState<Array<{ 
     itemName: string; 
@@ -126,7 +128,7 @@ export default function MaterialRequestPage() {
     preferredSupplier: '',
     stockQtyInInventory: '0',
     urgencyLevel: 'NORMAL',
-    requestedBy: 'Production Team'
+    requestedBy: ''
   })
   const importInputRef = useRef<HTMLInputElement | null>(null)
 
@@ -136,6 +138,18 @@ export default function MaterialRequestPage() {
     fetchInventory()
     fetchMaterialRequests()
   }, [])
+
+  useEffect(() => {
+    if (status === 'authenticated') {
+      const name = session?.user?.name || session?.user?.email || ''
+      setFormData(prev => {
+        if (!prev.requestedBy || prev.requestedBy === 'Production Team') {
+          return { ...prev, requestedBy: name || prev.requestedBy }
+        }
+        return prev
+      })
+    }
+  }, [status, session])
 
   const handleImportRequests = async (file: File | null) => {
     if (!file) return
@@ -415,7 +429,7 @@ export default function MaterialRequestPage() {
           preferredSupplier: '',
           stockQtyInInventory: '0',
           urgencyLevel: 'NORMAL',
-          requestedBy: 'Production Team'
+          requestedBy: session?.user?.name || session?.user?.email || ''
         })
         setItems([{ 
           itemName: '', 
@@ -635,7 +649,7 @@ export default function MaterialRequestPage() {
                 <Label className="text-sm font-semibold mb-2">Items *</Label>
                 {/* Suggestions will be provided via Autocomplete component built from jobOrders, assets and inventory */}
                 <div className="space-y-2 overflow-x-auto">
-                  <div className="grid grid-cols-[1.125fr_3fr_0.5fr_0.4fr_1.75fr_0.9fr_1.2fr_1.25fr_0.6fr_0.5fr] gap-0.5 text-[11px] font-semibold text-slate-600 px-0.5 w-full">
+                  <div className="grid grid-cols-[1.125fr_3fr_minmax(72px,0.5fr)_0.4fr_1.5fr_minmax(84px,0.6fr)_1.2fr_1.25fr_0.6fr_0.5fr] gap-0.5 text-[11px] font-semibold text-slate-600 px-0.5 w-full">
                     <div>Item Name</div>
                     <div>Description</div>
                     <div>Qty</div>
@@ -648,7 +662,7 @@ export default function MaterialRequestPage() {
                     <div></div>
                   </div>
                   {items.map((item, idx) => (
-                    <div key={idx} className="grid grid-cols-[1.125fr_3fr_0.5fr_0.4fr_1.75fr_0.9fr_1.2fr_1.25fr_0.6fr_0.5fr] gap-0.5 w-full">
+                    <div key={idx} className="grid grid-cols-[1.125fr_3fr_minmax(72px,0.5fr)_0.4fr_1.5fr_minmax(84px,0.6fr)_1.2fr_1.25fr_0.6fr_0.5fr] gap-0.5 w-full">
                       <Input
                         value={item.itemName}
                         onChange={(e) => updateItemField(idx, 'itemName', e.target.value)}
@@ -668,14 +682,14 @@ export default function MaterialRequestPage() {
                         value={item.quantity}
                         onChange={(e) => updateItemField(idx, 'quantity', e.target.value)}
                         placeholder="Qty"
-                        className="h-7 text-[11px]"
+                        className="h-7 text-[11px] min-w-[72px] text-right px-1"
                         step="0.01"
                         required
                       />
                       <select
                         value={item.unit}
                         onChange={(e) => updateItemField(idx, 'unit', e.target.value)}
-                        className="h-7 px-1 rounded-md border border-slate-300 text-[11px]"
+                        className="h-7 px-1 rounded-md border border-slate-300 text-[11px] w-full focus:z-10 focus:ring-2 focus:ring-blue-400 focus:outline-none"
                       >
                         <option value="PCS">PCS</option>
                         <option value="KG">KG</option>
@@ -694,14 +708,14 @@ export default function MaterialRequestPage() {
                           ...assets.map(a => ({ id: a.id, label: `${a.code} - ${a.name}`, meta: a.category || a.location || '', type: 'asset' })),
                         ]}
                         placeholder="Reason (type to search or enter text)"
-                        inputClassName="h-7 px-1 rounded-md border border-slate-300 text-[11px]"
+                        inputClassName="h-7 px-1 rounded-md border border-slate-300 text-[11px] focus:z-10 focus:ring-2 focus:ring-blue-400 focus:outline-none"
                         className="w-full"
                       />
 
                       <select
                         value={item.urgencyLevel}
                         onChange={(e) => updateItemField(idx, 'urgencyLevel', e.target.value)}
-                        className="h-7 px-1 rounded-md border border-slate-300 text-[11px]"
+                        className="h-7 px-1 rounded-md border border-slate-300 text-[11px] w-full focus:z-10 focus:ring-2 focus:ring-blue-400 focus:outline-none"
                       >
                         <option value="LOW">Low</option>
                         <option value="NORMAL">Normal</option>
@@ -756,7 +770,7 @@ export default function MaterialRequestPage() {
                   onChange={(e) => setFormData({ ...formData, requestedBy: e.target.value })}
                   placeholder="Your name"
                   required
-                  className="mt-1 h-9"
+                  className="mt-1 h-9 focus:z-10 focus:ring-2 focus:ring-blue-400 focus:outline-none"
                 />
               </div>
 
@@ -1034,7 +1048,7 @@ export default function MaterialRequestPage() {
               <div>
                 <Label className="text-sm font-semibold mb-2">Items</Label>
                 <div className="space-y-2 overflow-x-auto">
-                  <div className="grid grid-cols-[1.125fr_3fr_0.5fr_0.4fr_1.75fr_0.9fr_1.2fr_1.25fr_0.6fr_0.5fr] gap-0.5 text-[11px] font-semibold text-slate-600 px-0.5 w-full">
+                  <div className="grid grid-cols-[1.125fr_3fr_minmax(72px,0.5fr)_0.4fr_1.5fr_minmax(84px,0.6fr)_1.2fr_1.25fr_0.6fr_0.5fr] gap-0.5 text-[11px] font-semibold text-slate-600 px-0.5 w-full">
                     <div>Item Name</div>
                     <div>Description</div>
                     <div>Qty</div>
@@ -1047,7 +1061,7 @@ export default function MaterialRequestPage() {
                     <div></div>
                   </div>
                   {items.map((item, idx) => (
-                    <div key={idx} className="grid grid-cols-[1.125fr_3fr_0.5fr_0.4fr_1.75fr_0.9fr_1.2fr_1.25fr_0.6fr_0.5fr] gap-0.5 w-full">
+                    <div key={idx} className="grid grid-cols-[1.125fr_3fr_minmax(72px,0.5fr)_0.4fr_1.5fr_minmax(84px,0.6fr)_1.2fr_1.25fr_0.6fr_0.5fr] gap-0.5 w-full">
                       <Input
                         value={item.itemName}
                         onChange={(e) => updateItemField(idx, 'itemName', e.target.value)}
@@ -1065,7 +1079,7 @@ export default function MaterialRequestPage() {
                         value={item.quantity}
                         onChange={(e) => updateItemField(idx, 'quantity', e.target.value)}
                         placeholder="Qty"
-                        className="h-7 text-[11px]"
+                        className="h-7 text-[11px] min-w-[72px] text-right px-1"
                         step="0.01"
                       />
                       <select

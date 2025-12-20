@@ -43,7 +43,14 @@ export default function Autocomplete({ value, onChange, suggestions, placeholder
   const updatePosition = () => {
     if (!inputRef.current) return
     const rect = inputRef.current.getBoundingClientRect()
-    setPosition({ left: rect.left + window.scrollX, top: rect.bottom + window.scrollY, width: rect.width })
+    // allow menu to be wider than the input for better readability
+    const minMenuWidth = 280
+    let width = Math.max(rect.width, minMenuWidth)
+    let left = rect.left + window.scrollX
+    // prevent overflow off the right edge
+    const overflowRight = left + width - (window.innerWidth - 12)
+    if (overflowRight > 0) left = Math.max(12, left - overflowRight)
+    setPosition({ left, top: rect.bottom + window.scrollY, width })
   }
 
   // handle outside clicks (works even though menu is rendered in body)
@@ -114,21 +121,15 @@ export default function Autocomplete({ value, onChange, suggestions, placeholder
         onFocus={() => setOpen(filtered.length > 0)}
         onKeyDown={onKeyDown}
         placeholder={placeholder}
-        className={cn('h-7 px-1 rounded-md border border-slate-300 text-[11px]', inputClassName)}
-        aria-expanded={open}
-        aria-haspopup="listbox"
+        className={cn('h-7 px-1 rounded-md border border-slate-300 text-[11px] focus:z-10 focus:ring-2 focus:ring-blue-400 focus:outline-none', inputClassName)}
       />
-
-      {open && filtered.length > 0 && position && typeof document !== 'undefined' && (
-        // Render menu to document.body via portal so it can escape overflow clipping
-        // eslint-disable-next-line react/no-unknown-property
-        (function renderPortal() {
+      { (function renderPortal() {
           const content = (
             <ul
               ref={menuRef}
               role="listbox"
               className={"bg-white rounded-md border border-slate-200 shadow-sm max-h-56 overflow-auto text-xs transition-opacity duration-150 ease-out transform-gpu" + (menuMounted ? ' opacity-100 translate-y-0' : ' opacity-0 -translate-y-1')}
-              style={{ position: 'absolute', left: position.left, top: position.top, width: position.width, zIndex: 9999 }}
+              style={{ position: 'absolute', left: position?.left, top: position?.top, width: position?.width, zIndex: 9999 }}
             >
               {filtered.map((s, i) => (
                 <li
@@ -152,7 +153,7 @@ export default function Autocomplete({ value, onChange, suggestions, placeholder
           const { createPortal } = require('react-dom')
           return createPortal(content, document.body)
         })()
-      )}
+      }
     </div>
   )
 }
