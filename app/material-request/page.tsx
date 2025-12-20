@@ -635,20 +635,20 @@ export default function MaterialRequestPage() {
                 <Label className="text-sm font-semibold mb-2">Items *</Label>
                 {/* Suggestions will be provided via Autocomplete component built from jobOrders, assets and inventory */}
                 <div className="space-y-2 overflow-x-auto">
-                  <div className="grid grid-cols-[1.5fr_3fr_0.5fr_0.4fr_0.4fr_2fr_1fr_1.2fr_1.125fr_0.5fr] gap-0.5 text-[11px] font-semibold text-slate-600 px-0.5 w-full">
+                  <div className="grid grid-cols-[1.125fr_3fr_0.5fr_0.4fr_1.75fr_0.9fr_1.2fr_1.25fr_0.6fr_0.5fr] gap-0.5 text-[11px] font-semibold text-slate-600 px-0.5 w-full">
                     <div>Item Name</div>
                     <div>Description</div>
                     <div>Qty</div>
                     <div>Unit</div>
-                    <div>Stock</div>
                     <div>Reason</div>
                     <div>Urgency</div>
                     <div>Req. Date</div>
                     <div>Supplier</div>
+                    <div>Stock</div>
                     <div></div>
                   </div>
                   {items.map((item, idx) => (
-                    <div key={idx} className="grid grid-cols-[1.5fr_3fr_0.5fr_0.4fr_0.4fr_2fr_1fr_1.2fr_1.125fr_0.5fr] gap-0.5 w-full">
+                    <div key={idx} className="grid grid-cols-[1.125fr_3fr_0.5fr_0.4fr_1.75fr_0.9fr_1.2fr_1.25fr_0.6fr_0.5fr] gap-0.5 w-full">
                       <Input
                         value={item.itemName}
                         onChange={(e) => updateItemField(idx, 'itemName', e.target.value)}
@@ -683,14 +683,6 @@ export default function MaterialRequestPage() {
                         <option value="M">M</option>
                         <option value="BOX">BOX</option>
                       </select>
-                      <Input
-                        type="number"
-                        value={item.stockQty}
-                        onChange={(e) => updateItemField(idx, 'stockQty', e.target.value)}
-                        placeholder="0"
-                        className="h-7 text-[11px]"
-                        step="0.01"
-                      />
                       <Autocomplete
                         value={item.reasonForRequest}
                         onChange={(val) => updateItemField(idx, 'reasonForRequest', val)}
@@ -727,6 +719,14 @@ export default function MaterialRequestPage() {
                         onChange={(e) => updateItemField(idx, 'preferredSupplier', e.target.value)}
                         placeholder="Supplier"
                         className="h-7 text-[11px]"
+                      />
+                      <Input
+                        type="number"
+                        value={item.stockQty}
+                        onChange={(e) => updateItemField(idx, 'stockQty', e.target.value)}
+                        placeholder="0"
+                        className="h-7 text-[11px] text-right px-1"
+                        step="0.01"
                       />
                       <button
                         type="button"
@@ -1034,20 +1034,20 @@ export default function MaterialRequestPage() {
               <div>
                 <Label className="text-sm font-semibold mb-2">Items</Label>
                 <div className="space-y-2 overflow-x-auto">
-                  <div className="grid grid-cols-[1.5fr_3fr_0.5fr_0.4fr_0.4fr_2fr_1fr_1.2fr_1.125fr_0.5fr] gap-0.5 text-[11px] font-semibold text-slate-600 px-0.5 w-full">
+                  <div className="grid grid-cols-[1.125fr_3fr_0.5fr_0.4fr_1.75fr_0.9fr_1.2fr_1.25fr_0.6fr_0.5fr] gap-0.5 text-[11px] font-semibold text-slate-600 px-0.5 w-full">
                     <div>Item Name</div>
                     <div>Description</div>
                     <div>Qty</div>
                     <div>Unit</div>
-                    <div>Stock</div>
                     <div>Reason</div>
                     <div>Urgency</div>
                     <div>Req. Date</div>
                     <div>Supplier</div>
+                    <div>Stock</div>
                     <div></div>
                   </div>
                   {items.map((item, idx) => (
-                    <div key={idx} className="grid grid-cols-[1.5fr_3fr_0.5fr_0.4fr_0.4fr_2fr_1fr_1.2fr_1.125fr_0.5fr] gap-0.5 w-full">
+                    <div key={idx} className="grid grid-cols-[1.125fr_3fr_0.5fr_0.4fr_1.75fr_0.9fr_1.2fr_1.25fr_0.6fr_0.5fr] gap-0.5 w-full">
                       <Input
                         value={item.itemName}
                         onChange={(e) => updateItemField(idx, 'itemName', e.target.value)}
@@ -1080,14 +1080,6 @@ export default function MaterialRequestPage() {
                         <option value="BOX">BOX</option>
                       </select>
                       <Input
-                        type="number"
-                        value={item.stockQty}
-                        onChange={(e) => updateItemField(idx, 'stockQty', e.target.value)}
-                        placeholder="0"
-                        className="h-7 text-[11px]"
-                        step="0.01"
-                      />
-                      <Input
                         value={item.reasonForRequest}
                         onChange={(e) => updateItemField(idx, 'reasonForRequest', e.target.value)}
                         placeholder="Reason"
@@ -1114,6 +1106,14 @@ export default function MaterialRequestPage() {
                         onChange={(e) => updateItemField(idx, 'preferredSupplier', e.target.value)}
                         placeholder="Supplier"
                         className="h-7 text-[11px]"
+                      />
+                      <Input
+                        type="number"
+                        value={item.stockQty}
+                        onChange={(e) => updateItemField(idx, 'stockQty', e.target.value)}
+                        placeholder="0"
+                        className="h-7 text-[11px] text-right px-1"
+                        step="0.01"
                       />
                       <button
                         type="button"
