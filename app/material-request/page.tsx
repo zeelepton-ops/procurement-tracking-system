@@ -716,12 +716,24 @@ export default function MaterialRequestPage() {
                             ))}
                           </optgroup>
                         )}
-                        <optgroup label="Other">
-                          <option value="Workshop">Workshop</option>
-                          <option value="Maintenance">Maintenance</option>
-                          <option value="general">General</option>
-                        </optgroup>
-                      </select>
+                        {/* Editable Reason input with type-ahead suggestions; Other options first, then Job Orders then Assets */}
+                      <Autocomplete
+                        value={item.reasonForRequest}
+                        onChange={(val) => updateItemField(idx, 'reasonForRequest', val)}
+                        suggestions={[
+                          // static other options first
+                          { label: 'Workshop', type: 'other' },
+                          { label: 'Maintenance', type: 'other' },
+                          { label: 'General', type: 'other' },
+                          // job orders (will be appended programmatically below)
+                          ...jobOrders.map(j => ({ id: j.id, label: `${j.jobNumber} - ${j.clientName || j.productName}`, meta: j.productName, type: 'job' })),
+                          // assets last
+                          ...assets.map(a => ({ id: a.id, label: `${a.code} - ${a.name}`, meta: a.category || a.location || '', type: 'asset' })),
+                        ]}
+                        placeholder="Reason (type to search or enter text)"
+                        inputClassName="h-8 px-1 rounded-md border border-slate-300 text-xs"
+                        className="w-full"
+                      />
                       <select
                         value={item.urgencyLevel}
                         onChange={(e) => updateItemField(idx, 'urgencyLevel', e.target.value)}
