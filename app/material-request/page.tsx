@@ -653,14 +653,14 @@ export default function MaterialRequestPage() {
                         value={item.itemName}
                         onChange={(e) => updateItemField(idx, 'itemName', e.target.value)}
                         placeholder="Item"
-                        className="h-8 text-xs"
+                        className="h-7 text-[11px]"
                         required
                       />
                       <Input
                         value={item.description}
                         onChange={(e) => updateItemField(idx, 'description', e.target.value)}
                         placeholder="Description/Specs"
-                        className="h-8 text-xs"
+                        className="h-7 text-[11px]"
                         required
                       />
                       <Input
@@ -668,14 +668,14 @@ export default function MaterialRequestPage() {
                         value={item.quantity}
                         onChange={(e) => updateItemField(idx, 'quantity', e.target.value)}
                         placeholder="Qty"
-                        className="h-8 text-xs"
+                        className="h-7 text-[11px]"
                         step="0.01"
                         required
                       />
                       <select
                         value={item.unit}
                         onChange={(e) => updateItemField(idx, 'unit', e.target.value)}
-                        className="h-8 px-1 rounded-md border border-slate-300 text-xs"
+                        className="h-7 px-1 rounded-md border border-slate-300 text-[11px]"
                       >
                         <option value="PCS">PCS</option>
                         <option value="KG">KG</option>
@@ -688,7 +688,7 @@ export default function MaterialRequestPage() {
                         value={item.stockQty}
                         onChange={(e) => updateItemField(idx, 'stockQty', e.target.value)}
                         placeholder="0"
-                        className="h-8 text-xs"
+                        className="h-7 text-[11px]"
                         step="0.01"
                       />
                       <Autocomplete
@@ -702,14 +702,14 @@ export default function MaterialRequestPage() {
                           ...assets.map(a => ({ id: a.id, label: `${a.code} - ${a.name}`, meta: a.category || a.location || '', type: 'asset' })),
                         ]}
                         placeholder="Reason (type to search or enter text)"
-                        inputClassName="h-8 px-1 rounded-md border border-slate-300 text-xs"
+                        inputClassName="h-7 px-1 rounded-md border border-slate-300 text-[11px]"
                         className="w-full"
                       />
 
                       <select
                         value={item.urgencyLevel}
                         onChange={(e) => updateItemField(idx, 'urgencyLevel', e.target.value)}
-                        className="h-8 px-1 rounded-md border border-slate-300 text-xs"
+                        className="h-7 px-1 rounded-md border border-slate-300 text-[11px]"
                       >
                         <option value="LOW">Low</option>
                         <option value="NORMAL">Normal</option>
@@ -720,19 +720,19 @@ export default function MaterialRequestPage() {
                         type="date"
                         value={item.requiredDate}
                         onChange={(e) => updateItemField(idx, 'requiredDate', e.target.value)}
-                        className="h-8 text-xs"
+                        className="h-7 text-[11px]"
                       />
                       <Input
                         value={item.preferredSupplier}
                         onChange={(e) => updateItemField(idx, 'preferredSupplier', e.target.value)}
                         placeholder="Supplier"
-                        className="h-8 text-xs"
+                        className="h-7 text-[11px]"
                       />
                       <button
                         type="button"
                         onClick={() => removeItemRow(idx)}
                         disabled={items.length === 1}
-                        className="px-2 py-1 text-xs bg-red-50 text-red-600 rounded hover:bg-red-100 disabled:opacity-30 disabled:cursor-not-allowed"
+                        className="px-1 py-0.5 text-[11px] bg-red-50 text-red-600 rounded hover:bg-red-100 disabled:opacity-30 disabled:cursor-not-allowed"
                       >
                         ×
                       </button>
@@ -741,7 +741,7 @@ export default function MaterialRequestPage() {
                   <button
                     type="button"
                     onClick={addItemRow}
-                    className="px-3 py-1.5 text-xs bg-blue-50 text-blue-700 rounded hover:bg-blue-100 font-medium"
+                    className="px-2 py-1 text-[11px] bg-blue-50 text-blue-700 rounded hover:bg-blue-100 font-medium"
                   >
                     + Add Item
                   </button>
@@ -1034,7 +1034,7 @@ export default function MaterialRequestPage() {
               <div>
                 <Label className="text-sm font-semibold mb-2">Items</Label>
                 <div className="space-y-2 overflow-x-auto">
-                  <div className="grid grid-cols-[1.5fr_3fr_0.5fr_0.4fr_0.4fr_2fr_1fr_1.2fr_1.125fr_0.5fr] gap-2 text-[11px] font-semibold text-slate-600 px-2 min-w-[1400px]">
+                  <div className="grid grid-cols-[1.5fr_3fr_0.5fr_0.4fr_0.4fr_2fr_1fr_1.2fr_1.125fr_0.5fr] gap-1 text-[11px] font-semibold text-slate-600 px-1 min-w-[1400px]">
                     <div>Item Name</div>
                     <div>Description</div>
                     <div>Qty</div>
@@ -1047,31 +1047,31 @@ export default function MaterialRequestPage() {
                     <div></div>
                   </div>
                   {items.map((item, idx) => (
-                    <div key={idx} className="grid grid-cols-[1.5fr_3fr_0.5fr_0.4fr_0.4fr_2fr_1fr_1.2fr_1.125fr_0.5fr] gap-2 min-w-[1400px]">
+                    <div key={idx} className="grid grid-cols-[1.5fr_3fr_0.5fr_0.4fr_0.4fr_2fr_1fr_1.2fr_1.125fr_0.5fr] gap-1 min-w-[1400px]">
                       <Input
                         value={item.itemName}
                         onChange={(e) => updateItemField(idx, 'itemName', e.target.value)}
                         placeholder="Item"
-                        className="h-8 text-xs"
+                        className="h-7 text-[11px]"
                       />
                       <Input
                         value={item.description}
                         onChange={(e) => updateItemField(idx, 'description', e.target.value)}
                         placeholder="Description/Specs"
-                        className="h-8 text-xs"
+                        className="h-7 text-[11px]"
                       />
                       <Input
                         type="number"
                         value={item.quantity}
                         onChange={(e) => updateItemField(idx, 'quantity', e.target.value)}
                         placeholder="Qty"
-                        className="h-8 text-xs"
+                        className="h-7 text-[11px]"
                         step="0.01"
                       />
                       <select
                         value={item.unit}
                         onChange={(e) => updateItemField(idx, 'unit', e.target.value)}
-                        className="h-8 px-1 rounded-md border border-slate-300 text-xs"
+                        className="h-7 px-1 rounded-md border border-slate-300 text-[11px]"
                       >
                         <option value="PCS">PCS</option>
                         <option value="KG">KG</option>
@@ -1084,19 +1084,19 @@ export default function MaterialRequestPage() {
                         value={item.stockQty}
                         onChange={(e) => updateItemField(idx, 'stockQty', e.target.value)}
                         placeholder="0"
-                        className="h-8 text-xs"
+                        className="h-7 text-[11px]"
                         step="0.01"
                       />
                       <Input
                         value={item.reasonForRequest}
                         onChange={(e) => updateItemField(idx, 'reasonForRequest', e.target.value)}
                         placeholder="Reason"
-                        className="h-8 text-xs"
+                        className="h-7 text-[11px]"
                       />
                       <select
                         value={item.urgencyLevel}
                         onChange={(e) => updateItemField(idx, 'urgencyLevel', e.target.value)}
-                        className="h-8 px-1 rounded-md border border-slate-300 text-xs"
+                        className="h-7 px-1 rounded-md border border-slate-300 text-[11px]"
                       >
                         <option value="LOW">Low</option>
                         <option value="NORMAL">Normal</option>
@@ -1107,19 +1107,19 @@ export default function MaterialRequestPage() {
                         type="date"
                         value={item.requiredDate}
                         onChange={(e) => updateItemField(idx, 'requiredDate', e.target.value)}
-                        className="h-8 text-xs"
+                        className="h-7 text-[11px]"
                       />
                       <Input
                         value={item.preferredSupplier}
                         onChange={(e) => updateItemField(idx, 'preferredSupplier', e.target.value)}
                         placeholder="Supplier"
-                        className="h-8 text-xs"
+                        className="h-7 text-[11px]"
                       />
                       <button
                         type="button"
                         onClick={() => removeItemRow(idx)}
                         disabled={items.length === 1}
-                        className="px-2 py-1 text-xs bg-red-50 text-red-600 rounded hover:bg-red-100 disabled:opacity-30 disabled:cursor-not-allowed"
+                        className="px-1 py-0.5 text-[11px] bg-red-50 text-red-600 rounded hover:bg-red-100 disabled:opacity-30 disabled:cursor-not-allowed"
                       >
                         ×
                       </button>
@@ -1128,7 +1128,7 @@ export default function MaterialRequestPage() {
                   <button
                     type="button"
                     onClick={addItemRow}
-                    className="px-3 py-1.5 text-xs bg-blue-50 text-blue-700 rounded hover:bg-blue-100 font-medium"
+                    className="px-2 py-1 text-[11px] bg-blue-50 text-blue-700 rounded hover:bg-blue-100 font-medium"
                   >
                     + Add Item
                   </button>

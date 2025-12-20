@@ -114,7 +114,7 @@ export default function Autocomplete({ value, onChange, suggestions, placeholder
         onFocus={() => setOpen(filtered.length > 0)}
         onKeyDown={onKeyDown}
         placeholder={placeholder}
-        className={cn('h-8 px-1 rounded-md border border-slate-300 text-xs', inputClassName)}
+        className={cn('h-7 px-1 rounded-md border border-slate-300 text-[11px]', inputClassName)}
         aria-expanded={open}
         aria-haspopup="listbox"
       />
