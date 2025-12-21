@@ -444,18 +444,7 @@ export default function JobOrdersPage() {
             <CardContent className="pt-4">
               <form onSubmit={handleSubmit} className="space-y-4">
                 {/* Basic Information */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  <div>
-                    <Label htmlFor="jobNumber" className="text-sm font-semibold">Job Number *</Label>
-                    <Input
-                      id="jobNumber"
-                      value={formData.jobNumber}
-                      onChange={(e) => setFormData({ ...formData, jobNumber: e.target.value })}
-                      placeholder="e.g., 7439"
-                      required
-                      className="mt-1 h-9"
-                    />
-                  </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div>
                     <Label htmlFor="foreman" className="text-sm font-semibold">Foreman</Label>
                     <Input
@@ -482,21 +471,66 @@ export default function JobOrdersPage() {
                   </div>
                 </div>
 
+                {/* Job & Client quick row */}
+                <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+                  <div>
+                    <Label htmlFor="jobNumber" className="text-sm font-semibold">Job Number *</Label>
+                    <Input
+                      id="jobNumber"
+                      value={formData.jobNumber}
+                      onChange={(e) => setFormData({ ...formData, jobNumber: e.target.value })}
+                      placeholder="e.g., 7439"
+                      required
+                      className="mt-1 h-9"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="clientName" className="text-sm font-semibold">Client Name *</Label>
+                    <Input
+                      id="clientName"
+                      value={formData.clientName}
+                      onChange={(e) => setFormData({ ...formData, clientName: e.target.value })}
+                      placeholder="e.g., QATAR ENGINEERING & CONSTRUCTION CO. WLL"
+                      required
+                      className="mt-1 h-9"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="lpoContractNo" className="text-sm font-semibold">LPO / Contract No</Label>
+                    <Input
+                      id="lpoContractNo"
+                      value={formData.lpoContractNo}
+                      onChange={(e) => setFormData({ ...formData, lpoContractNo: e.target.value })}
+                      placeholder="LPO-2025-13135"
+                      className="mt-1 h-9"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="clientContactPerson" className="text-sm font-semibold">Client's Contact Person</Label>
+                    <Input
+                      id="clientContactPerson"
+                      value={formData.clientContactPerson}
+                      onChange={(e) => setFormData({ ...formData, clientContactPerson: e.target.value })}
+                      placeholder="e.g., LENIN.M"
+                      className="mt-1 h-9"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="clientContactPhone" className="text-sm font-semibold">Client's Phone No.</Label>
+                    <Input
+                      id="clientContactPhone"
+                      value={formData.clientContactPhone}
+                      onChange={(e) => setFormData({ ...formData, clientContactPhone: e.target.value })}
+                      placeholder="+974 55xx xxxx"
+                      className="mt-1 h-9"
+                    />
+                  </div>
+                </div> 
+
                 {/* Client Information */}
                 <div className="border-t pt-4">
                   <h3 className="text-sm font-bold text-slate-700 mb-3">Client & NBTC Contact Information</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <div>
-                      <Label htmlFor="clientName" className="text-sm font-semibold">Client Name *</Label>
-                      <Input
-                        id="clientName"
-                        value={formData.clientName}
-                        onChange={(e) => setFormData({ ...formData, clientName: e.target.value })}
-                        placeholder="e.g., QATAR ENGINEERING & CONSTRUCTION CO. WLL"
-                        required
-                        className="mt-1 h-9"
-                      />
-                    </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
                       <Label htmlFor="contactPerson" className="text-sm font-semibold">NBTC's Contact Person</Label>
                       <Input
@@ -517,53 +551,34 @@ export default function JobOrdersPage() {
                         className="mt-1 h-9"
                       />
                     </div>
-                    <div>
-                      <Label htmlFor="clientContactPerson" className="text-sm font-semibold">Client's Contact Person</Label>
-                      <Input
-                        id="clientContactPerson"
-                        value={formData.clientContactPerson}
-                        onChange={(e) => setFormData({ ...formData, clientContactPerson: e.target.value })}
-                        placeholder="e.g., LENIN.M"
-                        className="mt-1 h-9"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="clientContactPhone" className="text-sm font-semibold">Client's Phone No.</Label>
-                      <Input
-                        id="clientContactPhone"
-                        value={formData.clientContactPhone}
-                        onChange={(e) => setFormData({ ...formData, clientContactPhone: e.target.value })}
-                        placeholder="+974 55xx xxxx"
-                        className="mt-1 h-9"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="lpoContractNo" className="text-sm font-semibold">LPO / Contract No</Label>
-                      <Input
-                        id="lpoContractNo"
-                        value={formData.lpoContractNo}
-                        onChange={(e) => setFormData({ ...formData, lpoContractNo: e.target.value })}
-                        placeholder="LPO-2025-13135"
-                        className="mt-1 h-9"
-                      />
-                    </div>
                   </div>
-                </div>
+                </div> 
 
                 {/* Work Scope only */}
                 <div className="border-t pt-4">
                   <h3 className="text-sm font-bold text-slate-700 mb-3">Work Details</h3>
-                  <div className="mb-4">
-                    <Label htmlFor="productName" className="text-sm font-semibold">Main Description *</Label>
-                    <Textarea
-                      id="productName"
-                      value={formData.productName}
-                      onChange={(e) => setFormData({ ...formData, productName: e.target.value })}
-                      placeholder="Main description of the job order"
-                      required
-                      className="mt-1"
-                      rows={2}
-                    />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+                    <div>
+                      <Label htmlFor="productName" className="text-sm font-semibold">Main Description *</Label>
+                      <Input
+                        id="productName"
+                        value={formData.productName}
+                        onChange={(e) => setFormData({ ...formData, productName: e.target.value })}
+                        placeholder="Main description of the job order"
+                        required
+                        className="mt-1 h-9"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="workScope" className="text-sm font-semibold">Additional Notes</Label>
+                      <Input
+                        id="workScope"
+                        value={formData.workScope}
+                        onChange={(e) => setFormData({ ...formData, workScope: e.target.value })}
+                        placeholder="Any additional notes or specifications"
+                        className="mt-1 h-9"
+                      />
+                    </div>
                   </div>
 
                   <div className="mb-4">
@@ -597,19 +612,7 @@ export default function JobOrdersPage() {
                       ))}
                     </div>
                   </div>
-
-                  <div>
-                    <Label htmlFor="workScope" className="text-sm font-semibold">Additional Notes</Label>
-                    <Textarea
-                      id="workScope"
-                      value={formData.workScope}
-                      onChange={(e) => setFormData({ ...formData, workScope: e.target.value })}
-                      placeholder="Any additional notes or specifications"
-                      className="mt-1"
-                      rows={2}
-                    />
-                  </div>
-                </div>
+                </div> 
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div>
@@ -940,14 +943,33 @@ export default function JobOrdersPage() {
               </div>
             </CardHeader>
             <CardContent className="pt-3 text-sm text-slate-800 space-y-3">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
                 <div>
-                  <div className="text-slate-500 text-xs">Priority</div>
-                  <div>{selectedJob.priority || 'MEDIUM'}</div>
+                  <div className="text-slate-500 text-xs">Job Number</div>
+                  <div className="font-semibold">JO-{selectedJob.jobNumber}</div>
                 </div>
                 <div>
                   <div className="text-slate-500 text-xs">Client</div>
                   <div>{selectedJob.clientName || '—'}</div>
+                </div>
+                <div>
+                  <div className="text-slate-500 text-xs">LPO / Contract</div>
+                  <div>{selectedJob.lpoContractNo || '—'}</div>
+                </div>
+                <div>
+                  <div className="text-slate-500 text-xs">Client's Contact Person</div>
+                  <div>{selectedJob.clientContactPerson || '—'}</div>
+                </div>
+                <div>
+                  <div className="text-slate-500 text-xs">Client's Phone No.</div>
+                  <div>{selectedJob.clientContactPhone || '—'}</div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <div className="text-slate-500 text-xs">Priority</div>
+                  <div>{selectedJob.priority || 'MEDIUM'}</div>
                 </div>
                 <div>
                   <div className="text-slate-500 text-xs">Foreman</div>
@@ -955,33 +977,16 @@ export default function JobOrdersPage() {
                 </div>
               </div>
 
-              <div>
-                <div className="text-slate-500 text-xs">Description</div>
-                <div>{selectedJob.productName}</div>
-              </div>
-
-              {selectedJob.scopeOfWorks && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
-                  <div className="text-slate-500 text-xs mb-2">Scope of Works</div>
-                  <div className="flex flex-wrap gap-2">
-                    {(typeof selectedJob.scopeOfWorks === 'string' 
-                      ? JSON.parse(selectedJob.scopeOfWorks) 
-                      : selectedJob.scopeOfWorks
-                    ).map((item: string) => (
-                      <span key={item} className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        {item}
-                      </span>
-                    ))}
-                  </div>
+                  <div className="text-slate-500 text-xs">Description</div>
+                  <div className="truncate">{selectedJob.productName}</div>
                 </div>
-              )}
-
-              {selectedJob.workScope && (
                 <div>
                   <div className="text-slate-500 text-xs">Additional Notes</div>
-                  <div>{selectedJob.workScope}</div>
+                  <div className="truncate">{selectedJob.workScope}</div>
                 </div>
-              )}
+              </div> 
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 {selectedJob.contactPerson && (
@@ -1107,17 +1112,7 @@ export default function JobOrdersPage() {
                 <CardContent className="pt-4 overflow-y-auto bg-white flex-1">
                 <form onSubmit={handleEditSubmit} className="space-y-4">
                   {/* Basic Information */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <div>
-                      <Label htmlFor="edit-jobNumber" className="text-sm font-semibold">Job Number *</Label>
-                      <Input
-                        id="edit-jobNumber"
-                        value={editFormData.jobNumber}
-                        onChange={(e) => setEditFormData({ ...editFormData, jobNumber: e.target.value })}
-                        required
-                        className="mt-1 h-9"
-                      />
-                    </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
                       <Label htmlFor="edit-foreman" className="text-sm font-semibold">Foreman</Label>
                       <Input
@@ -1143,10 +1138,20 @@ export default function JobOrdersPage() {
                     </div>
                   </div>
 
-                  {/* Client Information */}
+                  {/* Job & Client quick row */}
                   <div className="border-t pt-4">
                     <h3 className="text-sm font-bold text-slate-700 mb-3">Client & NBTC Contact Information</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+                      <div>
+                        <Label htmlFor="edit-jobNumber" className="text-sm font-semibold">Job Number *</Label>
+                        <Input
+                          id="edit-jobNumber"
+                          value={editFormData.jobNumber}
+                          onChange={(e) => setEditFormData({ ...editFormData, jobNumber: e.target.value })}
+                          required
+                          className="mt-1 h-9"
+                        />
+                      </div>
                       <div>
                         <Label htmlFor="edit-clientName" className="text-sm font-semibold">Client Name *</Label>
                         <Input
@@ -1158,20 +1163,11 @@ export default function JobOrdersPage() {
                         />
                       </div>
                       <div>
-                        <Label htmlFor="edit-contactPerson" className="text-sm font-semibold">NBTC's Contact Person</Label>
+                        <Label htmlFor="edit-lpoContractNo" className="text-sm font-semibold">LPO / Contract No</Label>
                         <Input
-                          id="edit-contactPerson"
-                          value={editFormData.contactPerson}
-                          onChange={(e) => setEditFormData({ ...editFormData, contactPerson: e.target.value })}
-                          className="mt-1 h-9"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="edit-phone" className="text-sm font-semibold">NBTC's Contact Phone No.</Label>
-                        <Input
-                          id="edit-phone"
-                          value={editFormData.phone}
-                          onChange={(e) => setEditFormData({ ...editFormData, phone: e.target.value })}
+                          id="edit-lpoContractNo"
+                          value={editFormData.lpoContractNo}
+                          onChange={(e) => setEditFormData({ ...editFormData, lpoContractNo: e.target.value })}
                           className="mt-1 h-9"
                         />
                       </div>
@@ -1193,31 +1189,32 @@ export default function JobOrdersPage() {
                           className="mt-1 h-9"
                         />
                       </div>
-                      <div>
-                        <Label htmlFor="edit-lpoContractNo" className="text-sm font-semibold">LPO / Contract No</Label>
-                        <Input
-                          id="edit-lpoContractNo"
-                          value={editFormData.lpoContractNo}
-                          onChange={(e) => setEditFormData({ ...editFormData, lpoContractNo: e.target.value })}
-                          className="mt-1 h-9"
-                        />
-                      </div>
                     </div>
-                  </div>
+                  </div> 
 
                   {/* Work Scope only */}
                   <div className="border-t pt-4">
                     <h3 className="text-sm font-bold text-slate-700 mb-3">Work Details</h3>
-                    <div className="mb-4">
-                      <Label htmlFor="edit-productName" className="text-sm font-semibold">Main Description *</Label>
-                      <Textarea
-                        id="edit-productName"
-                        value={editFormData.productName}
-                        onChange={(e) => setEditFormData({ ...editFormData, productName: e.target.value })}
-                        required
-                        className="mt-1"
-                        rows={2}
-                      />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+                      <div>
+                        <Label htmlFor="edit-productName" className="text-sm font-semibold">Main Description *</Label>
+                        <Input
+                          id="edit-productName"
+                          value={editFormData.productName}
+                          onChange={(e) => setEditFormData({ ...editFormData, productName: e.target.value })}
+                          required
+                          className="mt-1 h-9"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="edit-workScope" className="text-sm font-semibold">Additional Notes</Label>
+                        <Input
+                          id="edit-workScope"
+                          value={editFormData.workScope}
+                          onChange={(e) => setEditFormData({ ...editFormData, workScope: e.target.value })}
+                          className="mt-1 h-9"
+                        />
+                      </div>
                     </div>
 
                     <div className="mb-4">
@@ -1250,17 +1247,6 @@ export default function JobOrdersPage() {
                           </div>
                         ))}
                       </div>
-                    </div>
-
-                    <div>
-                      <Label htmlFor="edit-workScope" className="text-sm font-semibold">Additional Notes</Label>
-                      <Textarea
-                        id="edit-workScope"
-                        value={editFormData.workScope}
-                        onChange={(e) => setEditFormData({ ...editFormData, workScope: e.target.value })}
-                        className="mt-1"
-                        rows={2}
-                      />
                     </div>
                   </div>
 
