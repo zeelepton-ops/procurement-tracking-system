@@ -445,7 +445,7 @@ export default function JobOrdersPage() {
               <form onSubmit={handleSubmit} className="space-y-4">
                 <h3 className="text-sm font-bold text-slate-700 mb-3">Client & NBTC Contact Information</h3>
                 {/* Basic Information: one-line row */}
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
                   <div className="md:col-span-2">
                     <Label htmlFor="foreman" className="text-sm font-semibold">Foreman</Label>
                     <Input
@@ -513,7 +513,7 @@ export default function JobOrdersPage() {
                 </div>
 
                 {/* Job & Client quick row */}
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
                   <div className="md:col-span-1 whitespace-nowrap">
                     <Label htmlFor="jobNumber" className="text-sm font-semibold">Job Number *</Label>
                     <Input
@@ -568,15 +568,11 @@ export default function JobOrdersPage() {
                   </div>
                 </div>  
 
-                {/* Client Information note */}
-                <div className="border-t pt-4">
-                  <div className="text-sm text-slate-600">Client and contact fields are on the quick row above.</div>
-                </div> 
 
                 {/* Work Scope only */}
                 <div className="border-t pt-4">
                   <h3 className="text-sm font-bold text-slate-700 mb-3">Work Details</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                     <div>
                       <Label htmlFor="productName" className="text-sm font-semibold">Main Description *</Label>
                       <Input
@@ -962,7 +958,7 @@ export default function JobOrdersPage() {
               </div>
             </CardHeader>
             <CardContent className="pt-3 text-sm text-slate-800 space-y-3">
-              <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
                 <div className="md:col-span-1">
                   <div className="text-slate-500 text-xs">Job Number</div>
                   <div className="font-semibold whitespace-nowrap">JO-{selectedJob.jobNumber}</div>
@@ -995,7 +991,7 @@ export default function JobOrdersPage() {
                   <div>{selectedJob.foreman || '—'}</div>
                 </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <div className="text-slate-500 text-xs">Description</div>
                   <div className="truncate">{selectedJob.productName}</div>
@@ -1103,7 +1099,7 @@ export default function JobOrdersPage() {
                 <form onSubmit={handleEditSubmit} className="space-y-4">
                   <h3 className="text-sm font-bold text-slate-700 mb-3">Client & NBTC Contact Information</h3>
                   {/* Basic Information */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="edit-foreman" className="text-sm font-semibold">Foreman</Label>
                       <Input
@@ -1209,7 +1205,7 @@ export default function JobOrdersPage() {
 
                     <div className="mb-4">
                       <Label className="text-sm font-semibold block mb-3">Scope of Works</Label>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 bg-slate-50 p-3 rounded border border-slate-200">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 bg-slate-50 p-4 rounded border border-slate-200">
                         {SCOPE_OF_WORKS_OPTIONS.map((option) => (
                           <div key={option} className="flex items-center gap-2">
                             <input
@@ -1240,7 +1236,7 @@ export default function JobOrdersPage() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="edit-drawingRef" className="text-sm font-semibold">Drawing / Enquiry Reference</Label>
                       <Input
