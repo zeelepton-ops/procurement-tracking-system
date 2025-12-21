@@ -453,7 +453,7 @@ export default function JobOrdersPage() {
                       value={formData.foreman}
                       onChange={(e) => setFormData({ ...formData, foreman: e.target.value })}
                       placeholder="e.g., GUNA"
-                      className="mt-1 h-9 max-w-[12ch]"
+                      className="mt-1 h-9 w-full"
                     />
                   </div>
                   <div className="md:col-span-1">
@@ -477,7 +477,7 @@ export default function JobOrdersPage() {
                       value={formData.contactPerson}
                       onChange={(e) => setFormData({ ...formData, contactPerson: e.target.value })}
                       placeholder="e.g., NBTC Rep"
-                      className="mt-1 h-9 max-w-[18ch]"
+                      className="mt-1 h-9 w-full"
                     />
                   </div>
                   <div className="md:col-span-2">
@@ -487,7 +487,7 @@ export default function JobOrdersPage() {
                       value={formData.phone}
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                       placeholder="+974 5508 7272"
-                      className="mt-1 h-9 max-w-[14ch]"
+                      className="mt-1 h-9 w-full"
                     />
                   </div>
                   <div className="md:col-span-3">
@@ -497,7 +497,7 @@ export default function JobOrdersPage() {
                       value={formData.qaQcInCharge}
                       onChange={(e) => setFormData({ ...formData, qaQcInCharge: e.target.value })}
                       placeholder="e.g., Mr. VILLAVAN"
-                      className="mt-1 h-9 max-w-[15ch]"
+                      className="mt-1 h-9 w-full"
                     />
                   </div>
                   <div className="md:col-span-1">
@@ -507,7 +507,7 @@ export default function JobOrdersPage() {
                       value={formData.drawingRef}
                       onChange={(e) => setFormData({ ...formData, drawingRef: e.target.value })}
                       placeholder="e.g., E-11899"
-                      className="mt-1 h-9 max-w-[12ch]"
+                      className="mt-1 h-9 w-full"
                     />
                   </div>
                 </div> 
@@ -533,7 +533,7 @@ export default function JobOrdersPage() {
                       onChange={(e) => setFormData({ ...formData, clientName: e.target.value })}
                       placeholder="e.g., QATAR ENGINEERING & CONSTRUCTION CO. WLL"
                       required
-                      className="mt-1 h-9 max-w-[40ch]"
+                      className="mt-1 h-9 w-full"
                     />
                   </div>
                   <div className="md:col-span-2">
@@ -543,7 +543,7 @@ export default function JobOrdersPage() {
                       value={formData.lpoContractNo}
                       onChange={(e) => setFormData({ ...formData, lpoContractNo: e.target.value })}
                       placeholder="LPO-2025-13135"
-                      className="mt-1 h-9 max-w-[16ch]"
+                      className="mt-1 h-9 w-full"
                     />
                   </div>
                   <div className="md:col-span-2">
@@ -553,7 +553,7 @@ export default function JobOrdersPage() {
                       value={formData.clientContactPerson}
                       onChange={(e) => setFormData({ ...formData, clientContactPerson: e.target.value })}
                       placeholder="e.g., LENIN.M"
-                      className="mt-1 h-9 max-w-[16ch]"
+                      className="mt-1 h-9 w-full"
                     />
                   </div>
                   <div className="md:col-span-2">
@@ -563,7 +563,7 @@ export default function JobOrdersPage() {
                       value={formData.clientContactPhone}
                       onChange={(e) => setFormData({ ...formData, clientContactPhone: e.target.value })}
                       placeholder="+974 55xx xxxx"
-                      className="mt-1 h-9 max-w-[14ch]"
+                      className="mt-1 h-9 w-full"
                     />
                   </div>
                 </div>
@@ -942,7 +942,7 @@ export default function JobOrdersPage() {
               <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
                 <div className="md:col-span-2">
                   <div className="text-slate-500 text-xs">Foreman</div>
-                  <div className="truncate max-w-[12ch]">{selectedJob.foreman || '—'}</div>
+                  <div className="whitespace-normal">{selectedJob.foreman || '—'}</div>
                 </div>
                 <div className="md:col-span-1">
                   <div className="text-slate-500 text-xs">Priority</div>
@@ -950,19 +950,19 @@ export default function JobOrdersPage() {
                 </div>
                 <div className="md:col-span-3">
                   <div className="text-slate-500 text-xs">NBTC's Contact Person</div>
-                  <div className="truncate max-w-[18ch]">{selectedJob.contactPerson || '—'}</div>
+                  <div className="whitespace-normal">{selectedJob.contactPerson || '—'}</div>
                 </div>
                 <div className="md:col-span-2">
                   <div className="text-slate-500 text-xs">NBTC's Contact Phone No.</div>
-                  <div className="whitespace-nowrap max-w-[14ch]">{selectedJob.phone || '—'}</div>
+                  <div className="whitespace-normal">{selectedJob.phone || '—'}</div>
                 </div>
                 <div className="md:col-span-3">
                   <div className="text-slate-500 text-xs">QA/QC In Charge</div>
-                  <div className="truncate max-w-[15ch]">{selectedJob.qaQcInCharge || '—'}</div>
+                  <div className="whitespace-normal">{selectedJob.qaQcInCharge || '—'}</div>
                 </div>
                 <div className="md:col-span-1">
                   <div className="text-slate-500 text-xs">Drawing</div>
-                  <div className="truncate max-w-[12ch]">{selectedJob.drawingRef || '—'}</div>
+                  <div className="whitespace-normal">{selectedJob.drawingRef || '—'}</div>
                 </div>
               </div>
 
@@ -973,19 +973,19 @@ export default function JobOrdersPage() {
                 </div>
                 <div className="md:col-span-5">
                   <div className="text-slate-500 text-xs">Client</div>
-                  <div className="truncate max-w-[40ch]">{selectedJob.clientName || '—'}</div>
+                  <div className="whitespace-normal">{selectedJob.clientName || '—'}</div>
                 </div>
                 <div className="md:col-span-2">
                   <div className="text-slate-500 text-xs">LPO / Contract</div>
-                  <div className="truncate max-w-[16ch]">{selectedJob.lpoContractNo || '—'}</div>
+                  <div className="whitespace-normal">{selectedJob.lpoContractNo || '—'}</div>
                 </div>
                 <div className="md:col-span-2">
                   <div className="text-slate-500 text-xs">Client's Contact Person</div>
-                  <div className="truncate max-w-[16ch]">{selectedJob.clientContactPerson || '—'}</div>
+                  <div className="whitespace-normal">{selectedJob.clientContactPerson || '—'}</div>
                 </div>
                 <div className="md:col-span-2">
                   <div className="text-slate-500 text-xs">Client's Phone No.</div>
-                  <div className="whitespace-nowrap max-w-[14ch]">{selectedJob.clientContactPhone || '—'}</div>
+                  <div className="whitespace-normal">{selectedJob.clientContactPhone || '—'}</div>
                 </div>
               </div>  
 
@@ -1085,7 +1085,7 @@ export default function JobOrdersPage() {
                         id="edit-foreman"
                         value={editFormData.foreman}
                         onChange={(e) => setEditFormData({ ...editFormData, foreman: e.target.value })}
-                        className="mt-1 h-9 max-w-[12ch]"
+                        className="mt-1 h-9 w-full"
                       />
                     </div>
                     <div className="md:col-span-1">
@@ -1108,7 +1108,7 @@ export default function JobOrdersPage() {
                         id="edit-contactPerson"
                         value={editFormData.contactPerson}
                         onChange={(e) => setEditFormData({ ...editFormData, contactPerson: e.target.value })}
-                        className="mt-1 h-9 max-w-[18ch]"
+                        className="mt-1 h-9 w-full"
                       />
                     </div>
                     <div className="md:col-span-2">
@@ -1117,7 +1117,7 @@ export default function JobOrdersPage() {
                         id="edit-phone"
                         value={editFormData.phone}
                         onChange={(e) => setEditFormData({ ...editFormData, phone: e.target.value })}
-                        className="mt-1 h-9 max-w-[14ch]"
+                        className="mt-1 h-9 w-full"
                       />
                     </div>
                     <div className="md:col-span-3">
@@ -1126,7 +1126,7 @@ export default function JobOrdersPage() {
                         id="edit-qaQcInCharge"
                         value={editFormData.qaQcInCharge}
                         onChange={(e) => setEditFormData({ ...editFormData, qaQcInCharge: e.target.value })}
-                        className="mt-1 h-9 max-w-[15ch]"
+                        className="mt-1 h-9 w-full"
                       />
                     </div>
                     <div className="md:col-span-1">
@@ -1135,7 +1135,7 @@ export default function JobOrdersPage() {
                         id="edit-drawingRef"
                         value={editFormData.drawingRef}
                         onChange={(e) => setEditFormData({ ...editFormData, drawingRef: e.target.value })}
-                        className="mt-1 h-9 max-w-[12ch]"
+                        className="mt-1 h-9 w-full"
                       />
                     </div>
                   </div>
