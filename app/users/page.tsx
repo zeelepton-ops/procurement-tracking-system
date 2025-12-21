@@ -32,6 +32,7 @@ export default function UsersManagementPage() {
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('ALL')
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
+  const [editingUser, setEditingUser] = useState<any | null>(null)
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -247,41 +248,79 @@ export default function UsersManagementPage() {
                 <CardContent className="p-3 space-y-3 text-sm">
                   <div>
                     <Label className="text-xs text-slate-600">Name</Label>
-                    <p className="font-medium">{selectedUser.name}</p>
+                    <div className="flex gap-2 items-center">
+                      <p className="font-medium">{selectedUser.name}</p>
+                      <Button size="sm" variant="outline" className="text-xs py-1" onClick={() => setEditingUser(selectedUser)}>Edit</Button>
+                    </div>
                   </div>
 
-                  {selectedUser.qid && (
+                  {selectedUser.qid && (!editingUser || editingUser.id !== selectedUser.id) && (
                     <div>
                       <Label className="text-xs text-slate-600">QID</Label>
                       <p>{selectedUser.qid}</p>
                     </div>
                   )}
 
-                  {selectedUser.department && (
+                  {editingUser && editingUser.id === selectedUser.id && (
+                    <div>
+                      <Label className="text-xs text-slate-600">QID</Label>
+                      <input value={(editingUser as any).qid || ''} onChange={(e) => setEditingUser({ ...editingUser, qid: e.target.value })} className="mt-1 h-9 w-full rounded-md border px-2" />
+                    </div>
+                  )}
+
+                  {selectedUser.department && (!editingUser || editingUser.id !== selectedUser.id) && (
                     <div>
                       <Label className="text-xs text-slate-600">Department</Label>
                       <p>{selectedUser.department}</p>
                     </div>
                   )}
 
-                  {selectedUser.position && (
+                  {editingUser && editingUser.id === selectedUser.id && (
+                    <div>
+                      <Label className="text-xs text-slate-600">Department</Label>
+                      <input value={(editingUser as any).department || ''} onChange={(e) => setEditingUser({ ...editingUser, department: e.target.value })} className="mt-1 h-9 w-full rounded-md border px-2" />
+                    </div>
+                  )}
+
+                  {selectedUser.position && (!editingUser || editingUser.id !== selectedUser.id) && (
                     <div>
                       <Label className="text-xs text-slate-600">Position</Label>
                       <p>{selectedUser.position}</p>
                     </div>
                   )}
 
-                  {selectedUser.phone && (
+                  {editingUser && editingUser.id === selectedUser.id && (
+                    <div>
+                      <Label className="text-xs text-slate-600">Position</Label>
+                      <input value={(editingUser as any).position || ''} onChange={(e) => setEditingUser({ ...editingUser, position: e.target.value })} className="mt-1 h-9 w-full rounded-md border px-2" />
+                    </div>
+                  )}
+
+                  {selectedUser.phone && (!editingUser || editingUser.id !== selectedUser.id) && (
                     <div>
                       <Label className="text-xs text-slate-600">Phone</Label>
                       <p>{selectedUser.phone}</p>
                     </div>
                   )}
 
-                  {selectedUser.joiningDate && (
+                  {editingUser && editingUser.id === selectedUser.id && (
+                    <div>
+                      <Label className="text-xs text-slate-600">Phone</Label>
+                      <input value={(editingUser as any).phone || ''} onChange={(e) => setEditingUser({ ...editingUser, phone: e.target.value })} className="mt-1 h-9 w-full rounded-md border px-2" />
+                    </div>
+                  )}
+
+                  {selectedUser.joiningDate && (!editingUser || editingUser.id !== selectedUser.id) && (
                     <div>
                       <Label className="text-xs text-slate-600">Joining Date</Label>
                       <p>{new Date(selectedUser.joiningDate).toLocaleDateString()}</p>
+                    </div>
+                  )}
+
+                  {editingUser && editingUser.id === selectedUser.id && (
+                    <div>
+                      <Label className="text-xs text-slate-600">Joining Date</Label>
+                      <input type="date" value={(editingUser as any).joiningDate ? new Date((editingUser as any).joiningDate).toISOString().slice(0,10) : ''} onChange={(e) => setEditingUser({ ...editingUser, joiningDate: e.target.value })} className="mt-1 h-9 w-full rounded-md border px-2" />
                     </div>
                   )}
 
@@ -289,6 +328,35 @@ export default function UsersManagementPage() {
                     <Label className="text-xs text-slate-600">Registered</Label>
                     <p className="text-xs">{new Date(selectedUser.createdAt).toLocaleString()}</p>
                   </div>
+
+                  {editingUser && editingUser.id === selectedUser.id && (
+                    <div className="flex gap-2 pt-2">
+                      <Button size="sm" className="bg-green-600 hover:bg-green-700 text-xs h-8" onClick={async () => {
+                        // Save changes
+                        const data = (editingUser as any)
+                        await handleUserAction(selectedUser.id, 'update', {
+                          name: data.name,
+                          qid: data.qid,
+                          joiningDate: data.joiningDate,
+                          department: data.department,
+                          position: data.position,
+                          phone: data.phone
+                        })
+                        // Refresh list and selected user
+                        await fetchUsers()
+                        const usersData = await (await fetch('/api/users')).json()
+                        const updated = usersData.find((u:any) => u.id === selectedUser.id)
+                        setSelectedUser(updated)
+                        setEditingUser(null)
+                      }}>Save</Button>
+
+                      <Button size="sm" variant="outline" className="text-xs h-8" onClick={() => {
+                        // Cancel edit
+                        setEditingUser(null)
+                        fetchUsers()
+                      }}>Cancel</Button>
+                    </div>
+                  )}
 
                   <hr />
 

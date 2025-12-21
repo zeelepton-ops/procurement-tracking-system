@@ -49,7 +49,7 @@ export async function PUT(request: Request) {
     }
 
     const body = await request.json()
-    const { id, action, role, status, isActive } = body
+    const { id, action, role, status, isActive, name, qid, joiningDate, department, position, phone } = body
 
     if (!id) {
       return NextResponse.json({ error: 'User ID is required' }, { status: 400 })
@@ -69,6 +69,17 @@ export async function PUT(request: Request) {
       if (role) updateData.role = role
       if (status) updateData.status = status
       if (typeof isActive === 'boolean') updateData.isActive = isActive
+
+      // Editable profile fields
+      if (typeof name === 'string') updateData.name = name
+      if (typeof qid === 'string') updateData.qid = qid || null
+      if (typeof department === 'string') updateData.department = department || null
+      if (typeof position === 'string') updateData.position = position || null
+      if (typeof phone === 'string') updateData.phone = phone || null
+      if (joiningDate) {
+        // Accept either date string or Date
+        updateData.joiningDate = new Date(joiningDate)
+      }
     }
 
     const user = await prisma.user.update({
