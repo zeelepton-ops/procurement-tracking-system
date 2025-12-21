@@ -472,8 +472,8 @@ export default function JobOrdersPage() {
                 </div>
 
                 {/* Job & Client quick row */}
-                <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
-                  <div>
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
+                  <div className="md:col-span-1">
                     <Label htmlFor="jobNumber" className="text-sm font-semibold">Job Number *</Label>
                     <Input
                       id="jobNumber"
@@ -484,7 +484,7 @@ export default function JobOrdersPage() {
                       className="mt-1 h-9"
                     />
                   </div>
-                  <div>
+                  <div className="md:col-span-6">
                     <Label htmlFor="clientName" className="text-sm font-semibold">Client Name *</Label>
                     <Input
                       id="clientName"
@@ -495,7 +495,7 @@ export default function JobOrdersPage() {
                       className="mt-1 h-9"
                     />
                   </div>
-                  <div>
+                  <div className="md:col-span-2">
                     <Label htmlFor="lpoContractNo" className="text-sm font-semibold">LPO / Contract No</Label>
                     <Input
                       id="lpoContractNo"
@@ -505,7 +505,7 @@ export default function JobOrdersPage() {
                       className="mt-1 h-9"
                     />
                   </div>
-                  <div>
+                  <div className="md:col-span-2">
                     <Label htmlFor="clientContactPerson" className="text-sm font-semibold">Client's Contact Person</Label>
                     <Input
                       id="clientContactPerson"
@@ -515,7 +515,7 @@ export default function JobOrdersPage() {
                       className="mt-1 h-9"
                     />
                   </div>
-                  <div>
+                  <div className="md:col-span-1">
                     <Label htmlFor="clientContactPhone" className="text-sm font-semibold">Client's Phone No.</Label>
                     <Input
                       id="clientContactPhone"
@@ -525,7 +525,7 @@ export default function JobOrdersPage() {
                       className="mt-1 h-9"
                     />
                   </div>
-                </div> 
+                </div>  
 
                 {/* Client Information */}
                 <div className="border-t pt-4">
@@ -943,28 +943,28 @@ export default function JobOrdersPage() {
               </div>
             </CardHeader>
             <CardContent className="pt-3 text-sm text-slate-800 space-y-3">
-              <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
-                <div>
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
+                <div className="md:col-span-1">
                   <div className="text-slate-500 text-xs">Job Number</div>
                   <div className="font-semibold">JO-{selectedJob.jobNumber}</div>
                 </div>
-                <div>
+                <div className="md:col-span-6">
                   <div className="text-slate-500 text-xs">Client</div>
-                  <div>{selectedJob.clientName || '—'}</div>
+                  <div className="truncate">{selectedJob.clientName || '—'}</div>
                 </div>
-                <div>
+                <div className="md:col-span-2">
                   <div className="text-slate-500 text-xs">LPO / Contract</div>
-                  <div>{selectedJob.lpoContractNo || '—'}</div>
+                  <div className="truncate">{selectedJob.lpoContractNo || '—'}</div>
                 </div>
-                <div>
+                <div className="md:col-span-2">
                   <div className="text-slate-500 text-xs">Client's Contact Person</div>
                   <div>{selectedJob.clientContactPerson || '—'}</div>
                 </div>
-                <div>
+                <div className="md:col-span-1">
                   <div className="text-slate-500 text-xs">Client's Phone No.</div>
-                  <div>{selectedJob.clientContactPhone || '—'}</div>
+                  <div className="truncate">{selectedJob.clientContactPhone || '—'}</div>
                 </div>
-              </div>
+              </div> 
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
@@ -1141,8 +1141,8 @@ export default function JobOrdersPage() {
                   {/* Job & Client quick row */}
                   <div className="border-t pt-4">
                     <h3 className="text-sm font-bold text-slate-700 mb-3">Client & NBTC Contact Information</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
-                      <div>
+                    <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
+                      <div className="md:col-span-1">
                         <Label htmlFor="edit-jobNumber" className="text-sm font-semibold">Job Number *</Label>
                         <Input
                           id="edit-jobNumber"
@@ -1152,7 +1152,7 @@ export default function JobOrdersPage() {
                           className="mt-1 h-9"
                         />
                       </div>
-                      <div>
+                      <div className="md:col-span-6">
                         <Label htmlFor="edit-clientName" className="text-sm font-semibold">Client Name *</Label>
                         <Input
                           id="edit-clientName"
@@ -1162,7 +1162,7 @@ export default function JobOrdersPage() {
                           className="mt-1 h-9"
                         />
                       </div>
-                      <div>
+                      <div className="md:col-span-2">
                         <Label htmlFor="edit-lpoContractNo" className="text-sm font-semibold">LPO / Contract No</Label>
                         <Input
                           id="edit-lpoContractNo"
@@ -1171,7 +1171,7 @@ export default function JobOrdersPage() {
                           className="mt-1 h-9"
                         />
                       </div>
-                      <div>
+                      <div className="md:col-span-2">
                         <Label htmlFor="edit-clientContactPerson" className="text-sm font-semibold">Client's Contact Person</Label>
                         <Input
                           id="edit-clientContactPerson"
@@ -1180,7 +1180,7 @@ export default function JobOrdersPage() {
                           className="mt-1 h-9"
                         />
                       </div>
-                      <div>
+                      <div className="md:col-span-1">
                         <Label htmlFor="edit-clientContactPhone" className="text-sm font-semibold">Client's Phone No.</Label>
                         <Input
                           id="edit-clientContactPhone"
