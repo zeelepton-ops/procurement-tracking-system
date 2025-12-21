@@ -443,6 +443,7 @@ export default function JobOrdersPage() {
             </CardHeader>
             <CardContent className="pt-4">
               <form onSubmit={handleSubmit} className="space-y-4">
+                <h3 className="text-sm font-bold text-slate-700 mb-3">Client & NBTC Contact Information</h3>
                 {/* Basic Information: one-line row */}
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
                   <div className="md:col-span-2">
@@ -513,7 +514,7 @@ export default function JobOrdersPage() {
 
                 {/* Job & Client quick row */}
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
-                  <div className="md:col-span-1">
+                  <div className="md:col-span-1 whitespace-nowrap">
                     <Label htmlFor="jobNumber" className="text-sm font-semibold">Job Number *</Label>
                     <Input
                       id="jobNumber"
@@ -521,7 +522,7 @@ export default function JobOrdersPage() {
                       onChange={(e) => setFormData({ ...formData, jobNumber: e.target.value })}
                       placeholder="e.g., 7439"
                       required
-                      className="mt-1 h-9"
+                      className="mt-1 h-9 whitespace-nowrap"
                     />
                   </div>
                   <div className="md:col-span-3">
@@ -555,22 +556,21 @@ export default function JobOrdersPage() {
                       className="mt-1 h-9"
                     />
                   </div>
-                  <div className="md:col-span-1">
+                  <div className="md:col-span-1 whitespace-nowrap">
                     <Label htmlFor="clientContactPhone" className="text-sm font-semibold">Client's Phone No.</Label>
                     <Input
                       id="clientContactPhone"
                       value={formData.clientContactPhone}
                       onChange={(e) => setFormData({ ...formData, clientContactPhone: e.target.value })}
                       placeholder="+974 55xx xxxx"
-                      className="mt-1 h-9"
+                      className="mt-1 h-9 whitespace-nowrap"
                     />
                   </div>
                 </div>  
 
-                {/* Client Information (see quick row above) */}
+                {/* Client Information note */}
                 <div className="border-t pt-4">
-                  <h3 className="text-sm font-bold text-slate-700 mb-3">Client & NBTC Contact Information</h3>
-                  <div className="text-sm text-slate-600">The primary client and contact fields are on the quick row above for compact entry.</div>
+                  <div className="text-sm text-slate-600">Client and contact fields are on the quick row above.</div>
                 </div> 
 
                 {/* Work Scope only */}
@@ -965,11 +965,11 @@ export default function JobOrdersPage() {
               <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
                 <div className="md:col-span-1">
                   <div className="text-slate-500 text-xs">Job Number</div>
-                  <div className="font-semibold">JO-{selectedJob.jobNumber}</div>
+                  <div className="font-semibold whitespace-nowrap">JO-{selectedJob.jobNumber}</div>
                 </div>
-                <div className="md:col-span-2">
+                <div className="md:col-span-6">
                   <div className="text-slate-500 text-xs">Client</div>
-                  <div className="truncate max-w-[12ch]">{selectedJob.clientName || '—'}</div>
+                  <div className="truncate max-w-[50ch]">{selectedJob.clientName || '—'}</div>
                 </div>
                 <div className="md:col-span-2">
                   <div className="text-slate-500 text-xs">LPO / Contract</div>
@@ -981,7 +981,7 @@ export default function JobOrdersPage() {
                 </div>
                 <div className="md:col-span-1">
                   <div className="text-slate-500 text-xs">Client's Phone No.</div>
-                  <div className="truncate">{selectedJob.clientContactPhone || '—'}</div>
+                  <div className="whitespace-nowrap">{selectedJob.clientContactPhone || '—'}</div>
                 </div>
               </div> 
 
@@ -1101,6 +1101,7 @@ export default function JobOrdersPage() {
                 </CardHeader>
                 <CardContent className="pt-4 overflow-y-auto bg-white flex-1">
                 <form onSubmit={handleEditSubmit} className="space-y-4">
+                  <h3 className="text-sm font-bold text-slate-700 mb-3">Client & NBTC Contact Information</h3>
                   {/* Basic Information */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
@@ -1130,26 +1131,25 @@ export default function JobOrdersPage() {
 
                   {/* Job & Client quick row */}
                   <div className="border-t pt-4">
-                    <h3 className="text-sm font-bold text-slate-700 mb-3">Client & NBTC Contact Information</h3>
                     <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
-                      <div className="md:col-span-1">
+                      <div className="md:col-span-1 whitespace-nowrap">
                         <Label htmlFor="edit-jobNumber" className="text-sm font-semibold">Job Number *</Label>
                         <Input
                           id="edit-jobNumber"
                           value={editFormData.jobNumber}
                           onChange={(e) => setEditFormData({ ...editFormData, jobNumber: e.target.value })}
                           required
-                          className="mt-1 h-9"
+                          className="mt-1 h-9 whitespace-nowrap"
                         />
                       </div>
-                      <div className="md:col-span-3">
+                      <div className="md:col-span-6">
                         <Label htmlFor="edit-clientName" className="text-sm font-semibold">Client Name *</Label>
                         <Input
                           id="edit-clientName"
                           value={editFormData.clientName}
                           onChange={(e) => setEditFormData({ ...editFormData, clientName: e.target.value })}
                           required
-                          className="mt-1 h-9 max-w-[12ch]"
+                          className="mt-1 h-9 max-w-[50ch]"
                         />
                       </div>
                       <div className="md:col-span-2">
@@ -1170,13 +1170,13 @@ export default function JobOrdersPage() {
                           className="mt-1 h-9"
                         />
                       </div>
-                      <div className="md:col-span-1">
+                      <div className="md:col-span-1 whitespace-nowrap">
                         <Label htmlFor="edit-clientContactPhone" className="text-sm font-semibold">Client's Phone No.</Label>
                         <Input
                           id="edit-clientContactPhone"
                           value={editFormData.clientContactPhone}
                           onChange={(e) => setEditFormData({ ...editFormData, clientContactPhone: e.target.value })}
-                          className="mt-1 h-9"
+                          className="mt-1 h-9 whitespace-nowrap"
                         />
                       </div>
                     </div>
