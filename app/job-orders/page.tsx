@@ -443,9 +443,9 @@ export default function JobOrdersPage() {
             </CardHeader>
             <CardContent className="pt-4">
               <form onSubmit={handleSubmit} className="space-y-4">
-                {/* Basic Information */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div>
+                {/* Basic Information: one-line row */}
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
+                  <div className="md:col-span-2">
                     <Label htmlFor="foreman" className="text-sm font-semibold">Foreman</Label>
                     <Input
                       id="foreman"
@@ -455,7 +455,7 @@ export default function JobOrdersPage() {
                       className="mt-1 h-9"
                     />
                   </div>
-                  <div>
+                  <div className="md:col-span-2">
                     <Label htmlFor="priority" className="text-sm font-semibold">Priority *</Label>
                     <select
                       id="priority"
@@ -468,6 +468,46 @@ export default function JobOrdersPage() {
                       <option value="MEDIUM">MEDIUM</option>
                       <option value="LOW">LOW</option>
                     </select>
+                  </div>
+                  <div className="md:col-span-2">
+                    <Label htmlFor="contactPerson" className="text-sm font-semibold">NBTC's Contact Person</Label>
+                    <Input
+                      id="contactPerson"
+                      value={formData.contactPerson}
+                      onChange={(e) => setFormData({ ...formData, contactPerson: e.target.value })}
+                      placeholder="e.g., NBTC Rep"
+                      className="mt-1 h-9"
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <Label htmlFor="phone" className="text-sm font-semibold">NBTC's Contact Phone No.</Label>
+                    <Input
+                      id="phone"
+                      value={formData.phone}
+                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                      placeholder="+974 5508 7272"
+                      className="mt-1 h-9"
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <Label htmlFor="drawingRef" className="text-sm font-semibold">Drawing / Enquiry Reference</Label>
+                    <Input
+                      id="drawingRef"
+                      value={formData.drawingRef}
+                      onChange={(e) => setFormData({ ...formData, drawingRef: e.target.value })}
+                      placeholder="e.g., E-11899 (Rev. 00)"
+                      className="mt-1 h-9"
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <Label htmlFor="qaQcInCharge" className="text-sm font-semibold">QA/QC In Charge</Label>
+                    <Input
+                      id="qaQcInCharge"
+                      value={formData.qaQcInCharge}
+                      onChange={(e) => setFormData({ ...formData, qaQcInCharge: e.target.value })}
+                      placeholder="e.g., Mr. VILLAVAN"
+                      className="mt-1 h-9"
+                    />
                   </div>
                 </div>
 
@@ -484,7 +524,7 @@ export default function JobOrdersPage() {
                       className="mt-1 h-9"
                     />
                   </div>
-                  <div className="md:col-span-6">
+                  <div className="md:col-span-3">
                     <Label htmlFor="clientName" className="text-sm font-semibold">Client Name *</Label>
                     <Input
                       id="clientName"
@@ -492,9 +532,9 @@ export default function JobOrdersPage() {
                       onChange={(e) => setFormData({ ...formData, clientName: e.target.value })}
                       placeholder="e.g., QATAR ENGINEERING & CONSTRUCTION CO. WLL"
                       required
-                      className="mt-1 h-9"
+                      className="mt-1 h-9 max-w-[12ch]"
                     />
-                  </div>
+                  </div> 
                   <div className="md:col-span-2">
                     <Label htmlFor="lpoContractNo" className="text-sm font-semibold">LPO / Contract No</Label>
                     <Input
@@ -527,31 +567,10 @@ export default function JobOrdersPage() {
                   </div>
                 </div>  
 
-                {/* Client Information */}
+                {/* Client Information (see quick row above) */}
                 <div className="border-t pt-4">
                   <h3 className="text-sm font-bold text-slate-700 mb-3">Client & NBTC Contact Information</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div>
-                      <Label htmlFor="contactPerson" className="text-sm font-semibold">NBTC's Contact Person</Label>
-                      <Input
-                        id="contactPerson"
-                        value={formData.contactPerson}
-                        onChange={(e) => setFormData({ ...formData, contactPerson: e.target.value })}
-                        placeholder="e.g., NBTC Rep"
-                        className="mt-1 h-9"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="phone" className="text-sm font-semibold">NBTC's Contact Phone No.</Label>
-                      <Input
-                        id="phone"
-                        value={formData.phone}
-                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                        placeholder="+974 5508 7272"
-                        className="mt-1 h-9"
-                      />
-                    </div>
-                  </div>
+                  <div className="text-sm text-slate-600">The primary client and contact fields are on the quick row above for compact entry.</div>
                 </div> 
 
                 {/* Work Scope only */}
@@ -948,9 +967,9 @@ export default function JobOrdersPage() {
                   <div className="text-slate-500 text-xs">Job Number</div>
                   <div className="font-semibold">JO-{selectedJob.jobNumber}</div>
                 </div>
-                <div className="md:col-span-6">
+                <div className="md:col-span-2">
                   <div className="text-slate-500 text-xs">Client</div>
-                  <div className="truncate">{selectedJob.clientName || '—'}</div>
+                  <div className="truncate max-w-[12ch]">{selectedJob.clientName || '—'}</div>
                 </div>
                 <div className="md:col-span-2">
                   <div className="text-slate-500 text-xs">LPO / Contract</div>
@@ -966,16 +985,15 @@ export default function JobOrdersPage() {
                 </div>
               </div> 
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div>
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
+                <div className="md:col-span-2">
                   <div className="text-slate-500 text-xs">Priority</div>
                   <div>{selectedJob.priority || 'MEDIUM'}</div>
                 </div>
-                <div>
+                <div className="md:col-span-2">
                   <div className="text-slate-500 text-xs">Foreman</div>
                   <div>{selectedJob.foreman || '—'}</div>
                 </div>
-              </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
@@ -988,53 +1006,25 @@ export default function JobOrdersPage() {
                 </div>
               </div> 
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                {selectedJob.contactPerson && (
-                  <div>
-                    <div className="text-slate-500 text-xs">NBTC's Contact Person</div>
-                    <div>{selectedJob.contactPerson}</div>
-                  </div>
-                )}
-                {selectedJob.phone && (
-                  <div>
-                    <div className="text-slate-500 text-xs">NBTC's Contact Phone No.</div>
-                    <div>{selectedJob.phone}</div>
-                  </div>
-                )}
-                {selectedJob.clientContactPerson && (
-                  <div>
-                    <div className="text-slate-500 text-xs">Client's Contact Person</div>
-                    <div>{selectedJob.clientContactPerson}</div>
-                  </div>
-                )}
-                {selectedJob.clientContactPhone && (
-                  <div>
-                    <div className="text-slate-500 text-xs">Client's Phone No.</div>
-                    <div>{selectedJob.clientContactPhone}</div>
-                  </div>
-                )}
-                {selectedJob.lpoContractNo && (
-                  <div>
-                    <div className="text-slate-500 text-xs">LPO / Contract</div>
-                    <div>{selectedJob.lpoContractNo}</div>
-                  </div>
-                )}
+                <div className="md:col-span-2">
+                  <div className="text-slate-500 text-xs">NBTC's Contact Person</div>
+                  <div>{selectedJob.contactPerson || '—'}</div>
+                </div>
+                <div className="md:col-span-2">
+                  <div className="text-slate-500 text-xs">NBTC's Contact Phone No.</div>
+                  <div>{selectedJob.phone || '—'}</div>
+                </div>
+                <div className="md:col-span-2">
+                  <div className="text-slate-500 text-xs">Drawing / Enquiry Ref</div>
+                  <div className="truncate">{selectedJob.drawingRef || '—'}</div>
+                </div>
+                <div className="md:col-span-2">
+                  <div className="text-slate-500 text-xs">QA/QC In Charge</div>
+                  <div className="truncate">{selectedJob.qaQcInCharge || '—'}</div>
+                </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {selectedJob.drawingRef && (
-                  <div>
-                    <div className="text-slate-500 text-xs">Drawing / Enquiry Ref</div>
-                    <div>{selectedJob.drawingRef}</div>
-                  </div>
-                )}
-                {selectedJob.qaQcInCharge && (
-                  <div>
-                    <div className="text-slate-500 text-xs">QA/QC In Charge</div>
-                    <div>{selectedJob.qaQcInCharge}</div>
-                  </div>
-                )}
-              </div>
+
 
               {/* Work Items Table */}
               {selectedJob.items && selectedJob.items.length > 0 && (
@@ -1152,14 +1142,14 @@ export default function JobOrdersPage() {
                           className="mt-1 h-9"
                         />
                       </div>
-                      <div className="md:col-span-6">
+                      <div className="md:col-span-3">
                         <Label htmlFor="edit-clientName" className="text-sm font-semibold">Client Name *</Label>
                         <Input
                           id="edit-clientName"
                           value={editFormData.clientName}
                           onChange={(e) => setEditFormData({ ...editFormData, clientName: e.target.value })}
                           required
-                          className="mt-1 h-9"
+                          className="mt-1 h-9 max-w-[12ch]"
                         />
                       </div>
                       <div className="md:col-span-2">
