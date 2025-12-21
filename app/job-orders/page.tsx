@@ -490,16 +490,7 @@ export default function JobOrdersPage() {
                       className="mt-1 h-9"
                     />
                   </div>
-                  <div className="md:col-span-2">
-                    <Label htmlFor="drawingRef" className="text-sm font-semibold">Drawing / Enquiry Reference</Label>
-                    <Input
-                      id="drawingRef"
-                      value={formData.drawingRef}
-                      onChange={(e) => setFormData({ ...formData, drawingRef: e.target.value })}
-                      placeholder="e.g., E-11899 (Rev. 00)"
-                      className="mt-1 h-9"
-                    />
-                  </div>
+
                   <div className="md:col-span-2">
                     <Label htmlFor="qaQcInCharge" className="text-sm font-semibold">QA/QC In Charge</Label>
                     <Input
@@ -514,7 +505,7 @@ export default function JobOrdersPage() {
 
                 {/* Job & Client quick row */}
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-                  <div className="md:col-span-1 whitespace-nowrap">
+                  <div className="md:col-span-2 whitespace-nowrap">
                     <Label htmlFor="jobNumber" className="text-sm font-semibold">Job Number *</Label>
                     <Input
                       id="jobNumber"
@@ -525,7 +516,7 @@ export default function JobOrdersPage() {
                       className="mt-1 h-9 whitespace-nowrap"
                     />
                   </div>
-                  <div className="md:col-span-3">
+                  <div className="md:col-span-6">
                     <Label htmlFor="clientName" className="text-sm font-semibold">Client Name *</Label>
                     <Input
                       id="clientName"
@@ -533,7 +524,7 @@ export default function JobOrdersPage() {
                       onChange={(e) => setFormData({ ...formData, clientName: e.target.value })}
                       placeholder="e.g., QATAR ENGINEERING & CONSTRUCTION CO. WLL"
                       required
-                      className="mt-1 h-9 max-w-[12ch]"
+                      className="mt-1 h-9 max-w-[50ch]"
                     />
                   </div> 
                   <div className="md:col-span-2">
@@ -556,18 +547,31 @@ export default function JobOrdersPage() {
                       className="mt-1 h-9"
                     />
                   </div>
-                  <div className="md:col-span-1 whitespace-nowrap">
+                  <div className="md:col-span-2">
                     <Label htmlFor="clientContactPhone" className="text-sm font-semibold">Client's Phone No.</Label>
                     <Input
                       id="clientContactPhone"
                       value={formData.clientContactPhone}
                       onChange={(e) => setFormData({ ...formData, clientContactPhone: e.target.value })}
                       placeholder="+974 55xx xxxx"
-                      className="mt-1 h-9 whitespace-nowrap"
+                      className="mt-1 h-9"
                     />
                   </div>
-                </div>  
+                </div>
 
+                {/* Drawing / Enquiry Reference - placed on its own line */}
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-4 mb-4">
+                  <div className="md:col-span-3">
+                    <Label htmlFor="drawingRef" className="text-sm font-semibold">Drawing / Enquiry Reference</Label>
+                    <Input
+                      id="drawingRef"
+                      value={formData.drawingRef}
+                      onChange={(e) => setFormData({ ...formData, drawingRef: e.target.value })}
+                      placeholder="e.g., E-11899 (Rev. 00)"
+                      className="mt-1 h-9"
+                    />
+                  </div>
+                </div>
 
                 {/* Work Scope only */}
                 <div className="border-t pt-4">
@@ -629,28 +633,7 @@ export default function JobOrdersPage() {
                   </div>
                 </div> 
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div>
-                    <Label htmlFor="drawingRef" className="text-sm font-semibold">Drawing / Enquiry Reference</Label>
-                    <Input
-                      id="drawingRef"
-                      value={formData.drawingRef}
-                      onChange={(e) => setFormData({ ...formData, drawingRef: e.target.value })}
-                      placeholder="e.g., E-11899 (Rev. 00)"
-                      className="mt-1 h-9"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="qaQcInCharge" className="text-sm font-semibold">QA/QC In Charge</Label>
-                    <Input
-                      id="qaQcInCharge"
-                      value={formData.qaQcInCharge}
-                      onChange={(e) => setFormData({ ...formData, qaQcInCharge: e.target.value })}
-                      placeholder="e.g., Mr. VILLAVAN"
-                      className="mt-1 h-9"
-                    />
-                  </div>
-                </div>
+
 
                 {/* Work Items */}
                 <div className="border-t pt-4">
@@ -959,7 +942,7 @@ export default function JobOrdersPage() {
             </CardHeader>
             <CardContent className="pt-3 text-sm text-slate-800 space-y-3">
               <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-                <div className="md:col-span-1">
+                <div className="md:col-span-2">
                   <div className="text-slate-500 text-xs">Job Number</div>
                   <div className="font-semibold whitespace-nowrap">JO-{selectedJob.jobNumber}</div>
                 </div>
@@ -975,7 +958,7 @@ export default function JobOrdersPage() {
                   <div className="text-slate-500 text-xs">Client's Contact Person</div>
                   <div>{selectedJob.clientContactPerson || '—'}</div>
                 </div>
-                <div className="md:col-span-1">
+                <div className="md:col-span-2">
                   <div className="text-slate-500 text-xs">Client's Phone No.</div>
                   <div className="whitespace-nowrap">{selectedJob.clientContactPhone || '—'}</div>
                 </div>
@@ -1127,8 +1110,8 @@ export default function JobOrdersPage() {
 
                   {/* Job & Client quick row */}
                   <div className="border-t pt-4">
-                    <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
-                      <div className="md:col-span-1 whitespace-nowrap">
+                    <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+                      <div className="md:col-span-2 whitespace-nowrap">
                         <Label htmlFor="edit-jobNumber" className="text-sm font-semibold">Job Number *</Label>
                         <Input
                           id="edit-jobNumber"
@@ -1166,13 +1149,13 @@ export default function JobOrdersPage() {
                           className="mt-1 h-9"
                         />
                       </div>
-                      <div className="md:col-span-1 whitespace-nowrap">
+                      <div className="md:col-span-2">
                         <Label htmlFor="edit-clientContactPhone" className="text-sm font-semibold">Client's Phone No.</Label>
                         <Input
                           id="edit-clientContactPhone"
                           value={editFormData.clientContactPhone}
                           onChange={(e) => setEditFormData({ ...editFormData, clientContactPhone: e.target.value })}
-                          className="mt-1 h-9 whitespace-nowrap"
+                          className="mt-1 h-9"
                         />
                       </div>
                     </div>
