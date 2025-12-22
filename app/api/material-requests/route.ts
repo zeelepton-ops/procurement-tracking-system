@@ -17,19 +17,40 @@ export async function GET(request: Request) {
     // Use raw SQL as fallback to ensure we get all records regardless of Prisma schema issues
     try {
       const requests = await prisma.$queryRaw`
-        SELECT * FROM "MaterialRequest" 
-        WHERE "isDeleted" = false
-        ORDER BY "createdAt" DESC
+        SELECT 
+          mr.*,
+          json_build_object(
+            'id', jo.id,
+            'jobNumber', jo."jobNumber",
+            'productName', jo."productName",
+            'drawingRef', jo."drawingRef"
+          ) as "jobOrder"
+        FROM "MaterialRequest" mr
+        LEFT JOIN "JobOrder" jo ON mr."jobOrderId" = jo.id
+        WHERE mr."isDeleted" = false
+        ORDER BY mr."createdAt" DESC
         LIMIT ${pageSize} OFFSET ${skip}
       `
       
-      // Ensure all records have a status field (fallback to PENDING if missing)
-      const safeRequests = (requests as any[]).map((req: any) => ({
-        ...req,
-        status: req.status || 'PENDING'
+      // Fetch items and actions separately for each request
+      const enrichedRequests = await Promise.all((requests as any[]).map(async (req: any) => {
+        const items = await prisma.materialRequestItem.findMany({
+          where: { materialRequestId: req.id }
+        })
+        const procurementActions = await prisma.procurementAction.findMany({
+          where: { materialRequestId: req.id },
+          orderBy: { actionDate: 'desc' },
+          take: 1
+        })
+        return {
+          ...req,
+          items,
+          procurementActions,
+          status: req.status || 'PENDING'
+        }
       }))
       
-      return NextResponse.json(safeRequests)
+      return NextResponse.json(enrichedRequests)
     } catch (rawErr) {
       console.warn('Raw SQL query failed, falling back to Prisma:', rawErr)
       
