@@ -1,15 +1,49 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
-export async function GET() {
-  const suppliers = await prisma.supplier.findMany({ orderBy: { name: 'asc' } })
-  return NextResponse.json(suppliers)
+export async function GET(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const q = searchParams.get('q')
+    const where = q
+      ? { OR: [{ name: { contains: q, mode: 'insensitive' } }, { tradingName: { contains: q, mode: 'insensitive' } }] }
+      : undefined
+
+    const suppliers = await prisma.supplier.findMany({ where, orderBy: { name: 'asc' }, include: { contacts: true, capabilities: true, supplierPrices: true } })
+    return NextResponse.json(suppliers)
+  } catch (err: any) {
+    console.error('Failed to list suppliers', err)
+    return NextResponse.json({ error: err.message }, { status: 500 })
+  }
 }
 
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const created = await prisma.supplier.create({ data: body })
+
+    // Minimal validation
+    if (!body.name) return NextResponse.json({ error: 'name required' }, { status: 400 })
+
+    const created = await prisma.supplier.create({
+      data: {
+        name: body.name,
+        tradingName: body.tradingName || null,
+        contactPerson: body.contactPerson || null,
+        email: body.email || null,
+        phone: body.phone || null,
+        address: body.address || null,
+        website: body.website || null,
+        paymentTerms: body.paymentTerms || null,
+        leadTimeDays: body.leadTimeDays ?? null,
+        defaultCurrency: body.defaultCurrency || 'QAR',
+        taxId: body.taxId || null,
+        tradeLicense: body.tradeLicense || null,
+        notes: body.notes || null,
+        // create primary contact if provided
+        contacts: body.contact ? { create: { name: body.contact.name, role: body.contact.role || 'Primary', email: body.contact.email || null, phone: body.contact.phone || null, isPrimary: true } } : undefined
+      }
+    })
+
     return NextResponse.json(created, { status: 201 })
   } catch (err: any) {
     console.error('Failed to create supplier', err)
