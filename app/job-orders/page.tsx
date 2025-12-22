@@ -32,6 +32,8 @@ interface JobOrder {
   deletedAt?: string | null
   deletedBy?: string | null
   items?: JobOrderItem[]
+  discount?: number
+  roundOff?: number
   _count?: {
     materialRequests: number
   }
@@ -98,7 +100,9 @@ export default function JobOrdersPage() {
     foreman: '',
     workScope: '',
     scopeOfWorks: [] as string[],
-    qaQcInCharge: ''
+    qaQcInCharge: '',
+    discount: 0,
+    roundOff: 0
   })
   const [workItems, setWorkItems] = useState<JobOrderItem[]>([
     { workDescription: '', quantity: 0, unit: 'PCS', unitPrice: 0, totalPrice: 0 }
@@ -122,7 +126,9 @@ export default function JobOrdersPage() {
     foreman: '',
     workScope: '',
     scopeOfWorks: [] as string[],
-    qaQcInCharge: ''
+    qaQcInCharge: '',
+    discount: 0,
+    roundOff: 0
   })
   const [editWorkItems, setEditWorkItems] = useState<JobOrderItem[]>([
     { workDescription: '', quantity: 0, unit: 'PCS', unitPrice: 0, totalPrice: 0 }
@@ -300,7 +306,9 @@ export default function JobOrdersPage() {
         foreman: '',
         workScope: '',
         scopeOfWorks: [],
-        qaQcInCharge: ''
+        qaQcInCharge: '',
+        discount: 0,
+        roundOff: 0
       })
       setWorkItems([{ workDescription: '', quantity: 0, unit: 'PCS', unitPrice: 0, totalPrice: 0 }])
       setShowForm(false)
@@ -374,7 +382,9 @@ export default function JobOrdersPage() {
       foreman: job.foreman || '',
       workScope: job.workScope || '',
       scopeOfWorks: scopeOfWorks,
-      qaQcInCharge: job.qaQcInCharge || ''
+      qaQcInCharge: job.qaQcInCharge || '',
+      discount: (job as any).discount || 0,
+      roundOff: (job as any).roundOff || 0
     })
     setEditWorkItems(job.items && job.items.length > 0 
       ? job.items 
@@ -810,6 +820,42 @@ export default function JobOrdersPage() {
                   </div>
                 </div>
 
+                {/* Totals & Adjustment */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end mb-2 mt-3">
+                  <div className="md:col-span-1 text-sm text-slate-600">
+                    Subtotal
+                    <div className="font-semibold text-slate-800">
+                      {workItems.reduce((s, it) => s + (it.totalPrice || 0), 0).toFixed(2)} QAR
+                    </div>
+                  </div>
+                  <div className="md:col-span-1">
+                    <Label className="text-xs">Discount (amount)</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={(formData as any).discount || ''}
+                      onChange={(e) => setFormData({ ...formData, discount: parseFloat(e.target.value) || 0 })}
+                      className="h-8 text-sm"
+                    />
+                  </div>
+                  <div className="md:col-span-1">
+                    <Label className="text-xs">Round Off (adjustment)</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={(formData as any).roundOff || ''}
+                      onChange={(e) => setFormData({ ...formData, roundOff: parseFloat(e.target.value) || 0 })}
+                      className="h-8 text-sm"
+                    />
+                  </div>
+                  <div className="md:col-span-1 text-sm text-slate-600">
+                    Final Total
+                    <div className="font-bold text-blue-600">
+                      {(workItems.reduce((s, it) => s + (it.totalPrice || 0), 0) - ((formData as any).discount || 0) + ((formData as any).roundOff || 0)).toFixed(2)} QAR
+                    </div>
+                  </div>
+                </div>
+
                 {error && (
                   <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded text-sm">
                     {error}
@@ -1186,10 +1232,20 @@ export default function JobOrdersPage() {
                       </tbody>
                       <tfoot className="bg-slate-50 border-t-2">
                         <tr>
-                          <td colSpan={4} className="p-2 text-right font-bold">Grand Total:</td>
-                          <td className="p-2 text-right font-bold text-blue-600">
-                            {selectedJob.items.reduce((sum, item) => sum + item.totalPrice, 0).toFixed(2)} QAR
-                          </td>
+                          <td colSpan={4} className="p-2 text-right">Subtotal:</td>
+                          <td className="p-2 text-right font-semibold">{selectedJob.items.reduce((sum, item) => sum + item.totalPrice, 0).toFixed(2)} QAR</td>
+                        </tr>
+                        <tr>
+                          <td colSpan={4} className="p-2 text-right">Discount:</td>
+                          <td className="p-2 text-right text-red-600">-{(selectedJob as any).discount?.toFixed ? (selectedJob as any).discount.toFixed(2) : ((selectedJob as any).discount || 0).toFixed(2)} QAR</td>
+                        </tr>
+                        <tr>
+                          <td colSpan={4} className="p-2 text-right">Round Off:</td>
+                          <td className="p-2 text-right">{(selectedJob as any).roundOff?.toFixed ? (selectedJob as any).roundOff.toFixed(2) : ((selectedJob as any).roundOff || 0).toFixed(2)} QAR</td>
+                        </tr>
+                        <tr>
+                          <td colSpan={4} className="p-2 text-right font-bold">Final Total:</td>
+                          <td className="p-2 text-right font-bold text-blue-600">{(selectedJob.items.reduce((sum, item) => sum + item.totalPrice, 0) - ((selectedJob as any).discount || 0) + ((selectedJob as any).roundOff || 0)).toFixed(2)} QAR</td>
                         </tr>
                       </tfoot>
                     </table>
@@ -1502,6 +1558,42 @@ export default function JobOrdersPage() {
                           )}
                         </div>
                       ))}
+                    </div>
+                  </div>
+
+                  {/* Totals & Adjustment (edit modal) */}
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end mb-2 mt-3">
+                    <div className="md:col-span-1 text-sm text-slate-600">
+                      Subtotal
+                      <div className="font-semibold text-slate-800">
+                        {editWorkItems.reduce((s, it) => s + (it.totalPrice || 0), 0).toFixed(2)} QAR
+                      </div>
+                    </div>
+                    <div className="md:col-span-1">
+                      <Label className="text-xs">Discount (amount)</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={(editFormData as any).discount || ''}
+                        onChange={(e) => setEditFormData({ ...editFormData, discount: parseFloat(e.target.value) || 0 })}
+                        className="h-8 text-sm"
+                      />
+                    </div>
+                    <div className="md:col-span-1">
+                      <Label className="text-xs">Round Off (adjustment)</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={(editFormData as any).roundOff || ''}
+                        onChange={(e) => setEditFormData({ ...editFormData, roundOff: parseFloat(e.target.value) || 0 })}
+                        className="h-8 text-sm"
+                      />
+                    </div>
+                    <div className="md:col-span-1 text-sm text-slate-600">
+                      Final Total
+                      <div className="font-bold text-blue-600">
+                        {(editWorkItems.reduce((s, it) => s + (it.totalPrice || 0), 0) - ((editFormData as any).discount || 0) + ((editFormData as any).roundOff || 0)).toFixed(2)} QAR
+                      </div>
                     </div>
                   </div>
 

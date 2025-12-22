@@ -50,6 +50,8 @@ model JobOrder {
   workScope      String?  // Legacy field - kept for backwards compatibility
   scopeOfWorks   String?  // JSON array of selected work types
   qaQcInCharge   String?
+  discount       Float    @default(0)
+  roundOff       Float    @default(0)
   isDeleted      Boolean  @default(false)
   deletedAt      DateTime?
   deletedBy      String?

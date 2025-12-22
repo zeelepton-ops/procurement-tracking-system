@@ -144,6 +144,8 @@ export async function POST(request: Request) {
             workScope: body.workScope || productName,
             scopeOfWorks: body.scopeOfWorks && body.scopeOfWorks.length > 0 ? JSON.stringify(body.scopeOfWorks) : null,
             qaQcInCharge: body.qaQcInCharge || null,
+            discount: Number(body.discount) || 0,
+            roundOff: Number(body.roundOff) || 0,
             createdBy: session?.user?.email || 'unknown',
             isDeleted: false,
             deletedAt: null,
@@ -175,6 +177,8 @@ export async function POST(request: Request) {
           workScope: body.workScope || productName,
           scopeOfWorks: body.scopeOfWorks && body.scopeOfWorks.length > 0 ? JSON.stringify(body.scopeOfWorks) : null,
           qaQcInCharge: body.qaQcInCharge || null,
+          discount: Number(body.discount) || 0,
+          roundOff: Number(body.roundOff) || 0,
           createdBy: session?.user?.email || 'unknown',
           items: safeItems.length > 0 ? {
             create: safeItems
@@ -225,9 +229,10 @@ export async function PUT(request: Request) {
     const body = await request.json()
     const { id, items, ...updateData } = body
 
-    if (!id) {
-      return NextResponse.json({ error: 'Job order ID is required' }, { status: 400 })
-    }
+  // Coerce numeric fields if present
+  if (updateData.discount !== undefined) updateData.discount = parseFloat(updateData.discount) || 0
+  if (updateData.roundOff !== undefined) updateData.roundOff = parseFloat(updateData.roundOff) || 0
+
 
     const existingJobOrder = await prisma.jobOrder.findUnique({
       where: { id }
@@ -258,37 +263,70 @@ export async function PUT(request: Request) {
 
     // Update job order and items in transaction
     const userEmail = session.user.email || 'unknown'
-    const updatedJobOrder = await prisma.$transaction(async (tx) => {
-      // Delete existing items
-      await tx.jobOrderItem.deleteMany({
-        where: { jobOrderId: id }
-      })
+    let updatedJobOrder
+    try {
+      updatedJobOrder = await prisma.$transaction(async (tx) => {
+        // Delete existing items
+        await tx.jobOrderItem.deleteMany({
+          where: { jobOrderId: id }
+        })
 
-      // Update job order with new items
-      const updated = await tx.jobOrder.update({
-        where: { id },
-        data: {
-          ...updateData,
-          scopeOfWorks: updateData.scopeOfWorks && updateData.scopeOfWorks.length > 0 ? JSON.stringify(updateData.scopeOfWorks) : null,
-          lastEditedBy: userEmail,
-          lastEditedAt: new Date(),
-          items: items && items.length > 0 ? {
-            create: items.map((item: any) => ({
-              workDescription: item.workDescription,
-              quantity: parseFloat(item.quantity),
-              unit: item.unit,
-              unitPrice: parseFloat(item.unitPrice),
-              totalPrice: parseFloat(item.totalPrice)
-            }))
-          } : undefined
-        },
-        include: {
-          items: true
-        }
-      })
+        // Update job order with new items
+        const updated = await tx.jobOrder.update({
+          where: { id },
+          data: {
+            ...updateData,
+            scopeOfWorks: updateData.scopeOfWorks && updateData.scopeOfWorks.length > 0 ? JSON.stringify(updateData.scopeOfWorks) : null,
+            lastEditedBy: userEmail,
+            lastEditedAt: new Date(),
+            items: items && items.length > 0 ? {
+              create: items.map((item: any) => ({
+                workDescription: item.workDescription,
+                quantity: parseFloat(item.quantity),
+                unit: item.unit,
+                unitPrice: parseFloat(item.unitPrice),
+                totalPrice: parseFloat(item.totalPrice)
+              }))
+            } : undefined
+          },
+          include: {
+            items: true
+          }
+        })
 
-      return updated
-    })
+        return updated
+      })
+    } catch (dbError: any) {
+      // If database schema not migrated and doesn't have discount/roundOff fields, retry without them
+      if (dbError.code === 'P2009' || dbError.message?.includes('column') || dbError.message?.includes('Unknown field')) {
+        const updated = await prisma.$transaction(async (tx) => {
+          await tx.jobOrderItem.deleteMany({ where: { jobOrderId: id } })
+          return tx.jobOrder.update({
+            where: { id },
+            data: {
+              // omit discount/roundOff
+              ...Object.fromEntries(Object.entries(updateData).filter(([k]) => k !== 'discount' && k !== 'roundOff')),
+              scopeOfWorks: updateData.scopeOfWorks && updateData.scopeOfWorks.length > 0 ? JSON.stringify(updateData.scopeOfWorks) : null,
+              lastEditedBy: userEmail,
+              lastEditedAt: new Date(),
+              items: items && items.length > 0 ? {
+                create: items.map((item: any) => ({
+                  workDescription: item.workDescription,
+                  quantity: parseFloat(item.quantity),
+                  unit: item.unit,
+                  unitPrice: parseFloat(item.unitPrice),
+                  totalPrice: parseFloat(item.totalPrice)
+                }))
+              } : undefined
+            },
+            include: { items: true }
+          })
+        })
+        updatedJobOrder = updated
+      } else {
+        throw dbError
+      }
+    }
 
     // Record edit history
     if (Object.keys(changes).length > 0 || items) {
