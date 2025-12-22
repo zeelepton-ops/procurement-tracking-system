@@ -74,6 +74,14 @@ export async function POST(request: Request) {
       const rawBody = await request.json()
     console.log('POST /api/material-requests - Received body:', JSON.stringify(rawBody, null, 2))
 
+    // Log database connection info to help debug schema mismatches in production
+    try {
+      const conn = await prisma.$queryRaw`SELECT current_database() AS db, current_user AS user, inet_server_addr() AS server, current_setting('search_path') AS search_path`
+      console.info('DB connection info:', JSON.stringify(conn))
+    } catch (connErr) {
+      console.warn('Failed to fetch DB connection info:', connErr)
+    }
+
     // Basic validation & sanitization
     const body = {
       requestContext: rawBody.requestContext || 'WORKSHOP',
@@ -241,11 +249,51 @@ export async function POST(request: Request) {
               })
             } catch (fallbackErr) {
               console.error('Fallback create without status also failed:', fallbackErr)
+              // As a last resort, try a raw INSERT that explicitly lists columns (bypassing Prisma's generated column mappings)
+              try {
+                console.info('Attempting raw INSERT fallback (explicit columns)')
+                const now = new Date()
+                // Insert main material request row without the status column
+                const inserted = await prisma.$queryRaw`
+                  INSERT INTO "MaterialRequest" ("id","requestNumber","requestContext","jobOrderId","assetId","materialType","itemName","description","quantity","unit","reasonForRequest","requiredDate","preferredSupplier","stockQtyInInventory","urgencyLevel","requestedBy","createdBy","createdAt","updatedAt")
+                  VALUES (${explicitId}, ${requestNumber}, ${body.requestContext}, ${body.jobOrderId || null}, ${body.assetId || null}, ${body.materialType}, ${firstItem?.itemName || body.itemName || 'Multiple Items'}, ${firstItem?.description || body.description || 'See items list'}, ${mainQuantity}, ${firstItem?.unit || body.unit || 'PCS'}, ${firstItem?.reasonForRequest || body.reasonForRequest || 'As required'}, ${requiredDate}, ${firstItem?.preferredSupplier || body.preferredSupplier || null}, ${mainStockQty}, ${firstItem?.urgencyLevel || body.urgencyLevel || 'NORMAL'}, ${body.requestedBy}, ${session?.user?.email || body.requestedBy}, ${now}, ${now})
+                  RETURNING *
+                `
+
+                // Insert items if present (use createMany for efficiency)
+                if (itemsCreate && itemsCreate.length > 0) {
+                  await prisma.materialRequestItem.createMany({
+                    data: itemsCreate.map((it: any) => ({
+                      id: randomUUID(),
+                      materialRequestId: explicitId,
+                      itemName: it.itemName,
+                      description: it.description,
+                      quantity: it.quantity,
+                      unit: it.unit,
+                      stockQtyInInventory: it.stockQtyInInventory,
+                      reasonForRequest: it.reasonForRequest,
+                      urgencyLevel: it.urgencyLevel || 'NORMAL',
+                      requiredDate: it.requiredDate,
+                      preferredSupplier: it.preferredSupplier || null
+                    }))
+                  })
+                }
+
+                // Fetch the created record including items
+                materialRequest = await prisma.materialRequest.findUnique({
+                  where: { id: explicitId },
+                  include: { jobOrder: true, asset: true, items: true }
+                })
+
+                if (!materialRequest) throw new Error('Raw insert succeeded but fetch failed')
+
+              } catch (rawErr) {
+                console.error('Raw INSERT fallback also failed:', rawErr)
+                throw err // rethrow original error to be handled below
+              }
+            } else {
               throw err // rethrow original error to be handled below
             }
-          } else {
-            throw err // rethrow original error to be handled below
-          }
         }
       } else {
         throw err
