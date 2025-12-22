@@ -230,14 +230,24 @@ export async function POST(request: Request) {
     }
     
     return NextResponse.json(materialRequest, { status: 201 })
-  } catch (error) {
-    console.error('Error creating material request - Full error:', error)
-    console.error('Error name:', error instanceof Error ? error.name : 'unknown')
-    console.error('Error message:', error instanceof Error ? error.message : 'unknown')
-    console.error('Error stack:', error instanceof Error ? error.stack : 'unknown')
+  } catch (error: any) {
+    try {
+      console.error('Error creating material request - Full error:', error)
+      if (error?.code) console.error('Prisma error code:', error.code)
+      if (error?.meta) console.error('Prisma error meta:', JSON.stringify(error.meta))
+      // serialize non-enumerable properties as well for richer logs
+      try {
+        console.error('Serialized error:', JSON.stringify(error, Object.getOwnPropertyNames(error)))
+      } catch (serErr) {
+        console.error('Failed to serialize error object:', serErr)
+      }
+    } catch (logErr) {
+      console.error('Failed to log error details:', logErr)
+    }
     return NextResponse.json({ 
       error: 'Failed to create material request',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      code: error?.code || null,
+      details: typeof error?.message === 'string' ? error.message : String(error)
     }, { status: 500 })
   }
 }

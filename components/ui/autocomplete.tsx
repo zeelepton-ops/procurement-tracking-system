@@ -22,6 +22,7 @@ export default function Autocomplete({ value, onChange, suggestions, placeholder
   const inputRef = useRef<HTMLInputElement | null>(null)
   const menuRef = useRef<HTMLUListElement | null>(null)
   const [position, setPosition] = useState<{ left: number; top: number; width: number } | null>(null)
+  const [ignoreOpenOnNextChange, setIgnoreOpenOnNextChange] = useState(false)
 
   useEffect(() => {
     const q = (value || '').trim().toLowerCase()
@@ -29,15 +30,20 @@ export default function Autocomplete({ value, onChange, suggestions, placeholder
       setFiltered(suggestions.slice(0, 8))
       setOpen(false)
       setActiveIndex(-1)
+      setIgnoreOpenOnNextChange(false)
       return
     }
     const f = suggestions
       .filter(s => s.label.toLowerCase().includes(q) || (s.meta || '').toLowerCase().includes(q))
       .slice(0, 8)
     setFiltered(f)
-    setOpen(f.length > 0)
     setActiveIndex(-1)
-  }, [value, suggestions])
+    if (!ignoreOpenOnNextChange) {
+      setOpen(f.length > 0)
+    } else {
+      setOpen(false)
+    }
+  }, [value, suggestions, ignoreOpenOnNextChange])
 
   // update menu position based on input rect
   const updatePosition = () => {
@@ -117,8 +123,9 @@ export default function Autocomplete({ value, onChange, suggestions, placeholder
       <input
         ref={inputRef}
         value={value}
-        onChange={(e) => { onChange(e.target.value); setOpen(true) }}
-        onFocus={() => setOpen(filtered.length > 0)}
+        onChange={(e) => { onChange(e.target.value); setIgnoreOpenOnNextChange(false); setOpen(true) }}
+        onFocus={() => { setIgnoreOpenOnNextChange(false); setOpen(filtered.length > 0) }}
+        onBlur={() => { setIgnoreOpenOnNextChange(true); setOpen(false) }}
         onKeyDown={onKeyDown}
         placeholder={placeholder}
         className={cn('h-7 px-1 rounded-md border border-slate-300 text-[11px] focus:z-10 focus:ring-2 focus:ring-blue-400 focus:outline-none', inputClassName)}
