@@ -286,6 +286,11 @@ model Supplier {
   website      String?
   preferred    Boolean @default(false)
   notes        String?
+
+  // Relations
+  supplierPrices SupplierPrice[]
+  supplierQuotes SupplierQuote[]
+
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
