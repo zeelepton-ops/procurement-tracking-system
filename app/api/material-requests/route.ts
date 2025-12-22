@@ -275,6 +275,7 @@ export async function POST(request: Request) {
                       urgencyLevel: it.urgencyLevel || 'NORMAL',
                       requiredDate: it.requiredDate,
                       preferredSupplier: it.preferredSupplier || null
+                      // Note: omitting 'status' field; if the column is missing in DB, default will apply
                     }))
                   })
                 }
@@ -291,9 +292,10 @@ export async function POST(request: Request) {
                 console.error('Raw INSERT fallback also failed:', rawErr)
                 throw err // rethrow original error to be handled below
               }
-            } else {
-              throw err // rethrow original error to be handled below
             }
+          } else {
+            throw err // rethrow original error to be handled below
+          }
         }
       } else {
         throw err
