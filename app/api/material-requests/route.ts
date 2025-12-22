@@ -14,60 +14,81 @@ export async function GET(request: Request) {
     const pageSize = parseInt(searchParams.get('pageSize') || '50', 10)
     const skip = Math.max(0, (page - 1) * pageSize)
 
-    // Lightweight summary mode for faster list loading
-    if (summary) {
-      const requests = await prisma.materialRequest.findMany({
-        where: { isDeleted: false },
-        select: {
-          id: true,
-          requestNumber: true,
-          itemName: true,
-          description: true,
-          quantity: true,
-          unit: true,
-          stockQtyInInventory: true,
-          requiredDate: true,
-          urgencyLevel: true,
-          status: true,
-          jobOrder: { select: { jobNumber: true } }
-        },
-        orderBy: { createdAt: 'desc' },
-        skip,
-        take: pageSize
-      })
-      return NextResponse.json(requests)
-    }
-
-    // Full payload with items
-    const requests = await prisma.materialRequest.findMany({
-      where: {
-        isDeleted: false
-      },
-      include: {
-        jobOrder: true,
-        items: true,
-        procurementActions: {
-          orderBy: { actionDate: 'desc' },
-          take: 1
-        },
-        purchaseOrderItems: {
-          include: {
-            purchaseOrder: true
-          }
-        }
-      },
-      orderBy: {
-        createdAt: 'desc'
+    // Use raw SQL as fallback to ensure we get all records regardless of Prisma schema issues
+    try {
+      const requests = await prisma.$queryRaw`
+        SELECT * FROM "MaterialRequest" 
+        WHERE "isDeleted" = false
+        ORDER BY "createdAt" DESC
+        LIMIT ${pageSize} OFFSET ${skip}
+      `
+      
+      // Ensure all records have a status field (fallback to PENDING if missing)
+      const safeRequests = (requests as any[]).map((req: any) => ({
+        ...req,
+        status: req.status || 'PENDING'
+      }))
+      
+      return NextResponse.json(safeRequests)
+    } catch (rawErr) {
+      console.warn('Raw SQL query failed, falling back to Prisma:', rawErr)
+      
+      // Fallback to original Prisma query
+      // Lightweight summary mode for faster list loading
+      if (summary) {
+        const requests = await prisma.materialRequest.findMany({
+          where: { isDeleted: false },
+          select: {
+            id: true,
+            requestNumber: true,
+            itemName: true,
+            description: true,
+            quantity: true,
+            unit: true,
+            stockQtyInInventory: true,
+            requiredDate: true,
+            urgencyLevel: true,
+            status: true,
+            jobOrder: { select: { jobNumber: true } }
+          },
+          orderBy: { createdAt: 'desc' },
+          skip,
+          take: pageSize
+        })
+        return NextResponse.json(requests)
       }
-    })
 
-    // Ensure all records have a status field (fallback to PENDING if missing)
-    const safeRequests = requests.map((req: any) => ({
-      ...req,
-      status: req.status || 'PENDING'
-    }))
-    
-    return NextResponse.json(safeRequests)
+      // Full payload with items
+      const requests = await prisma.materialRequest.findMany({
+        where: {
+          isDeleted: false
+        },
+        include: {
+          jobOrder: true,
+          items: true,
+          procurementActions: {
+            orderBy: { actionDate: 'desc' },
+            take: 1
+          },
+          purchaseOrderItems: {
+            include: {
+              purchaseOrder: true
+            }
+          }
+        },
+        orderBy: {
+          createdAt: 'desc'
+        }
+      })
+
+      // Ensure all records have a status field (fallback to PENDING if missing)
+      const safeRequests = requests.map((req: any) => ({
+        ...req,
+        status: req.status || 'PENDING'
+      }))
+      
+      return NextResponse.json(safeRequests)
+    }
   } catch (error) {
     console.error('Failed to fetch material requests:', error)
     // Return empty array instead of error object to prevent frontend filter errors
