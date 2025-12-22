@@ -59,8 +59,14 @@ export async function GET(request: Request) {
         createdAt: 'desc'
       }
     })
+
+    // Ensure all records have a status field (fallback to PENDING if missing)
+    const safeRequests = requests.map((req: any) => ({
+      ...req,
+      status: req.status || 'PENDING'
+    }))
     
-    return NextResponse.json(requests)
+    return NextResponse.json(safeRequests)
   } catch (error) {
     console.error('Failed to fetch material requests:', error)
     // Return empty array instead of error object to prevent frontend filter errors
