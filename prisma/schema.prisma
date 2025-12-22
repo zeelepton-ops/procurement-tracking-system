@@ -302,8 +302,17 @@ model Supplier {
   references     SupplierReference[]
   bankDetails    SupplierBankDetails?
 
+  status SupplierStatus @default(PENDING)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+enum SupplierStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  SUSPENDED
 }
 
 model SupplierContact {

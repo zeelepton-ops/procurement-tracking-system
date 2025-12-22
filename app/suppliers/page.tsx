@@ -85,7 +85,7 @@ export default function SuppliersPage() {
               </div>
               <div className="flex gap-2">
                 <Button size="sm" variant="outline" onClick={() => window.location.href = `/suppliers/${s.id}`}>View</Button>
-                {s.status === 'PENDING' && session?.user?.role === 'ADMIN' && <Button size="sm" onClick={() => setApproval({ open: true, supplier: s })}>Approve</Button>}
+                {s.status === 'PENDING' && session?.user?.role === 'ADMIN' && <Button size="sm" onClick={() => setApproval({ open: true, supplier: s, notes: '' })}>Approve</Button>}
                 <Button size="sm" variant="outline" onClick={() => edit(s)}>Edit</Button>
                 <Button size="sm" variant="destructive" onClick={() => remove(s.id)}>Delete</Button>
               </div>

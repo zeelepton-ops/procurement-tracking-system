@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { Prisma } from '@prisma/client'
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
     const q = searchParams.get('q')
     const where = q
-      ? { OR: [{ name: { contains: q, mode: 'insensitive' } }, { tradingName: { contains: q, mode: 'insensitive' } }] }
+      ? { OR: [{ name: { contains: q, mode: 'insensitive' as Prisma.QueryMode } }, { tradingName: { contains: q, mode: 'insensitive' as Prisma.QueryMode } }] }
       : undefined
 
     const suppliers = await prisma.supplier.findMany({ where, orderBy: { name: 'asc' }, include: { contacts: true, capabilities: true, supplierPrices: true } })
