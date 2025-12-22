@@ -290,6 +290,8 @@ model Supplier {
   // Relations
   supplierPrices SupplierPrice[]
   supplierQuotes SupplierQuote[]
+  enquiryResponses EnquiryResponse[] @relation("EnquiryResponseToSupplier")
+  notifications Notification[] @relation("NotificationToSupplier")
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -325,16 +327,62 @@ model POPreparation {
   status      String   @default("DRAFT")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  enquiries   Enquiry[] @relation("EnquiryToPrep")
+  supplierQuotes SupplierQuote[] @relation("SupplierQuoteToPrep")
 }
 
 model SupplierQuote {
   id          String   @id @default(cuid())
   prepId      String
+  prep        POPreparation @relation(fields: [prepId], references: [id], name: "SupplierQuoteToPrep")
   supplierId  String
   supplier    Supplier @relation(fields: [supplierId], references: [id])
   quoteJson   String   // JSON of quoted items and prices
   total       Float
   createdAt   DateTime @default(now())
+}
+
+model Enquiry {
+  id          String   @id @default(cuid())
+  prepId      String
+  prep        POPreparation @relation(fields: [prepId], references: [id], name: "EnquiryToPrep")
+  createdBy   String
+  supplierIds String[]
+  message     String?
+  status      String   @default("DRAFT") // DRAFT | SENT | RESPONSES_RECEIVED | CLOSED
+  sentAt      DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  responses   EnquiryResponse[]
+  notifications Notification[]
+}
+
+model EnquiryResponse {
+  id          String   @id @default(cuid())
+  enquiryId   String
+  enquiry     Enquiry  @relation(fields: [enquiryId], references: [id])
+  supplierId  String
+  supplier    Supplier  @relation(fields: [supplierId], references: [id], name: "EnquiryResponseToSupplier")
+  quoteJson   Json
+  total       Float
+  attachments  Json?
+  respondedAt DateTime @default(now())
+}
+
+model Notification {
+  id              String   @id @default(cuid())
+  enquiryId       String?
+  enquiry         Enquiry? @relation(fields: [enquiryId], references: [id])
+  supplierId      String?
+  supplier        Supplier? @relation(fields: [supplierId], references: [id], name: "NotificationToSupplier")
+  channel         String   // EMAIL | SMS
+  to              String
+  status          String   @default("PENDING") // PENDING | SENT | FAILED
+  providerResult  Json?
+  sentAt          DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }
 
 model InventoryItem {

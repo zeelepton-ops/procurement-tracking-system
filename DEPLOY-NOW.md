@@ -49,6 +49,25 @@ git push -u origin main
 8. Click "Deploy"
 9. Wait for deployment to complete (~5 min)
 
+---
+
+### Optional: Email / SMS Notifications (configure if you want enquiry circulation to notify suppliers)
+
+If you want the app to send emails and SMS when an enquiry is sent, add these environment variables in Vercel (or your .env.local for local dev):
+
+| Key | Value |
+|-----|-------|
+| `SMTP_HOST` | e.g., `smtp.mailgun.org` |
+| `SMTP_PORT` | e.g., `587` |
+| `SMTP_USER` | SMTP username |
+| `SMTP_PASS` | SMTP password |
+| `EMAIL_FROM` | Default From address (optional) |
+| `TWILIO_SID` | Twilio Account SID (optional) |
+| `TWILIO_TOKEN` | Twilio Auth Token (optional) |
+| `TWILIO_FROM` | Your Twilio phone number (optional) |
+
+If these are not set, enquiries will still be created; notifications will be skipped and stored with status `FAILED` in the DB.
+
 ## Step 4: Set Up Supabase Database (~15 minutes)
 
 1. Go to https://supabase.com

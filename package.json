@@ -21,16 +21,19 @@
     "lucide-react": "^0.294.0",
     "next": "^14.0.4",
     "next-auth": "^4.24.13",
+    "nodemailer": "^7.0.12",
+    "playwright": "^1.40.0",
     "prisma": "^5.7.1",
+    "puppeteer-core": "^21.6.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "tailwind-merge": "^2.1.0",
-    "xlsx": "^0.18.5",
-    "puppeteer-core": "^21.6.0",
-    "playwright": "^1.40.0"
+    "twilio": "^4.23.0",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@types/node": "^20",
+    "@types/nodemailer": "^7.0.4",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "@typescript-eslint/eslint-plugin": "^6.0.0",

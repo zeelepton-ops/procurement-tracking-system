@@ -30,7 +30,7 @@ export default function PreparePO() {
     <div className="max-w-4xl mx-auto p-4">
       <h1 className="text-xl font-bold mb-4">Prepare Purchase Order</h1>
       <div className="mb-4">
-        <label className="block text-sm text-slate-600 mb-1">Items JSON (format: [{"itemKey":"MR-1","qty":10}, ...])</label>
+        <label className="block text-sm text-slate-600 mb-1">Items JSON (format: <code>{`[{"itemKey":"MR-1","qty":10}, ...]`}</code>)</label>
         <textarea value={itemsJson} onChange={(e) => setItemsJson(e.target.value)} className="w-full h-36 border p-2" />
         <div className="mt-2">
           <Button onClick={createPrep} className="bg-blue-600">Create Prep</Button>
