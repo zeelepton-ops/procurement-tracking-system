@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Plus, Package, X, Trash2, Edit } from 'lucide-react'
+import LayoutEditor from '@/components/layout-editor'
 
 interface JobOrder {
   id: string
@@ -940,50 +941,50 @@ export default function JobOrdersPage() {
             <CardContent className="pt-3 text-sm text-slate-800 space-y-3">
               {/* Contact block - line 1 (Details view) */}
               <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-start">
-                <div className="md:col-span-1">
+                <div className="md:col-span-1" data-edit-key="foreman">
                   <div className="text-slate-500 text-xs">Foreman</div>
                   <div className="whitespace-normal">{selectedJob.foreman || '—'}</div>
                 </div>
-                <div className="md:col-span-2">
+                <div className="md:col-span-2" data-edit-key="priority">
                   <div className="text-slate-500 text-xs">Priority</div>
                   <div className="text-sm font-medium">{selectedJob.priority || 'MEDIUM'}</div>
                 </div>
-                <div className="md:col-span-2">
+                <div className="md:col-span-2" data-edit-key="contactPerson">
                   <div className="text-slate-500 text-xs">NBTC's Contact Person</div>
                   <div className="whitespace-normal">{selectedJob.contactPerson || '—'}</div>
                 </div>
-                <div className="md:col-span-2">
+                <div className="md:col-span-2" data-edit-key="phone">
                   <div className="text-slate-500 text-xs">NBTC's Contact Phone No.</div>
                   <div className="whitespace-normal">{selectedJob.phone || '—'}</div>
                 </div>
-                <div className="md:col-span-1">
+                <div className="md:col-span-1" data-edit-key="qaQc">
                   <div className="text-slate-500 text-xs">QA/QC In Charge</div>
                   <div className="whitespace-normal">{selectedJob.qaQcInCharge || '—'}</div>
                 </div>
-                <div className="md:col-span-4">
+                <div className="md:col-span-4" data-edit-key="drawing">
                   <div className="text-slate-500 text-xs">Drawing</div>
                   <div className="truncate">{selectedJob.drawingRef || '—'}</div>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-                <div className="md:col-span-2">
+                <div className="md:col-span-2" data-edit-key="jobNumber">
                   <div className="text-slate-500 text-xs">Job Number</div>
                   <div className="font-semibold whitespace-nowrap">JO-{selectedJob.jobNumber}</div>
                 </div>
-                <div className="md:col-span-4">
+                <div className="md:col-span-4" data-edit-key="client">
                   <div className="text-slate-500 text-xs">Client</div>
                   <div className="whitespace-normal">{selectedJob.clientName || '—'}</div>
                 </div>
-                <div className="md:col-span-2">
+                <div className="md:col-span-2" data-edit-key="lpo">
                   <div className="text-slate-500 text-xs">LPO / Contract</div>
                   <div className="whitespace-normal">{selectedJob.lpoContractNo || '—'}</div>
                 </div>
-                <div className="md:col-span-2">
+                <div className="md:col-span-2" data-edit-key="clientContact">
                   <div className="text-slate-500 text-xs">Client's Contact Person</div>
                   <div className="whitespace-normal">{selectedJob.clientContactPerson || '—'}</div>
                 </div>
-                <div className="md:col-span-2">
+                <div className="md:col-span-2" data-edit-key="clientPhone">
                   <div className="text-slate-500 text-xs">Client's Phone No.</div>
                   <div className="whitespace-normal">{selectedJob.clientContactPhone || '—'}</div>
                 </div>
@@ -1380,6 +1381,9 @@ export default function JobOrdersPage() {
             </Card>
             </div>
           </div>
+        )}
+        {typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('layoutEdit') === '1' && (
+          <LayoutEditor />
         )}
       </div>
     </div>
