@@ -172,8 +172,8 @@ export async function POST(request: Request) {
             await prisma.$executeRaw`CREATE INDEX IF NOT EXISTS "Material Request_requestContext_idx" ON "MaterialRequest"("requestContext")`
           }
           if (missingCol === 'assetId') {
-            await prisma.$executeRaw`ALTER TABLE "MaterialRequest" ADD COLUMN IF NOT EXISTS "assetId" TEXT`
-            -- Note: foreign key to Asset is not added here to avoid failures if Asset table is missing; run full migration in DB later
+            await prisma.$executeRaw`ALTER TABLE "MaterialRequest" ADD COLUMN IF NOT EXISTS "assetId" TEXT`;
+            // Note: foreign key to Asset is not added here to avoid failures if Asset table is missing; run full migration in DB later
           }
           // Retry create once
           materialRequest = await prisma.materialRequest.create({
