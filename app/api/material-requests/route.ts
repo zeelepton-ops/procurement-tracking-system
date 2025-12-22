@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { canEditOrDelete } from '@/lib/permissions'
+import { randomUUID } from 'crypto'
 
 export async function GET(request: Request) {
   try {
@@ -132,10 +133,14 @@ export async function POST(request: Request) {
       inventoryItemId: item.inventoryItemId || null
     })) : undefined
 
+    // Ensure we always provide an id to avoid DB-side missing defaults
+    const explicitId = randomUUID()
+
     let materialRequest: any
     try {
       materialRequest = await prisma.materialRequest.create({
         data: {
+              id: explicitId,
           requestNumber,
           requestContext: body.requestContext,
           jobOrderId: body.jobOrderId || null,
@@ -182,6 +187,7 @@ export async function POST(request: Request) {
           // Retry create once
           materialRequest = await prisma.materialRequest.create({
             data: {
+              id: explicitId,
               requestNumber,
               requestContext: body.requestContext,
               jobOrderId: body.jobOrderId || null,
