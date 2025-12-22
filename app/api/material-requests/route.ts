@@ -152,7 +152,6 @@ export async function POST(request: Request) {
           urgencyLevel: firstItem?.urgencyLevel || body.urgencyLevel || 'NORMAL',
           requestedBy: body.requestedBy,
           createdBy: session?.user?.email || body.requestedBy,
-          status: 'PENDING',
           items: itemsCreate ? { create: itemsCreate } : undefined
         },
         include: {
@@ -199,7 +198,6 @@ export async function POST(request: Request) {
               urgencyLevel: firstItem?.urgencyLevel || body.urgencyLevel || 'NORMAL',
               requestedBy: body.requestedBy,
               createdBy: session?.user?.email || body.requestedBy,
-              status: 'PENDING',
               items: itemsCreate ? { create: itemsCreate } : undefined
             },
             include: {
@@ -210,7 +208,38 @@ export async function POST(request: Request) {
           })
         } catch (innerErr) {
           console.error('Automatic schema fix failed:', innerErr)
-          throw err // rethrow original error to be handled below
+          // If automatic ALTER fails for status, try to create without sending the status property (DB default will apply)
+          if (missingCol === 'status') {
+            try {
+              materialRequest = await prisma.materialRequest.create({
+                data: {
+                  requestNumber,
+                  requestContext: body.requestContext,
+                  jobOrderId: body.jobOrderId || null,
+                  assetId: body.assetId || null,
+                  materialType: body.materialType,
+                  itemName: firstItem?.itemName || body.itemName || 'Multiple Items',
+                  description: firstItem?.description || body.description || 'See items list',
+                  quantity: mainQuantity,
+                  unit: firstItem?.unit || body.unit || 'PCS',
+                  reasonForRequest: firstItem?.reasonForRequest || body.reasonForRequest || 'As required',
+                  requiredDate,
+                  preferredSupplier: firstItem?.preferredSupplier || body.preferredSupplier || null,
+                  stockQtyInInventory: mainStockQty,
+                  urgencyLevel: firstItem?.urgencyLevel || body.urgencyLevel || 'NORMAL',
+                  requestedBy: body.requestedBy,
+                  createdBy: session?.user?.email || body.requestedBy,
+                  items: itemsCreate ? { create: itemsCreate } : undefined
+                },
+                include: { jobOrder: true, asset: true, items: true }
+              })
+            } catch (fallbackErr) {
+              console.error('Fallback create without status also failed:', fallbackErr)
+              throw err // rethrow original error to be handled below
+            }
+          } else {
+            throw err // rethrow original error to be handled below
+          }
         }
       } else {
         throw err
