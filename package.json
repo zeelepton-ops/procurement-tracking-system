@@ -10,7 +10,6 @@
     "postinstall": "prisma generate",
     "test": "vitest"
   },
-  "devDependencies": {
   "dependencies": {
     "@prisma/client": "^5.7.1",
     "@radix-ui/react-label": "^2.1.2",
