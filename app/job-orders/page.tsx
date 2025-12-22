@@ -457,14 +457,14 @@ export default function JobOrdersPage() {
                       className="mt-1 h-9 w-full"
                     />
                   </div>
-                  <div className="md:col-span-2" data-edit-key="priority">
+                  <div className="md:col-span-2 relative" data-edit-key="priority">
                     <Label htmlFor="priority" className="text-sm font-semibold">Priority *</Label>
                     <select
                       id="priority"
                       value={formData.priority}
                       onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
                       required
-                      className="mt-1 h-9 px-3 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="mt-1 h-9 px-2 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full text-sm z-20"
                     >
                       <option value="HIGH">HIGH</option>
                       <option value="MEDIUM">MEDIUM</option>
@@ -515,7 +515,7 @@ export default function JobOrdersPage() {
 
                 {/* Job & Client quick row (line 2) */}
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-                  <div className="md:col-span-2 whitespace-nowrap" data-edit-key="jobNumber">
+                  <div className="md:col-span-2" data-edit-key="jobNumber">
                     <Label htmlFor="jobNumber" className="text-sm font-semibold">Job Number *</Label>
                     <Input
                       id="jobNumber"
@@ -523,7 +523,7 @@ export default function JobOrdersPage() {
                       onChange={(e) => setFormData({ ...formData, jobNumber: e.target.value })}
                       placeholder="e.g., 07439"
                       required
-                      className="mt-1 h-9 whitespace-nowrap max-w-[9ch]"
+                      className="mt-1 h-9 w-full text-sm"
                     />
                   </div>
                   <div className="md:col-span-4" data-edit-key="client">
@@ -1096,7 +1096,7 @@ export default function JobOrdersPage() {
                         value={editFormData.priority}
                         onChange={(e) => setEditFormData({ ...editFormData, priority: e.target.value })}
                         required
-                        className="mt-1 h-9 px-3 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 max-w-[6ch]"
+                        className="mt-1 h-9 px-2 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full text-sm z-20"
                       >
                         <option value="HIGH">HIGH</option>
                         <option value="MEDIUM">MEDIUM</option>
@@ -1144,14 +1144,14 @@ export default function JobOrdersPage() {
                   {/* Job & Client quick row (edit modal) */}
                   <div className="border-t pt-4">
                     <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-                      <div className="md:col-span-1 whitespace-nowrap">
+                      <div className="md:col-span-1">
                         <Label htmlFor="edit-jobNumber" className="text-sm font-semibold">Job Number *</Label>
                         <Input
                           id="edit-jobNumber"
                           value={editFormData.jobNumber}
                           onChange={(e) => setEditFormData({ ...editFormData, jobNumber: e.target.value })}
                           required
-                          className="mt-1 h-9 whitespace-nowrap max-w-[5ch]"
+                          className="mt-1 h-9 w-full text-sm"
                         />
                       </div>
                       <div className="md:col-span-5">
@@ -1161,7 +1161,7 @@ export default function JobOrdersPage() {
                           value={editFormData.clientName}
                           onChange={(e) => setEditFormData({ ...editFormData, clientName: e.target.value })}
                           required
-                          className="mt-1 h-9 max-w-[40ch]"
+                          className="mt-1 h-9 w-full text-sm"
                         />
                       </div>
                       <div className="md:col-span-2">
@@ -1170,7 +1170,7 @@ export default function JobOrdersPage() {
                           id="edit-lpoContractNo"
                           value={editFormData.lpoContractNo}
                           onChange={(e) => setEditFormData({ ...editFormData, lpoContractNo: e.target.value })}
-                          className="mt-1 h-9 max-w-[16ch]"
+                          className="mt-1 h-9 w-full text-sm"
                         />
                       </div>
                       <div className="md:col-span-2">
@@ -1179,7 +1179,7 @@ export default function JobOrdersPage() {
                           id="edit-clientContactPerson"
                           value={editFormData.clientContactPerson}
                           onChange={(e) => setEditFormData({ ...editFormData, clientContactPerson: e.target.value })}
-                          className="mt-1 h-9 max-w-[16ch]"
+                          className="mt-1 h-9 w-full text-sm"
                         />
                       </div>
                       <div className="md:col-span-2">
@@ -1188,7 +1188,7 @@ export default function JobOrdersPage() {
                           id="edit-clientContactPhone"
                           value={editFormData.clientContactPhone}
                           onChange={(e) => setEditFormData({ ...editFormData, clientContactPhone: e.target.value })}
-                          className="mt-1 h-9 max-w-[14ch]"
+                          className="mt-1 h-9 w-full text-sm"
                         />
                       </div>
                     </div>
