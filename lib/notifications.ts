@@ -5,22 +5,17 @@ import { prisma } from './prisma'
 type EmailPayload = { to: string; subject: string; text?: string; html?: string; enquiryId?: string; supplierId?: string }
 type SmsPayload = { to: string; body: string; enquiryId?: string; supplierId?: string }
 
-type NotificationRecordInput = {
-  enquiryId?: string | null
-  supplierId?: string | null
-  channel: string
-  to: string
-  status?: string
-  providerResult?: unknown
-}
+import type { Prisma } from '@prisma/client'
+
+type NotificationRecordInput = Prisma.NotificationCreateInput | Prisma.NotificationUncheckedCreateInput
 
 async function createNotificationRecord(data: NotificationRecordInput) {
-  return prisma.notification.create({ data })
+  return prisma.notification.create({ data: data as Prisma.NotificationCreateInput })
 }
 
 export async function sendEmail(payload: EmailPayload): Promise<{ success: boolean; info?: unknown; error?: string }> {
   const { to, subject, text, html, enquiryId, supplierId } = payload
-  const record = await createNotificationRecord({ enquiryId: enquiryId ?? null, supplierId: supplierId ?? null, channel: 'EMAIL', to })
+  const record = await createNotificationRecord({ enquiryId: enquiryId ?? undefined, supplierId: supplierId ?? undefined, channel: 'EMAIL', to })
 
   // Check SMTP config
   const host = process.env.SMTP_HOST
@@ -48,7 +43,7 @@ export async function sendEmail(payload: EmailPayload): Promise<{ success: boole
 
 export async function sendSms(payload: SmsPayload): Promise<{ success: boolean; info?: unknown; error?: string }> {
   const { to, body, enquiryId, supplierId } = payload
-  const record = await createNotificationRecord({ enquiryId: enquiryId ?? null, supplierId: supplierId ?? null, channel: 'SMS', to })
+  const record = await createNotificationRecord({ enquiryId: enquiryId ?? undefined, supplierId: supplierId ?? undefined, channel: 'SMS', to })
 
   const sid = process.env.TWILIO_SID
   const token = process.env.TWILIO_TOKEN

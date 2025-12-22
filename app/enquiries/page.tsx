@@ -106,9 +106,9 @@ export default function EnquiriesPage() {
       alert('Failed to submit response')
       return
     }
-    const resp = await r.json() as EnquiryResponse
-    setResponses([resp, ...responses])
-    (e.currentTarget as HTMLFormElement).reset()
+    const resp = await r.json() as EnquiryResponse;
+    setResponses([resp, ...responses]);
+    (e.currentTarget as HTMLFormElement).reset();
   }
 
   return (
