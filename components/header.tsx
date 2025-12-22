@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { useSession, signOut } from 'next-auth/react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -9,6 +10,7 @@ import { Package, FileText, BarChart3, LogOut, Briefcase, Users, Boxes } from 'l
 export default function Header() {
   const { data: session } = useSession()
   const pathname = usePathname()
+  const [openIndex, setOpenIndex] = useState<number | null>(null)
 
   if (!session || pathname === '/login') {
     return null
@@ -17,10 +19,16 @@ export default function Header() {
   const navItems = [
     { href: '/dashboard', label: 'Dashboard', icon: BarChart3 },
     { href: '/job-orders', label: 'Job Orders', icon: Briefcase },
-    { href: '/material-request', label: 'Material Requests', icon: FileText },
-    { href: '/procurement', label: 'Procurement', icon: Package },
-    { href: '/purchase-orders/prepare', label: 'Purchase Orders', icon: FileText },
-    { href: '/suppliers', label: 'Suppliers', icon: Users },
+    {
+      href: '/procurement',
+      label: 'Procurement',
+      icon: Package,
+      children: [
+        { href: '/material-request', label: 'Material Requests', icon: FileText },
+        { href: '/purchase-orders/prepare', label: 'Purchase Orders', icon: FileText },
+        { href: '/suppliers', label: 'Suppliers', icon: Users },
+      ]
+    },
     { href: '/store', label: 'Store', icon: Boxes },
   ]
 
@@ -45,9 +53,42 @@ export default function Header() {
             </Link>
 
             <nav className="flex gap-1 ml-4">
-              {navItems.map((item) => {
+              {navItems.map((item, idx) => {
                 const Icon = item.icon
-                const isActive = pathname === item.href
+                const isActive = pathname === item.href || (item.children && item.children.some((c: any) => pathname === c.href))
+
+                if (item.children) {
+                  return (
+                    <div key={item.href} className="relative" onMouseLeave={() => setOpenIndex(null)}>
+                      <button
+                        onClick={() => setOpenIndex(openIndex === idx ? null : idx)}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap ${
+                          isActive ? 'bg-blue-100 text-blue-700 font-medium' : 'text-slate-600 hover:bg-slate-100'
+                        }`}
+                      >
+                        <Icon className="h-4 w-4 flex-shrink-0" />
+                        <span className="text-sm">{item.label}</span>
+                      </button>
+
+                      {openIndex === idx && (
+                        <div className="absolute left-0 mt-1 bg-white border rounded shadow-md z-50 min-w-[200px]">
+                          {item.children.map((child: any) => {
+                            const ChildIcon = child.icon
+                            return (
+                              <Link key={child.href} href={child.href} className={`block px-3 py-2 text-sm text-slate-600 hover:bg-slate-100 ${pathname === child.href ? 'bg-blue-50 text-blue-700 font-medium' : ''}`}>
+                                <div className="flex items-center gap-2">
+                                  {ChildIcon ? <ChildIcon className="h-4 w-4" /> : null}
+                                  <span>{child.label}</span>
+                                </div>
+                              </Link>
+                            )
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )
+                }
+
                 return (
                   <Link
                     key={item.href}
