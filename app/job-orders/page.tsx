@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Plus, Package, X, Trash2, Edit } from 'lucide-react'
-import LayoutEditor from '@/components/layout-editor'
+
 
 interface JobOrder {
   id: string
@@ -457,7 +457,7 @@ export default function JobOrdersPage() {
                       className="mt-1 h-9 w-full"
                     />
                   </div>
-                  <div className="md:col-span-3 relative" data-edit-key="priority">
+                  <div className="md:col-span-2 relative" data-edit-key="priority">
                     <Label htmlFor="priority" className="text-sm font-semibold">Priority *</Label>
                     <select
                       id="priority"
@@ -491,7 +491,7 @@ export default function JobOrdersPage() {
                       className="mt-1 h-9 w-full"
                     />
                   </div>
-                  <div className="md:col-span-1" data-edit-key="qaQc">
+                  <div className="md:col-span-2" data-edit-key="qaQc">
                     <Label htmlFor="qaQcInCharge" className="text-sm font-semibold">QA/QC In Charge</Label>
                     <Input
                       id="qaQcInCharge"
@@ -941,7 +941,7 @@ export default function JobOrdersPage() {
             <CardContent className="pt-3 text-sm text-slate-800 space-y-3">
               {/* Contact block - line 1 (Details view) */}
               <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-start">
-                <div className="md:col-span-1" data-edit-key="foreman">
+                <div className="md:col-span-2" data-edit-key="foreman">
                   <div className="text-slate-500 text-xs">Foreman</div>
                   <div className="whitespace-normal">{selectedJob.foreman || '—'}</div>
                 </div>
@@ -957,11 +957,11 @@ export default function JobOrdersPage() {
                   <div className="text-slate-500 text-xs">NBTC's Contact Phone No.</div>
                   <div className="whitespace-normal">{selectedJob.phone || '—'}</div>
                 </div>
-                <div className="md:col-span-1" data-edit-key="qaQc">
+                <div className="md:col-span-2" data-edit-key="qaQc">
                   <div className="text-slate-500 text-xs">QA/QC In Charge</div>
                   <div className="whitespace-normal">{selectedJob.qaQcInCharge || '—'}</div>
                 </div>
-                <div className="md:col-span-4" data-edit-key="drawing">
+                <div className="md:col-span-2" data-edit-key="drawing">
                   <div className="text-slate-500 text-xs">Drawing</div>
                   <div className="truncate">{selectedJob.drawingRef || '—'}</div>
                 </div>
@@ -1121,7 +1121,7 @@ export default function JobOrdersPage() {
                         className="mt-1 h-9 w-full"
                       />
                     </div>
-                    <div className="md:col-span-1">
+                    <div className="md:col-span-2">
                       <Label htmlFor="edit-qaQcInCharge" className="text-sm font-semibold">QA/QC In Charge</Label>
                       <Input
                         id="edit-qaQcInCharge"
@@ -1382,9 +1382,7 @@ export default function JobOrdersPage() {
             </div>
           </div>
         )}
-        {typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('layoutEdit') === '1' && (
-          <LayoutEditor />
-        )}
+
       </div>
     </div>
   )
