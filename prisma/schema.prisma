@@ -278,8 +278,58 @@ model Supplier {
   rating      Float?
   
   isActive    Boolean  @default(true)
+  paymentTerms String?
+  leadTimeDays Int?
+  defaultCurrency String? @default("QAR")
+  taxId        String?
+  bankDetails  String?
+  website      String?
+  preferred    Boolean @default(false)
+  notes        String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+model PrintTemplate {
+  id          String   @id @default(cuid())
+  name        String
+  entityType  String   // JOB_ORDER | MATERIAL_REQUEST | PURCHASE_ORDER
+  htmlTemplate String
+  mapping     Json?
+  isDefault   Boolean  @default(false)
+  createdBy   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model SupplierPrice {
+  id          String @id @default(cuid())
+  supplierId  String
+  supplier    Supplier @relation(fields: [supplierId], references: [id])
+  itemKey     String  // item code or materialRequestItem id
+  unitPrice   Float
+  currency    String  @default("QAR")
+  effectiveFrom DateTime?
+  createdAt   DateTime @default(now())
+}
+
+model POPreparation {
+  id          String   @id @default(cuid())
+  createdBy   String
+  items       Json     // { itemKey, qty, unit }
+  status      String   @default("DRAFT")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model SupplierQuote {
+  id          String   @id @default(cuid())
+  prepId      String
+  supplierId  String
+  supplier    Supplier @relation(fields: [supplierId], references: [id])
+  quoteJson   String   // JSON of quoted items and prices
+  total       Float
+  createdAt   DateTime @default(now())
 }
 
 model InventoryItem {
