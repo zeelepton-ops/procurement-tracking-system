@@ -21,7 +21,7 @@ export default function LayoutEditor() {
   const [settings, setSettings] = useState<Record<string, number>>({})
   const [exportText, setExportText] = useState('')
 
-  useEffect(() => {
+  const scan = () => {
     const init: Record<string, number> = {}
     FIELDS.forEach((f) => {
       const el = document.querySelector(`[data-edit-key="${f.key}"]`)
@@ -32,6 +32,11 @@ export default function LayoutEditor() {
       }
     })
     setSettings(init)
+    return init
+  }
+
+  useEffect(() => {
+    scan()
   }, [])
 
   const apply = (key: string, value: number) => {
@@ -45,6 +50,9 @@ export default function LayoutEditor() {
       .join(' ')
     eln.classList.add(`md:col-span-${value}`)
     setSettings((s) => ({ ...s, [key]: value }))
+
+    // Ensure the editor knows the current DOM state after applying changes
+    scan()
   }
 
   const increment = (key: string) => {
@@ -90,6 +98,10 @@ export default function LayoutEditor() {
               className="text-xs text-slate-600 hover:text-slate-800"
               onClick={() => { exportChanges() }}
             >Export</button>
+            <button
+              className="text-xs text-slate-600 hover:text-slate-800"
+              onClick={() => scan()}
+            >Refresh</button>
             <button
               className="text-xs text-red-600 hover:text-red-800"
               onClick={() => setOpen(!open)}
