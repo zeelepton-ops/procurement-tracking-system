@@ -25,8 +25,8 @@ export function parseTemplateExcel(buffer: ArrayBuffer) {
   // If no htmlTemplate found, try to construct basic template from first sheet rows
   if (!result.htmlTemplate) {
     // simple fallback: join all rows as lines
-    const data = XLSX.utils.sheet_to_json(templateSheet, { header: 1 })
-    result.htmlTemplate = '<pre>' + data.map((r: any[]) => r.join('\t')).join('\n') + '</pre>'
+    const data: any = XLSX.utils.sheet_to_json(templateSheet, { header: 1 })
+    result.htmlTemplate = '<pre>' + (data as any[]).map((r: any) => Array.isArray(r) ? r.join('\t') : String(r)).join('\n') + '</pre>'
   }
 
   return result
