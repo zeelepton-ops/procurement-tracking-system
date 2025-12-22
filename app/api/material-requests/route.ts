@@ -70,68 +70,88 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions)
-    const body = await request.json()
-    
-    console.log('POST /api/material-requests - Received body:', JSON.stringify(body, null, 2))
-    
-    // Validation relaxed: jobOrderId and assetId are optional during creation; per-item reason/context should be used when appropriate
-    const requestContext = body.requestContext || 'WORKSHOP'
-    
+      const rawBody = await request.json()
+    console.log('POST /api/material-requests - Received body:', JSON.stringify(rawBody, null, 2))
+
+    // Basic validation & sanitization
+    const body = {
+      requestContext: rawBody.requestContext || 'WORKSHOP',
+      jobOrderId: rawBody.jobOrderId || null,
+      assetId: rawBody.assetId || null,
+      materialType: rawBody.materialType || 'RAW_MATERIAL',
+      itemName: rawBody.itemName,
+      description: rawBody.description,
+      quantity: rawBody.quantity,
+      unit: rawBody.unit,
+      reasonForRequest: rawBody.reasonForRequest,
+      requiredDate: rawBody.requiredDate,
+      preferredSupplier: rawBody.preferredSupplier,
+      stockQtyInInventory: rawBody.stockQtyInInventory,
+      urgencyLevel: rawBody.urgencyLevel || 'NORMAL',
+      requestedBy: rawBody.requestedBy || (session?.user?.email ?? 'system'),
+      items: Array.isArray(rawBody.items) ? rawBody.items : []
+    }
+
     // Generate request number
     const count = await prisma.materialRequest.count()
     const requestNumber = `MR-${new Date().getFullYear()}-${String(count + 1).padStart(4, '0')}`
-    
+
     // Use first item as primary or fallback to legacy fields
-    const firstItem = body.items && body.items.length > 0 ? body.items[0] : null
-    
+    const firstItem = body.items.length > 0 ? body.items[0] : null
+
     // Use first item's required date or fallback to legacy field or default to 7 days from now
-    const requiredDate = firstItem?.requiredDate 
+    const requiredDate = firstItem?.requiredDate
       ? new Date(firstItem.requiredDate)
-      : body.requiredDate 
+      : body.requiredDate
         ? new Date(body.requiredDate)
         : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-    
+
     console.log('Creating material request with:', {
       requestNumber,
       jobOrderId: body.jobOrderId,
       hasItems: !!firstItem,
-      itemCount: body.items?.length || 0,
+      itemCount: body.items.length,
       requiredDate
     })
-    
+
+    // Sanitize numeric fields and ensure fallbacks
+    const mainQuantity = firstItem ? (Number(firstItem.quantity) || 0) : (Number(body.quantity) || 1)
+    const mainStockQty = firstItem ? (Number(firstItem.stockQty) || 0) : (Number(body.stockQtyInInventory) || 0)
+
+    // Map items safely
+    const itemsCreate = body.items.length > 0 ? body.items.map((item: any) => ({
+      itemName: item.itemName || 'Unnamed Item',
+      description: item.description || null,
+      quantity: Number(item.quantity) || 0,
+      unit: item.unit || 'PCS',
+      stockQtyInInventory: Number(item.stockQty) || 0,
+      reasonForRequest: item.reasonForRequest || null,
+      urgencyLevel: item.urgencyLevel || 'NORMAL',
+      requiredDate: item.requiredDate ? new Date(item.requiredDate) : null,
+      preferredSupplier: item.preferredSupplier || null,
+      inventoryItemId: item.inventoryItemId || null
+    })) : undefined
+
     const materialRequest = await prisma.materialRequest.create({
       data: {
         requestNumber,
-        requestContext,
+        requestContext: body.requestContext,
         jobOrderId: body.jobOrderId || null,
         assetId: body.assetId || null,
         materialType: body.materialType,
         itemName: firstItem?.itemName || body.itemName || 'Multiple Items',
         description: firstItem?.description || body.description || 'See items list',
-        quantity: firstItem ? parseFloat(firstItem.quantity) : parseFloat(body.quantity || '1'),
+        quantity: mainQuantity,
         unit: firstItem?.unit || body.unit || 'PCS',
         reasonForRequest: firstItem?.reasonForRequest || body.reasonForRequest || 'As required',
         requiredDate,
         preferredSupplier: firstItem?.preferredSupplier || body.preferredSupplier || null,
-        stockQtyInInventory: firstItem ? parseFloat(firstItem.stockQty || '0') : parseFloat(body.stockQtyInInventory || '0'),
+        stockQtyInInventory: mainStockQty,
         urgencyLevel: firstItem?.urgencyLevel || body.urgencyLevel || 'NORMAL',
         requestedBy: body.requestedBy,
         createdBy: session?.user?.email || body.requestedBy,
         status: 'PENDING',
-        items: body.items && body.items.length > 0 ? {
-          create: body.items.map((item: any) => ({
-            itemName: item.itemName,
-            description: item.description,
-            quantity: parseFloat(item.quantity),
-            unit: item.unit,
-            stockQtyInInventory: parseFloat(item.stockQty || '0'),
-            reasonForRequest: item.reasonForRequest || null,
-            urgencyLevel: item.urgencyLevel || 'NORMAL',
-            requiredDate: item.requiredDate ? new Date(item.requiredDate) : null,
-            preferredSupplier: item.preferredSupplier || null,
-            inventoryItemId: item.inventoryItemId || null
-          }))
-        } : undefined
+        items: itemsCreate ? { create: itemsCreate } : undefined
       },
       include: {
         jobOrder: true,

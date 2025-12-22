@@ -19,6 +19,8 @@ export default function Header() {
     { href: '/job-orders', label: 'Job Orders', icon: Briefcase },
     { href: '/material-request', label: 'Material Requests', icon: FileText },
     { href: '/procurement', label: 'Procurement', icon: Package },
+    { href: '/purchase-orders/prepare', label: 'Purchase Orders', icon: FileText },
+    { href: '/suppliers', label: 'Suppliers', icon: Users },
     { href: '/store', label: 'Store', icon: Boxes },
   ]
 
