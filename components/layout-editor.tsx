@@ -39,6 +39,23 @@ export default function LayoutEditor() {
     scan()
   }, [])
 
+  // auto-scan when DOM changes (useful for toggled forms)
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    let timeout: number | undefined
+    const mo = new MutationObserver(() => {
+      if (timeout) window.clearTimeout(timeout)
+      timeout = window.setTimeout(() => {
+        scan()
+      }, 150)
+    })
+    mo.observe(document.body, { childList: true, subtree: true })
+    return () => {
+      mo.disconnect()
+      if (timeout) window.clearTimeout(timeout)
+    }
+  }, [])
+
   const apply = (key: string, value: number) => {
     const el = document.querySelector(`[data-edit-key="${key}"]`)
     if (!el) return
