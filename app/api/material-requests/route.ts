@@ -132,34 +132,86 @@ export async function POST(request: Request) {
       inventoryItemId: item.inventoryItemId || null
     })) : undefined
 
-    const materialRequest = await prisma.materialRequest.create({
-      data: {
-        requestNumber,
-        requestContext: body.requestContext,
-        jobOrderId: body.jobOrderId || null,
-        assetId: body.assetId || null,
-        materialType: body.materialType,
-        itemName: firstItem?.itemName || body.itemName || 'Multiple Items',
-        description: firstItem?.description || body.description || 'See items list',
-        quantity: mainQuantity,
-        unit: firstItem?.unit || body.unit || 'PCS',
-        reasonForRequest: firstItem?.reasonForRequest || body.reasonForRequest || 'As required',
-        requiredDate,
-        preferredSupplier: firstItem?.preferredSupplier || body.preferredSupplier || null,
-        stockQtyInInventory: mainStockQty,
-        urgencyLevel: firstItem?.urgencyLevel || body.urgencyLevel || 'NORMAL',
-        requestedBy: body.requestedBy,
-        createdBy: session?.user?.email || body.requestedBy,
-        status: 'PENDING',
-        items: itemsCreate ? { create: itemsCreate } : undefined
-      },
-      include: {
-        jobOrder: true,
-        asset: true,
-        items: true
+    let materialRequest: any
+    try {
+      materialRequest = await prisma.materialRequest.create({
+        data: {
+          requestNumber,
+          requestContext: body.requestContext,
+          jobOrderId: body.jobOrderId || null,
+          assetId: body.assetId || null,
+          materialType: body.materialType,
+          itemName: firstItem?.itemName || body.itemName || 'Multiple Items',
+          description: firstItem?.description || body.description || 'See items list',
+          quantity: mainQuantity,
+          unit: firstItem?.unit || body.unit || 'PCS',
+          reasonForRequest: firstItem?.reasonForRequest || body.reasonForRequest || 'As required',
+          requiredDate,
+          preferredSupplier: firstItem?.preferredSupplier || body.preferredSupplier || null,
+          stockQtyInInventory: mainStockQty,
+          urgencyLevel: firstItem?.urgencyLevel || body.urgencyLevel || 'NORMAL',
+          requestedBy: body.requestedBy,
+          createdBy: session?.user?.email || body.requestedBy,
+          status: 'PENDING',
+          items: itemsCreate ? { create: itemsCreate } : undefined
+        },
+        include: {
+          jobOrder: true,
+          asset: true,
+          items: true
+        }
+      })
+    } catch (err: any) {
+      // Handle missing-column schema errors by attempting an additive migration
+      if (err?.code === 'P2022' && err?.meta?.column) {
+        const missingCol = String(err.meta.column)
+        console.warn(`Detected missing column ${missingCol} in MaterialRequest; attempting to add it`)
+        try {
+          if (missingCol === 'requestContext') {
+            await prisma.$executeRaw`ALTER TABLE "MaterialRequest" ADD COLUMN IF NOT EXISTS "requestContext" TEXT NOT NULL DEFAULT 'JOB_ORDER'`
+            await prisma.$executeRaw`CREATE INDEX IF NOT EXISTS "Material Request_requestContext_idx" ON "MaterialRequest"("requestContext")`
+          }
+          if (missingCol === 'assetId') {
+            await prisma.$executeRaw`ALTER TABLE "MaterialRequest" ADD COLUMN IF NOT EXISTS "assetId" TEXT`
+            -- Note: foreign key to Asset is not added here to avoid failures if Asset table is missing; run full migration in DB later
+          }
+          // Retry create once
+          materialRequest = await prisma.materialRequest.create({
+            data: {
+              requestNumber,
+              requestContext: body.requestContext,
+              jobOrderId: body.jobOrderId || null,
+              assetId: body.assetId || null,
+              materialType: body.materialType,
+              itemName: firstItem?.itemName || body.itemName || 'Multiple Items',
+              description: firstItem?.description || body.description || 'See items list',
+              quantity: mainQuantity,
+              unit: firstItem?.unit || body.unit || 'PCS',
+              reasonForRequest: firstItem?.reasonForRequest || body.reasonForRequest || 'As required',
+              requiredDate,
+              preferredSupplier: firstItem?.preferredSupplier || body.preferredSupplier || null,
+              stockQtyInInventory: mainStockQty,
+              urgencyLevel: firstItem?.urgencyLevel || body.urgencyLevel || 'NORMAL',
+              requestedBy: body.requestedBy,
+              createdBy: session?.user?.email || body.requestedBy,
+              status: 'PENDING',
+              items: itemsCreate ? { create: itemsCreate } : undefined
+            },
+            include: {
+              jobOrder: true,
+              asset: true,
+              items: true
+            }
+          })
+        } catch (innerErr) {
+          console.error('Automatic schema fix failed:', innerErr)
+          throw err // rethrow original error to be handled below
+        }
+      } else {
+        throw err
       }
-    })
-    
+    }
+
     console.log('Material request created:', materialRequest.id)
     
     // Create status history
