@@ -175,6 +175,11 @@ export async function POST(request: Request) {
             await prisma.$executeRaw`ALTER TABLE "MaterialRequest" ADD COLUMN IF NOT EXISTS "assetId" TEXT`;
             // Note: foreign key to Asset is not added here to avoid failures if Asset table is missing; run full migration in DB later
           }
+          if (missingCol === 'status') {
+            // Add status column with default matching Prisma schema
+            await prisma.$executeRaw`ALTER TABLE "MaterialRequest" ADD COLUMN IF NOT EXISTS "status" TEXT NOT NULL DEFAULT 'PENDING'`
+            await prisma.$executeRaw`CREATE INDEX IF NOT EXISTS "Material Request_status_idx" ON "MaterialRequest"("status")`
+          }
           // Retry create once
           materialRequest = await prisma.materialRequest.create({
             data: {
