@@ -939,16 +939,16 @@ export default function JobOrdersPage() {
             </CardHeader>
             <CardContent className="pt-3 text-sm text-slate-800 space-y-3">
               {/* Contact block - line 1 (Details view) */}
-              <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-                <div className="md:col-span-2">
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-start">
+                <div className="md:col-span-1">
                   <div className="text-slate-500 text-xs">Foreman</div>
                   <div className="whitespace-normal">{selectedJob.foreman || '—'}</div>
                 </div>
-                <div className="md:col-span-1">
+                <div className="md:col-span-2">
                   <div className="text-slate-500 text-xs">Priority</div>
-                  <div className="truncate max-w-[6ch]">{selectedJob.priority || 'MEDIUM'}</div>
+                  <div className="text-sm font-medium">{selectedJob.priority || 'MEDIUM'}</div>
                 </div>
-                <div className="md:col-span-3">
+                <div className="md:col-span-2">
                   <div className="text-slate-500 text-xs">NBTC's Contact Person</div>
                   <div className="whitespace-normal">{selectedJob.contactPerson || '—'}</div>
                 </div>
@@ -956,22 +956,22 @@ export default function JobOrdersPage() {
                   <div className="text-slate-500 text-xs">NBTC's Contact Phone No.</div>
                   <div className="whitespace-normal">{selectedJob.phone || '—'}</div>
                 </div>
-                <div className="md:col-span-3">
+                <div className="md:col-span-1">
                   <div className="text-slate-500 text-xs">QA/QC In Charge</div>
                   <div className="whitespace-normal">{selectedJob.qaQcInCharge || '—'}</div>
                 </div>
-                <div className="md:col-span-1">
+                <div className="md:col-span-4">
                   <div className="text-slate-500 text-xs">Drawing</div>
-                  <div className="whitespace-normal">{selectedJob.drawingRef || '—'}</div>
+                  <div className="truncate">{selectedJob.drawingRef || '—'}</div>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-                <div className="md:col-span-1">
+                <div className="md:col-span-2">
                   <div className="text-slate-500 text-xs">Job Number</div>
                   <div className="font-semibold whitespace-nowrap">JO-{selectedJob.jobNumber}</div>
                 </div>
-                <div className="md:col-span-5">
+                <div className="md:col-span-4">
                   <div className="text-slate-500 text-xs">Client</div>
                   <div className="whitespace-normal">{selectedJob.clientName || '—'}</div>
                 </div>
