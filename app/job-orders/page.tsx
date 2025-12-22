@@ -457,7 +457,7 @@ export default function JobOrdersPage() {
                       className="mt-1 h-9 w-full"
                     />
                   </div>
-                  <div className="md:col-span-2 relative" data-edit-key="priority">
+                  <div className="md:col-span-1 relative" data-edit-key="priority">
                     <Label htmlFor="priority" className="text-sm font-semibold">Priority *</Label>
                     <select
                       id="priority"
@@ -491,7 +491,7 @@ export default function JobOrdersPage() {
                       className="mt-1 h-9 w-full"
                     />
                   </div>
-                  <div className="md:col-span-1" data-edit-key="qaQc">
+                  <div className="md:col-span-2" data-edit-key="qaQc">
                     <Label htmlFor="qaQcInCharge" className="text-sm font-semibold">QA/QC In Charge</Label>
                     <Input
                       id="qaQcInCharge"
@@ -501,7 +501,7 @@ export default function JobOrdersPage() {
                       className="mt-1 h-9 w-full"
                     />
                   </div>
-                  <div className="md:col-span-4" data-edit-key="drawing">
+                  <div className="md:col-span-2" data-edit-key="drawing">
                     <Label htmlFor="drawingRef" className="text-sm font-semibold">Drawing / Enquiry Ref</Label>
                     <Input
                       id="drawingRef"
@@ -515,7 +515,7 @@ export default function JobOrdersPage() {
 
                 {/* Job & Client quick row (line 2) */}
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-                  <div className="md:col-span-2" data-edit-key="jobNumber">
+                  <div className="md:col-span-1" data-edit-key="jobNumber">
                     <Label htmlFor="jobNumber" className="text-sm font-semibold">Job Number *</Label>
                     <Input
                       id="jobNumber"
@@ -1080,7 +1080,7 @@ export default function JobOrdersPage() {
                   <h3 className="text-sm font-bold text-slate-700 mb-3">Client & NBTC Contact Information</h3>
                   {/* Contact block - line 1 (edit modal) */}
                   <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-                    <div className="md:col-span-2">
+                    <div className="md:col-span-1">
                       <Label htmlFor="edit-foreman" className="text-sm font-semibold">Foreman</Label>
                       <Input
                         id="edit-foreman"
@@ -1103,7 +1103,7 @@ export default function JobOrdersPage() {
                         <option value="LOW">LOW</option>
                       </select>
                     </div>
-                    <div className="md:col-span-3">
+                    <div className="md:col-span-2">
                       <Label htmlFor="edit-contactPerson" className="text-sm font-semibold">NBTC's Contact Person</Label>
                       <Input
                         id="edit-contactPerson"
@@ -1121,7 +1121,7 @@ export default function JobOrdersPage() {
                         className="mt-1 h-9 w-full"
                       />
                     </div>
-                    <div className="md:col-span-3">
+                    <div className="md:col-span-2">
                       <Label htmlFor="edit-qaQcInCharge" className="text-sm font-semibold">QA/QC In Charge</Label>
                       <Input
                         id="edit-qaQcInCharge"
@@ -1130,7 +1130,7 @@ export default function JobOrdersPage() {
                         className="mt-1 h-9 w-full"
                       />
                     </div>
-                    <div className="md:col-span-1">
+                    <div className="md:col-span-2">
                       <Label htmlFor="edit-drawingRef" className="text-sm font-semibold">Drawing / Enquiry Ref</Label>
                       <Input
                         id="edit-drawingRef"
@@ -1154,7 +1154,7 @@ export default function JobOrdersPage() {
                           className="mt-1 h-9 w-full text-sm"
                         />
                       </div>
-                      <div className="md:col-span-5">
+                      <div className="md:col-span-4">
                         <Label htmlFor="edit-clientName" className="text-sm font-semibold">Client Name *</Label>
                         <Input
                           id="edit-clientName"
