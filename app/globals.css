@@ -51,6 +51,16 @@ body {
   .text-balance {
     text-wrap: balance;
   }
+
+  /* Utility for clamping text to two lines with ellipsis */
+  .two-line {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: normal;
+  }
 }
 
 @layer base {

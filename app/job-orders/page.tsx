@@ -1019,11 +1019,11 @@ export default function JobOrdersPage() {
                       <tbody className="divide-y">
                         {selectedJob.items.map((item, idx) => (
                           <tr key={item.id || idx} className="hover:bg-slate-50">
-                            <td className="p-2">{item.workDescription}</td>
-                            <td className="p-2 text-right">{item.quantity}</td>
-                            <td className="p-2">{item.unit}</td>
-                            <td className="p-2 text-right">{item.unitPrice.toFixed(2)} QAR</td>
-                            <td className="p-2 text-right font-semibold">{item.totalPrice.toFixed(2)} QAR</td>
+                            <td className="p-2 max-w-[40ch] two-line">{item.workDescription}</td>
+                            <td className="p-2 text-right whitespace-nowrap">{item.quantity}</td>
+                            <td className="p-2 whitespace-nowrap">{item.unit}</td>
+                            <td className="p-2 text-right whitespace-nowrap">{item.unitPrice.toFixed(2)} QAR</td>
+                            <td className="p-2 text-right whitespace-nowrap font-semibold">{item.totalPrice.toFixed(2)} QAR</td>
                           </tr>
                         ))}
                       </tbody>
