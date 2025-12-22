@@ -76,7 +76,14 @@ export default function JobOrdersPage() {
     search: '',
     priority: 'ALL'
   })
+  // pagination
+  const [page, setPage] = useState(1)
+  const [perPage, setPerPage] = useState(20)
+  const [totalCount, setTotalCount] = useState(0)
+
   const [selectedJob, setSelectedJob] = useState<JobOrder | null>(null)
+  const [selectedIds, setSelectedIds] = useState<string[]>([])
+  const [draft, setDraft] = useState<any>(null)
   const [formData, setFormData] = useState({
     jobNumber: '',
     productName: '',
@@ -124,21 +131,50 @@ export default function JobOrdersPage() {
   useEffect(() => {
     fetchJobOrders()
     fetchDeletedJobOrders()
+    // restore draft if exists
+    try {
+      const raw = localStorage.getItem('jobOrderDraft')
+      if (raw) setDraft(JSON.parse(raw))
+    } catch (e) {
+      // ignore
+    }
+
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'n' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        const tag = (e.target as HTMLElement).tagName
+        if (tag !== 'INPUT' && tag !== 'TEXTAREA' && !((e.target as HTMLElement).isContentEditable)) {
+          setShowForm(true)
+          setTimeout(() => {
+            const el = document.getElementById('jobNumber') as HTMLInputElement | null
+            if (el) el.focus()
+          }, 120)
+        }
+      }
+    }
+
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
   }, [])
 
-  const filteredOrders = jobOrders.filter((order) => {
-    const matchesSearch = filters.search
-      ? `${order.jobNumber} ${order.productName} ${order.clientName || ''} ${order.foreman || ''}`
-          .toLowerCase()
-          .includes(filters.search.toLowerCase())
-      : true
+  useEffect(() => {
+    // refetch when filters or pagination change
+    fetchJobOrders()
+  }, [filters, page, perPage])
 
-    const matchesPriority = filters.priority === 'ALL'
-      ? true
-      : (order.priority || 'MEDIUM') === filters.priority
+  // Autosave draft locally
+  useEffect(() => {
+    try {
+      const t = window.setTimeout(() => {
+        localStorage.setItem('jobOrderDraft', JSON.stringify(formData))
+      }, 700)
+      return () => window.clearTimeout(t)
+    } catch (e) {
+      // ignore
+    }
+  }, [formData, workItems])
 
-    return matchesSearch && matchesPriority
-  })
+  // server-side filtered/paginated orders
+  const filteredOrders = jobOrders
 
   const addWorkItem = () => {
     setWorkItems([...workItems, { workDescription: '', quantity: 0, unit: 'PCS', unitPrice: 0, totalPrice: 0 }])
@@ -176,23 +212,32 @@ export default function JobOrdersPage() {
 
   const fetchJobOrders = async () => {
     try {
-      const res = await fetch('/api/job-orders')
+      setLoading(true)
+      const params = new URLSearchParams()
+      params.set('page', String(page))
+      params.set('perPage', String(perPage))
+      if (filters.search) params.set('search', filters.search)
+      if (filters.priority && filters.priority !== 'ALL') params.set('priority', filters.priority)
+
+      const res = await fetch(`/api/job-orders?${params.toString()}`)
       if (!res.ok) {
         throw new Error(`Failed to fetch job orders: ${res.status}`)
       }
       const data = await res.json()
-      
-      // Ensure data is an array
-      if (Array.isArray(data)) {
-        setJobOrders(data)
+
+      if (data && Array.isArray(data.jobs)) {
+        setJobOrders(data.jobs)
+        setTotalCount(data.totalCount || 0)
       } else {
         console.error('Invalid response format:', data)
         setJobOrders([])
+        setTotalCount(0)
       }
-      setLoading(false)
     } catch (error) {
       console.error('Failed to fetch job orders:', error)
       setJobOrders([])
+      setTotalCount(0)
+    } finally {
       setLoading(false)
     }
   }
@@ -259,6 +304,7 @@ export default function JobOrdersPage() {
       })
       setWorkItems([{ workDescription: '', quantity: 0, unit: 'PCS', unitPrice: 0, totalPrice: 0 }])
       setShowForm(false)
+      localStorage.removeItem('jobOrderDraft')
       fetchJobOrders()
     } catch (err: any) {
       setError(err.message)
@@ -334,6 +380,12 @@ export default function JobOrdersPage() {
       ? job.items 
       : [{ workDescription: '', quantity: 0, unit: 'PCS', unitPrice: 0, totalPrice: 0 }]
     )
+
+    // focus job number in modal after small delay
+    setTimeout(() => {
+      const el = document.getElementById('edit-jobNumber') as HTMLInputElement | null
+      if (el) el.focus()
+    }, 100)
   }
 
   const handleEditSubmit = async (e: React.FormEvent) => {
@@ -433,6 +485,11 @@ export default function JobOrdersPage() {
               <option value="LOW">Low</option>
             </select>
           </div>
+
+          {/* quick actions */}
+          <div className="flex items-end justify-end gap-2">
+            <div className="text-xs text-slate-500">Shortcuts: Press <span className="font-mono">n</span> to open New Job</div>
+          </div>
         </div>
 
         {/* Create Form */}
@@ -444,6 +501,31 @@ export default function JobOrdersPage() {
             </CardHeader>
             <CardContent className="pt-4">
               <form onSubmit={handleSubmit} className="space-y-4">
+                {draft && (
+                  <div className="bg-yellow-50 border border-yellow-200 p-3 rounded text-sm flex items-center justify-between">
+                    <div>Draft job saved locally. You can restore it or continue a new form.</div>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        className="text-xs bg-blue-600 text-white px-3 py-1 rounded"
+                        onClick={() => {
+                          setFormData(draft)
+                          setDraft(null)
+                          localStorage.removeItem('jobOrderDraft')
+                        }}
+                      >Restore</button>
+                      <button
+                        type="button"
+                        className="text-xs bg-slate-100 px-3 py-1 rounded"
+                        onClick={() => {
+                          setDraft(null)
+                          localStorage.removeItem('jobOrderDraft')
+                        }}
+                      >Discard</button>
+                    </div>
+                  </div>
+                )}
+
                 <h3 className="text-sm font-bold text-slate-700 mb-3">Client & NBTC Contact Information</h3>
                 {/* Contact block - line 1 (Foreman, Priority, NBTC contact + phone, QA/QC, Drawing) */}
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
@@ -789,14 +871,61 @@ export default function JobOrdersPage() {
           ) : (
             <Card className="border border-slate-200">
               <CardHeader className="py-2">
-                <div className="grid grid-cols-12 gap-2 text-[11px] font-semibold text-slate-600">
-                  <div className="col-span-2">Job # / Priority</div>
-                  <div className="col-span-4">Description</div>
-                  <div className="col-span-2">Client / Foreman</div>
-                  <div className="col-span-2">Created</div>
-                  <div className="col-span-1 text-right">Materials</div>
-                  <div className="col-span-1 text-right">Actions</div>
-                </div>
+                {selectedIds.length > 0 ? (
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm font-medium">{selectedIds.length} selected</div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        className="text-xs bg-blue-600 text-white px-3 py-1 rounded"
+                        onClick={async () => {
+                          // Export selected
+                          const ids = selectedIds.join(',')
+                          const res = await fetch(`/api/job-orders?export=csv&ids=${ids}`)
+                          const blob = await res.blob()
+                          const url = URL.createObjectURL(blob)
+                          const a = document.createElement('a')
+                          a.href = url
+                          a.download = 'job-orders-selected.csv'
+                          document.body.appendChild(a)
+                          a.click()
+                          a.remove()
+                          URL.revokeObjectURL(url)
+                        }}
+                      >Export CSV</button>
+                      <button
+                        className="text-xs bg-red-600 text-white px-3 py-1 rounded"
+                        onClick={async () => {
+                          if (!confirm(`Delete ${selectedIds.length} selected job(s)?`)) return
+                          const res = await fetch(`/api/job-orders?ids=${selectedIds.join(',')}`, { method: 'DELETE' })
+                          const data = await res.json()
+                          alert(data.message || data.error || 'Done')
+                          setSelectedIds([])
+                          fetchJobOrders()
+                          fetchDeletedJobOrders()
+                        }}
+                      >Delete</button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-12 gap-2 text-[11px] font-semibold text-slate-600">
+                    <div className="col-span-2 flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.length === jobOrders.length && jobOrders.length > 0}
+                        onChange={(e) => {
+                          if (e.target.checked) setSelectedIds(jobOrders.map(j => j.id))
+                          else setSelectedIds([])
+                        }}
+                      />
+                      <span>Job # / Priority</span>
+                    </div>
+                    <div className="col-span-4">Description</div>
+                    <div className="col-span-2">Client / Foreman</div>
+                    <div className="col-span-2">Created</div>
+                    <div className="col-span-1 text-right">Materials</div>
+                    <div className="col-span-1 text-right">Actions</div>
+                  </div>
+                )}
               </CardHeader>
               <CardContent className="p-0">
                 <div className="divide-y divide-slate-200">
@@ -807,6 +936,17 @@ export default function JobOrdersPage() {
                       onClick={() => setSelectedJob(order)}
                     >
                       <div className="col-span-2 flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.includes(order.id)}
+                          onChange={(e) => {
+                            e.stopPropagation()
+                            if (e.target.checked) setSelectedIds((s) => [...s, order.id])
+                            else setSelectedIds((s) => s.filter(id => id !== order.id))
+                          }}
+                          className="mr-2"
+                          onClick={(e) => e.stopPropagation()}
+                        />
                         <div className={`text-[11px] px-2 py-0.5 rounded-full font-semibold ${
                           order.priority === 'HIGH' ? 'bg-red-100 text-red-700' :
                           order.priority === 'MEDIUM' ? 'bg-yellow-100 text-yellow-700' :
@@ -872,6 +1012,22 @@ export default function JobOrdersPage() {
               </CardContent>
             </Card>
           )}
+
+          {/* Pagination */}
+          <div className="mt-3 flex items-center justify-between">
+            <div className="text-sm text-slate-600">{`Showing ${(page-1)*perPage+1} - ${Math.min(page*perPage, totalCount)} of ${totalCount}`}</div>
+            <div className="flex items-center gap-2">
+              <button className="px-2 py-1 text-sm border rounded" onClick={() => setPage((p) => Math.max(1, p-1))} disabled={page===1}>Prev</button>
+              <div className="text-sm">Page {page} / {Math.max(1, Math.ceil(totalCount / perPage))}</div>
+              <button className="px-2 py-1 text-sm border rounded" onClick={() => setPage((p) => Math.min(Math.ceil(totalCount / perPage), p+1))} disabled={page===Math.ceil(totalCount / perPage)}>Next</button>
+              <select className="ml-3 border px-2 py-1 text-sm" value={perPage} onChange={(e) => { setPerPage(parseInt(e.target.value)); setPage(1) }}>
+                <option value={10}>10</option>
+                <option value={20}>20</option>
+                <option value={50}>50</option>
+              </select>
+            </div>
+          </div>
+
         </div>
 
         {/* Deleted Job Orders Section */}

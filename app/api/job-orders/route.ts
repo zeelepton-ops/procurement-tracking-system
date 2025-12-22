@@ -31,22 +31,58 @@ export async function GET(request: Request) {
 
     // Include soft-deleted if requested
     const includeDeleted = searchParams.get('includeDeleted') === 'true'
-    const whereClause = includeDeleted ? {} : { isDeleted: false }
+    const page = parseInt(searchParams.get('page') || '1', 10)
+    const perPage = Math.min(100, parseInt(searchParams.get('perPage') || '20', 10))
+    const search = searchParams.get('search') || ''
+    const priority = searchParams.get('priority') || ''
+
+    // Build where clause
+    const whereClause: any = includeDeleted ? {} : { isDeleted: false }
+    if (priority && priority !== 'ALL') {
+      whereClause.priority = priority
+    }
+    if (search) {
+      whereClause.OR = [
+        { jobNumber: { contains: search, mode: 'insensitive' } },
+        { productName: { contains: search, mode: 'insensitive' } },
+        { clientName: { contains: search, mode: 'insensitive' } },
+        { foreman: { contains: search, mode: 'insensitive' } }
+      ]
+    }
+
+    // Export CSV if requested
+    if (searchParams.get('export') === 'csv') {
+      const idsParam = searchParams.get('ids')
+      const ids = idsParam ? idsParam.split(',').filter(Boolean) : null
+      const jobsToExport = ids && ids.length > 0
+        ? await prisma.jobOrder.findMany({ where: { id: { in: ids } }, include: { items: true } })
+        : await prisma.jobOrder.findMany({ where: whereClause, include: { items: true }, orderBy: { createdAt: 'desc' } })
+
+      const { jobOrdersToCSV } = await import('@/lib/csv')
+      const csv = jobOrdersToCSV(jobsToExport)
+      return new NextResponse(csv, {
+        status: 200,
+        headers: {
+          'Content-Type': 'text/csv',
+          'Content-Disposition': 'attachment; filename="job-orders-export.csv"'
+        }
+      })
+    }
+
+    const totalCount = await prisma.jobOrder.count({ where: whereClause })
 
     const jobOrders = await prisma.jobOrder.findMany({
       where: whereClause,
-      orderBy: {
-        createdAt: 'desc'
-      },
+      orderBy: { createdAt: 'desc' },
+      skip: (page - 1) * perPage,
+      take: perPage,
       include: {
-        _count: {
-          select: { materialRequests: true }
-        },
+        _count: { select: { materialRequests: true } },
         items: true
       }
     })
-    
-    return NextResponse.json(jobOrders || [])
+
+    return NextResponse.json({ jobs: jobOrders || [], totalCount })
   } catch (error) {
     console.error('Failed to fetch job orders:', error)
     // Return empty array on error instead of 500
@@ -283,6 +319,63 @@ export async function DELETE(request: Request) {
     }
 
     const { searchParams } = new URL(request.url)
+    const idsParam = searchParams.get('ids')
+
+    if (idsParam) {
+      const ids = idsParam.split(',').filter(Boolean)
+      if (ids.length === 0) {
+        return NextResponse.json({ error: 'No IDs provided' }, { status: 400 })
+      }
+
+      // Fetch jobs and check permissions
+      const jobs = await prisma.jobOrder.findMany({ where: { id: { in: ids } }, select: { id: true, jobNumber: true, isDeleted: true, createdAt: true } })
+      const userRole = session.user.role || 'USER'
+      const forbidden = jobs.filter(j => !canEditOrDelete(j.createdAt, userRole)).map(j => j.id)
+      if (forbidden.length > 0) {
+        return NextResponse.json({ error: 'Permission denied for some job orders', forbidden }, { status: 403 })
+      }
+
+      const deletionDate = new Date()
+      const ops: any[] = []
+
+      for (const j of jobs) {
+        if (j.isDeleted) continue
+
+        // Collect material requests
+        const materialRequests = await prisma.materialRequest.findMany({ where: { jobOrderId: j.id }, select: { id: true, status: true } })
+
+        // Append receipts updates
+        const receipts = await prisma.materialReceipt.findMany({
+          where: {
+            purchaseOrderItem: {
+              materialRequest: {
+                jobOrderId: j.id
+              }
+            }
+          },
+          select: { id: true, notes: true }
+        })
+
+        const deletionNote = `Linked job order ${j.jobNumber} deleted on ${deletionDate.toISOString()}. Materials and requests remain for traceability.`
+
+        receipts.forEach((receipt) => {
+          ops.push(prisma.materialReceipt.update({ where: { id: receipt.id }, data: { notes: receipt.notes ? `${receipt.notes}\n${deletionNote}` : deletionNote } }))
+        })
+
+        materialRequests.forEach((mr) => {
+          ops.push(prisma.statusHistory.create({ data: { materialRequestId: mr.id, oldStatus: mr.status, newStatus: mr.status, changedBy: 'system', notes: deletionNote } }))
+        })
+
+        ops.push(prisma.jobOrder.update({ where: { id: j.id }, data: { isDeleted: true, deletedAt: deletionDate, deletedBy: session.user.email } }))
+      }
+
+      if (ops.length > 0) {
+        await prisma.$transaction(ops)
+      }
+
+      return NextResponse.json({ message: 'Selected job orders deleted (soft delete).' })
+    }
+
     const id = searchParams.get('id')
 
     if (!id) {
