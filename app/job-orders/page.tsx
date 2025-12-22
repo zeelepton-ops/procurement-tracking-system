@@ -892,7 +892,9 @@ export default function JobOrdersPage() {
                         foreman: '',
                         workScope: '',
                         scopeOfWorks: [],
-                        qaQcInCharge: ''
+                        qaQcInCharge: '',
+                        discount: 0,
+                        roundOff: 0
                       })
                     }}
                   >
