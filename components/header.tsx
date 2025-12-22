@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useSession, signOut } from 'next-auth/react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -11,6 +11,7 @@ export default function Header() {
   const { data: session } = useSession()
   const pathname = usePathname()
   const [openIndex, setOpenIndex] = useState<number | null>(null)
+  const closeTimeoutRef = useRef<number | null>(null)
 
   if (!session || pathname === '/login') {
     return null
@@ -59,9 +60,23 @@ export default function Header() {
 
                 if (item.children) {
                   return (
-                    <div key={item.href} className="relative" onMouseLeave={() => setOpenIndex(null)}>
+                    <div
+                      key={item.href}
+                      className="relative"
+                      onMouseEnter={() => {
+                        if (closeTimeoutRef.current) {
+                          clearTimeout(closeTimeoutRef.current)
+                          closeTimeoutRef.current = null
+                        }
+                        setOpenIndex(idx)
+                      }}
+                      onMouseLeave={() => {
+                        closeTimeoutRef.current = window.setTimeout(() => setOpenIndex(null), 150)
+                      }}
+                    >
                       <button
                         onClick={() => setOpenIndex(openIndex === idx ? null : idx)}
+                        aria-expanded={openIndex === idx}
                         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap ${
                           isActive ? 'bg-blue-100 text-blue-700 font-medium' : 'text-slate-600 hover:bg-slate-100'
                         }`}
@@ -71,7 +86,18 @@ export default function Header() {
                       </button>
 
                       {openIndex === idx && (
-                        <div className="absolute left-0 mt-1 bg-white border rounded shadow-md z-50 min-w-[200px]">
+                        <div
+                          className="absolute right-0 top-full mt-1 bg-white border rounded shadow-md z-50 min-w-[200px]"
+                          onMouseEnter={() => {
+                            if (closeTimeoutRef.current) {
+                              clearTimeout(closeTimeoutRef.current)
+                              closeTimeoutRef.current = null
+                            }
+                          }}
+                          onMouseLeave={() => {
+                            closeTimeoutRef.current = window.setTimeout(() => setOpenIndex(null), 150)
+                          }}
+                        >
                           {item.children.map((child: any) => {
                             const ChildIcon = child.icon
                             return (
