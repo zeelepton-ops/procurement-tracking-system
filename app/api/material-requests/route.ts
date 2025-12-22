@@ -214,16 +214,20 @@ export async function POST(request: Request) {
 
     console.log('Material request created:', materialRequest.id)
     
-    // Create status history
-    await prisma.statusHistory.create({
-      data: {
-        materialRequestId: materialRequest.id,
-        oldStatus: '',
-        newStatus: 'PENDING',
-        changedBy: body.requestedBy,
-        notes: 'Material request created'
-      }
-    })
+    // Create status history (non-blocking: don't fail the request if history insert fails)
+    try {
+      await prisma.statusHistory.create({
+        data: {
+          materialRequestId: materialRequest.id,
+          oldStatus: '',
+          newStatus: 'PENDING',
+          changedBy: body.requestedBy,
+          notes: 'Material request created'
+        }
+      })
+    } catch (histErr) {
+      console.warn('Failed to create status history (non-fatal):', histErr)
+    }
     
     return NextResponse.json(materialRequest, { status: 201 })
   } catch (error) {
