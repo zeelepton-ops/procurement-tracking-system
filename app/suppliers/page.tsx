@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useSession } from 'next-auth/react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -10,6 +11,8 @@ export default function SuppliersPage() {
   const [loading, setLoading] = useState(true)
   const [form, setForm] = useState<any>({ name: '', contactPerson: '', email: '', phone: '', address: '', paymentTerms: '', leadTimeDays: 0 })
   const [editingId, setEditingId] = useState<string | null>(null)
+  const { data: session } = useSession()
+  const [approval, setApproval] = useState<{ open: boolean; supplier: any | null; notes: string }>({ open: false, supplier: null, notes: '' })
 
   useEffect(() => { fetchSuppliers() }, [])
 
@@ -51,7 +54,14 @@ export default function SuppliersPage() {
 
   return (
     <div className="max-w-4xl mx-auto p-4">
-      <h1 className="text-xl font-bold mb-4">Suppliers</h1>
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-xl font-bold">Suppliers</h1>
+        <div className="flex gap-2">
+          <Button onClick={() => window.location.href = '/suppliers/register'}>Register Supplier</Button>
+          <Button onClick={fetchSuppliers} variant="outline">Refresh</Button>
+        </div>
+      </div>
+
       <form onSubmit={save} className="grid grid-cols-1 md:grid-cols-3 gap-2 mb-4">
         <Input placeholder="Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
         <Input placeholder="Contact person" value={form.contactPerson} onChange={(e) => setForm({ ...form, contactPerson: e.target.value })} />
@@ -70,15 +80,38 @@ export default function SuppliersPage() {
           {suppliers.map(s => (
             <div key={s.id} className="border p-3 rounded flex items-center justify-between">
               <div>
-                <div className="font-semibold">{s.name}</div>
+                <div className="font-semibold">{s.name} {s.tradingName ? `(${s.tradingName})` : ''} {s.status ? <span className="ml-2 px-2 py-0.5 rounded bg-slate-100 text-sm">{s.status}</span> : null}</div>
                 <div className="text-sm text-slate-600">{s.contactPerson} • {s.phone} • {s.email}</div>
               </div>
               <div className="flex gap-2">
+                <Button size="sm" variant="outline" onClick={() => window.location.href = `/suppliers/${s.id}`}>View</Button>
+                {s.status === 'PENDING' && session?.user?.role === 'ADMIN' && <Button size="sm" onClick={() => setApproval({ open: true, supplier: s })}>Approve</Button>}
                 <Button size="sm" variant="outline" onClick={() => edit(s)}>Edit</Button>
                 <Button size="sm" variant="destructive" onClick={() => remove(s.id)}>Delete</Button>
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {approval.open && (
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
+          <div className="bg-white p-4 rounded max-w-md w-full">
+            <h3 className="font-semibold mb-2">Approve supplier</h3>
+            <div className="mb-2">Approve <strong>{approval.supplier?.name}</strong>?</div>
+            <textarea className="w-full border p-2" placeholder="Notes (optional)" value={approval.notes} onChange={(e) => setApproval({ ...approval, notes: e.target.value })}></textarea>
+            <div className="mt-3 flex gap-2 justify-end">
+              <Button variant="outline" onClick={() => setApproval({ open: false, supplier: null, notes: '' })}>Cancel</Button>
+              <Button onClick={async () => {
+                try {
+                  const res = await fetch(`/api/suppliers/${approval.supplier.id}/approve`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'APPROVED', notes: approval.notes }) })
+                  if (!res.ok) throw new Error('Failed')
+                  setApproval({ open: false, supplier: null, notes: '' })
+                  fetchSuppliers()
+                } catch (err) { alert('Failed to approve') }
+              }}>Approve</Button>
+            </div>
+          </div>
         </div>
       )}
     </div>
