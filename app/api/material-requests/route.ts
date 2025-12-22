@@ -5,6 +5,7 @@ import { authOptions } from '@/lib/auth'
 import { canEditOrDelete } from '@/lib/permissions'
 import { randomUUID } from 'crypto'
 
+// Force Prisma Client regeneration on Vercel build
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
