@@ -151,7 +151,6 @@ model MaterialRequestItem {
   preferredSupplier   String?
   inventoryItemId     String?
   inventoryItem       InventoryItem? @relation(fields: [inventoryItemId], references: [id])
-  status              String         @default("PENDING") // "PENDING", "IN_PROCUREMENT", "ORDERED", "PARTIALLY_RECEIVED", "RECEIVED", "CANCELLED"
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
