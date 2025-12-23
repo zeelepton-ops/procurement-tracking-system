@@ -909,222 +909,6 @@ export default function JobOrdersPage() {
           </Card>
         )}
 
-        {/* Job Orders List */}
-        <div className="space-y-2">
-          {filteredOrders.length === 0 ? (
-            <Card>
-              <CardContent className="py-10 text-center text-slate-500">
-                <Package className="h-10 w-10 mx-auto mb-3 text-slate-300" />
-                <p>No job orders found</p>
-                <p className="text-xs mt-1">Adjust filters or create a new job order</p>
-              </CardContent>
-            </Card>
-          ) : (
-            <Card className="border border-slate-200">
-              <CardHeader className="py-2">
-                {selectedIds.length > 0 ? (
-                  <div className="flex items-center justify-between">
-                    <div className="text-sm font-medium">{selectedIds.length} selected</div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        className="text-xs bg-blue-600 text-white px-3 py-1 rounded"
-                        onClick={async () => {
-                          // Export selected
-                          const ids = selectedIds.join(',')
-                          const res = await fetch(`/api/job-orders?export=csv&ids=${ids}`)
-                          const blob = await res.blob()
-                          const url = URL.createObjectURL(blob)
-                          const a = document.createElement('a')
-                          a.href = url
-                          a.download = 'job-orders-selected.csv'
-                          document.body.appendChild(a)
-                          a.click()
-                          a.remove()
-                          URL.revokeObjectURL(url)
-                        }}
-                      >Export CSV</button>
-                      <button
-                        className="text-xs bg-red-600 text-white px-3 py-1 rounded"
-                        onClick={async () => {
-                          if (!confirm(`Delete ${selectedIds.length} selected job(s)?`)) return
-                          const res = await fetch(`/api/job-orders?ids=${selectedIds.join(',')}`, { method: 'DELETE' })
-                          const data = await res.json()
-                          alert(data.message || data.error || 'Done')
-                          setSelectedIds([])
-                          fetchJobOrders()
-                          fetchDeletedJobOrders()
-                        }}
-                      >Delete</button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-12 gap-2 text-[11px] font-semibold text-slate-600">
-                    <div className="col-span-2 flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        checked={selectedIds.length === jobOrders.length && jobOrders.length > 0}
-                        onChange={(e) => {
-                          if (e.target.checked) setSelectedIds(jobOrders.map(j => j.id))
-                          else setSelectedIds([])
-                        }}
-                      />
-                      <span>Job # / Priority</span>
-                    </div>
-                    <div className="col-span-4">Description</div>
-                    <div className="col-span-2">Client / Foreman</div>
-                    <div className="col-span-2">Created</div>
-                    <div className="col-span-1 text-right">Materials</div>
-                    <div className="col-span-1 text-right">Actions</div>
-                  </div>
-                )}
-              </CardHeader>
-              <CardContent className="p-0">
-                <div className="divide-y divide-slate-200">
-                  {filteredOrders.map((order) => (
-                    <div
-                      key={order.id}
-                      className={`grid grid-cols-12 items-center gap-2 px-3 py-2 text-[12px] cursor-pointer hover:bg-blue-50 ${selectedJob?.id === order.id ? 'bg-blue-50' : ''}`}
-                      onClick={() => setSelectedJob(order)}
-                    >
-                      <div className="col-span-2 flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          checked={selectedIds.includes(order.id)}
-                          onChange={(e) => {
-                            e.stopPropagation()
-                            if (e.target.checked) setSelectedIds((s) => [...s, order.id])
-                            else setSelectedIds((s) => s.filter(id => id !== order.id))
-                          }}
-                          className="mr-2"
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                        <div className={`text-[11px] px-2 py-0.5 rounded-full font-semibold ${
-                          order.priority === 'HIGH' ? 'bg-red-100 text-red-700' :
-                          order.priority === 'MEDIUM' ? 'bg-yellow-100 text-yellow-700' :
-                          'bg-green-100 text-green-700'
-                        }`}>
-                          {order.priority || 'MEDIUM'}
-                        </div>
-                        <div className="font-semibold text-slate-900">JO-{order.jobNumber}</div>
-                      </div>
-                      <div className="col-span-4 truncate" title={order.productName}>{order.productName}</div>
-                      <div className="col-span-2 truncate">
-                        {order.clientName && <span className="block text-slate-800 truncate">{order.clientName}</span>}
-                        {order.foreman && <span className="block text-slate-500 truncate">Foreman: {order.foreman}</span>}
-                      </div>
-                      <div className="col-span-2 text-slate-600">
-                        {new Date(order.createdAt).toLocaleDateString()}
-                      </div>
-                      <div className="col-span-1 text-right font-semibold text-blue-700">
-                        {order._count?.materialRequests ?? 0}
-                      </div>
-                      <div className="col-span-1 flex justify-end">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            setDeleteConfirm(order.id)
-                          }}
-                          className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-
-                      {deleteConfirm === order.id && (
-                        <div className="col-span-12 bg-red-50 border border-red-200 rounded px-3 py-2 mt-2" onClick={(e) => e.stopPropagation()}>
-                          <div className="flex items-center justify-between text-[12px] text-red-800">
-                            <p>Delete this job order?</p>
-                            <div className="flex gap-2">
-                              <Button
-                                size="sm"
-                                variant="destructive"
-                                onClick={() => handleDelete(order.id)}
-                                className="h-7 text-xs"
-                              >
-                                Delete
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => setDeleteConfirm(null)}
-                                className="h-7 text-xs"
-                              >
-                                Cancel
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Pagination */}
-          <div className="mt-3 flex items-center justify-between">
-            <div className="text-sm text-slate-600">{`Showing ${(page-1)*perPage+1} - ${Math.min(page*perPage, totalCount)} of ${totalCount}`}</div>
-            <div className="flex items-center gap-2">
-              <button className="px-2 py-1 text-sm border rounded" onClick={() => setPage((p) => Math.max(1, p-1))} disabled={page===1}>Prev</button>
-              <div className="text-sm">Page {page} / {Math.max(1, Math.ceil(totalCount / perPage))}</div>
-              <button className="px-2 py-1 text-sm border rounded" onClick={() => setPage((p) => Math.min(Math.ceil(totalCount / perPage), p+1))} disabled={page===Math.ceil(totalCount / perPage)}>Next</button>
-              <select className="ml-3 border px-2 py-1 text-sm" value={perPage} onChange={(e) => { setPerPage(parseInt(e.target.value)); setPage(1) }}>
-                <option value={10}>10</option>
-                <option value={20}>20</option>
-                <option value={50}>50</option>
-              </select>
-            </div>
-          </div>
-
-        </div>
-
-        {/* Deleted Job Orders Section */}
-        {deletedJobOrders.length > 0 && (
-          <Card className="mt-6 border-amber-200 bg-amber-50">
-            <CardHeader className="py-3 bg-amber-100">
-              <CardTitle className="text-amber-900 text-lg">Deleted Job Orders ({deletedJobOrders.length})</CardTitle>
-              <CardDescription className="text-amber-700">Soft-deleted records that can be restored</CardDescription>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="divide-y divide-amber-200">
-                {deletedJobOrders.map((order) => (
-                  <div
-                    key={order.id}
-                    className="grid grid-cols-12 items-center gap-2 px-3 py-2 text-[12px] hover:bg-amber-100"
-                  >
-                    <div className="col-span-2">
-                      <div className="font-semibold text-amber-900">JO-{order.jobNumber}</div>
-                      <div className="text-[10px] text-amber-700">Deleted</div>
-                    </div>
-                    <div className="col-span-4 truncate text-amber-800">{order.productName}</div>
-                    <div className="col-span-3 truncate text-amber-700">
-                      {order.clientName && <span className="block truncate">{order.clientName}</span>}
-                      {order.foreman && <span className="block text-[11px]">Foreman: {order.foreman}</span>}
-                    </div>
-                    <div className="col-span-2 text-amber-700">
-                      {new Date(order.createdAt).toLocaleDateString()}
-                    </div>
-                    <div className="col-span-1 flex justify-end">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleRestore(order.id)}
-                        disabled={restoring === order.id}
-                        className="h-7 text-[11px] text-green-600 hover:text-green-700 hover:bg-green-50 border-green-300"
-                      >
-                        {restoring === order.id ? 'Restoring...' : 'Restore'}
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
         {/* Selected job details */}
         {selectedJob && (
           <Card className="mt-3 border-blue-100">
@@ -1270,7 +1054,69 @@ export default function JobOrdersPage() {
           </Card>
         )}
 
-        {/* Edit Job Order Modal */}
+        {/* Job Orders List */}
+        <div className="space-y-2">
+          {filteredOrders.length === 0 ? (
+            <Card>
+              <CardContent className="py-10 text-center text-slate-500">
+                <Package className="h-10 w-10 mx-auto mb-3 text-slate-300" />
+                <p>No job orders found</p>
+                <p className="text-xs mt-1">Adjust filters or create a new job order</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card className="border border-slate-200">
+              <CardHeader className="py-2">
+
+        {/* Deleted Job Orders Section */}
+        {deletedJobOrders.length > 0 && (
+          <Card className="mt-6 border-amber-200 bg-amber-50">
+            <CardHeader className="py-3 bg-amber-100">
+              <CardTitle className="text-amber-900 text-lg">Deleted Job Orders ({deletedJobOrders.length})</CardTitle>
+              <CardDescription className="text-amber-700">Soft-deleted records that can be restored</CardDescription>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="divide-y divide-amber-200">
+                {deletedJobOrders.map((order) => (
+                  <div
+                    key={order.id}
+                    className={`grid grid-cols-12 items-center gap-2 px-3 py-2 text-[12px] hover:bg-amber-100 cursor-pointer ${selectedJob?.id === order.id ? 'bg-amber-100' : ''}` }
+                    onClick={() => setSelectedJob(order)}
+                  >
+                    <div className="col-span-2">
+                      <div className="font-semibold text-amber-900">JO-{order.jobNumber}</div>
+                      <div className="text-[10px] text-amber-700">Deleted</div>
+                    </div>
+                    <div className="col-span-4 truncate text-amber-800">{order.productName}</div>
+                    <div className="col-span-3 truncate text-amber-700">
+                      {order.clientName && <span className="block truncate">{order.clientName}</span>}
+                      {order.foreman && <span className="block text-[11px]">Foreman: {order.foreman}</span>}
+                    </div>
+                    <div className="col-span-2 text-amber-700">
+                      {new Date(order.createdAt).toLocaleDateString()}
+                    </div>
+                    <div className="col-span-1 flex justify-end">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleRestore(order.id)
+                        }}
+                        disabled={restoring === order.id}
+                        className="h-7 text-[11px] text-green-600 hover:text-green-700 hover:bg-green-50 border-green-300"
+                      >
+                        {restoring === order.id ? 'Restoring...' : 'Restore'}
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+
         {editingJob && (
           <div className="fixed inset-0 bg-black/50 flex items-start justify-center p-4 z-50 overflow-y-auto" onClick={() => setEditingJob(null)}>
             <div className="w-full max-w-5xl my-8" onClick={(e) => e.stopPropagation()}>
