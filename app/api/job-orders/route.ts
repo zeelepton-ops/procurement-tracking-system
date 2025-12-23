@@ -11,10 +11,25 @@ export async function GET(request: Request) {
 
     // Direct lookup by job number (includes soft-deleted) for debugging/resolution
     if (jobNumberParam) {
-      const jo = await prisma.jobOrder.findFirst({
-        where: { jobNumber: jobNumberParam },
-        include: { items: true }
-      })
+      let jo: any = null
+      try {
+        jo = await prisma.jobOrder.findFirst({ where: { jobNumber: jobNumberParam }, include: { items: true } })
+      } catch (err: any) {
+        if (err?.code === 'P2022' && err?.meta?.column) {
+          const col = String(err.meta.column)
+          console.warn(`Detected missing column ${col} in JobOrder during lookup; attempting to add it temporarily`)
+          try {
+            const matches = col.match(/\.(.+)$/)
+            const columnName = matches ? matches[1] : col
+            await prisma.$executeRawUnsafe(`ALTER TABLE "JobOrder" ADD COLUMN IF NOT EXISTS "${columnName}" TEXT`)
+            jo = await prisma.jobOrder.findFirst({ where: { jobNumber: jobNumberParam }, include: { items: true } })
+          } catch (addErr) {
+            console.error('Failed to auto-add missing JobOrder column during lookup:', addErr)
+          }
+        } else {
+          throw err
+        }
+      }
       if (!jo) {
         return NextResponse.json({ message: `Job number '${jobNumberParam}' not found`, found: false }, { status: 404 })
       }
@@ -112,9 +127,30 @@ export async function POST(request: Request) {
       : []
     
     // Check for existing job number (both active and deleted)
-    const existingByNumber = await prisma.jobOrder.findFirst({
-      where: { jobNumber: body.jobNumber }
-    })
+    let existingByNumber: any = null
+    try {
+      existingByNumber = await prisma.jobOrder.findFirst({ where: { jobNumber: body.jobNumber } })
+    } catch (err: any) {
+      // Handle missing column errors (Prisma P2022) by adding the column and retrying once
+      if (err?.code === 'P2022' && err?.meta?.column) {
+        const col = String(err.meta.column)
+        console.warn(`Detected missing column ${col} in JobOrder; attempting to add it temporarily`)
+        try {
+          // Extract column name after the dot if formatted like 'JobOrder.clientContactPerson'
+          const matches = col.match(/\.(.+)$/)
+          const columnName = matches ? matches[1] : col
+          // Add as nullable TEXT to avoid breaking existing rows
+          await prisma.$executeRawUnsafe(`ALTER TABLE "JobOrder" ADD COLUMN IF NOT EXISTS "${columnName}" TEXT`)
+          // Retry the findFirst once
+          existingByNumber = await prisma.jobOrder.findFirst({ where: { jobNumber: body.jobNumber } })
+        } catch (addErr) {
+          console.error('Failed to auto-add missing JobOrder column:', addErr)
+          // proceed without existingByNumber, creation will attempt to continue
+        }
+      } else {
+        throw err
+      }
+    }
 
     // If job exists and is ACTIVE (not deleted), reject it
     if (existingByNumber && !existingByNumber.isDeleted) {
