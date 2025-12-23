@@ -85,8 +85,8 @@ export async function GET(request: Request) {
     return NextResponse.json({ jobs: jobOrders || [], totalCount })
   } catch (error) {
     console.error('Failed to fetch job orders:', error)
-    // Return empty array on error instead of 500
-    return NextResponse.json([], { status: 200 })
+    // Return proper format to avoid parsing errors on frontend
+    return NextResponse.json({ jobs: [], totalCount: 0 }, { status: 200 })
   }
 }
 

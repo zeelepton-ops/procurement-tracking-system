@@ -256,14 +256,17 @@ export default function JobOrdersPage() {
       }
       const data = await res.json()
       
-      // Filter only deleted jobs
+      // Handle both array and object formats from API
+      let allJobs: JobOrder[] = []
       if (Array.isArray(data)) {
-        const deleted = data.filter((job: JobOrder) => (job as any).isDeleted)
-        setDeletedJobOrders(deleted)
-      } else {
-        console.error('Invalid response format:', data)
-        setDeletedJobOrders([])
+        allJobs = data
+      } else if (data && data.jobs && Array.isArray(data.jobs)) {
+        allJobs = data.jobs
       }
+      
+      // Filter only deleted jobs
+      const deleted = allJobs.filter((job: JobOrder) => job.isDeleted)
+      setDeletedJobOrders(deleted)
     } catch (error) {
       console.error('Failed to fetch deleted job orders:', error)
       setDeletedJobOrders([])
