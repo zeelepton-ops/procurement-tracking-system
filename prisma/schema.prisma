@@ -148,6 +148,10 @@ model MaterialRequestItem {
   reasonForRequest    String?
   urgencyLevel        String         @default("NORMAL")
   requiredDate        DateTime?
+  
+  isDeleted    Boolean   @default(false)
+  deletedAt    DateTime?
+  deletedBy    String?
   preferredSupplier   String?
   inventoryItemId     String?
   inventoryItem       InventoryItem? @relation(fields: [inventoryItemId], references: [id])

@@ -35,7 +35,7 @@ export async function GET(request: Request) {
       // Fetch items and actions separately for each request
       const enrichedRequests = await Promise.all((requests as any[]).map(async (req: any) => {
         const items = await prisma.materialRequestItem.findMany({
-          where: { materialRequestId: req.id }
+          where: { materialRequestId: req.id, isDeleted: false }
         })
         const procurementActions = await prisma.procurementAction.findMany({
           where: { materialRequestId: req.id },
@@ -521,9 +521,14 @@ export async function PUT(request: Request) {
 
     // Update material request and items in a transaction
     const updated = await prisma.$transaction(async (tx) => {
-      // Delete existing items
-      await tx.materialRequestItem.deleteMany({
-        where: { materialRequestId: id }
+      // Soft-delete existing items instead of hard delete
+      await tx.materialRequestItem.updateMany({
+        where: { materialRequestId: id, isDeleted: false },
+        data: {
+          isDeleted: true,
+          deletedAt: new Date(),
+          deletedBy: session?.user?.email || 'unknown'
+        }
       })
 
       // Update material request with new data
