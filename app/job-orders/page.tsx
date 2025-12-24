@@ -453,6 +453,24 @@ export default function JobOrdersPage() {
     }, 100)
   }
 
+  const handleSelectJob = async (jobNumber: string, fallback?: any) => {
+    try {
+      const res = await fetch(`/api/job-orders?jobNumber=${encodeURIComponent(jobNumber)}`)
+      if (res.ok) {
+        const data = await res.json()
+        if (data?.found && data?.data) {
+          setSelectedJob(data.data)
+          return
+        }
+      }
+    } catch (err) {
+      console.error('Failed to fetch job details for', jobNumber, err)
+    }
+
+    // Fallback to provided object or clear selection
+    if (fallback) setSelectedJob(fallback)
+  }
+
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!editingJob) return
@@ -1053,7 +1071,7 @@ export default function JobOrdersPage() {
                     <div
                       key={order.id}
                       className={`grid grid-cols-12 items-center gap-2 px-3 py-2 text-[12px] cursor-pointer hover:bg-blue-50 ${selectedJob?.id === order.id ? 'bg-blue-50' : ''}`}
-                      onClick={() => setSelectedJob(order)}
+                      onClick={() => handleSelectJob(order.jobNumber, order)}
                     >
                       <div className="col-span-2 flex items-center gap-2">
                         <input
@@ -1291,7 +1309,7 @@ export default function JobOrdersPage() {
                   <div
                     key={order.id}
                     className={`grid grid-cols-12 items-center gap-2 px-3 py-2 text-[12px] hover:bg-amber-100 cursor-pointer ${selectedJob?.id === order.id ? 'bg-amber-100' : ''}` }
-                    onClick={() => setSelectedJob(order)}
+                    onClick={() => handleSelectJob(order.jobNumber, order)}
                   >
                     <div className="col-span-2">
                       <div className="font-semibold text-amber-900">JO-{order.jobNumber}</div>
