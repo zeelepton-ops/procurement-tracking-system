@@ -1236,7 +1236,7 @@ export default function JobOrdersPage() {
               </div> 
 
               {/* Work Items Table */}
-              {selectedJob.items && selectedJob.items.length > 0 && (
+              {selectedJob.items && selectedJob.items.length > 0 ? (
                 <div className="border-t pt-3">
                   <div className="text-sm font-semibold text-slate-700 mb-2">Work Items</div>
                   <div className="border rounded-lg overflow-hidden">
@@ -1280,6 +1280,12 @@ export default function JobOrdersPage() {
                         </tr>
                       </tfoot>
                     </table>
+                  </div>
+                </div>
+              ) : (
+                <div className="border-t pt-3">
+                  <div className="bg-amber-50 border border-amber-100 text-amber-900 px-3 py-2 rounded text-sm">
+                    No work items recorded — items with blank Qty and Total are not saved.
                   </div>
                 </div>
               )}
