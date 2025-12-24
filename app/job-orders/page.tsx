@@ -978,151 +978,6 @@ export default function JobOrdersPage() {
           </Card>
         )}
 
-        {/* Selected job details */}
-        {selectedJob && (
-          <Card className="mt-3 border-blue-100">
-            <CardHeader className="py-3 bg-blue-50">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-lg text-blue-900">Job Order Details</CardTitle>
-                  <CardDescription>JO-{selectedJob.jobNumber}</CardDescription>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleEditClick(selectedJob)}
-                  className="h-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                >
-                  <Edit className="h-4 w-4 mr-2" />
-                  Edit
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="pt-3 text-sm text-slate-800 space-y-3">
-              {/* Contact block - line 1 (Details view) */}
-              <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-start">
-                <div className="md:col-span-2" data-edit-key="foreman">
-                  <div className="text-slate-500 text-xs">Foreman</div>
-                  <div className="whitespace-normal">{selectedJob.foreman || '—'}</div>
-                </div>
-                <div className="md:col-span-2" data-edit-key="priority">
-                  <div className="text-slate-500 text-xs">Priority</div>
-                  <div className="text-sm font-medium">{selectedJob.priority || 'MEDIUM'}</div>
-                </div>
-                <div className="md:col-span-2" data-edit-key="contactPerson">
-                  <div className="text-slate-500 text-xs">NBTC's Contact Person</div>
-                  <div className="whitespace-normal">{selectedJob.contactPerson || '—'}</div>
-                </div>
-                <div className="md:col-span-2" data-edit-key="phone">
-                  <div className="text-slate-500 text-xs">NBTC's Contact Phone No.</div>
-                  <div className="whitespace-normal">{selectedJob.phone || '—'}</div>
-                </div>
-                <div className="md:col-span-2" data-edit-key="qaQc">
-                  <div className="text-slate-500 text-xs">QA/QC In Charge</div>
-                  <div className="whitespace-normal">{selectedJob.qaQcInCharge || '—'}</div>
-                </div>
-                <div className="md:col-span-2" data-edit-key="drawing">
-                  <div className="text-slate-500 text-xs">Drawing</div>
-                  <div className="truncate">{selectedJob.drawingRef || '—'}</div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-                <div className="md:col-span-2" data-edit-key="jobNumber">
-                  <div className="text-slate-500 text-xs">Job Number</div>
-                  <div className="font-semibold whitespace-nowrap">JO-{selectedJob.jobNumber}</div>
-                </div>
-                <div className="md:col-span-4" data-edit-key="client">
-                  <div className="text-slate-500 text-xs">Client</div>
-                  <div className="whitespace-normal">{selectedJob.clientName || '—'}</div>
-                </div>
-                <div className="md:col-span-2" data-edit-key="lpo">
-                  <div className="text-slate-500 text-xs">LPO / Contract</div>
-                  <div className="whitespace-normal">{selectedJob.lpoContractNo || '—'}</div>
-                </div>
-                <div className="md:col-span-2" data-edit-key="clientContact">
-                  <div className="text-slate-500 text-xs">Client's Contact Person</div>
-                  <div className="whitespace-normal">{selectedJob.clientContactPerson || '—'}</div>
-                </div>
-                <div className="md:col-span-2" data-edit-key="clientPhone">
-                  <div className="text-slate-500 text-xs">Client's Phone No.</div>
-                  <div className="whitespace-normal">{selectedJob.clientContactPhone || '—'}</div>
-                </div>
-              </div>  
-
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <div className="text-slate-500 text-xs">Description</div>
-                  <div className="truncate">{selectedJob.productName}</div>
-                </div>
-                <div>
-                  <div className="text-slate-500 text-xs">Additional Notes</div>
-                  <div className="truncate">{selectedJob.workScope}</div>
-                </div>
-              </div> 
-
-              {/* Work Items Table */}
-              {selectedJob.items && selectedJob.items.length > 0 && (
-                <div className="border-t pt-3">
-                  <div className="text-sm font-semibold text-slate-700 mb-2">Work Items</div>
-                  <div className="border rounded-lg overflow-hidden">
-                    <table className="w-full text-xs">
-                      <thead className="bg-slate-100">
-                        <tr>
-                          <th className="text-left p-2 font-semibold">Description</th>
-                          <th className="text-right p-2 font-semibold">Qty</th>
-                          <th className="text-left p-2 font-semibold">Unit</th>
-                          <th className="text-right p-2 font-semibold">Unit Price</th>
-                          <th className="text-right p-2 font-semibold">Total</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y">
-                        {selectedJob.items.map((item, idx) => (
-                          <tr key={item.id || idx} className="hover:bg-slate-50">
-                            <td className="p-2 max-w-[40ch] two-line">{item.workDescription}</td>
-                            <td className="p-2 text-right whitespace-nowrap">{item.quantity}</td>
-                            <td className="p-2 whitespace-nowrap">{item.unit}</td>
-                            <td className="p-2 text-right whitespace-nowrap">{item.unitPrice.toFixed(2)} QAR</td>
-                            <td className="p-2 text-right whitespace-nowrap font-semibold">{item.totalPrice.toFixed(2)} QAR</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                      <tfoot className="bg-slate-50 border-t-2">
-                        <tr>
-                          <td colSpan={4} className="p-2 text-right">Subtotal:</td>
-                          <td className="p-2 text-right font-semibold">{selectedJob.items.reduce((sum, item) => sum + item.totalPrice, 0).toFixed(2)} QAR</td>
-                        </tr>
-                        <tr>
-                          <td colSpan={4} className="p-2 text-right">Discount:</td>
-                          <td className="p-2 text-right text-red-600">-{(selectedJob as any).discount?.toFixed ? (selectedJob as any).discount.toFixed(2) : ((selectedJob as any).discount || 0).toFixed(2)} QAR</td>
-                        </tr>
-                        <tr>
-                          <td colSpan={4} className="p-2 text-right">Round Off:</td>
-                          <td className="p-2 text-right">{(selectedJob as any).roundOff?.toFixed ? (selectedJob as any).roundOff.toFixed(2) : ((selectedJob as any).roundOff || 0).toFixed(2)} QAR</td>
-                        </tr>
-                        <tr>
-                          <td colSpan={4} className="p-2 text-right font-bold">Final Total:</td>
-                          <td className="p-2 text-right font-bold text-blue-600">{((selectedJob as any).finalTotal !== undefined && (selectedJob as any).finalTotal !== null ? (selectedJob as any).finalTotal : (selectedJob.items.reduce((sum, item) => sum + item.totalPrice, 0) - ((selectedJob as any).discount || 0) + ((selectedJob as any).roundOff || 0))).toFixed(2)} QAR</td>
-                        </tr>
-                      </tfoot>
-                    </table>
-                  </div>
-                </div>
-              )}
-
-              <div className="border-t pt-3 space-y-1">
-                <div className="text-xs text-slate-500">Created: {new Date(selectedJob.createdAt).toLocaleString()}</div>
-                {selectedJob.lastEditedBy && selectedJob.lastEditedAt && (
-                  <div className="text-xs text-blue-600">
-                    Last edited: {new Date(selectedJob.lastEditedAt).toLocaleString()} by {selectedJob.lastEditedBy}
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
         {/* Job Orders List */}
         <div className="space-y-2">
           {filteredOrders.length === 0 ? (
@@ -1277,6 +1132,151 @@ export default function JobOrdersPage() {
               </CardContent>
             </Card>
           )}
+
+        {/* Selected job details */}
+        {selectedJob && (
+          <Card className="mt-3 border-blue-100">
+            <CardHeader className="py-3 bg-blue-50">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-lg text-blue-900">Job Order Details</CardTitle>
+                  <CardDescription>JO-{selectedJob.jobNumber}</CardDescription>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleEditClick(selectedJob)}
+                  className="h-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                >
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-3 text-sm text-slate-800 space-y-3">
+              {/* Contact block - line 1 (Details view) */}
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-start">
+                <div className="md:col-span-2" data-edit-key="foreman">
+                  <div className="text-slate-500 text-xs">Foreman</div>
+                  <div className="whitespace-normal">{selectedJob.foreman || '—'}</div>
+                </div>
+                <div className="md:col-span-2" data-edit-key="priority">
+                  <div className="text-slate-500 text-xs">Priority</div>
+                  <div className="text-sm font-medium">{selectedJob.priority || 'MEDIUM'}</div>
+                </div>
+                <div className="md:col-span-2" data-edit-key="contactPerson">
+                  <div className="text-slate-500 text-xs">NBTC's Contact Person</div>
+                  <div className="whitespace-normal">{selectedJob.contactPerson || '—'}</div>
+                </div>
+                <div className="md:col-span-2" data-edit-key="phone">
+                  <div className="text-slate-500 text-xs">NBTC's Contact Phone No.</div>
+                  <div className="whitespace-normal">{selectedJob.phone || '—'}</div>
+                </div>
+                <div className="md:col-span-2" data-edit-key="qaQc">
+                  <div className="text-slate-500 text-xs">QA/QC In Charge</div>
+                  <div className="whitespace-normal">{selectedJob.qaQcInCharge || '—'}</div>
+                </div>
+                <div className="md:col-span-2" data-edit-key="drawing">
+                  <div className="text-slate-500 text-xs">Drawing</div>
+                  <div className="truncate">{selectedJob.drawingRef || '—'}</div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+                <div className="md:col-span-2" data-edit-key="jobNumber">
+                  <div className="text-slate-500 text-xs">Job Number</div>
+                  <div className="font-semibold whitespace-nowrap">JO-{selectedJob.jobNumber}</div>
+                </div>
+                <div className="md:col-span-4" data-edit-key="client">
+                  <div className="text-slate-500 text-xs">Client</div>
+                  <div className="whitespace-normal">{selectedJob.clientName || '—'}</div>
+                </div>
+                <div className="md:col-span-2" data-edit-key="lpo">
+                  <div className="text-slate-500 text-xs">LPO / Contract</div>
+                  <div className="whitespace-normal">{selectedJob.lpoContractNo || '—'}</div>
+                </div>
+                <div className="md:col-span-2" data-edit-key="clientContact">
+                  <div className="text-slate-500 text-xs">Client's Contact Person</div>
+                  <div className="whitespace-normal">{selectedJob.clientContactPerson || '—'}</div>
+                </div>
+                <div className="md:col-span-2" data-edit-key="clientPhone">
+                  <div className="text-slate-500 text-xs">Client's Phone No.</div>
+                  <div className="whitespace-normal">{selectedJob.clientContactPhone || '—'}</div>
+                </div>
+              </div>  
+
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <div className="text-slate-500 text-xs">Description</div>
+                  <div className="truncate">{selectedJob.productName}</div>
+                </div>
+                <div>
+                  <div className="text-slate-500 text-xs">Additional Notes</div>
+                  <div className="truncate">{selectedJob.workScope}</div>
+                </div>
+              </div> 
+
+              {/* Work Items Table */}
+              {selectedJob.items && selectedJob.items.length > 0 && (
+                <div className="border-t pt-3">
+                  <div className="text-sm font-semibold text-slate-700 mb-2">Work Items</div>
+                  <div className="border rounded-lg overflow-hidden">
+                    <table className="w-full text-xs">
+                      <thead className="bg-slate-100">
+                        <tr>
+                          <th className="text-left p-2 font-semibold">Description</th>
+                          <th className="text-right p-2 font-semibold">Qty</th>
+                          <th className="text-left p-2 font-semibold">Unit</th>
+                          <th className="text-right p-2 font-semibold">Unit Price</th>
+                          <th className="text-right p-2 font-semibold">Total</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y">
+                        {selectedJob.items.map((item, idx) => (
+                          <tr key={item.id || idx} className="hover:bg-slate-50">
+                            <td className="p-2 max-w-[40ch] two-line">{item.workDescription}</td>
+                            <td className="p-2 text-right whitespace-nowrap">{item.quantity}</td>
+                            <td className="p-2 whitespace-nowrap">{item.unit}</td>
+                            <td className="p-2 text-right whitespace-nowrap">{item.unitPrice.toFixed(2)} QAR</td>
+                            <td className="p-2 text-right whitespace-nowrap font-semibold">{item.totalPrice.toFixed(2)} QAR</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                      <tfoot className="bg-slate-50 border-t-2">
+                        <tr>
+                          <td colSpan={4} className="p-2 text-right">Subtotal:</td>
+                          <td className="p-2 text-right font-semibold">{selectedJob.items.reduce((sum, item) => sum + item.totalPrice, 0).toFixed(2)} QAR</td>
+                        </tr>
+                        <tr>
+                          <td colSpan={4} className="p-2 text-right">Discount:</td>
+                          <td className="p-2 text-right text-red-600">-{(selectedJob as any).discount?.toFixed ? (selectedJob as any).discount.toFixed(2) : ((selectedJob as any).discount || 0).toFixed(2)} QAR</td>
+                        </tr>
+                        <tr>
+                          <td colSpan={4} className="p-2 text-right">Round Off:</td>
+                          <td className="p-2 text-right">{(selectedJob as any).roundOff?.toFixed ? (selectedJob as any).roundOff.toFixed(2) : ((selectedJob as any).roundOff || 0).toFixed(2)} QAR</td>
+                        </tr>
+                        <tr>
+                          <td colSpan={4} className="p-2 text-right font-bold">Final Total:</td>
+                          <td className="p-2 text-right font-bold text-blue-600">{((selectedJob as any).finalTotal !== undefined && (selectedJob as any).finalTotal !== null ? (selectedJob as any).finalTotal : (selectedJob.items.reduce((sum, item) => sum + item.totalPrice, 0) - ((selectedJob as any).discount || 0) + ((selectedJob as any).roundOff || 0))).toFixed(2)} QAR</td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              <div className="border-t pt-3 space-y-1">
+                <div className="text-xs text-slate-500">Created: {new Date(selectedJob.createdAt).toLocaleString()}</div>
+                {selectedJob.lastEditedBy && selectedJob.lastEditedAt && (
+                  <div className="text-xs text-blue-600">
+                    Last edited: {new Date(selectedJob.lastEditedAt).toLocaleString()} by {selectedJob.lastEditedBy}
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Deleted Job Orders Section */}
         {deletedJobOrders.length > 0 && (
