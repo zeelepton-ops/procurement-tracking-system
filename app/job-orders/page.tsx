@@ -193,9 +193,33 @@ export default function JobOrdersPage() {
   const updateWorkItem = (index: number, field: keyof JobOrderItem, value: any) => {
     const updated = [...workItems]
     updated[index] = { ...updated[index], [field]: value }
-    if (field === 'quantity' || field === 'unitPrice') {
-      updated[index].totalPrice = updated[index].quantity * updated[index].unitPrice
+
+    const cur = updated[index]
+
+    if (field === 'totalPrice') {
+      cur.totalPrice = Number(value) || 0
+      if (cur.unitPrice && cur.unitPrice > 0) {
+        cur.quantity = cur.totalPrice / cur.unitPrice
+      } else if (cur.quantity && cur.quantity > 0) {
+        cur.unitPrice = cur.totalPrice / cur.quantity
+      }
+    } else if (field === 'unitPrice') {
+      cur.unitPrice = Number(value) || 0
+      if (cur.quantity && cur.quantity > 0) {
+        cur.totalPrice = cur.quantity * cur.unitPrice
+      } else if (cur.totalPrice && cur.totalPrice > 0 && cur.unitPrice > 0) {
+        cur.quantity = cur.totalPrice / cur.unitPrice
+      }
+    } else if (field === 'quantity') {
+      cur.quantity = Number(value) || 0
+      if (cur.unitPrice && cur.unitPrice > 0) {
+        cur.totalPrice = cur.quantity * cur.unitPrice
+      } else if (cur.totalPrice && cur.quantity > 0) {
+        cur.unitPrice = cur.totalPrice / cur.quantity
+      }
     }
+
+    updated[index] = cur
     setWorkItems(updated)
   }
 
@@ -210,9 +234,33 @@ export default function JobOrdersPage() {
   const updateEditWorkItem = (index: number, field: keyof JobOrderItem, value: any) => {
     const updated = [...editWorkItems]
     updated[index] = { ...updated[index], [field]: value }
-    if (field === 'quantity' || field === 'unitPrice') {
-      updated[index].totalPrice = updated[index].quantity * updated[index].unitPrice
+
+    const cur = updated[index]
+
+    if (field === 'totalPrice') {
+      cur.totalPrice = Number(value) || 0
+      if (cur.unitPrice && cur.unitPrice > 0) {
+        cur.quantity = cur.totalPrice / cur.unitPrice
+      } else if (cur.quantity && cur.quantity > 0) {
+        cur.unitPrice = cur.totalPrice / cur.quantity
+      }
+    } else if (field === 'unitPrice') {
+      cur.unitPrice = Number(value) || 0
+      if (cur.quantity && cur.quantity > 0) {
+        cur.totalPrice = cur.quantity * cur.unitPrice
+      } else if (cur.totalPrice && cur.totalPrice > 0 && cur.unitPrice > 0) {
+        cur.quantity = cur.totalPrice / cur.unitPrice
+      }
+    } else if (field === 'quantity') {
+      cur.quantity = Number(value) || 0
+      if (cur.unitPrice && cur.unitPrice > 0) {
+        cur.totalPrice = cur.quantity * cur.unitPrice
+      } else if (cur.totalPrice && cur.quantity > 0) {
+        cur.unitPrice = cur.totalPrice / cur.quantity
+      }
     }
+
+    updated[index] = cur
     setEditWorkItems(updated)
   }
 
@@ -750,13 +798,16 @@ export default function JobOrdersPage() {
                       <Label className="text-xs font-semibold text-slate-600">Work Description *</Label>
                     </div>
                     <div className="col-span-2">
-                      <Label className="text-xs font-semibold text-slate-600">Quantity *</Label>
+                      <Label className="text-xs font-semibold text-slate-600">Quantity</Label>
                     </div>
                     <div className="col-span-2">
                       <Label className="text-xs font-semibold text-slate-600">Unit *</Label>
                     </div>
-                    <div className="col-span-2">
+                    <div className="col-span-1">
                       <Label className="text-xs font-semibold text-slate-600">Unit Price</Label>
+                    </div>
+                    <div className="col-span-1">
+                      <Label className="text-xs font-semibold text-slate-600">Total</Label>
                     </div>
                     <div className="col-span-1"></div>
                   </div>
@@ -778,7 +829,6 @@ export default function JobOrdersPage() {
                             type="number"
                             value={item.quantity || ''}
                             onChange={(e) => updateWorkItem(index, 'quantity', parseFloat(e.target.value) || 0)}
-                            required
                             className="h-8 text-sm"
                           />
                         </div>
@@ -791,12 +841,21 @@ export default function JobOrdersPage() {
                             className="h-8 text-sm"
                           />
                         </div>
-                        <div className="col-span-2">
+                        <div className="col-span-1">
                           <Input
                             type="number"
                             step="0.01"
                             value={item.unitPrice || ''}
                             onChange={(e) => updateWorkItem(index, 'unitPrice', parseFloat(e.target.value) || 0)}
+                            className="h-8 text-sm"
+                          />
+                        </div>
+                        <div className="col-span-1">
+                          <Input
+                            type="number"
+                            step="0.01"
+                            value={item.totalPrice || ''}
+                            onChange={(e) => updateWorkItem(index, 'totalPrice', parseFloat(e.target.value) || 0)}
                             className="h-8 text-sm"
                           />
                         </div>
@@ -813,11 +872,6 @@ export default function JobOrdersPage() {
                             </Button>
                           )}
                         </div>
-                        {item.quantity > 0 && item.unitPrice > 0 && (
-                          <div className="col-span-12 text-xs text-slate-600">
-                            Total: {item.totalPrice.toFixed(2)} QAR
-                          </div>
-                        )}
                       </div>
                     ))}
                   </div>
@@ -1339,13 +1393,16 @@ export default function JobOrdersPage() {
                         <Label className="text-xs font-semibold text-slate-600">Work Description *</Label>
                       </div>
                       <div className="col-span-2">
-                        <Label className="text-xs font-semibold text-slate-600">Quantity *</Label>
+                        <Label className="text-xs font-semibold text-slate-600">Quantity</Label>
                       </div>
                       <div className="col-span-2">
                         <Label className="text-xs font-semibold text-slate-600">Unit *</Label>
                       </div>
-                      <div className="col-span-2">
+                      <div className="col-span-1">
                         <Label className="text-xs font-semibold text-slate-600">Unit Price</Label>
+                      </div>
+                      <div className="col-span-1">
+                        <Label className="text-xs font-semibold text-slate-600">Total</Label>
                       </div>
                       <div className="col-span-1"></div>
                     </div>
@@ -1367,7 +1424,6 @@ export default function JobOrdersPage() {
                               type="number"
                               value={item.quantity || ''}
                               onChange={(e) => updateEditWorkItem(index, 'quantity', parseFloat(e.target.value) || 0)}
-                              required
                               className="h-8 text-sm"
                             />
                           </div>
@@ -1380,12 +1436,21 @@ export default function JobOrdersPage() {
                               className="h-8 text-sm"
                             />
                           </div>
-                          <div className="col-span-2">
+                          <div className="col-span-1">
                             <Input
                               type="number"
                               step="0.01"
                               value={item.unitPrice || ''}
                               onChange={(e) => updateEditWorkItem(index, 'unitPrice', parseFloat(e.target.value) || 0)}
+                              className="h-8 text-sm"
+                            />
+                          </div>
+                          <div className="col-span-1">
+                            <Input
+                              type="number"
+                              step="0.01"
+                              value={item.totalPrice || ''}
+                              onChange={(e) => updateEditWorkItem(index, 'totalPrice', parseFloat(e.target.value) || 0)}
                               className="h-8 text-sm"
                             />
                           </div>
