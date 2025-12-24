@@ -52,6 +52,7 @@ model JobOrder {
   qaQcInCharge        String?
   discount            Float     @default(0)
   roundOff            Float     @default(0)
+  finalTotal          Float?
   isDeleted           Boolean   @default(false)
   deletedAt           DateTime?
   deletedBy           String?

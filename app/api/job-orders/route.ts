@@ -116,7 +116,7 @@ export async function POST(request: Request) {
 
     const safeItems = Array.isArray(body.items)
       ? body.items
-          .filter((item: any) => item?.workDescription && Number(item?.quantity) > 0)
+          .filter((item: any) => item?.workDescription && (Number(item?.quantity) > 0 || Number(item?.totalPrice) > 0))
           .map((item: any) => ({
             workDescription: item.workDescription,
             quantity: Number(item.quantity) || 0,
@@ -182,6 +182,7 @@ export async function POST(request: Request) {
             qaQcInCharge: body.qaQcInCharge || null,
             discount: Number(body.discount) || 0,
             roundOff: Number(body.roundOff) || 0,
+            finalTotal: body.finalTotal !== undefined ? Number(body.finalTotal) : undefined,
             createdBy: session?.user?.email || 'unknown',
             isDeleted: false,
             deletedAt: null,
@@ -215,6 +216,7 @@ export async function POST(request: Request) {
           qaQcInCharge: body.qaQcInCharge || null,
           discount: Number(body.discount) || 0,
           roundOff: Number(body.roundOff) || 0,
+          finalTotal: body.finalTotal !== undefined ? Number(body.finalTotal) : undefined,
           createdBy: session?.user?.email || 'unknown',
           items: safeItems.length > 0 ? {
             create: safeItems
@@ -268,6 +270,7 @@ export async function PUT(request: Request) {
   // Coerce numeric fields if present
   if (updateData.discount !== undefined) updateData.discount = parseFloat(updateData.discount) || 0
   if (updateData.roundOff !== undefined) updateData.roundOff = parseFloat(updateData.roundOff) || 0
+  if (updateData.finalTotal !== undefined) updateData.finalTotal = updateData.finalTotal === null ? null : Number(updateData.finalTotal)
 
 
     const existingJobOrder = await prisma.jobOrder.findUnique({

@@ -109,6 +109,8 @@ export default function JobOrdersPage() {
   ])
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
+  const [finalTotalOverride, setFinalTotalOverride] = useState<number | null>(null)
+  const [editFinalTotalOverride, setEditFinalTotalOverride] = useState<number | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
   const [editingJob, setEditingJob] = useState<JobOrder | null>(null)
   const [restoring, setRestoring] = useState<string | null>(null)
@@ -332,7 +334,8 @@ export default function JobOrdersPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
-          items: workItems.filter(item => item.workDescription && item.quantity > 0)
+          items: workItems.filter(item => item.workDescription && (item.quantity > 0 || item.totalPrice > 0)),
+          finalTotal: finalTotalOverride !== null ? finalTotalOverride : undefined
         })
       })
 
@@ -437,6 +440,7 @@ export default function JobOrdersPage() {
       discount: (job as any).discount || 0,
       roundOff: (job as any).roundOff || 0
     })
+    setEditFinalTotalOverride((job as any).finalTotal !== undefined ? (job as any).finalTotal : null)
     setEditWorkItems(job.items && job.items.length > 0 
       ? job.items 
       : [{ workDescription: '', quantity: 0, unit: 'PCS', unitPrice: 0, totalPrice: 0 }]
@@ -463,7 +467,8 @@ export default function JobOrdersPage() {
         body: JSON.stringify({
           id: editingJob.id,
           ...editFormData,
-          items: editWorkItems.filter(item => item.workDescription && item.quantity > 0)
+          items: editWorkItems.filter(item => item.workDescription && (item.quantity > 0 || item.totalPrice > 0)),
+          finalTotal: editFinalTotalOverride !== null ? editFinalTotalOverride : undefined
         })
       })
 
@@ -907,9 +912,19 @@ export default function JobOrdersPage() {
                   </div>
                   <div className="md:col-span-1 text-sm text-slate-600">
                     Final Total
-                    <div className="font-bold text-blue-600">
-                      {(workItems.reduce((s, it) => s + (it.totalPrice || 0), 0) - ((formData as any).discount || 0) + ((formData as any).roundOff || 0)).toFixed(2)} QAR
-                    </div>
+                    {workItems.some(it => !it.quantity || it.quantity <= 0) ? (
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={finalTotalOverride !== null ? String(finalTotalOverride) : (workItems.reduce((s, it) => s + (it.totalPrice || 0), 0) - ((formData as any).discount || 0) + ((formData as any).roundOff || 0)).toFixed(2)}
+                        onChange={(e) => setFinalTotalOverride(e.target.value === '' ? null : parseFloat(e.target.value))}
+                        className="mt-1 h-8 text-sm"
+                      />
+                    ) : (
+                      <div className="font-bold text-blue-600">
+                        {(workItems.reduce((s, it) => s + (it.totalPrice || 0), 0) - ((formData as any).discount || 0) + ((formData as any).roundOff || 0)).toFixed(2)} QAR
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -1088,7 +1103,7 @@ export default function JobOrdersPage() {
                         </tr>
                         <tr>
                           <td colSpan={4} className="p-2 text-right font-bold">Final Total:</td>
-                          <td className="p-2 text-right font-bold text-blue-600">{(selectedJob.items.reduce((sum, item) => sum + item.totalPrice, 0) - ((selectedJob as any).discount || 0) + ((selectedJob as any).roundOff || 0)).toFixed(2)} QAR</td>
+                          <td className="p-2 text-right font-bold text-blue-600">{((selectedJob as any).finalTotal !== undefined && (selectedJob as any).finalTotal !== null ? (selectedJob as any).finalTotal : (selectedJob.items.reduce((sum, item) => sum + item.totalPrice, 0) - ((selectedJob as any).discount || 0) + ((selectedJob as any).roundOff || 0))).toFixed(2)} QAR</td>
                         </tr>
                       </tfoot>
                     </table>
@@ -1648,9 +1663,19 @@ export default function JobOrdersPage() {
                     </div>
                     <div className="md:col-span-1 text-sm text-slate-600">
                       Final Total
-                      <div className="font-bold text-blue-600">
-                        {(editWorkItems.reduce((s, it) => s + (it.totalPrice || 0), 0) - ((editFormData as any).discount || 0) + ((editFormData as any).roundOff || 0)).toFixed(2)} QAR
-                      </div>
+                      {editWorkItems.some(it => !it.quantity || it.quantity <= 0) ? (
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={editFinalTotalOverride !== null ? String(editFinalTotalOverride) : (editWorkItems.reduce((s, it) => s + (it.totalPrice || 0), 0) - ((editFormData as any).discount || 0) + ((editFormData as any).roundOff || 0)).toFixed(2)}
+                          onChange={(e) => setEditFinalTotalOverride(e.target.value === '' ? null : parseFloat(e.target.value))}
+                          className="mt-1 h-8 text-sm"
+                        />
+                      ) : (
+                        <div className="font-bold text-blue-600">
+                          {(editWorkItems.reduce((s, it) => s + (it.totalPrice || 0), 0) - ((editFormData as any).discount || 0) + ((editFormData as any).roundOff || 0)).toFixed(2)} QAR
+                        </div>
+                      )}
                     </div>
                   </div>
 
