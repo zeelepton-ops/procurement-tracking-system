@@ -62,9 +62,10 @@ model JobOrder {
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 
-  materialRequests MaterialRequest[]
-  editHistory      JobOrderEditHistory[]
-  items            JobOrderItem[]
+  materialRequests     MaterialRequest[]
+  materialRequestItems MaterialRequestItem[]
+  editHistory          JobOrderEditHistory[]
+  items                JobOrderItem[]
 
   @@unique([jobNumber, isDeleted])
 }
@@ -141,21 +142,25 @@ model MaterialRequestItem {
   materialRequestId String
   materialRequest   MaterialRequest @relation(fields: [materialRequestId], references: [id], onDelete: Cascade)
 
+  // New: optional link to JobOrder at item level to avoid free-text matching
+  jobOrderId String?
+  jobOrder   JobOrder? @relation(fields: [jobOrderId], references: [id], onDelete: SetNull)
+
   itemName            String
   description         String
   quantity            Float
   unit                String
-  stockQtyInInventory Float          @default(0)
+  stockQtyInInventory Float     @default(0)
   reasonForRequest    String?
-  urgencyLevel        String         @default("NORMAL")
+  urgencyLevel        String    @default("NORMAL")
   requiredDate        DateTime?
-  
-  isDeleted    Boolean   @default(false)
-  deletedAt    DateTime?
-  deletedBy    String?
-  preferredSupplier   String?
-  inventoryItemId     String?
-  inventoryItem       InventoryItem? @relation(fields: [inventoryItemId], references: [id])
+
+  isDeleted         Boolean        @default(false)
+  deletedAt         DateTime?
+  deletedBy         String?
+  preferredSupplier String?
+  inventoryItemId   String?
+  inventoryItem     InventoryItem? @relation(fields: [inventoryItemId], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

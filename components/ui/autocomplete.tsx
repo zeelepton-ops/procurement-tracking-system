@@ -13,9 +13,11 @@ interface AutocompleteProps {
   placeholder?: string
   className?: string
   inputClassName?: string
+  // Optional callback invoked when a suggestion is explicitly selected (via mouse or Enter). If provided, this receives the full Suggestion object.
+  onSelect?: (s: Suggestion) => void
 }
 
-export default function Autocomplete({ value, onChange, suggestions, placeholder, className, inputClassName }: AutocompleteProps) {
+export default function Autocomplete({ value, onChange, suggestions, placeholder, className, inputClassName, onSelect }: AutocompleteProps) {
   const [open, setOpen] = useState(false)
   const [activeIndex, setActiveIndex] = useState(-1)
   const [filtered, setFiltered] = useState<Suggestion[]>([])
@@ -113,7 +115,12 @@ export default function Autocomplete({ value, onChange, suggestions, placeholder
   }
 
   const select = (s: Suggestion) => {
-    onChange(s.label)
+    // Prefer onSelect hook if provided to give callers access to the full suggestion object (id, type, meta)
+    if (typeof onSelect === 'function') {
+      try { onSelect(s) } catch (e) { /* ignore */ }
+    } else {
+      onChange(s.label)
+    }
     setOpen(false)
     inputRef.current?.focus()
   }

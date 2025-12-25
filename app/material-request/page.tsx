@@ -104,6 +104,8 @@ export default function MaterialRequestPage() {
     urgencyLevel: string;
     requiredDate: string;
     preferredSupplier: string;
+    // New: optional item-level job link
+    jobOrderId?: string;
   }>>([{ 
     itemName: '', 
     description: '', 
@@ -113,7 +115,8 @@ export default function MaterialRequestPage() {
     reasonForRequest: '',
     urgencyLevel: 'NORMAL',
     requiredDate: '',
-    preferredSupplier: ''
+    preferredSupplier: '',
+    jobOrderId: ''
   }])
   
   const [formData, setFormData] = useState({
@@ -531,6 +534,10 @@ export default function MaterialRequestPage() {
     setItems(prev => prev.map((it, i) => i === index ? { ...it, [field]: value } : it))
   }
 
+  const setItemJobOrder = (index: number, jobOrderId: string | null, label?: string) => {
+    setItems(prev => prev.map((it, i) => i === index ? { ...it, jobOrderId: jobOrderId || '', reasonForRequest: label ?? it.reasonForRequest } : it))
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4">
       <div className="max-w-7xl mx-auto">
@@ -709,6 +716,15 @@ export default function MaterialRequestPage() {
                         <Autocomplete
                           value={item.reasonForRequest}
                           onChange={(val) => updateItemField(idx, 'reasonForRequest', val)}
+                          // When a suggestion with a job id is selected, set the item.jobOrderId and the label
+                          onSelect={(s) => {
+                            if (s?.type === 'job') {
+                              setItemJobOrder(idx, s.id || null, s.label)
+                            } else {
+                              // for non-job suggestions, set label only
+                              updateItemField(idx, 'reasonForRequest', s.label)
+                            }
+                          }}
                           suggestions={[
                             { label: 'Workshop', type: 'other' },
                             { label: 'Maintenance', type: 'other' },
@@ -721,6 +737,9 @@ export default function MaterialRequestPage() {
                           className="w-full"
                         />
                       </ErrorBoundary>
+                      {item.jobOrderId ? (
+                        <div className="text-[11px] text-slate-600 mt-1">Linked to <span className="font-medium">{(jobOrders.find(j => j.id === item.jobOrderId)?.jobNumber) ? `JO-${jobOrders.find(j => j.id === item.jobOrderId)?.jobNumber}` : 'Job'}</span></div>
+                      ) : null}
 
                       <select
                         value={item.urgencyLevel}

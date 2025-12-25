@@ -184,6 +184,8 @@ export async function POST(request: Request) {
       unit: item.unit || 'PCS',
       stockQtyInInventory: Number(item.stockQty) || 0,
       reasonForRequest: item.reasonForRequest || null,
+      // New: support jobOrderId at item level
+      jobOrderId: item.jobOrderId || null,
       urgencyLevel: item.urgencyLevel || 'NORMAL',
       requiredDate: item.requiredDate ? new Date(item.requiredDate) : null,
       preferredSupplier: item.preferredSupplier || null,
@@ -320,8 +322,8 @@ export async function POST(request: Request) {
                       quantity: it.quantity,
                       unit: it.unit,
                       stockQtyInInventory: it.stockQtyInInventory,
-                      reasonForRequest: it.reasonForRequest,
-                      urgencyLevel: it.urgencyLevel || 'NORMAL',
+                      reasonForRequest: it.reasonForRequest,                      // New: persist item.jobOrderId when present
+                      jobOrderId: it.jobOrderId || null,                      urgencyLevel: it.urgencyLevel || 'NORMAL',
                       requiredDate: it.requiredDate,
                       preferredSupplier: it.preferredSupplier || null
                       // Note: omitting 'status' field; if the column is missing in DB, default will apply
@@ -555,6 +557,8 @@ export async function PUT(request: Request) {
               unit: item.unit,
               stockQtyInInventory: parseFloat(item.stockQty || '0'),
               reasonForRequest: item.reasonForRequest || null,
+              // Persist item-level jobOrderId when present
+              jobOrderId: item.jobOrderId || null,
               urgencyLevel: item.urgencyLevel || 'NORMAL',
               requiredDate: item.requiredDate ? new Date(item.requiredDate) : null,
               preferredSupplier: item.preferredSupplier || null

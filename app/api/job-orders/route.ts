@@ -96,33 +96,48 @@ export async function GET(request: Request) {
       }
     })
 
-    // Compute counts of non-deleted material requests for these jobs in a single grouped query
+    // Compute item-level counts of non-deleted material request *items* referencing these jobs.
+    // Some material request items store the job as free-text in `reasonForRequest` (e.g. "7549 - CLIC Qatar ...").
+    // We therefore count items where the parent MR's jobOrderId = job.id OR the item's reasonForRequest contains the jobNumber.
     const jobIds = jobOrders.map(j => j.id)
-    let mrCounts: Array<{ jobOrderId: string; _count: { _all: number } }> = []
+    let itemCounts: Array<{ jobOrderId: string; count: number }> = []
+
     if (jobIds.length > 0) {
       try {
-        mrCounts = await prisma.materialRequest.groupBy({
-          by: ['jobOrderId'],
-          where: { jobOrderId: { in: jobIds }, isDeleted: false },
-          _count: { _all: true }
-        }) as any
+        // Run per-job item count queries in parallel (page size is small so this is acceptable)
+        const counts = await Promise.all(jobOrders.map(async (j) => {
+          const rows = await prisma.$queryRaw<any>`
+            SELECT COUNT(*)::int AS cnt
+            FROM "MaterialRequestItem" mri
+            JOIN "MaterialRequest" mr ON mr.id = mri."materialRequestId" AND mr."isDeleted" = FALSE
+            WHERE mri."isDeleted" = FALSE
+              AND (
+                mr."jobOrderId" = ${j.id}
+                OR (mri."jobOrderId" IS NOT NULL AND mri."jobOrderId" = ${j.id})
+                OR (mri."reasonForRequest" IS NOT NULL AND mri."reasonForRequest" ILIKE ${'%' + j.jobNumber + '%'})
+              )
+          `
+          return { jobOrderId: j.id, count: (rows && rows[0] && Number(rows[0].cnt)) || 0 }
+        }))
+        itemCounts = counts
       } catch (err) {
-        console.warn('Failed to compute material request counts by group, falling back to per-job counts', err)
-        // Fallback: compute per-job counts sequentially
-        mrCounts = []
+        console.warn('Failed to compute material request item counts, falling back to MR-level counts', err)
+        // Fallback: count material requests by jobOrderId as before
+        const mrCounts: Array<{ jobOrderId: string; _count: { _all: number } }> = []
         for (const id of jobIds) {
           const c = await prisma.materialRequest.count({ where: { jobOrderId: id, isDeleted: false } })
           mrCounts.push({ jobOrderId: id, _count: { _all: c } } as any)
         }
+        itemCounts = mrCounts.map(m => ({ jobOrderId: m.jobOrderId, count: m._count._all }))
       }
     }
 
-    // Attach a filtered materialRequests count (non-deleted) to each job under _count.materialRequests for UI compatibility
+    // Attach item-level counts to each job under _count.materialRequests for UI compatibility
     const jobsWithCounts = jobOrders.map(j => {
-      const found = mrCounts.find(m => m.jobOrderId === j.id)
+      const found = itemCounts.find(m => m.jobOrderId === j.id)
       return {
         ...j,
-        _count: { materialRequests: found ? found._count._all : 0 }
+        _count: { materialRequests: found ? found.count : 0 }
       }
     })
 
