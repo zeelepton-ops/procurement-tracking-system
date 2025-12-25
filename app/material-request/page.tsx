@@ -106,6 +106,8 @@ export default function MaterialRequestPage() {
     preferredSupplier: string;
     // New: optional item-level job link
     jobOrderId?: string;
+    // Transient UI flag set to true when the user links the item by selecting a Job suggestion in this session
+    _linkedByJobSuggestion?: boolean;
   }>>([{ 
     itemName: '', 
     description: '', 
@@ -116,7 +118,8 @@ export default function MaterialRequestPage() {
     urgencyLevel: 'NORMAL',
     requiredDate: '',
     preferredSupplier: '',
-    jobOrderId: ''
+    jobOrderId: '',
+    _linkedByJobSuggestion: false
   }])
   
   const [formData, setFormData] = useState({
@@ -344,7 +347,9 @@ export default function MaterialRequestPage() {
           reasonForRequest: item.reasonForRequest || '',
           urgencyLevel: item.urgencyLevel || 'NORMAL',
           requiredDate: item.requiredDate ? new Date(item.requiredDate).toISOString().slice(0,10) : '',
-          preferredSupplier: item.preferredSupplier || ''
+          preferredSupplier: item.preferredSupplier || '',
+          jobOrderId: item.jobOrderId || '',
+          _linkedByJobSuggestion: false
         }))
       : [{
           itemName: req.itemName,
@@ -355,7 +360,9 @@ export default function MaterialRequestPage() {
           reasonForRequest: req.reasonForRequest || '',
           urgencyLevel: req.urgencyLevel || 'NORMAL',
           requiredDate: new Date(req.requiredDate).toISOString().slice(0,10),
-          preferredSupplier: req.preferredSupplier || ''
+          preferredSupplier: req.preferredSupplier || '',
+          jobOrderId: req.jobOrderId || '',
+          _linkedByJobSuggestion: false
         }]
     
     setItems(itemsToEdit)
@@ -531,11 +538,17 @@ export default function MaterialRequestPage() {
   }
 
   const updateItemField = (index: number, field: keyof typeof items[0], value: string) => {
-    setItems(prev => prev.map((it, i) => i === index ? { ...it, [field]: value } : it))
+    setItems(prev => prev.map((it, i) => {
+      if (i !== index) return it
+      // If the reason field is changed (typed or a non-job suggestion selected), clear the transient linked flag
+      if (field === 'reasonForRequest') return { ...it, [field]: value, _linkedByJobSuggestion: false }
+      return { ...it, [field]: value }
+    }))
   }
 
   const setItemJobOrder = (index: number, jobOrderId: string | null, label?: string) => {
-    setItems(prev => prev.map((it, i) => i === index ? { ...it, jobOrderId: jobOrderId || '', reasonForRequest: label ?? it.reasonForRequest } : it))
+    // When the user selects a Job suggestion, set the jobOrderId and mark that it was linked via suggestion
+    setItems(prev => prev.map((it, i) => i === index ? { ...it, jobOrderId: jobOrderId || '', reasonForRequest: label ?? it.reasonForRequest, _linkedByJobSuggestion: true } : it))
   }
 
   return (
@@ -737,7 +750,7 @@ export default function MaterialRequestPage() {
                           className="w-full"
                         />
                       </ErrorBoundary>
-                      {item.jobOrderId ? (
+                      {item.jobOrderId && item._linkedByJobSuggestion ? (
                         <div className="text-[11px] text-slate-600 mt-1">Linked to <span className="font-medium">{(jobOrders.find(j => j.id === item.jobOrderId)?.jobNumber) ? `JO-${jobOrders.find(j => j.id === item.jobOrderId)?.jobNumber}` : 'Job'}</span></div>
                       ) : null}
 

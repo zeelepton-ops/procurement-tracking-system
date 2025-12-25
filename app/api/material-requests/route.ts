@@ -243,6 +243,12 @@ export async function POST(request: Request) {
             await prisma.$executeRaw`ALTER TABLE "MaterialRequest" ADD COLUMN IF NOT EXISTS "status" TEXT NOT NULL DEFAULT 'PENDING'`
             await prisma.$executeRaw`CREATE INDEX IF NOT EXISTS "Material Request_status_idx" ON "MaterialRequest"("status")`
           }
+          if (missingCol === 'jobOrderId') {
+            // Add jobOrderId column (nullable) so clients can submit requests even if DB migration hasn't run yet
+            await prisma.$executeRaw`ALTER TABLE "MaterialRequest" ADD COLUMN IF NOT EXISTS "jobOrderId" TEXT`;
+            // Index this column for faster JO lookups
+            await prisma.$executeRaw`CREATE INDEX IF NOT EXISTS "MaterialRequest_jobOrderId_idx" ON "MaterialRequest"("jobOrderId")`
+          }
           // Retry create once
           materialRequest = await prisma.materialRequest.create({
             data: {
