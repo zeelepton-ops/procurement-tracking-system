@@ -7,10 +7,12 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
-import Autocomplete from '@/components/ui/autocomplete'
+import dynamic from 'next/dynamic'
+const Autocomplete = dynamic(() => import('@/components/ui/autocomplete').then(m => m.default), { ssr: false, loading: () => null })
 import { useSession } from 'next-auth/react'
 
 import { AlertCircle, Package, Clock, AlertTriangle, Plus, X, Trash2 } from 'lucide-react'
+import ErrorBoundary from '@/components/ui/error-boundary'
 
 interface JobOrder {
   id: string
@@ -697,20 +699,22 @@ export default function MaterialRequestPage() {
                         <option value="M">M</option>
                         <option value="BOX">BOX</option>
                       </select>
-                      <Autocomplete
-                        value={item.reasonForRequest}
-                        onChange={(val) => updateItemField(idx, 'reasonForRequest', val)}
-                        suggestions={[
-                          { label: 'Workshop', type: 'other' },
-                          { label: 'Maintenance', type: 'other' },
-                          { label: 'General', type: 'other' },
-                          ...jobOrders.map(j => ({ id: j.id, label: `${j.jobNumber} - ${j.clientName || j.productName}`, meta: j.productName, type: 'job' })),
-                          ...assets.map(a => ({ id: a.id, label: `${a.code} - ${a.name}`, meta: a.category || a.location || '', type: 'asset' })),
-                        ]}
-                        placeholder="Reason (type to search or enter text)"
-                        inputClassName="h-7 px-1 rounded-md border border-slate-300 text-[11px] focus:z-10 focus:ring-2 focus:ring-blue-400 focus:outline-none"
-                        className="w-full"
-                      />
+                      <ErrorBoundary>
+                        <Autocomplete
+                          value={item.reasonForRequest}
+                          onChange={(val) => updateItemField(idx, 'reasonForRequest', val)}
+                          suggestions={[
+                            { label: 'Workshop', type: 'other' },
+                            { label: 'Maintenance', type: 'other' },
+                            { label: 'General', type: 'other' },
+                            ...jobOrders.map(j => ({ id: j.id, label: `${j.jobNumber} - ${j.clientName || j.productName}`, meta: j.productName, type: 'job' })),
+                            ...assets.map(a => ({ id: a.id, label: `${a.code} - ${a.name}`, meta: a.category || a.location || '', type: 'asset' })),
+                          ]}
+                          placeholder="Reason (type to search or enter text)"
+                          inputClassName="h-7 px-1 rounded-md border border-slate-300 text-[11px] focus:z-10 focus:ring-2 focus:ring-blue-400 focus:outline-none"
+                          className="w-full"
+                        />
+                      </ErrorBoundary>
 
                       <select
                         value={item.urgencyLevel}
