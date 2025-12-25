@@ -1256,16 +1256,14 @@ export default function JobOrdersPage() {
                           <tr key={item.id || idx} className="hover:bg-slate-50">
                             <td className="p-2 max-w-[80ch] two-line align-middle">
                               <div>{item.workDescription}</div>
-                              {((item.quantity == null) && (item.totalPrice == null)) ? (
-                                <div className="text-xs text-amber-700 mt-1 italic">Qty/Total variable — saved as placeholder; edit to add numeric values.</div>
-                              ) : ((!item.quantity || item.quantity <= 0) && item.unitPrice && item.unitPrice > 0) && (
-                                <div className="text-xs text-amber-700 mt-1 italic">Qty missing — saved as unit-rate-only line</div>
+                              {((item.quantity == null) || (item.totalPrice == null) || (!item.quantity || item.quantity <= 0)) && (
+                                <div className="text-xs text-amber-700 mt-1 italic">Qty/Total Variable - Qty & Invoice based on Drawing Release/Actual Qty while delivery.</div>
                               )}
                             </td>
                             <td className="p-2 text-right whitespace-nowrap">{item.quantity && item.quantity > 0 ? item.quantity : '—'}</td>
                             <td className="p-2 whitespace-nowrap">{item.unit}</td>
                             <td className="p-2 text-right whitespace-nowrap">{item.unitPrice != null ? item.unitPrice.toFixed(2) + ' QAR' : '—'}</td>
-                            <td className="p-2 text-right whitespace-nowrap font-semibold">{item.totalPrice != null ? item.totalPrice.toFixed(2) + ' QAR' : '—'}</td>
+                            <td className="p-2 text-right whitespace-nowrap font-semibold">{item.totalPrice != null ? item.totalPrice.toFixed(2) + ' QAR' : (item.unitPrice != null ? '0.00 QAR' : '—')}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -1655,11 +1653,15 @@ export default function JobOrdersPage() {
                               </Button>
                             )}
                           </div>
-                          {item.quantity != null && item.quantity > 0 && item.unitPrice != null && item.unitPrice > 0 && item.totalPrice != null && (
+                          {item.totalPrice != null ? (
                             <div className="col-span-12 text-xs text-slate-600">
                               Total: {item.totalPrice.toFixed(2)} QAR
                             </div>
-                          )}
+                          ) : (item.unitPrice != null && (
+                            <div className="col-span-12 text-xs text-slate-600">
+                              Total: 0.00 QAR
+                            </div>
+                          ))}
                         </div>
                       ))}
                     </div>
