@@ -185,7 +185,7 @@ export default function JobOrdersPage() {
   const filteredOrders = jobOrders
 
   const addWorkItem = () => {
-    setWorkItems([...workItems, { workDescription: '', quantity: 0, unit: 'PCS', unitPrice: 0, totalPrice: 0 }])
+    setWorkItems([...workItems, { workDescription: '', quantity: null, unit: 'PCS', unitPrice: null, totalPrice: null }])
   }
 
   const removeWorkItem = (index: number) => {
@@ -198,25 +198,26 @@ export default function JobOrdersPage() {
 
     const cur = updated[index]
 
+    // Normalize nulls and numbers
     if (field === 'totalPrice') {
-      cur.totalPrice = Number(value) || 0
-      if (cur.unitPrice && cur.unitPrice > 0) {
-        cur.quantity = cur.totalPrice / cur.unitPrice
-      } else if (cur.quantity && cur.quantity > 0) {
-        cur.unitPrice = cur.totalPrice / cur.quantity
+      cur.totalPrice = value == null ? null : Number(value)
+      if (cur.unitPrice != null && cur.unitPrice > 0) {
+        cur.quantity = cur.totalPrice != null ? cur.totalPrice / cur.unitPrice : cur.quantity
+      } else if (cur.quantity != null && cur.quantity > 0) {
+        cur.unitPrice = cur.totalPrice != null ? cur.totalPrice / cur.quantity : cur.unitPrice
       }
     } else if (field === 'unitPrice') {
-      cur.unitPrice = Number(value) || 0
-      if (cur.quantity && cur.quantity > 0) {
+      cur.unitPrice = value == null ? null : Number(value)
+      if (cur.quantity != null && cur.quantity > 0 && cur.unitPrice != null) {
         cur.totalPrice = cur.quantity * cur.unitPrice
-      } else if (cur.totalPrice && cur.totalPrice > 0 && cur.unitPrice > 0) {
+      } else if (cur.totalPrice != null && cur.unitPrice != null && cur.unitPrice > 0) {
         cur.quantity = cur.totalPrice / cur.unitPrice
       }
     } else if (field === 'quantity') {
-      cur.quantity = Number(value) || 0
-      if (cur.unitPrice && cur.unitPrice > 0) {
+      cur.quantity = value == null ? null : Number(value)
+      if (cur.unitPrice != null && cur.unitPrice > 0 && cur.quantity != null) {
         cur.totalPrice = cur.quantity * cur.unitPrice
-      } else if (cur.totalPrice && cur.quantity > 0) {
+      } else if (cur.totalPrice != null && cur.quantity != null && cur.quantity > 0) {
         cur.unitPrice = cur.totalPrice / cur.quantity
       }
     }
@@ -226,7 +227,7 @@ export default function JobOrdersPage() {
   }
 
   const addEditWorkItem = () => {
-    setEditWorkItems([...editWorkItems, { workDescription: '', quantity: 0, unit: 'PCS', unitPrice: 0, totalPrice: 0 }])
+    setEditWorkItems([...editWorkItems, { workDescription: '', quantity: null, unit: 'PCS', unitPrice: null, totalPrice: null }])
   }
 
   const removeEditWorkItem = (index: number) => {
@@ -240,24 +241,24 @@ export default function JobOrdersPage() {
     const cur = updated[index]
 
     if (field === 'totalPrice') {
-      cur.totalPrice = Number(value) || 0
-      if (cur.unitPrice && cur.unitPrice > 0) {
-        cur.quantity = cur.totalPrice / cur.unitPrice
-      } else if (cur.quantity && cur.quantity > 0) {
-        cur.unitPrice = cur.totalPrice / cur.quantity
+      cur.totalPrice = value == null ? null : Number(value)
+      if (cur.unitPrice != null && cur.unitPrice > 0) {
+        cur.quantity = cur.totalPrice != null ? cur.totalPrice / cur.unitPrice : cur.quantity
+      } else if (cur.quantity != null && cur.quantity > 0) {
+        cur.unitPrice = cur.totalPrice != null ? cur.totalPrice / cur.quantity : cur.unitPrice
       }
     } else if (field === 'unitPrice') {
-      cur.unitPrice = Number(value) || 0
-      if (cur.quantity && cur.quantity > 0) {
+      cur.unitPrice = value == null ? null : Number(value)
+      if (cur.quantity != null && cur.quantity > 0 && cur.unitPrice != null) {
         cur.totalPrice = cur.quantity * cur.unitPrice
-      } else if (cur.totalPrice && cur.totalPrice > 0 && cur.unitPrice > 0) {
+      } else if (cur.totalPrice != null && cur.unitPrice != null && cur.unitPrice > 0) {
         cur.quantity = cur.totalPrice / cur.unitPrice
       }
     } else if (field === 'quantity') {
-      cur.quantity = Number(value) || 0
-      if (cur.unitPrice && cur.unitPrice > 0) {
+      cur.quantity = value == null ? null : Number(value)
+      if (cur.unitPrice != null && cur.unitPrice > 0 && cur.quantity != null) {
         cur.totalPrice = cur.quantity * cur.unitPrice
-      } else if (cur.totalPrice && cur.quantity > 0) {
+      } else if (cur.totalPrice != null && cur.quantity != null && cur.quantity > 0) {
         cur.unitPrice = cur.totalPrice / cur.quantity
       }
     }
@@ -334,7 +335,7 @@ export default function JobOrdersPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
-          items: workItems.filter(item => item.workDescription && (item.quantity > 0 || item.totalPrice > 0 || (item.unitPrice && item.unitPrice > 0))),
+          items: workItems.filter(item => item.workDescription),
           finalTotal: finalTotalOverride !== null ? finalTotalOverride : undefined
         })
       })
@@ -485,7 +486,7 @@ export default function JobOrdersPage() {
         body: JSON.stringify({
           id: editingJob.id,
           ...editFormData,
-          items: editWorkItems.filter(item => item.workDescription && (item.quantity > 0 || item.totalPrice > 0 || (item.unitPrice && item.unitPrice > 0))),
+          items: editWorkItems.filter(item => item.workDescription),
           finalTotal: editFinalTotalOverride !== null ? editFinalTotalOverride : undefined
         })
       })
@@ -850,8 +851,8 @@ export default function JobOrdersPage() {
                         <div className="col-span-2">
                           <Input
                             type="number"
-                            value={item.quantity || ''}
-                            onChange={(e) => updateWorkItem(index, 'quantity', parseFloat(e.target.value) || 0)}
+                            value={item.quantity == null ? '' : String(item.quantity)}
+                            onChange={(e) => updateWorkItem(index, 'quantity', e.target.value === '' ? null : parseFloat(e.target.value))}
                             className="h-8 text-sm"
                           />
                         </div>
@@ -868,8 +869,8 @@ export default function JobOrdersPage() {
                           <Input
                             type="number"
                             step="0.01"
-                            value={item.unitPrice || ''}
-                            onChange={(e) => updateWorkItem(index, 'unitPrice', parseFloat(e.target.value) || 0)}
+                            value={item.unitPrice == null ? '' : String(item.unitPrice)}
+                            onChange={(e) => updateWorkItem(index, 'unitPrice', e.target.value === '' ? null : parseFloat(e.target.value))}
                             className="h-8 text-sm"
                           />
                         </div>
@@ -877,8 +878,8 @@ export default function JobOrdersPage() {
                           <Input
                             type="number"
                             step="0.01"
-                            value={item.totalPrice || ''}
-                            onChange={(e) => updateWorkItem(index, 'totalPrice', parseFloat(e.target.value) || 0)}
+                            value={item.totalPrice == null ? '' : String(item.totalPrice)}
+                            onChange={(e) => updateWorkItem(index, 'totalPrice', e.target.value === '' ? null : parseFloat(e.target.value))}
                             className="h-8 text-sm"
                           />
                         </div>
@@ -1255,14 +1256,16 @@ export default function JobOrdersPage() {
                           <tr key={item.id || idx} className="hover:bg-slate-50">
                             <td className="p-2 max-w-[40ch] two-line">
                               <div>{item.workDescription}</div>
-                              {(!item.quantity || item.quantity <= 0) && item.unitPrice && item.unitPrice > 0 && (
+                              {((item.quantity == null) && (item.totalPrice == null)) ? (
+                                <div className="text-xs text-amber-700 mt-1 italic">Qty/Total variable — saved as placeholder; edit to add numeric values.</div>
+                              ) : ((!item.quantity || item.quantity <= 0) && item.unitPrice && item.unitPrice > 0) && (
                                 <div className="text-xs text-amber-700 mt-1 italic">Qty missing — saved as unit-rate-only line</div>
                               )}
                             </td>
                             <td className="p-2 text-right whitespace-nowrap">{item.quantity && item.quantity > 0 ? item.quantity : '—'}</td>
                             <td className="p-2 whitespace-nowrap">{item.unit}</td>
-                            <td className="p-2 text-right whitespace-nowrap">{item.unitPrice.toFixed(2)} QAR</td>
-                            <td className="p-2 text-right whitespace-nowrap font-semibold">{item.totalPrice.toFixed(2)} QAR</td>
+                            <td className="p-2 text-right whitespace-nowrap">{item.unitPrice != null ? item.unitPrice.toFixed(2) + ' QAR' : '—'}</td>
+                            <td className="p-2 text-right whitespace-nowrap font-semibold">{item.totalPrice != null ? item.totalPrice.toFixed(2) + ' QAR' : '—'}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -1290,7 +1293,7 @@ export default function JobOrdersPage() {
               ) : (
                 <div className="border-t pt-3">
                   <div className="bg-amber-50 border border-amber-100 text-amber-900 px-3 py-2 rounded text-sm">
-                    No work items recorded — items with blank Qty and Total are not saved.
+                    No work items recorded.
                   </div>
                 </div>
               )}

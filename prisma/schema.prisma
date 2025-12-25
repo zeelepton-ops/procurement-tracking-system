@@ -75,10 +75,10 @@ model JobOrderItem {
   jobOrder   JobOrder @relation(fields: [jobOrderId], references: [id], onDelete: Cascade)
 
   workDescription String
-  quantity        Float
+  quantity        Float?
   unit            String
-  unitPrice       Float
-  totalPrice      Float // quantity * unitPrice
+  unitPrice       Float?
+  totalPrice      Float? // quantity * unitPrice
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

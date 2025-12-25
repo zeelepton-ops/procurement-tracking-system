@@ -116,14 +116,20 @@ export async function POST(request: Request) {
 
     const safeItems = Array.isArray(body.items)
       ? body.items
-          .filter((item: any) => item?.workDescription && (Number(item?.quantity) > 0 || Number(item?.totalPrice) > 0 || Number(item?.unitPrice) > 0))
-          .map((item: any) => ({
-            workDescription: item.workDescription,
-            quantity: Number(item.quantity) || 0,
-            unit: item.unit || 'PCS',
-            unitPrice: Number(item.unitPrice) || 0,
-            totalPrice: Number(item.totalPrice) || ((Number(item.quantity) || 0) * (Number(item.unitPrice) || 0))
-          }))
+          .filter((item: any) => item?.workDescription)
+          .map((item: any) => {
+            const quantity = item.quantity === null || item.quantity === undefined || item.quantity === '' ? null : Number(item.quantity)
+            const unitPrice = item.unitPrice === null || item.unitPrice === undefined || item.unitPrice === '' ? null : Number(item.unitPrice)
+            const totalPrice = item.totalPrice === null || item.totalPrice === undefined || item.totalPrice === '' ? null : Number(item.totalPrice)
+            const computedTotal = (quantity != null && unitPrice != null) ? (quantity * unitPrice) : null
+            return {
+              workDescription: item.workDescription,
+              quantity: quantity,
+              unit: item.unit || 'PCS',
+              unitPrice: unitPrice,
+              totalPrice: totalPrice != null ? totalPrice : computedTotal
+            }
+          })
       : []
     
     // Check for existing job number (both active and deleted)
