@@ -334,7 +334,7 @@ export default function JobOrdersPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
-          items: workItems.filter(item => item.workDescription && (item.quantity > 0 || item.totalPrice > 0)),
+          items: workItems.filter(item => item.workDescription && (item.quantity > 0 || item.totalPrice > 0 || (item.unitPrice && item.unitPrice > 0))),
           finalTotal: finalTotalOverride !== null ? finalTotalOverride : undefined
         })
       })
@@ -485,7 +485,7 @@ export default function JobOrdersPage() {
         body: JSON.stringify({
           id: editingJob.id,
           ...editFormData,
-          items: editWorkItems.filter(item => item.workDescription && (item.quantity > 0 || item.totalPrice > 0)),
+          items: editWorkItems.filter(item => item.workDescription && (item.quantity > 0 || item.totalPrice > 0 || (item.unitPrice && item.unitPrice > 0))),
           finalTotal: editFinalTotalOverride !== null ? editFinalTotalOverride : undefined
         })
       })
@@ -1254,7 +1254,7 @@ export default function JobOrdersPage() {
                         {selectedJob.items.map((item, idx) => (
                           <tr key={item.id || idx} className="hover:bg-slate-50">
                             <td className="p-2 max-w-[40ch] two-line">{item.workDescription}</td>
-                            <td className="p-2 text-right whitespace-nowrap">{item.quantity}</td>
+                            <td className="p-2 text-right whitespace-nowrap">{item.quantity && item.quantity > 0 ? item.quantity : '—'}</td>
                             <td className="p-2 whitespace-nowrap">{item.unit}</td>
                             <td className="p-2 text-right whitespace-nowrap">{item.unitPrice.toFixed(2)} QAR</td>
                             <td className="p-2 text-right whitespace-nowrap font-semibold">{item.totalPrice.toFixed(2)} QAR</td>

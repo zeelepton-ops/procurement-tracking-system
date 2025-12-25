@@ -116,13 +116,13 @@ export async function POST(request: Request) {
 
     const safeItems = Array.isArray(body.items)
       ? body.items
-          .filter((item: any) => item?.workDescription && (Number(item?.quantity) > 0 || Number(item?.totalPrice) > 0))
+          .filter((item: any) => item?.workDescription && (Number(item?.quantity) > 0 || Number(item?.totalPrice) > 0 || Number(item?.unitPrice) > 0))
           .map((item: any) => ({
             workDescription: item.workDescription,
             quantity: Number(item.quantity) || 0,
             unit: item.unit || 'PCS',
             unitPrice: Number(item.unitPrice) || 0,
-            totalPrice: Number(item.totalPrice) || (Number(item.quantity) || 0) * (Number(item.unitPrice) || 0)
+            totalPrice: Number(item.totalPrice) || ((Number(item.quantity) || 0) * (Number(item.unitPrice) || 0))
           }))
       : []
     
@@ -351,10 +351,10 @@ export async function PUT(request: Request) {
               items: items && items.length > 0 ? {
                 create: items.map((item: any) => ({
                   workDescription: item.workDescription,
-                  quantity: parseFloat(item.quantity),
-                  unit: item.unit,
-                  unitPrice: parseFloat(item.unitPrice),
-                  totalPrice: parseFloat(item.totalPrice)
+                  quantity: Number(item.quantity) || 0,
+                  unit: item.unit || 'PCS',
+                  unitPrice: Number(item.unitPrice) || 0,
+                  totalPrice: Number(item.totalPrice) || ((Number(item.quantity) || 0) * (Number(item.unitPrice) || 0))
                 }))
               } : undefined
             },
