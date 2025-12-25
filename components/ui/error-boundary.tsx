@@ -13,8 +13,29 @@ export default class ErrorBoundary extends React.Component<any, { hasError: bool
   }
 
   componentDidCatch(error: any, info: any) {
-    // Log errors to console; in future we could send to Sentry
+    // Log errors to console
     console.error('ErrorBoundary caught an error:', error, info)
+
+    // Send a lightweight telemetry payload to the server for debugging.
+    // Avoid sending sensitive user data. Only include stack, component trace and browser context.
+    try {
+      const payload = {
+        message: error?.message || String(error),
+        stack: error?.stack || null,
+        componentStack: info?.componentStack || null,
+        url: typeof window !== 'undefined' ? window.location.href : null,
+        userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
+        timestamp: new Date().toISOString()
+      }
+      // fire-and-forget; do not block rendering
+      void fetch('/api/client-errors', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).catch((e) => console.warn('Failed to send client telemetry:', e))
+    } catch (e) {
+      console.warn('Telemetry reporting failed:', e)
+    }
   }
 
   render() {
