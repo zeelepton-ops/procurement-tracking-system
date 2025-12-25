@@ -1253,7 +1253,12 @@ export default function JobOrdersPage() {
                       <tbody className="divide-y">
                         {selectedJob.items.map((item, idx) => (
                           <tr key={item.id || idx} className="hover:bg-slate-50">
-                            <td className="p-2 max-w-[40ch] two-line">{item.workDescription}</td>
+                            <td className="p-2 max-w-[40ch] two-line">
+                              <div>{item.workDescription}</div>
+                              {(!item.quantity || item.quantity <= 0) && item.unitPrice && item.unitPrice > 0 && (
+                                <div className="text-xs text-amber-700 mt-1 italic">Qty missing — saved as unit-rate-only line</div>
+                              )}
+                            </td>
                             <td className="p-2 text-right whitespace-nowrap">{item.quantity && item.quantity > 0 ? item.quantity : '—'}</td>
                             <td className="p-2 whitespace-nowrap">{item.unit}</td>
                             <td className="p-2 text-right whitespace-nowrap">{item.unitPrice.toFixed(2)} QAR</td>
