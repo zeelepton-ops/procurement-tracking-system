@@ -92,12 +92,41 @@ export async function GET(request: Request) {
       skip: (page - 1) * perPage,
       take: perPage,
       include: {
-        _count: { select: { materialRequests: true } },
         items: true
       }
     })
 
-    return NextResponse.json({ jobs: jobOrders || [], totalCount })
+    // Compute counts of non-deleted material requests for these jobs in a single grouped query
+    const jobIds = jobOrders.map(j => j.id)
+    let mrCounts: Array<{ jobOrderId: string; _count: { _all: number } }> = []
+    if (jobIds.length > 0) {
+      try {
+        mrCounts = await prisma.materialRequest.groupBy({
+          by: ['jobOrderId'],
+          where: { jobOrderId: { in: jobIds }, isDeleted: false },
+          _count: { _all: true }
+        }) as any
+      } catch (err) {
+        console.warn('Failed to compute material request counts by group, falling back to per-job counts', err)
+        // Fallback: compute per-job counts sequentially
+        mrCounts = []
+        for (const id of jobIds) {
+          const c = await prisma.materialRequest.count({ where: { jobOrderId: id, isDeleted: false } })
+          mrCounts.push({ jobOrderId: id, _count: { _all: c } } as any)
+        }
+      }
+    }
+
+    // Attach a filtered materialRequests count (non-deleted) to each job under _count.materialRequests for UI compatibility
+    const jobsWithCounts = jobOrders.map(j => {
+      const found = mrCounts.find(m => m.jobOrderId === j.id)
+      return {
+        ...j,
+        _count: { materialRequests: found ? found._count._all : 0 }
+      }
+    })
+
+    return NextResponse.json({ jobs: jobsWithCounts || [], totalCount })
   } catch (error) {
     console.error('Failed to fetch job orders:', error)
     // Return proper format to avoid parsing errors on frontend
