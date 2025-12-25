@@ -1237,7 +1237,7 @@ export default function JobOrdersPage() {
               </div> 
 
               {/* Work Items Table */}
-              {selectedJob.items && selectedJob.items.length > 0 ? (
+              {Array.isArray(selectedJob.items) && selectedJob.items.length > 0 ? (
                 <div className="border-t pt-3">
                   <div className="text-sm font-semibold text-slate-700 mb-2">Work Items</div>
                   <div className="border rounded-lg overflow-hidden">
@@ -1252,7 +1252,7 @@ export default function JobOrdersPage() {
                         </tr>
                       </thead>
                       <tbody className="divide-y">
-                        {selectedJob.items.map((item, idx) => (
+                        {(Array.isArray(selectedJob.items) ? selectedJob.items : []).map((item, idx) => (
                           <tr key={item.id || idx} className="hover:bg-slate-50">
                             <td className="p-2 max-w-[80ch] two-line align-middle">
                               <div>{item.workDescription}</div>
@@ -1270,7 +1270,7 @@ export default function JobOrdersPage() {
                       <tfoot className="bg-slate-50 border-t-2">
                         <tr>
                           <td colSpan={4} className="p-2 text-right">Subtotal:</td>
-                          <td className="p-2 text-right font-semibold">{selectedJob.items.reduce((sum, item) => sum + (item.totalPrice ?? 0), 0).toFixed(2)} QAR</td>
+                          <td className="p-2 text-right font-semibold">{(Array.isArray(selectedJob.items) ? selectedJob.items.reduce((sum, item) => sum + (item.totalPrice ?? 0), 0) : 0).toFixed(2)} QAR</td>
                         </tr>
                         <tr>
                           <td colSpan={4} className="p-2 text-right">Discount:</td>
@@ -1282,7 +1282,7 @@ export default function JobOrdersPage() {
                         </tr>
                         <tr>
                           <td colSpan={4} className="p-2 text-right font-bold">Final Total:</td>
-                          <td className="p-2 text-right font-bold text-blue-600">{((selectedJob as any).finalTotal !== undefined && (selectedJob as any).finalTotal !== null ? (selectedJob as any).finalTotal : (selectedJob.items.reduce((sum, item) => sum + (item.totalPrice ?? 0), 0) - ((selectedJob as any).discount || 0) + ((selectedJob as any).roundOff || 0))).toFixed(2)} QAR</td>
+                          <td className="p-2 text-right font-bold text-blue-600">{((selectedJob as any).finalTotal !== undefined && (selectedJob as any).finalTotal !== null ? (selectedJob as any).finalTotal : ((Array.isArray(selectedJob.items) ? selectedJob.items.reduce((sum, item) => sum + (item.totalPrice ?? 0), 0) : 0) - ((selectedJob as any).discount || 0) + ((selectedJob as any).roundOff || 0))).toFixed(2)} QAR</td>
                         </tr>
                       </tfoot>
                     </table>

@@ -261,7 +261,10 @@ export default function MaterialRequestPage() {
     try {
       const res = await fetch('/api/job-orders')
       const data = await res.json()
-      setJobOrders(data)
+      // API may return { jobs: [], totalCount } or an array directly — handle both
+      if (Array.isArray(data)) setJobOrders(data)
+      else if (data && Array.isArray((data as any).jobs)) setJobOrders((data as any).jobs)
+      else setJobOrders([])
     } catch (error) {
       console.error('Failed to fetch job orders:', error)
     }
@@ -271,7 +274,10 @@ export default function MaterialRequestPage() {
     try {
       const res = await fetch('/api/assets')
       const data = await res.json()
-      setAssets(data)
+      // Ensure we always store an array
+      if (Array.isArray(data)) setAssets(data)
+      else if (data && Array.isArray((data as any).assets)) setAssets((data as any).assets)
+      else setAssets([])
     } catch (error) {
       console.error('Failed to fetch assets:', error)
     }
