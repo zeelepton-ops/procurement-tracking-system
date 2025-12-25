@@ -42,10 +42,10 @@ interface JobOrder {
 interface JobOrderItem {
   id?: string
   workDescription: string
-  quantity: number
+  quantity: number | null
   unit: string
-  unitPrice: number
-  totalPrice: number
+  unitPrice: number | null
+  totalPrice: number | null
 }
 
 const SCOPE_OF_WORKS_OPTIONS = [
@@ -1272,7 +1272,7 @@ export default function JobOrdersPage() {
                       <tfoot className="bg-slate-50 border-t-2">
                         <tr>
                           <td colSpan={4} className="p-2 text-right">Subtotal:</td>
-                          <td className="p-2 text-right font-semibold">{selectedJob.items.reduce((sum, item) => sum + item.totalPrice, 0).toFixed(2)} QAR</td>
+                          <td className="p-2 text-right font-semibold">{selectedJob.items.reduce((sum, item) => sum + (item.totalPrice ?? 0), 0).toFixed(2)} QAR</td>
                         </tr>
                         <tr>
                           <td colSpan={4} className="p-2 text-right">Discount:</td>
@@ -1284,7 +1284,7 @@ export default function JobOrdersPage() {
                         </tr>
                         <tr>
                           <td colSpan={4} className="p-2 text-right font-bold">Final Total:</td>
-                          <td className="p-2 text-right font-bold text-blue-600">{((selectedJob as any).finalTotal !== undefined && (selectedJob as any).finalTotal !== null ? (selectedJob as any).finalTotal : (selectedJob.items.reduce((sum, item) => sum + item.totalPrice, 0) - ((selectedJob as any).discount || 0) + ((selectedJob as any).roundOff || 0))).toFixed(2)} QAR</td>
+                          <td className="p-2 text-right font-bold text-blue-600">{((selectedJob as any).finalTotal !== undefined && (selectedJob as any).finalTotal !== null ? (selectedJob as any).finalTotal : (selectedJob.items.reduce((sum, item) => sum + (item.totalPrice ?? 0), 0) - ((selectedJob as any).discount || 0) + ((selectedJob as any).roundOff || 0))).toFixed(2)} QAR</td>
                         </tr>
                       </tfoot>
                     </table>
@@ -1655,7 +1655,7 @@ export default function JobOrdersPage() {
                               </Button>
                             )}
                           </div>
-                          {item.quantity > 0 && item.unitPrice > 0 && (
+                          {item.quantity != null && item.quantity > 0 && item.unitPrice != null && item.unitPrice > 0 && item.totalPrice != null && (
                             <div className="col-span-12 text-xs text-slate-600">
                               Total: {item.totalPrice.toFixed(2)} QAR
                             </div>
@@ -1670,7 +1670,7 @@ export default function JobOrdersPage() {
                     <div className="md:col-span-1 text-sm text-slate-600">
                       Subtotal
                       <div className="font-semibold text-slate-800">
-                        {editWorkItems.reduce((s, it) => s + (it.totalPrice || 0), 0).toFixed(2)} QAR
+                        {editWorkItems.reduce((s, it) => s + (it.totalPrice ?? 0), 0).toFixed(2)} QAR
                       </div>
                     </div>
                     <div className="md:col-span-1">
