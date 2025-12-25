@@ -1244,7 +1244,7 @@ export default function JobOrdersPage() {
                     <table className="w-full text-xs">
                       <thead className="bg-slate-100">
                         <tr>
-                          <th className="text-left p-2 font-semibold">Description</th>
+                          <th className="text-left p-2 font-semibold w-[60%]">Description</th>
                           <th className="text-right p-2 font-semibold">Qty</th>
                           <th className="text-left p-2 font-semibold">Unit</th>
                           <th className="text-right p-2 font-semibold">Unit Price</th>
@@ -1254,7 +1254,7 @@ export default function JobOrdersPage() {
                       <tbody className="divide-y">
                         {selectedJob.items.map((item, idx) => (
                           <tr key={item.id || idx} className="hover:bg-slate-50">
-                            <td className="p-2 max-w-[40ch] two-line">
+                            <td className="p-2 max-w-[80ch] two-line align-middle">
                               <div>{item.workDescription}</div>
                               {((item.quantity == null) && (item.totalPrice == null)) ? (
                                 <div className="text-xs text-amber-700 mt-1 italic">Qty/Total variable — saved as placeholder; edit to add numeric values.</div>
