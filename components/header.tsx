@@ -26,7 +26,7 @@ export default function Header() {
       icon: Package,
       children: [
         { href: '/material-request', label: 'Material Requests', icon: FileText },
-        { href: '/purchase-orders/prepare', label: 'Purchase Orders', icon: FileText },
+        { href: '/purchase-orders', label: 'Purchase Orders', icon: FileText },
         { href: '/suppliers', label: 'Suppliers', icon: Users },
       ]
     },

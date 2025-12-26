@@ -218,30 +218,33 @@ model PurchaseOrder {
   expectedDelivery DateTime?
   actualDelivery   DateTime?
 
-  totalAmount Float
   status      String @default("PENDING") // "PENDING", "SENT", "ACKNOWLEDGED", "PARTIALLY_DELIVERED", "DELIVERED", "CANCELLED"
 
-  createdBy String
+  createdBy String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  items PurchaseOrderItem[]
+  // Soft delete support
+  isDeleted Boolean   @default(false)
+  deletedAt DateTime?
+  deletedBy String?
+
+  purchaseOrderItems PurchaseOrderItem[]
 }
 
 model PurchaseOrderItem {
   id              String        @id @default(cuid())
   purchaseOrderId String
-  purchaseOrder   PurchaseOrder @relation(fields: [purchaseOrderId], references: [id])
+  purchaseOrder   PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
 
   materialRequestId String
   materialRequest   MaterialRequest @relation(fields: [materialRequestId], references: [id])
 
-  orderedQuantity  Float
-  receivedQuantity Float @default(0)
+  description      String
+  quantity         Float
+  unit             String
   unitPrice        Float
   totalPrice       Float
-
-  deliveryStatus String @default("PENDING") // "PENDING", "PARTIAL", "DELIVERED"
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
