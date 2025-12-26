@@ -529,7 +529,7 @@ export async function PUT(request: Request) {
 
     // Update material request and items in a transaction
     const updated = await prisma.$transaction(async (tx) => {
-      // Soft-delete existing items instead of hard delete
+      // Soft-delete existing items of THIS request only (not all items)
       await tx.materialRequestItem.updateMany({
         where: { materialRequestId: id, isDeleted: false },
         data: {
@@ -567,7 +567,9 @@ export async function PUT(request: Request) {
               jobOrderId: item.jobOrderId || null,
               urgencyLevel: item.urgencyLevel || 'NORMAL',
               requiredDate: item.requiredDate ? new Date(item.requiredDate) : null,
-              preferredSupplier: item.preferredSupplier || null
+              preferredSupplier: item.preferredSupplier || null,
+              // NEW: per-line status
+              status: item.status || 'PENDING'
             }))
           } : undefined
         },

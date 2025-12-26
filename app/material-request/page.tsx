@@ -108,6 +108,8 @@ export default function MaterialRequestPage() {
     jobOrderId?: string;
     // Transient UI flag set to true when the user links the item by selecting a Job suggestion in this session
     _linkedByJobSuggestion?: boolean;
+    // NEW: per-line item status
+    status?: string;
   }>>([{ 
     itemName: '', 
     description: '', 
@@ -119,7 +121,8 @@ export default function MaterialRequestPage() {
     requiredDate: '',
     preferredSupplier: '',
     jobOrderId: '',
-    _linkedByJobSuggestion: false
+    _linkedByJobSuggestion: false,
+    status: 'PENDING'
   }])
   
   const [formData, setFormData] = useState({
@@ -349,7 +352,8 @@ export default function MaterialRequestPage() {
           requiredDate: item.requiredDate ? new Date(item.requiredDate).toISOString().slice(0,10) : '',
           preferredSupplier: item.preferredSupplier || '',
           jobOrderId: item.jobOrderId || '',
-          _linkedByJobSuggestion: false
+          _linkedByJobSuggestion: false,
+          status: item.status || 'PENDING'
         }))
       : [{
           itemName: req.itemName,
@@ -362,7 +366,8 @@ export default function MaterialRequestPage() {
           requiredDate: new Date(req.requiredDate).toISOString().slice(0,10),
           preferredSupplier: req.preferredSupplier || '',
           jobOrderId: req.jobOrderId || '',
-          _linkedByJobSuggestion: false
+          _linkedByJobSuggestion: false,
+          status: req.status || 'PENDING'
         }]
     
     setItems(itemsToEdit)
@@ -527,7 +532,10 @@ export default function MaterialRequestPage() {
       reasonForRequest: '',
       urgencyLevel: 'NORMAL',
       requiredDate: '',
-      preferredSupplier: ''
+      preferredSupplier: '',
+      jobOrderId: '',
+      _linkedByJobSuggestion: false,
+      status: 'PENDING'
     }])
   }
 
@@ -1058,52 +1066,26 @@ export default function MaterialRequestPage() {
               <CardDescription>{selectedRequest.requestNumber}</CardDescription>
             </CardHeader>
             <CardContent className="pt-3 text-sm text-slate-800 space-y-3">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div>
-                  <Label>Material Type *</Label>
-                  <Select 
-                    value={editData.materialType || 'RAW_MATERIAL'} 
-                    onChange={(e) => setEditData({ ...editData, materialType: e.target.value })}
-                  >
-                    <option value="RAW_MATERIAL">Raw Material</option>
-                    <option value="CONSUMABLE">Consumable</option>
-                    <option value="MAINTENANCE">Maintenance</option>
-                    <option value="ASSET">Asset</option>
-                    <option value="STATIONARY">Stationary</option>
-                    <option value="GENERAL_REQUEST">General Request</option>
-                  </Select>
-                </div>
-                <div>
-                  <Label>Status</Label>
-                  <Select value={editData.status || 'PENDING'} onChange={(e) => setEditData({ ...editData, status: e.target.value })}>
-                    <option value="PENDING">PENDING</option>
-                    <option value="IN_PROCUREMENT">IN_PROCUREMENT</option>
-                    <option value="ORDERED">ORDERED</option>
-                    <option value="PARTIALLY_RECEIVED">PARTIALLY_RECEIVED</option>
-                    <option value="RECEIVED">RECEIVED</option>
-                    <option value="CANCELLED">CANCELLED</option>
-                  </Select>
-                </div>
-              </div>
 
               {/* Items Section */}
               <div>
                 <Label className="text-sm font-semibold mb-2">Items</Label>
                 <div className="space-y-2 overflow-x-auto">
-                  <div className="grid grid-cols-[1.125fr_3fr_minmax(72px,0.5fr)_0.4fr_1.5fr_minmax(84px,0.6fr)_1.2fr_1.25fr_0.6fr_0.5fr] gap-0.5 text-[11px] font-semibold text-slate-600 px-0.5 w-full">
+                  <div className="grid grid-cols-[1.125fr_3fr_minmax(72px,0.5fr)_0.4fr_1.5fr_minmax(84px,0.6fr)_minmax(75px,0.65fr)_1.2fr_1.25fr_0.6fr_0.5fr] gap-0.5 text-[11px] font-semibold text-slate-600 px-0.5 w-full">
                     <div>Item Name</div>
                     <div>Description</div>
                     <div>Qty</div>
                     <div>Unit</div>
                     <div>Reason</div>
                     <div>Urgency</div>
+                    <div>Status</div>
                     <div>Req. Date</div>
                     <div>Supplier</div>
                     <div>Stock</div>
                     <div></div>
                   </div>
                   {items.map((item, idx) => (
-                    <div key={idx} className="grid grid-cols-[1.125fr_3fr_minmax(72px,0.5fr)_0.4fr_1.5fr_minmax(84px,0.6fr)_1.2fr_1.25fr_0.6fr_0.5fr] gap-0.5 w-full">
+                    <div key={idx} className="grid grid-cols-[1.125fr_3fr_minmax(72px,0.5fr)_0.4fr_1.5fr_minmax(84px,0.6fr)_minmax(75px,0.65fr)_1.2fr_1.25fr_0.6fr_0.5fr] gap-0.5 w-full">
                       <Input
                         value={item.itemName}
                         onChange={(e) => updateItemField(idx, 'itemName', e.target.value)}
@@ -1150,6 +1132,18 @@ export default function MaterialRequestPage() {
                         <option value="NORMAL">Normal</option>
                         <option value="HIGH">High</option>
                         <option value="CRITICAL">Critical</option>
+                      </select>
+                      <select
+                        value={item.status || 'PENDING'}
+                        onChange={(e) => updateItemField(idx, 'status', e.target.value)}
+                        className="h-7 px-1 rounded-md border border-slate-300 text-[11px]"
+                      >
+                        <option value="PENDING">PENDING</option>
+                        <option value="IN_PROCUREMENT">IN_PROCUREMENT</option>
+                        <option value="ORDERED">ORDERED</option>
+                        <option value="PARTIALLY_RECEIVED">PARTIAL</option>
+                        <option value="RECEIVED">RECEIVED</option>
+                        <option value="CANCELLED">CANCELLED</option>
                       </select>
                       <Input
                         type="date"
