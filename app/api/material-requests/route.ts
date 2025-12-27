@@ -226,9 +226,10 @@ export async function POST(request: Request) {
       })
     } catch (err: any) {
       // Handle missing-column schema errors by attempting an additive migration
-      if (err?.code === 'P2022' && err?.meta?.column) {
+      const allowRuntimeFix = process.env.ALLOW_RUNTIME_SCHEMA_FIXES === 'true'
+      if (allowRuntimeFix && err?.code === 'P2022' && err?.meta?.column) {
         const missingCol = String(err.meta.column)
-        console.warn(`Detected missing column ${missingCol} in MaterialRequest; attempting to add it`)
+        console.warn(`Detected missing column ${missingCol} in MaterialRequest; attempting to add it (runtime schema fix enabled)`)
         try {
           if (missingCol === 'requestContext') {
             await prisma.$executeRaw`ALTER TABLE "MaterialRequest" ADD COLUMN IF NOT EXISTS "requestContext" TEXT NOT NULL DEFAULT 'JOB_ORDER'`

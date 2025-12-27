@@ -82,12 +82,14 @@ Use this in your SQL editor to list missing columns (we used a similar query alr
 ---
 
 ## Temporary runtime fallback: use sparingly ⚠️
-- The codebase may add defensive `try/catch` that catches Prisma `P2022` and attempts `ALTER TABLE ADD COLUMN IF NOT EXISTS` then retries the query. This *works* short-term but is not recommended for the long term because:
+- The codebase may add defensive `try/catch` that catches Prisma `P2022`/`P2021` and attempts idempotent SQL (e.g., `ALTER TABLE ADD COLUMN IF NOT EXISTS` or `CREATE TABLE IF NOT EXISTS`) then retries the query. This *works* short-term but is not recommended for the long term because:
   - It hides schema drift rather than enforcing correct migrations
   - It may produce inconsistent DB states across replicas
   - It makes debugging harder and can mask missing indexes or constraints
 
-Use this approach only as an emergency auto-remediation while you apply permanent migrations.
+- **Runtime fixes are gated** by the environment variable `ALLOW_RUNTIME_SCHEMA_FIXES`. By default this should be unset (disabled). When set to `true`, the server will attempt the emergency SQL fix; otherwise it will fail fast and surface a clear error so you can apply the correct migration.
+
+Use this approach only as an emergency auto-remediation while you apply permanent migrations, and **disable it after the migration is applied**.
 
 ---
 

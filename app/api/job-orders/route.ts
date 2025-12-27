@@ -15,9 +15,10 @@ export async function GET(request: Request) {
       try {
         jo = await prisma.jobOrder.findFirst({ where: { jobNumber: jobNumberParam }, include: { items: true } })
       } catch (err: any) {
-        if (err?.code === 'P2022' && err?.meta?.column) {
+        const allowRuntimeFix = process.env.ALLOW_RUNTIME_SCHEMA_FIXES === 'true'
+        if (allowRuntimeFix && err?.code === 'P2022' && err?.meta?.column) {
           const col = String(err.meta.column)
-          console.warn(`Detected missing column ${col} in JobOrder during lookup; attempting to add it temporarily`)
+          console.warn(`Detected missing column ${col} in JobOrder during lookup; attempting to add it temporarily (runtime schema fix enabled)`)
           try {
             const matches = col.match(/\.(.+)$/)
             const columnName = matches ? matches[1] : col
@@ -181,10 +182,11 @@ export async function POST(request: Request) {
     try {
       existingByNumber = await prisma.jobOrder.findFirst({ where: { jobNumber: body.jobNumber } })
     } catch (err: any) {
-      // Handle missing column errors (Prisma P2022) by adding the column and retrying once
-      if (err?.code === 'P2022' && err?.meta?.column) {
+      // Handle missing column errors (Prisma P2022) by adding the column and retrying once, but only when explicitly enabled
+      const allowRuntimeFix = process.env.ALLOW_RUNTIME_SCHEMA_FIXES === 'true'
+      if (allowRuntimeFix && err?.code === 'P2022' && err?.meta?.column) {
         const col = String(err.meta.column)
-        console.warn(`Detected missing column ${col} in JobOrder; attempting to add it temporarily`)
+        console.warn(`Detected missing column ${col} in JobOrder; attempting to add it temporarily (runtime schema fix enabled)`)
         try {
           // Extract column name after the dot if formatted like 'JobOrder.clientContactPerson'
           const matches = col.match(/\.(.+)$/)
