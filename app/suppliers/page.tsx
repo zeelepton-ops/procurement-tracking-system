@@ -13,12 +13,17 @@ export default function SuppliersPage() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const { data: session } = useSession()
   const [approval, setApproval] = useState<{ open: boolean; supplier: any | null; notes: string }>({ open: false, supplier: null, notes: '' })
+  const [q, setQ] = useState('')
+  const [statusFilter, setStatusFilter] = useState<'ALL' | 'PENDING' | 'APPROVED' | 'REJECTED' | 'SUSPENDED'>('ALL')
 
   useEffect(() => { fetchSuppliers() }, [])
 
-  async function fetchSuppliers() {
+  async function fetchSuppliers(query?: string, status?: string) {
     setLoading(true)
-    const res = await fetch('/api/suppliers')
+    const params = new URLSearchParams()
+    if (query) params.set('q', query)
+    if (status && status !== 'ALL') params.set('status', status)
+    const res = await fetch(`/api/suppliers?${params.toString()}`)
     const data = await res.json()
     setSuppliers(data)
     setLoading(false)
@@ -55,10 +60,23 @@ export default function SuppliersPage() {
   return (
     <div className="max-w-4xl mx-auto p-4">
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-bold">Suppliers</h1>
+        <div className="flex flex-col">
+          <h1 className="text-xl font-bold">Suppliers</h1>
+          <div className="mt-2 flex gap-2 items-center">
+            <Input placeholder="Search suppliers" value={q} onChange={(e) => setQ((e.target as HTMLInputElement).value)} />
+            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as any)} className="border rounded px-2 py-1">
+              <option value="ALL">All</option>
+              <option value="PENDING">Pending</option>
+              <option value="APPROVED">Approved</option>
+              <option value="REJECTED">Rejected</option>
+              <option value="SUSPENDED">Suspended</option>
+            </select>
+            <Button onClick={() => fetchSuppliers(q, statusFilter)}>Search</Button>
+          </div>
+        </div>
         <div className="flex gap-2">
           <Button onClick={() => window.location.href = '/suppliers/register'}>Register Supplier</Button>
-          <Button onClick={fetchSuppliers} variant="outline">Refresh</Button>
+          <Button onClick={() => fetchSuppliers(q, statusFilter)} variant="outline">Refresh</Button>
         </div>
       </div>
 

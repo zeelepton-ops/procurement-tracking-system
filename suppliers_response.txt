@@ -1,0 +1,14 @@
+HTTP/1.1 500 Internal Server Error
+Age: 0
+Cache-Control: public, max-age=0, must-revalidate
+Content-Type: application/json
+Date: Sat, 27 Dec 2025 10:59:59 GMT
+Server: Vercel
+Strict-Transport-Security: max-age=63072000
+Vary: RSC, Next-Router-State-Tree, Next-Router-Prefetch
+X-Matched-Path: /api/suppliers
+X-Vercel-Cache: MISS
+X-Vercel-Id: dxb1::iad1::ttzgb-1766833196904-058dccc761ee
+Transfer-Encoding: chunked
+
+{"error":"\nInvalid `prisma.supplier.findMany()` invocation:\n\n\nThe column `SupplierPrice.unitPrice` does not exist in the current database."}

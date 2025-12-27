@@ -1,0 +1,1 @@
+{"error":"\nInvalid `prisma.supplier.findMany()` invocation:\n\n\nThe column `SupplierPrice.unitPrice` does not exist in the current database."}
