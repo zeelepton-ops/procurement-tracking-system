@@ -289,9 +289,23 @@ model Supplier {
   email         String?
   phone         String?
   address       String?
+  city          String?
+  country       String?
   website       String?
+  
+  // Business Details
+  category      String? // e.g., "Steel Structures", "Equipment", "Materials", etc.
+  businessType  String? // e.g., "Manufacturer", "Distributor", "Service Provider"
+  yearEstablished Int?
+  
+  // Registration Documents
+  crNumber      String?
+  crDocumentUrl String? // Commercial Registration
+  taxCardUrl    String? // Tax Card/Tax ID Document
+  icvUrl        String? // ICV Certificate
+  
+  // Financial & Terms
   rating        Float?
-
   isActive        Boolean @default(true)
   paymentTerms    String?
   leadTimeDays    Int?

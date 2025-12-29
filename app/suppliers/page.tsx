@@ -1,137 +1,310 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { Select } from '@/components/ui/select'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Building2, MapPin, Phone, Mail, Award, Plus, Search, Filter } from 'lucide-react'
+
+interface Supplier {
+  id: string
+  name: string
+  tradingName?: string
+  category?: string
+  businessType?: string
+  email?: string
+  phone?: string
+  address?: string
+  city?: string
+  country?: string
+  rating?: number
+  status: string
+  isActive: boolean
+  crNumber?: string
+  createdAt: string
+}
+
+const SUPPLIER_CATEGORIES = [
+  'Steel Structures',
+  'Equipment & Machinery',
+  'Raw Materials',
+  'Consumables',
+  'Services',
+  'Construction Materials',
+  'Electronics',
+  'Hardware',
+  'Other'
+]
 
 export default function SuppliersPage() {
-  const [suppliers, setSuppliers] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
-  const [form, setForm] = useState<any>({ name: '', contactPerson: '', email: '', phone: '', address: '', paymentTerms: '', leadTimeDays: 0 })
-  const [editingId, setEditingId] = useState<string | null>(null)
+  const router = useRouter()
   const { data: session } = useSession()
-  const [approval, setApproval] = useState<{ open: boolean; supplier: any | null; notes: string }>({ open: false, supplier: null, notes: '' })
-  const [q, setQ] = useState('')
-  const [statusFilter, setStatusFilter] = useState<'ALL' | 'PENDING' | 'APPROVED' | 'REJECTED' | 'SUSPENDED'>('ALL')
+  const [suppliers, setSuppliers] = useState<Supplier[]>([])
+  const [loading, setLoading] = useState(true)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [categoryFilter, setCategoryFilter] = useState('ALL')
+  const [statusFilter, setStatusFilter] = useState<'ALL' | 'PENDING' | 'APPROVED' | 'REJECTED' | 'SUSPENDED'>('APPROVED')
 
-  useEffect(() => { fetchSuppliers() }, [])
+  useEffect(() => {
+    fetchSuppliers()
+  }, [searchQuery, categoryFilter, statusFilter])
 
-  async function fetchSuppliers(query?: string, status?: string) {
+  async function fetchSuppliers() {
     setLoading(true)
-    const params = new URLSearchParams()
-    if (query) params.set('q', query)
-    if (status && status !== 'ALL') params.set('status', status)
-    const res = await fetch(`/api/suppliers?${params.toString()}`)
-    const data = await res.json()
-    setSuppliers(data)
-    setLoading(false)
-  }
+    try {
+      const params = new URLSearchParams()
+      if (searchQuery) params.set('q', searchQuery)
+      if (categoryFilter !== 'ALL') params.set('category', categoryFilter)
+      if (statusFilter !== 'ALL') params.set('status', statusFilter)
 
-  async function save(e: React.FormEvent) {
-    e.preventDefault()
-    if (editingId) {
-      const res = await fetch('/api/suppliers', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...form, id: editingId }) })
-      if (!res.ok) return alert('Update failed')
-      setEditingId(null)
-      setForm({ name: '', contactPerson: '', email: '', phone: '', address: '', paymentTerms: '', leadTimeDays: 0 })
-      fetchSuppliers()
-    } else {
-      const res = await fetch('/api/suppliers', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) })
-      if (!res.ok) return alert('Create failed')
-      setForm({ name: '', contactPerson: '', email: '', phone: '', address: '', paymentTerms: '', leadTimeDays: 0 })
-      fetchSuppliers()
+      const res = await fetch(`/api/suppliers?${params.toString()}`)
+      const data = await res.json()
+      setSuppliers(Array.isArray(data) ? data : [])
+    } catch (error) {
+      console.error('Failed to fetch suppliers:', error)
+      setSuppliers([])
+    } finally {
+      setLoading(false)
     }
   }
 
-  async function edit(s: any) {
-    setEditingId(s.id)
-    setForm(s)
-  }
-
-  async function remove(id: string) {
-    if (!confirm('Delete supplier?')) return
-    const res = await fetch(`/api/suppliers?id=${id}`, { method: 'DELETE' })
-    if (!res.ok) return alert('Delete failed')
-    fetchSuppliers()
-  }
+  const isAdmin = session?.user?.role === 'ADMIN'
 
   return (
-    <div className="max-w-4xl mx-auto p-4">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex flex-col">
-          <h1 className="text-xl font-bold">Suppliers</h1>
-          <div className="mt-2 flex gap-2 items-center">
-            <Input placeholder="Search suppliers" value={q} onChange={(e) => setQ((e.target as HTMLInputElement).value)} />
-            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as any)} className="border rounded px-2 py-1">
-              <option value="ALL">All</option>
-              <option value="PENDING">Pending</option>
-              <option value="APPROVED">Approved</option>
-              <option value="REJECTED">Rejected</option>
-              <option value="SUSPENDED">Suspended</option>
-            </select>
-            <Button onClick={() => fetchSuppliers(q, statusFilter)}>Search</Button>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-8">
+      <div className="max-w-7xl mx-auto px-4">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900">Suppliers</h1>
+            <p className="text-slate-600 mt-1">Manage and review all registered suppliers</p>
           </div>
+          <Button
+            onClick={() => router.push('/suppliers/register')}
+            className="bg-blue-600 hover:bg-blue-700"
+          >
+            <Plus className="h-4 w-4 mr-2" /> Register New Supplier
+          </Button>
         </div>
-        <div className="flex gap-2">
-          <Button onClick={() => window.location.href = '/suppliers/register'}>Register Supplier</Button>
-          <Button onClick={() => fetchSuppliers(q, statusFilter)} variant="outline">Refresh</Button>
-        </div>
-      </div>
 
-      <form onSubmit={save} className="grid grid-cols-1 md:grid-cols-3 gap-2 mb-4">
-        <Input placeholder="Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-        <Input placeholder="Contact person" value={form.contactPerson} onChange={(e) => setForm({ ...form, contactPerson: e.target.value })} />
-        <Input placeholder="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
-        <Input placeholder="Phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
-        <Input placeholder="Payment terms" value={form.paymentTerms} onChange={(e) => setForm({ ...form, paymentTerms: e.target.value })} />
-        <Input placeholder="Lead time (days)" type="number" value={form.leadTimeDays} onChange={(e) => setForm({ ...form, leadTimeDays: parseInt(e.target.value || '0') })} />
-        <div className="md:col-span-3 flex gap-2">
-          <Button type="submit" className="bg-blue-600">{editingId ? 'Save' : 'Create'}</Button>
-          {editingId && <Button type="button" variant="outline" onClick={() => { setEditingId(null); setForm({ name: '', contactPerson: '', email: '', phone: '', address: '', paymentTerms: '', leadTimeDays: 0 }) }}>Cancel</Button>}
-        </div>
-      </form>
-
-      {loading ? <div>Loading...</div> : (
-        <div className="space-y-2">
-          {suppliers.map(s => (
-            <div key={s.id} className="border p-3 rounded flex items-center justify-between">
+        {/* Filters */}
+        <Card className="mb-6">
+          <CardContent className="pt-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div>
-                <div className="font-semibold">{s.name} {s.tradingName ? `(${s.tradingName})` : ''} {s.status ? <span className="ml-2 px-2 py-0.5 rounded bg-slate-100 text-sm">{s.status}</span> : null}</div>
-                <div className="text-sm text-slate-600">{s.contactPerson} • {s.phone} • {s.email}</div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Search</label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+                  <Input
+                    placeholder="Search by name, email..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
               </div>
-              <div className="flex gap-2">
-                <Button size="sm" variant="outline" onClick={() => window.location.href = `/suppliers/${s.id}`}>View</Button>
-                {s.status === 'PENDING' && session?.user?.role === 'ADMIN' && <Button size="sm" onClick={() => setApproval({ open: true, supplier: s, notes: '' })}>Approve</Button>}
-                <Button size="sm" variant="outline" onClick={() => edit(s)}>Edit</Button>
-                <Button size="sm" variant="destructive" onClick={() => remove(s.id)}>Delete</Button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
 
-      {approval.open && (
-        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
-          <div className="bg-white p-4 rounded max-w-md w-full">
-            <h3 className="font-semibold mb-2">Approve supplier</h3>
-            <div className="mb-2">Approve <strong>{approval.supplier?.name}</strong>?</div>
-            <textarea className="w-full border p-2" placeholder="Notes (optional)" value={approval.notes} onChange={(e) => setApproval({ ...approval, notes: e.target.value })}></textarea>
-            <div className="mt-3 flex gap-2 justify-end">
-              <Button variant="outline" onClick={() => setApproval({ open: false, supplier: null, notes: '' })}>Cancel</Button>
-              <Button onClick={async () => {
-                try {
-                  const res = await fetch(`/api/suppliers/${approval.supplier.id}/approve`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'APPROVED', notes: approval.notes }) })
-                  if (!res.ok) throw new Error('Failed')
-                  setApproval({ open: false, supplier: null, notes: '' })
-                  fetchSuppliers()
-                } catch (err) { alert('Failed to approve') }
-              }}>Approve</Button>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Category</label>
+                <Select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
+                  <option value="ALL">All Categories</option>
+                  {SUPPLIER_CATEGORIES.map(cat => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </Select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Status</label>
+                <Select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value as any)}
+                >
+                  <option value="ALL">All Status</option>
+                  <option value="PENDING">Pending Review</option>
+                  <option value="APPROVED">Approved</option>
+                  <option value="REJECTED">Rejected</option>
+                  <option value="SUSPENDED">Suspended</option>
+                </Select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">&nbsp;</label>
+                <Button
+                  onClick={() => {
+                    setSearchQuery('')
+                    setCategoryFilter('ALL')
+                    setStatusFilter('APPROVED')
+                  }}
+                  variant="outline"
+                  className="w-full"
+                >
+                  <Filter className="h-4 w-4 mr-2" /> Reset
+                </Button>
+              </div>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Suppliers Grid */}
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[...Array(6)].map((_, i) => (
+              <Card key={i} className="animate-pulse">
+                <CardContent className="pt-6">
+                  <div className="h-6 bg-slate-200 rounded mb-4" />
+                  <div className="h-4 bg-slate-200 rounded mb-2" />
+                  <div className="h-4 bg-slate-200 rounded w-3/4" />
+                </CardContent>
+              </Card>
+            ))}
           </div>
-        </div>
-      )}
+        ) : suppliers.length === 0 ? (
+          <Card>
+            <CardContent className="py-16 text-center">
+              <Building2 className="h-12 w-12 mx-auto text-slate-300 mb-4" />
+              <p className="text-slate-600 text-lg">No suppliers found</p>
+              <p className="text-slate-500 text-sm mt-1">Try adjusting your filters or register a new supplier</p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {suppliers.map(supplier => (
+              <Card
+                key={supplier.id}
+                className="hover:shadow-lg transition-shadow cursor-pointer"
+                onClick={() => router.push(`/suppliers/${supplier.id}`)}
+              >
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <CardTitle className="text-lg">{supplier.name}</CardTitle>
+                      {supplier.tradingName && (
+                        <p className="text-sm text-slate-600 mt-1">{supplier.tradingName}</p>
+                      )}
+                    </div>
+                    {supplier.rating && supplier.rating > 0 && (
+                      <div className="flex items-center gap-1 ml-2">
+                        <Award className="h-4 w-4 text-yellow-500" />
+                        <span className="text-sm font-medium">{supplier.rating.toFixed(1)}</span>
+                      </div>
+                    )}
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {/* Category & Status */}
+                    <div className="flex items-center justify-between">
+                      {supplier.category && (
+                        <span className="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-full">
+                          {supplier.category}
+                        </span>
+                      )}
+                      <span className={`text-xs px-3 py-1 rounded-full font-medium ${
+                        supplier.status === 'APPROVED' ? 'bg-green-100 text-green-700' :
+                        supplier.status === 'PENDING' ? 'bg-yellow-100 text-yellow-700' :
+                        supplier.status === 'REJECTED' ? 'bg-red-100 text-red-700' :
+                        'bg-gray-100 text-gray-700'
+                      }`}>
+                        {supplier.status}
+                      </span>
+                    </div>
+
+                    {/* Business Type */}
+                    {supplier.businessType && (
+                      <p className="text-sm text-slate-600">
+                        <span className="font-medium">Type:</span> {supplier.businessType}
+                      </p>
+                    )}
+
+                    {/* Location */}
+                    {(supplier.city || supplier.country) && (
+                      <div className="flex items-start gap-2 text-sm text-slate-600">
+                        <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                        <span>{[supplier.city, supplier.country].filter(Boolean).join(', ')}</span>
+                      </div>
+                    )}
+
+                    {/* Contact Info */}
+                    <div className="space-y-1">
+                      {supplier.email && (
+                        <div className="flex items-center gap-2 text-sm text-slate-600 truncate">
+                          <Mail className="h-4 w-4 flex-shrink-0" />
+                          <span className="truncate">{supplier.email}</span>
+                        </div>
+                      )}
+                      {supplier.phone && (
+                        <div className="flex items-center gap-2 text-sm text-slate-600">
+                          <Phone className="h-4 w-4 flex-shrink-0" />
+                          <span>{supplier.phone}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* CR Number */}
+                    {supplier.crNumber && (
+                      <p className="text-xs text-slate-500 border-t pt-3">
+                        <span className="font-medium">CR:</span> {supplier.crNumber}
+                      </p>
+                    )}
+                  </div>
+                </CardContent>
+                <div className="px-6 pb-4">
+                  <Button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      router.push(`/suppliers/${supplier.id}`)
+                    }}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    View Details
+                  </Button>
+                </div>
+              </Card>
+            ))}
+          </div>
+        )}
+
+        {/* Stats */}
+        {!loading && suppliers.length > 0 && (
+          <div className="mt-8 grid grid-cols-1 md:grid-cols-4 gap-4">
+            <Card>
+              <CardContent className="pt-6">
+                <p className="text-2xl font-bold text-slate-900">{suppliers.length}</p>
+                <p className="text-sm text-slate-600">Total Suppliers</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <p className="text-2xl font-bold text-green-600">
+                  {suppliers.filter(s => s.status === 'APPROVED').length}
+                </p>
+                <p className="text-sm text-slate-600">Approved</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <p className="text-2xl font-bold text-yellow-600">
+                  {suppliers.filter(s => s.status === 'PENDING').length}
+                </p>
+                <p className="text-sm text-slate-600">Pending Review</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <p className="text-2xl font-bold text-blue-600">
+                  {new Set(suppliers.map(s => s.category)).size}
+                </p>
+                <p className="text-sm text-slate-600">Categories</p>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
