@@ -466,27 +466,27 @@ model POPreparation {
 }
 
 model SupplierQuote {
-  id         String        @id @default(cuid())
-  prepId     String
-  prep       POPreparation @relation(fields: [prepId], references: [id], name: "SupplierQuoteToPrep")
+  id         String         @id @default(cuid())
+  prepId     String?
+  prep       POPreparation? @relation(fields: [prepId], references: [id], name: "SupplierQuoteToPrep")
   supplierId String
-  supplier   Supplier      @relation(fields: [supplierId], references: [id])
+  supplier   Supplier       @relation(fields: [supplierId], references: [id])
   quoteJson  String // JSON of quoted items and prices
   total      Float
-  createdAt  DateTime      @default(now())
+  createdAt  DateTime       @default(now())
 }
 
 model Enquiry {
-  id            String            @id @default(cuid())
-  prepId        String
-  prep          POPreparation     @relation(fields: [prepId], references: [id], name: "EnquiryToPrep")
-  createdBy     String
+  id            String             @id @default(cuid())
+  prepId        String?
+  prep          POPreparation?     @relation(fields: [prepId], references: [id], name: "EnquiryToPrep")
+  createdBy     String?
   supplierIds   String[]
   message       String?
-  status        String            @default("DRAFT") // DRAFT | SENT | RESPONSES_RECEIVED | CLOSED
+  status        String             @default("DRAFT") // DRAFT | SENT | RESPONSES_RECEIVED | CLOSED
   sentAt        DateTime?
-  createdAt     DateTime          @default(now())
-  updatedAt     DateTime          @updatedAt
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
   responses     EnquiryResponse[]
   notifications Notification[]
 }

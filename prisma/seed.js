@@ -328,7 +328,6 @@ async function main() {
       supplierContact: 'sarah@globalmetals.com',
       orderDate: new Date(),
       expectedDelivery: nextWeek,
-      totalAmount: 1250.50,
       status: 'SENT',
       createdBy: 'Procurement Manager'
     }
