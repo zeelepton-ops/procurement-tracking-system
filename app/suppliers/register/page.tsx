@@ -908,7 +908,11 @@ export default function SupplierRegistrationPage() {
                       {Object.entries(validateAllSteps()).map(([key, info]) => (
                         <button
                           key={key}
-                          onClick={() => setStep(info.step)}
+                          onClick={() => {
+                            setValidationErrors({})
+                            setMessage({ type: 'success', text: '' })
+                            setStep(info.step)
+                          }}
                           className="w-full text-left p-3 rounded-lg bg-white border-2 border-red-300 hover:bg-red-100 transition-colors"
                         >
                           <p className="font-semibold text-red-900 text-sm">{info.field}</p>
@@ -998,7 +1002,11 @@ export default function SupplierRegistrationPage() {
           <div className="flex gap-3">
             {step > 0 && (
               <Button
-                onClick={() => setStep(step - 1)}
+                onClick={() => {
+                  setValidationErrors({})
+                  setMessage({ type: 'success', text: '' })
+                  setStep(step - 1)
+                }}
                 variant="outline"
                 disabled={loading}
               >
@@ -1020,6 +1028,8 @@ export default function SupplierRegistrationPage() {
               <Button
                 onClick={() => {
                   if (canProceedStep()) {
+                    setValidationErrors({})
+                    setMessage({ type: 'success', text: '' })
                     setStep(step + 1)
                   }
                 }}
