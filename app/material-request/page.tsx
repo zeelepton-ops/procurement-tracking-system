@@ -744,36 +744,38 @@ export default function MaterialRequestPage() {
                         <option value="M">M</option>
                         <option value="BOX">BOX</option>
                       </select>
-                      <ErrorBoundary>
-                        <Autocomplete
-                          value={item.reasonForRequest}
-                          onChange={(val) => updateItemField(idx, 'reasonForRequest', val)}
-                          // When a suggestion with a job id is selected, set the item.jobOrderId and the label
-                          onSelect={(s) => {
-                            if (s?.type === 'job') {
-                              setItemJobOrder(idx, s.id || null, s.label)
-                            } else {
-                              // for non-job suggestions, set label only
-                              updateItemField(idx, 'reasonForRequest', s.label)
-                            }
-                          }}
-                          suggestions={[
-                            { label: 'Workshop', type: 'other' },
-                            { label: 'Maintenance', type: 'other' },
-                            { label: 'General', type: 'other' },
-                            { label: 'Machinery Repair', type: 'other' },
-                            ...jobOrders.map(j => ({ id: j.id, label: `${j.jobNumber} - ${j.clientName || j.productName}`, meta: j.productName, type: 'job' })),
-                            ...assets.map(a => ({ id: a.id, label: `${a.code} - ${a.name}`, meta: a.category || a.location || '', type: 'asset' })),
-                          ]}
-                          placeholder="Reason (type to search or enter text)"
-                          inputClassName="h-7 px-1 rounded-md border border-slate-300 text-[11px] focus:z-10 focus:ring-2 focus:ring-blue-400 focus:outline-none"
-                          className="w-full"
-                          dropdownMode
-                        />
-                      </ErrorBoundary>
-                      {item.jobOrderId && item._linkedByJobSuggestion ? (
-                        <div className="text-[11px] text-slate-600 mt-1">Linked to <span className="font-medium">{(jobOrders.find(j => j.id === item.jobOrderId)?.jobNumber) ? `JO-${jobOrders.find(j => j.id === item.jobOrderId)?.jobNumber}` : 'Job'}</span></div>
-                      ) : null}
+                      <div className="flex flex-col">
+                        <ErrorBoundary>
+                          <Autocomplete
+                            value={item.reasonForRequest}
+                            onChange={(val) => updateItemField(idx, 'reasonForRequest', val)}
+                            // When a suggestion with a job id is selected, set the item.jobOrderId and the label
+                            onSelect={(s) => {
+                              if (s?.type === 'job') {
+                                setItemJobOrder(idx, s.id || null, s.label)
+                              } else {
+                                // for non-job suggestions, set label only
+                                updateItemField(idx, 'reasonForRequest', s.label)
+                              }
+                            }}
+                            suggestions={[
+                              { label: 'Workshop', type: 'other' },
+                              { label: 'Maintenance', type: 'other' },
+                              { label: 'General', type: 'other' },
+                              { label: 'Machinery Repair', type: 'other' },
+                              ...jobOrders.map(j => ({ id: j.id, label: `${j.jobNumber} - ${j.clientName || j.productName}`, meta: j.productName, type: 'job' })),
+                              ...assets.map(a => ({ id: a.id, label: `${a.code} - ${a.name}`, meta: a.category || a.location || '', type: 'asset' })),
+                            ]}
+                            placeholder="Reason (type to search or enter text)"
+                            inputClassName="h-7 px-1 rounded-md border border-slate-300 text-[11px] focus:z-10 focus:ring-2 focus:ring-blue-400 focus:outline-none"
+                            className="w-full"
+                            dropdownMode
+                          />
+                        </ErrorBoundary>
+                        {item.jobOrderId && item._linkedByJobSuggestion ? (
+                          <div className="text-[11px] text-slate-600 mt-1">Linked to <span className="font-medium">{(jobOrders.find(j => j.id === item.jobOrderId)?.jobNumber) ? `JO-${jobOrders.find(j => j.id === item.jobOrderId)?.jobNumber}` : 'Job'}</span></div>
+                        ) : null}
+                      </div>
 
                       <select
                         value={item.urgencyLevel}
