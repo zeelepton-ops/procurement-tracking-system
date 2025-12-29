@@ -90,16 +90,21 @@ export default function SupplierRegistrationPage() {
 
   // Load draft from localStorage on mount
   useEffect(() => {
-    const savedDraft = localStorage.getItem('supplierRegistrationDraft')
-    if (savedDraft) {
-      try {
-        const draft = JSON.parse(savedDraft)
-        setFormData(draft.formData)
-        setUploads(draft.uploads)
-        setStep(draft.step)
-        setHasDraft(true)
-      } catch (error) {
-        console.error('Failed to load draft:', error)
+    // Check if this is a new registration (not continuing draft)
+    const isNewRegistration = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('new') === 'true'
+    
+    if (!isNewRegistration) {
+      const savedDraft = localStorage.getItem('supplierRegistrationDraft')
+      if (savedDraft) {
+        try {
+          const draft = JSON.parse(savedDraft)
+          setFormData(draft.formData)
+          setUploads(draft.uploads)
+          setStep(draft.step)
+          setHasDraft(true)
+        } catch (error) {
+          console.error('Failed to load draft:', error)
+        }
       }
     }
   }, [])
@@ -226,9 +231,13 @@ export default function SupplierRegistrationPage() {
     // Validate ALL steps before submission
     const allErrors = validateAllSteps()
     if (Object.keys(allErrors).length > 0) {
+      // Show detailed error message with missing fields
+      const missingFields = Object.entries(allErrors)
+        .map(([, info]) => info.field)
+        .join(', ')
       setMessage({ 
         type: 'error', 
-        text: `Please complete all required fields. ${Object.keys(allErrors).length} field(s) still missing.` 
+        text: `Missing required fields: ${missingFields}` 
       })
       return
     }

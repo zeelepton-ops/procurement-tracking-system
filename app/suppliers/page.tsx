@@ -118,7 +118,7 @@ export default function SuppliersPage() {
             <p className="text-slate-600 mt-1">Manage and review all registered suppliers</p>
           </div>
           <Button
-            onClick={() => router.push('/suppliers/register')}
+            onClick={() => router.push('/suppliers/register?new=true')}
             className="bg-blue-600 hover:bg-blue-700"
           >
             <Plus className="h-4 w-4 mr-2" /> Register New Supplier
