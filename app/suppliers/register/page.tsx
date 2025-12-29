@@ -8,56 +8,18 @@ import { Label } from '@/components/ui/label'
 import { Select } from '@/components/ui/select'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
-import { Upload, CheckCircle, AlertCircle } from 'lucide-react'
-
-interface SupplierForm {
-  // Company Details
-  name: string
-  tradingName: string
-  email: string
-  phone: string
-  address: string
-  city: string
-  country: string
-  website: string
-  
-  // Business Information
-  category: string
-  businessType: string
-  yearEstablished: string
-  
-  // Registration Details
-  crNumber: string
-  taxId: string
-  
-  // Contact Person
-  contactName: string
-  contactRole: string
-  contactEmail: string
-  contactPhone: string
-  
-  // Additional
-  paymentTerms: string
-  leadTimeDays: string
-  notes: string
-}
-
-interface DocumentFile {
-  type: 'CR' | 'TAX_CARD' | 'ICV'
-  file: File | null
-  url?: string
-  uploaded: boolean
-}
+import { Upload, CheckCircle, AlertCircle, Building2 } from 'lucide-react'
 
 const SUPPLIER_CATEGORIES = [
-  'Steel Structures',
+  'Steel & Metal Structures',
   'Equipment & Machinery',
   'Raw Materials',
-  'Consumables',
-  'Services',
+  'Consumables & Supplies',
   'Construction Materials',
-  'Electronics',
-  'Hardware',
+  'Electronics & Components',
+  'Hardware & Fasteners',
+  'Lubricants & Chemicals',
+  'Services & Contracting',
   'Other'
 ]
 
@@ -65,100 +27,139 @@ const BUSINESS_TYPES = [
   'Manufacturer',
   'Distributor',
   'Wholesaler',
-  'Retailer',
-  'Service Provider',
-  'Trading Company'
+  'Importer',
+  'Contractor',
+  'Service Provider'
 ]
 
-export default function RegisterSupplierPage() {
+export default function SupplierRegistrationPage() {
   const router = useRouter()
   const [step, setStep] = useState(0)
   const [loading, setLoading] = useState(false)
-  const [message, setMessage] = useState('')
-  
-  const [form, setForm] = useState<SupplierForm>({
-    name: '',
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+
+  const [formData, setFormData] = useState({
+    companyName: '',
     tradingName: '',
     email: '',
     phone: '',
     address: '',
     city: '',
-    country: '',
+    state: '',
+    postalCode: '',
+    country: 'Qatar',
     website: '',
     category: '',
     businessType: '',
     yearEstablished: new Date().getFullYear().toString(),
+    numberOfEmployees: '',
     crNumber: '',
-    taxId: '',
+    crExpiry: '',
+    taxIdNumber: '',
+    taxIdExpiry: '',
     contactName: '',
-    contactRole: '',
+    contactTitle: '',
     contactEmail: '',
     contactPhone: '',
+    contactMobile: '',
     paymentTerms: 'Net 30',
     leadTimeDays: '14',
-    notes: ''
+    minimumOrderValue: '',
+    currency: 'QAR',
+    bankName: '',
+    accountHolder: '',
+    iban: '',
+    businessDescription: ''
   })
 
-  const [documents, setDocuments] = useState<DocumentFile[]>([
-    { type: 'CR', file: null, uploaded: false },
-    { type: 'TAX_CARD', file: null, uploaded: false },
-    { type: 'ICV', file: null, uploaded: false }
-  ])
+  const [documents, setDocuments] = useState({
+    cr: null as File | null,
+    taxCard: null as File | null,
+    icv: null as File | null,
+    bankDocument: null as File | null
+  })
 
-  const updateForm = (field: keyof SupplierForm, value: string) => {
-    setForm(prev => ({ ...prev, [field]: value }))
+  const [uploads, setUploads] = useState({
+    cr: false,
+    taxCard: false,
+    icv: false,
+    bankDocument: false
+  })
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }))
   }
 
-  const handleFileSelect = (type: 'CR' | 'TAX_CARD' | 'ICV', file: File | null) => {
-    setDocuments(prev => prev.map(d => 
-      d.type === type ? { ...d, file } : d
-    ))
+  const handleFileSelect = (docType: keyof typeof documents, file: File | null) => {
+    setDocuments(prev => ({ ...prev, [docType]: file }))
   }
 
-  const uploadDocument = async (type: 'CR' | 'TAX_CARD' | 'ICV') => {
-    const doc = documents.find(d => d.type === type)
-    if (!doc?.file) {
-      setMessage('Please select a file to upload')
+  const uploadFile = async (docType: keyof typeof documents, label: string) => {
+    const file = documents[docType]
+    if (!file) {
+      setMessage({ type: 'error', text: `Please select a file for ${label}` })
       return
     }
 
     setLoading(true)
     try {
-      const formData = new FormData()
-      formData.append('file', doc.file)
-      formData.append('type', type)
-      
-      // For now, simulate upload - you would send to actual API
-      const url = `document-${type}-${Date.now()}.pdf`
-      
-      setDocuments(prev => prev.map(d => 
-        d.type === type ? { ...d, url, uploaded: true } : d
-      ))
-      setMessage(`${type} uploaded successfully`)
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      setUploads(prev => ({ ...prev, [docType]: true }))
+      setMessage({ type: 'success', text: `${label} uploaded successfully` })
     } catch (error) {
-      console.error('Upload failed:', error)
-      setMessage('Upload failed')
+      setMessage({ type: 'error', text: `Failed to upload ${label}` })
     } finally {
       setLoading(false)
     }
   }
 
-  const submit = async () => {
+  const canProceedStep = () => {
+    switch (step) {
+      case 0:
+        return formData.companyName && formData.email && formData.phone && formData.address && 
+               formData.category && formData.businessType
+      case 1:
+        return formData.crNumber && formData.taxIdNumber && uploads.cr && uploads.taxCard
+      case 2:
+        return formData.contactName && formData.contactEmail && formData.contactPhone
+      case 3:
+        return formData.bankName && formData.accountHolder && formData.iban
+      default:
+        return false
+    }
+  }
+
+  const submitRegistration = async () => {
+    if (!canProceedStep()) {
+      setMessage({ type: 'error', text: 'Please fill all required fields' })
+      return
+    }
+
     setLoading(true)
     try {
       const payload = {
-        ...form,
-        yearEstablished: parseInt(form.yearEstablished),
-        leadTimeDays: parseInt(form.leadTimeDays),
-        crDocumentUrl: documents.find(d => d.type === 'CR')?.url || null,
-        taxCardUrl: documents.find(d => d.type === 'TAX_CARD')?.url || null,
-        icvUrl: documents.find(d => d.type === 'ICV')?.url || null,
+        ...formData,
+        yearEstablished: parseInt(formData.yearEstablished),
+        leadTimeDays: parseInt(formData.leadTimeDays),
+        numberOfEmployees: formData.numberOfEmployees ? parseInt(formData.numberOfEmployees) : null,
+        documents: {
+          crUrl: uploads.cr ? 'cr-document-url' : null,
+          taxCardUrl: uploads.taxCard ? 'tax-card-url' : null,
+          icvUrl: uploads.icv ? 'icv-url' : null,
+          bankDocumentUrl: uploads.bankDocument ? 'bank-doc-url' : null
+        },
         contact: {
-          name: form.contactName,
-          role: form.contactRole,
-          email: form.contactEmail,
-          phone: form.contactPhone,
+          name: formData.contactName,
+          title: formData.contactTitle,
+          email: formData.contactEmail,
+          phone: formData.contactPhone,
+          mobile: formData.contactMobile,
           isPrimary: true
+        },
+        bankDetails: {
+          bankName: formData.bankName,
+          accountHolder: formData.accountHolder,
+          iban: formData.iban
         }
       }
 
@@ -173,52 +174,63 @@ export default function RegisterSupplierPage() {
         throw new Error(error.error || 'Registration failed')
       }
 
-      const created = await res.json()
-      setMessage('Supplier registered successfully!')
-      setTimeout(() => router.push(`/suppliers/${created.id}`), 1500)
+      setMessage({ 
+        type: 'success', 
+        text: 'Registration submitted successfully! Your application will be reviewed within 2-3 business days.' 
+      })
+
+      setTimeout(() => {
+        router.push('/suppliers')
+      }, 2000)
     } catch (error) {
-      console.error('Registration failed:', error)
-      setMessage(error instanceof Error ? error.message : 'Registration failed')
+      setMessage({ 
+        type: 'error', 
+        text: error instanceof Error ? error.message : 'Registration failed. Please try again.' 
+      })
     } finally {
       setLoading(false)
     }
   }
 
-  const canProceed = () => {
-    switch(step) {
-      case 0: return form.name && form.email && form.phone && form.category && form.businessType
-      case 1: return form.crNumber && form.taxId
-      case 2: return form.contactName && form.contactEmail
-      case 3: return true
-      default: return false
-    }
-  }
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-8">
-      <div className="max-w-3xl mx-auto px-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-slate-50 to-slate-100 py-12 px-4">
+      <div className="max-w-4xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-slate-900">Register as Supplier</h1>
-          <p className="text-slate-600 mt-2">Complete all steps to register your company</p>
+        <div className="text-center mb-12">
+          <div className="flex items-center justify-center mb-4">
+            <Building2 className="h-12 w-12 text-blue-600" />
+          </div>
+          <h1 className="text-4xl font-bold text-slate-900 mb-2">Supplier Registration</h1>
+          <p className="text-lg text-slate-600">Register your company to supply materials and services</p>
         </div>
 
-        {/* Progress Bar */}
-        <div className="mb-8">
-          <div className="flex justify-between mb-2">
-            {['Company Info', 'Documents', 'Contact', 'Review'].map((label, i) => (
-              <div key={i} className="flex-1">
-                <div className={`h-2 rounded-full transition-colors ${i <= step ? 'bg-blue-600' : 'bg-slate-300'}`} />
-                <p className="text-xs font-medium text-slate-600 mt-1 text-center">{label}</p>
+        {/* Progress Indicator */}
+        <div className="mb-12">
+          <div className="flex justify-between mb-4">
+            {['Company Info', 'Documents', 'Contact', 'Banking', 'Review'].map((label, idx) => (
+              <div key={idx} className="flex-1 px-1">
+                <div className={`h-3 rounded-full transition-all ${idx <= step ? 'bg-blue-600' : 'bg-slate-300'}`} />
+                <p className="text-xs font-semibold text-slate-600 mt-2 text-center">{label}</p>
               </div>
             ))}
           </div>
         </div>
 
+        {/* Alert Messages */}
         {message && (
-          <div className={`mb-6 p-4 rounded-lg flex items-center gap-3 ${message.includes('success') ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-amber-50 text-amber-700 border border-amber-200'}`}>
-            {message.includes('success') ? <CheckCircle className="h-5 w-5" /> : <AlertCircle className="h-5 w-5" />}
-            <span className="text-sm">{message}</span>
+          <div className={`mb-6 p-4 rounded-lg flex items-center gap-3 ${
+            message.type === 'success' 
+              ? 'bg-green-50 border border-green-200' 
+              : 'bg-red-50 border border-red-200'
+          }`}>
+            {message.type === 'success' ? (
+              <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />
+            ) : (
+              <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0" />
+            )}
+            <span className={`text-sm ${message.type === 'success' ? 'text-green-700' : 'text-red-700'}`}>
+              {message.text}
+            </span>
           </div>
         )}
 
@@ -226,90 +238,118 @@ export default function RegisterSupplierPage() {
         {step === 0 && (
           <Card>
             <CardHeader>
-              <CardTitle>Company Information</CardTitle>
-              <CardDescription>Tell us about your company</CardDescription>
+              <CardTitle className="text-2xl">Company Information</CardTitle>
+              <CardDescription>Provide basic information about your company</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label className="font-medium">Company Name *</Label>
+                  <Label className="font-semibold">Company Name *</Label>
                   <Input
-                    value={form.name}
-                    onChange={(e) => updateForm('name', e.target.value)}
-                    placeholder="Full company name"
+                    value={formData.companyName}
+                    onChange={(e) => handleInputChange('companyName', e.target.value)}
+                    placeholder="Official company name"
+                    className="mt-2"
                   />
                 </div>
                 <div>
-                  <Label className="font-medium">Trading Name</Label>
+                  <Label className="font-semibold">Trading Name</Label>
                   <Input
-                    value={form.tradingName}
-                    onChange={(e) => updateForm('tradingName', e.target.value)}
-                    placeholder="Trading/Brand name (optional)"
+                    value={formData.tradingName}
+                    onChange={(e) => handleInputChange('tradingName', e.target.value)}
+                    placeholder="Brand or trading name (optional)"
+                    className="mt-2"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label className="font-medium">Email *</Label>
+                  <Label className="font-semibold">Email Address *</Label>
                   <Input
                     type="email"
-                    value={form.email}
-                    onChange={(e) => updateForm('email', e.target.value)}
+                    value={formData.email}
+                    onChange={(e) => handleInputChange('email', e.target.value)}
                     placeholder="company@example.com"
+                    className="mt-2"
                   />
                 </div>
                 <div>
-                  <Label className="font-medium">Phone *</Label>
+                  <Label className="font-semibold">Phone Number *</Label>
                   <Input
-                    value={form.phone}
-                    onChange={(e) => updateForm('phone', e.target.value)}
+                    value={formData.phone}
+                    onChange={(e) => handleInputChange('phone', e.target.value)}
                     placeholder="+974 4433 1234"
+                    className="mt-2"
                   />
                 </div>
               </div>
 
               <div>
-                <Label className="font-medium">Website</Label>
+                <Label className="font-semibold">Street Address *</Label>
                 <Input
-                  value={form.website}
-                  onChange={(e) => updateForm('website', e.target.value)}
-                  placeholder="https://example.com"
-                />
-              </div>
-
-              <div>
-                <Label className="font-medium">Address *</Label>
-                <Input
-                  value={form.address}
-                  onChange={(e) => updateForm('address', e.target.value)}
+                  value={formData.address}
+                  onChange={(e) => handleInputChange('address', e.target.value)}
                   placeholder="Street address"
+                  className="mt-2"
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <Label className="font-medium">City *</Label>
+                  <Label className="font-semibold">City *</Label>
                   <Input
-                    value={form.city}
-                    onChange={(e) => updateForm('city', e.target.value)}
+                    value={formData.city}
+                    onChange={(e) => handleInputChange('city', e.target.value)}
                     placeholder="Doha"
+                    className="mt-2"
                   />
                 </div>
                 <div>
-                  <Label className="font-medium">Country *</Label>
+                  <Label className="font-semibold">State/Region</Label>
                   <Input
-                    value={form.country}
-                    onChange={(e) => updateForm('country', e.target.value)}
-                    placeholder="Qatar"
+                    value={formData.state}
+                    onChange={(e) => handleInputChange('state', e.target.value)}
+                    placeholder="State (optional)"
+                    className="mt-2"
+                  />
+                </div>
+                <div>
+                  <Label className="font-semibold">Postal Code</Label>
+                  <Input
+                    value={formData.postalCode}
+                    onChange={(e) => handleInputChange('postalCode', e.target.value)}
+                    placeholder="12345"
+                    className="mt-2"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label className="font-medium">Category *</Label>
-                  <Select value={form.category} onChange={(e) => updateForm('category', e.target.value)}>
+                  <Label className="font-semibold">Country *</Label>
+                  <Select value={formData.country} onChange={(e) => handleInputChange('country', e.target.value)}>
+                    <option value="Qatar">Qatar</option>
+                    <option value="UAE">UAE</option>
+                    <option value="Saudi Arabia">Saudi Arabia</option>
+                    <option value="Other">Other</option>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="font-semibold">Website</Label>
+                  <Input
+                    value={formData.website}
+                    onChange={(e) => handleInputChange('website', e.target.value)}
+                    placeholder="https://example.com"
+                    className="mt-2"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label className="font-semibold">Product/Service Category *</Label>
+                  <Select value={formData.category} onChange={(e) => handleInputChange('category', e.target.value)}>
                     <option value="">-- Select Category --</option>
                     {SUPPLIER_CATEGORIES.map(cat => (
                       <option key={cat} value={cat}>{cat}</option>
@@ -317,8 +357,8 @@ export default function RegisterSupplierPage() {
                   </Select>
                 </div>
                 <div>
-                  <Label className="font-medium">Business Type *</Label>
-                  <Select value={form.businessType} onChange={(e) => updateForm('businessType', e.target.value)}>
+                  <Label className="font-semibold">Business Type *</Label>
+                  <Select value={formData.businessType} onChange={(e) => handleInputChange('businessType', e.target.value)}>
                     <option value="">-- Select Type --</option>
                     {BUSINESS_TYPES.map(type => (
                       <option key={type} value={type}>{type}</option>
@@ -327,129 +367,161 @@ export default function RegisterSupplierPage() {
                 </div>
               </div>
 
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label className="font-semibold">Year Established</Label>
+                  <Input
+                    type="number"
+                    value={formData.yearEstablished}
+                    onChange={(e) => handleInputChange('yearEstablished', e.target.value)}
+                    className="mt-2"
+                  />
+                </div>
+                <div>
+                  <Label className="font-semibold">Number of Employees</Label>
+                  <Input
+                    type="number"
+                    value={formData.numberOfEmployees}
+                    onChange={(e) => handleInputChange('numberOfEmployees', e.target.value)}
+                    placeholder="50"
+                    className="mt-2"
+                  />
+                </div>
+              </div>
+
               <div>
-                <Label className="font-medium">Year Established</Label>
-                <Input
-                  type="number"
-                  value={form.yearEstablished}
-                  onChange={(e) => updateForm('yearEstablished', e.target.value)}
-                  placeholder="2020"
+                <Label className="font-semibold">Business Description</Label>
+                <Textarea
+                  value={formData.businessDescription}
+                  onChange={(e) => handleInputChange('businessDescription', e.target.value)}
+                  placeholder="Brief description of your business, products, and services..."
+                  rows={4}
+                  className="mt-2"
                 />
               </div>
             </CardContent>
           </Card>
         )}
 
-        {/* Step 1: Registration Documents */}
+        {/* Step 1: Documents */}
         {step === 1 && (
           <Card>
             <CardHeader>
-              <CardTitle>Registration & Documents</CardTitle>
-              <CardDescription>Upload your business documents</CardDescription>
+              <CardTitle className="text-2xl">Business Documents</CardTitle>
+              <CardDescription>Upload your company registration and tax documents</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label className="font-medium">CR Number *</Label>
-                  <Input
-                    value={form.crNumber}
-                    onChange={(e) => updateForm('crNumber', e.target.value)}
-                    placeholder="Commercial Registration Number"
-                  />
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <h3 className="font-semibold text-blue-900 mb-3">Commercial Registration (CR)</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <Label className="font-semibold">CR Number *</Label>
+                    <Input
+                      value={formData.crNumber}
+                      onChange={(e) => handleInputChange('crNumber', e.target.value)}
+                      placeholder="CR-1234567"
+                      className="mt-2"
+                    />
+                  </div>
+                  <div>
+                    <Label className="font-semibold">CR Expiry Date *</Label>
+                    <Input
+                      type="date"
+                      value={formData.crExpiry}
+                      onChange={(e) => handleInputChange('crExpiry', e.target.value)}
+                      className="mt-2"
+                    />
+                  </div>
                 </div>
                 <div>
-                  <Label className="font-medium">Tax ID / TRN *</Label>
-                  <Input
-                    value={form.taxId}
-                    onChange={(e) => updateForm('taxId', e.target.value)}
-                    placeholder="Tax Registration Number"
-                  />
+                  <Label className="font-semibold block mb-2">Upload CR Document (PDF/Image) *</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      type="file"
+                      onChange={(e) => handleFileSelect('cr', e.target.files?.[0] || null)}
+                      accept=".pdf,.jpg,.jpeg,.png"
+                      disabled={loading}
+                      className="flex-1"
+                    />
+                    <Button
+                      onClick={() => uploadFile('cr', 'CR Document')}
+                      disabled={!documents.cr || loading}
+                      variant={uploads.cr ? 'outline' : 'default'}
+                      size="sm"
+                    >
+                      {uploads.cr ? <CheckCircle className="h-4 w-4" /> : <Upload className="h-4 w-4 mr-2" />}
+                      {uploads.cr ? 'Done' : 'Upload'}
+                    </Button>
+                  </div>
                 </div>
               </div>
 
-              <div className="border-t pt-6 space-y-4">
-                <h3 className="font-semibold">Document Uploads</h3>
-
-                {/* CR Document */}
-                <div className="border rounded-lg p-4 bg-slate-50">
-                  <div className="flex items-center justify-between mb-3">
-                    <div>
-                      <p className="font-medium">Commercial Registration (CR)</p>
-                      <p className="text-sm text-slate-600">PDF, JPG, PNG (Max 5MB)</p>
-                    </div>
-                    {documents.find(d => d.type === 'CR')?.uploaded && (
-                      <CheckCircle className="h-5 w-5 text-green-600" />
-                    )}
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                <h3 className="font-semibold text-amber-900 mb-3">Tax Registration (Tax Card/TRN)</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <Label className="font-semibold">Tax ID Number *</Label>
+                    <Input
+                      value={formData.taxIdNumber}
+                      onChange={(e) => handleInputChange('taxIdNumber', e.target.value)}
+                      placeholder="TRN-1234567"
+                      className="mt-2"
+                    />
                   </div>
+                  <div>
+                    <Label className="font-semibold">Tax Card Expiry Date</Label>
+                    <Input
+                      type="date"
+                      value={formData.taxIdExpiry}
+                      onChange={(e) => handleInputChange('taxIdExpiry', e.target.value)}
+                      className="mt-2"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label className="font-semibold block mb-2">Upload Tax Card/Certificate (PDF/Image) *</Label>
                   <div className="flex gap-2">
                     <Input
                       type="file"
-                      onChange={(e) => handleFileSelect('CR', e.target.files?.[0] || null)}
+                      onChange={(e) => handleFileSelect('taxCard', e.target.files?.[0] || null)}
                       accept=".pdf,.jpg,.jpeg,.png"
                       disabled={loading}
+                      className="flex-1"
                     />
                     <Button
-                      onClick={() => uploadDocument('CR')}
-                      disabled={!documents.find(d => d.type === 'CR')?.file || loading}
+                      onClick={() => uploadFile('taxCard', 'Tax Card')}
+                      disabled={!documents.taxCard || loading}
+                      variant={uploads.taxCard ? 'outline' : 'default'}
                       size="sm"
                     >
-                      <Upload className="h-4 w-4 mr-2" /> Upload
+                      {uploads.taxCard ? <CheckCircle className="h-4 w-4" /> : <Upload className="h-4 w-4 mr-2" />}
+                      {uploads.taxCard ? 'Done' : 'Upload'}
                     </Button>
                   </div>
                 </div>
+              </div>
 
-                {/* Tax Card */}
-                <div className="border rounded-lg p-4 bg-slate-50">
-                  <div className="flex items-center justify-between mb-3">
-                    <div>
-                      <p className="font-medium">Tax Card / Tax ID Document</p>
-                      <p className="text-sm text-slate-600">PDF, JPG, PNG (Max 5MB)</p>
-                    </div>
-                    {documents.find(d => d.type === 'TAX_CARD')?.uploaded && (
-                      <CheckCircle className="h-5 w-5 text-green-600" />
-                    )}
-                  </div>
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <h3 className="font-semibold text-green-900 mb-3">ICV Certificate (Optional)</h3>
+                <p className="text-sm text-green-700 mb-3">If applicable, upload your In-Country Value certification</p>
+                <div>
+                  <Label className="font-semibold block mb-2">Upload ICV Certificate</Label>
                   <div className="flex gap-2">
                     <Input
                       type="file"
-                      onChange={(e) => handleFileSelect('TAX_CARD', e.target.files?.[0] || null)}
+                      onChange={(e) => handleFileSelect('icv', e.target.files?.[0] || null)}
                       accept=".pdf,.jpg,.jpeg,.png"
                       disabled={loading}
+                      className="flex-1"
                     />
                     <Button
-                      onClick={() => uploadDocument('TAX_CARD')}
-                      disabled={!documents.find(d => d.type === 'TAX_CARD')?.file || loading}
+                      onClick={() => uploadFile('icv', 'ICV Certificate')}
+                      disabled={!documents.icv || loading}
+                      variant={uploads.icv ? 'outline' : 'default'}
                       size="sm"
                     >
-                      <Upload className="h-4 w-4 mr-2" /> Upload
-                    </Button>
-                  </div>
-                </div>
-
-                {/* ICV Certificate */}
-                <div className="border rounded-lg p-4 bg-slate-50">
-                  <div className="flex items-center justify-between mb-3">
-                    <div>
-                      <p className="font-medium">ICV Certificate (Optional)</p>
-                      <p className="text-sm text-slate-600">PDF, JPG, PNG (Max 5MB)</p>
-                    </div>
-                    {documents.find(d => d.type === 'ICV')?.uploaded && (
-                      <CheckCircle className="h-5 w-5 text-green-600" />
-                    )}
-                  </div>
-                  <div className="flex gap-2">
-                    <Input
-                      type="file"
-                      onChange={(e) => handleFileSelect('ICV', e.target.files?.[0] || null)}
-                      accept=".pdf,.jpg,.jpeg,.png"
-                      disabled={loading}
-                    />
-                    <Button
-                      onClick={() => uploadDocument('ICV')}
-                      disabled={!documents.find(d => d.type === 'ICV')?.file || loading}
-                      size="sm"
-                    >
-                      <Upload className="h-4 w-4 mr-2" /> Upload
+                      {uploads.icv ? <CheckCircle className="h-4 w-4" /> : <Upload className="h-4 w-4 mr-2" />}
+                      {uploads.icv ? 'Done' : 'Upload'}
                     </Button>
                   </div>
                 </div>
@@ -458,152 +530,248 @@ export default function RegisterSupplierPage() {
           </Card>
         )}
 
-        {/* Step 2: Contact Person */}
+        {/* Step 2: Contact Information */}
         {step === 2 && (
           <Card>
             <CardHeader>
-              <CardTitle>Primary Contact Person</CardTitle>
-              <CardDescription>Who should we contact for inquiries?</CardDescription>
+              <CardTitle className="text-2xl">Primary Contact Person</CardTitle>
+              <CardDescription>Information for our communication</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label className="font-medium">Full Name *</Label>
+                  <Label className="font-semibold">Full Name *</Label>
                   <Input
-                    value={form.contactName}
-                    onChange={(e) => updateForm('contactName', e.target.value)}
+                    value={formData.contactName}
+                    onChange={(e) => handleInputChange('contactName', e.target.value)}
                     placeholder="John Doe"
+                    className="mt-2"
                   />
                 </div>
                 <div>
-                  <Label className="font-medium">Role/Position *</Label>
+                  <Label className="font-semibold">Job Title/Position</Label>
                   <Input
-                    value={form.contactRole}
-                    onChange={(e) => updateForm('contactRole', e.target.value)}
+                    value={formData.contactTitle}
+                    onChange={(e) => handleInputChange('contactTitle', e.target.value)}
                     placeholder="Sales Manager"
+                    className="mt-2"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label className="font-medium">Email *</Label>
+                  <Label className="font-semibold">Email Address *</Label>
                   <Input
                     type="email"
-                    value={form.contactEmail}
-                    onChange={(e) => updateForm('contactEmail', e.target.value)}
+                    value={formData.contactEmail}
+                    onChange={(e) => handleInputChange('contactEmail', e.target.value)}
                     placeholder="john@company.com"
+                    className="mt-2"
                   />
                 </div>
                 <div>
-                  <Label className="font-medium">Phone *</Label>
+                  <Label className="font-semibold">Office Phone *</Label>
                   <Input
-                    value={form.contactPhone}
-                    onChange={(e) => updateForm('contactPhone', e.target.value)}
-                    placeholder="+974 5555 1234"
+                    value={formData.contactPhone}
+                    onChange={(e) => handleInputChange('contactPhone', e.target.value)}
+                    placeholder="+974 4433 1234"
+                    className="mt-2"
                   />
-                </div>
-              </div>
-
-              <div className="border-t pt-6">
-                <h3 className="font-semibold mb-4">Business Terms</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label className="font-medium">Payment Terms</Label>
-                    <Input
-                      value={form.paymentTerms}
-                      onChange={(e) => updateForm('paymentTerms', e.target.value)}
-                      placeholder="e.g., Net 30, Cash on Delivery"
-                    />
-                  </div>
-                  <div>
-                    <Label className="font-medium">Lead Time (Days)</Label>
-                    <Input
-                      type="number"
-                      value={form.leadTimeDays}
-                      onChange={(e) => updateForm('leadTimeDays', e.target.value)}
-                      placeholder="14"
-                    />
-                  </div>
                 </div>
               </div>
 
               <div>
-                <Label className="font-medium">Additional Notes</Label>
-                <Textarea
-                  value={form.notes}
-                  onChange={(e) => updateForm('notes', e.target.value)}
-                  placeholder="Any additional information about your company..."
-                  rows={4}
+                <Label className="font-semibold">Mobile Number</Label>
+                <Input
+                  value={formData.contactMobile}
+                  onChange={(e) => handleInputChange('contactMobile', e.target.value)}
+                  placeholder="+974 5555 1234"
+                  className="mt-2"
                 />
+              </div>
+
+              <div className="border-t pt-6">
+                <h3 className="font-semibold text-lg mb-4">Business Terms & Conditions</h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <Label className="font-semibold">Payment Terms</Label>
+                    <Select value={formData.paymentTerms} onChange={(e) => handleInputChange('paymentTerms', e.target.value)}>
+                      <option value="Cash on Delivery">Cash on Delivery</option>
+                      <option value="Net 7">Net 7 Days</option>
+                      <option value="Net 14">Net 14 Days</option>
+                      <option value="Net 30">Net 30 Days</option>
+                      <option value="Net 60">Net 60 Days</option>
+                      <option value="Other">Other</option>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="font-semibold">Lead Time (Days)</Label>
+                    <Input
+                      type="number"
+                      value={formData.leadTimeDays}
+                      onChange={(e) => handleInputChange('leadTimeDays', e.target.value)}
+                      placeholder="14"
+                      className="mt-2"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label className="font-semibold">Minimum Order Value</Label>
+                    <Input
+                      type="number"
+                      value={formData.minimumOrderValue}
+                      onChange={(e) => handleInputChange('minimumOrderValue', e.target.value)}
+                      placeholder="1000"
+                      className="mt-2"
+                    />
+                  </div>
+                  <div>
+                    <Label className="font-semibold">Currency</Label>
+                    <Select value={formData.currency} onChange={(e) => handleInputChange('currency', e.target.value)}>
+                      <option value="QAR">QAR (Qatari Riyal)</option>
+                      <option value="AED">AED (Emirates Dirham)</option>
+                      <option value="USD">USD (US Dollar)</option>
+                      <option value="EUR">EUR (Euro)</option>
+                    </Select>
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
         )}
 
-        {/* Step 3: Review */}
+        {/* Step 3: Banking Information */}
         {step === 3 && (
           <Card>
             <CardHeader>
-              <CardTitle>Review Your Information</CardTitle>
-              <CardDescription>Please verify all details before submitting</CardDescription>
+              <CardTitle className="text-2xl">Banking & Payment Information</CardTitle>
+              <CardDescription>Your bank details for payments and transfers</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
                 <div>
-                  <h4 className="font-semibold text-sm text-slate-600 mb-3">Company Details</h4>
-                  <div className="space-y-2 text-sm">
-                    <p><span className="font-medium">Company:</span> {form.name}</p>
-                    <p><span className="font-medium">Trading:</span> {form.tradingName || '-'}</p>
-                    <p><span className="font-medium">Email:</span> {form.email}</p>
-                    <p><span className="font-medium">Phone:</span> {form.phone}</p>
-                    <p><span className="font-medium">Category:</span> {form.category}</p>
-                    <p><span className="font-medium">Type:</span> {form.businessType}</p>
-                    <p><span className="font-medium">CR Number:</span> {form.crNumber}</p>
-                    <p><span className="font-medium">Tax ID:</span> {form.taxId}</p>
-                  </div>
-                </div>
-
-                <div>
-                  <h4 className="font-semibold text-sm text-slate-600 mb-3">Contact & Terms</h4>
-                  <div className="space-y-2 text-sm">
-                    <p><span className="font-medium">Contact:</span> {form.contactName}</p>
-                    <p><span className="font-medium">Role:</span> {form.contactRole}</p>
-                    <p><span className="font-medium">Email:</span> {form.contactEmail}</p>
-                    <p><span className="font-medium">Phone:</span> {form.contactPhone}</p>
-                    <p><span className="font-medium">Payment:</span> {form.paymentTerms}</p>
-                    <p><span className="font-medium">Lead Time:</span> {form.leadTimeDays} days</p>
-                  </div>
+                  <Label className="font-semibold">Bank Name *</Label>
+                  <Input
+                    value={formData.bankName}
+                    onChange={(e) => handleInputChange('bankName', e.target.value)}
+                    placeholder="Commercial Bank of Qatar"
+                    className="mt-2"
+                  />
                 </div>
               </div>
 
-              <div className="border-t pt-6">
-                <h4 className="font-semibold text-sm text-slate-600 mb-3">Documents Status</h4>
-                <div className="space-y-2 text-sm">
-                  <div className="flex items-center justify-between">
-                    <span>Commercial Registration (CR)</span>
-                    <span className={documents.find(d => d.type === 'CR')?.uploaded ? 'text-green-600 font-medium' : 'text-amber-600'}>
-                      {documents.find(d => d.type === 'CR')?.uploaded ? '✓ Uploaded' : '⚠ Pending'}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span>Tax Card / Tax ID</span>
-                    <span className={documents.find(d => d.type === 'TAX_CARD')?.uploaded ? 'text-green-600 font-medium' : 'text-amber-600'}>
-                      {documents.find(d => d.type === 'TAX_CARD')?.uploaded ? '✓ Uploaded' : '⚠ Pending'}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span>ICV Certificate</span>
-                    <span className={documents.find(d => d.type === 'ICV')?.uploaded ? 'text-green-600 font-medium' : 'text-slate-500'}>
-                      {documents.find(d => d.type === 'ICV')?.uploaded ? '✓ Uploaded' : '○ Optional'}
-                    </span>
-                  </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label className="font-semibold">Account Holder Name *</Label>
+                  <Input
+                    value={formData.accountHolder}
+                    onChange={(e) => handleInputChange('accountHolder', e.target.value)}
+                    placeholder="Company Legal Name"
+                    className="mt-2"
+                  />
+                </div>
+                <div>
+                  <Label className="font-semibold">Account Number / IBAN *</Label>
+                  <Input
+                    value={formData.iban}
+                    onChange={(e) => handleInputChange('iban', e.target.value)}
+                    placeholder="Account/IBAN number"
+                    className="mt-2"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label className="font-semibold block mb-2">Bank Certificate/Proof (Optional)</Label>
+                <div className="flex gap-2">
+                  <Input
+                    type="file"
+                    onChange={(e) => handleFileSelect('bankDocument', e.target.files?.[0] || null)}
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    disabled={loading}
+                    className="flex-1"
+                  />
+                  <Button
+                    onClick={() => uploadFile('bankDocument', 'Bank Document')}
+                    disabled={!documents.bankDocument || loading}
+                    variant={uploads.bankDocument ? 'outline' : 'default'}
+                    size="sm"
+                  >
+                    {uploads.bankDocument ? <CheckCircle className="h-4 w-4" /> : <Upload className="h-4 w-4 mr-2" />}
+                    {uploads.bankDocument ? 'Done' : 'Upload'}
+                  </Button>
                 </div>
               </div>
 
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <p className="text-sm text-blue-900">
-                  By submitting this form, you confirm that all information is accurate and complete. Your supplier profile will be reviewed within 2-3 business days.
+                  <span className="font-semibold">Note:</span> Your banking information will be kept confidential and used only for payment processing and verification purposes.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Step 4: Review & Submit */}
+        {step === 4 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-2xl">Review Your Application</CardTitle>
+              <CardDescription>Please verify all information before submitting</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="border rounded-lg p-4 bg-slate-50">
+                  <h4 className="font-semibold text-slate-900 mb-3">Company Details</h4>
+                  <div className="space-y-2 text-sm">
+                    <p><span className="font-medium text-slate-700">Company:</span> {formData.companyName}</p>
+                    <p><span className="font-medium text-slate-700">Category:</span> {formData.category}</p>
+                    <p><span className="font-medium text-slate-700">Type:</span> {formData.businessType}</p>
+                    <p><span className="font-medium text-slate-700">Email:</span> {formData.email}</p>
+                    <p><span className="font-medium text-slate-700">Phone:</span> {formData.phone}</p>
+                    <p><span className="font-medium text-slate-700">Address:</span> {formData.address}</p>
+                  </div>
+                </div>
+
+                <div className="border rounded-lg p-4 bg-slate-50">
+                  <h4 className="font-semibold text-slate-900 mb-3">Contact Person</h4>
+                  <div className="space-y-2 text-sm">
+                    <p><span className="font-medium text-slate-700">Name:</span> {formData.contactName}</p>
+                    <p><span className="font-medium text-slate-700">Title:</span> {formData.contactTitle}</p>
+                    <p><span className="font-medium text-slate-700">Email:</span> {formData.contactEmail}</p>
+                    <p><span className="font-medium text-slate-700">Phone:</span> {formData.contactPhone}</p>
+                    <p><span className="font-medium text-slate-700">Mobile:</span> {formData.contactMobile}</p>
+                  </div>
+                </div>
+
+                <div className="border rounded-lg p-4 bg-slate-50">
+                  <h4 className="font-semibold text-slate-900 mb-3">Registration Documents</h4>
+                  <div className="space-y-2 text-sm">
+                    <p><span className="font-medium text-slate-700">CR Number:</span> {formData.crNumber}</p>
+                    <p><span className="font-medium text-slate-700">CR Document:</span> {uploads.cr ? '✓ Uploaded' : '✗ Missing'}</p>
+                    <p><span className="font-medium text-slate-700">Tax ID:</span> {formData.taxIdNumber}</p>
+                    <p><span className="font-medium text-slate-700">Tax Document:</span> {uploads.taxCard ? '✓ Uploaded' : '✗ Missing'}</p>
+                  </div>
+                </div>
+
+                <div className="border rounded-lg p-4 bg-slate-50">
+                  <h4 className="font-semibold text-slate-900 mb-3">Business Terms</h4>
+                  <div className="space-y-2 text-sm">
+                    <p><span className="font-medium text-slate-700">Payment:</span> {formData.paymentTerms}</p>
+                    <p><span className="font-medium text-slate-700">Lead Time:</span> {formData.leadTimeDays} days</p>
+                    <p><span className="font-medium text-slate-700">Currency:</span> {formData.currency}</p>
+                    <p><span className="font-medium text-slate-700">Bank:</span> {formData.bankName}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <p className="text-sm text-green-900">
+                  <span className="font-semibold">✓ You're ready to submit!</span> By submitting, you confirm that all information is accurate. Our team will review your application within 2-3 business days.
                 </p>
               </div>
             </CardContent>
@@ -611,43 +779,45 @@ export default function RegisterSupplierPage() {
         )}
 
         {/* Navigation Buttons */}
-        <div className="flex gap-3 mt-8">
+        <div className="flex gap-3 justify-between mt-8">
           {step > 0 && (
             <Button
               onClick={() => setStep(step - 1)}
               variant="outline"
               disabled={loading}
             >
-              Previous
+              ← Previous
             </Button>
           )}
-          
-          {step < 3 ? (
-            <Button
-              onClick={() => setStep(step + 1)}
-              disabled={!canProceed() || loading}
-              className="ml-auto"
-            >
-              Next
-            </Button>
-          ) : (
-            <>
+
+          <div className="flex gap-3 ml-auto">
+            {step < 4 ? (
               <Button
-                onClick={submit}
-                disabled={loading}
-                className="ml-auto bg-green-600 hover:bg-green-700"
+                onClick={() => setStep(step + 1)}
+                disabled={!canProceedStep() || loading}
+                className="bg-blue-600 hover:bg-blue-700"
               >
-                {loading ? 'Submitting...' : 'Submit Registration'}
+                Next →
               </Button>
-              <Button
-                onClick={() => router.back()}
-                variant="outline"
-                disabled={loading}
-              >
-                Cancel
-              </Button>
-            </>
-          )}
+            ) : (
+              <>
+                <Button
+                  onClick={submitRegistration}
+                  disabled={loading}
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  {loading ? 'Submitting...' : 'Submit Application'}
+                </Button>
+                <Button
+                  onClick={() => router.back()}
+                  variant="outline"
+                  disabled={loading}
+                >
+                  Cancel
+                </Button>
+              </>
+            )}
+          </div>
         </div>
       </div>
     </div>
