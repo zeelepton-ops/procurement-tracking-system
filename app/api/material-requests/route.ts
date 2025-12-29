@@ -557,21 +557,26 @@ export async function PUT(request: Request) {
           lastEditedBy: session.user?.email || 'unknown',
           lastEditedAt: new Date(),
           items: items && items.length > 0 ? {
-            create: items.map((item: any) => ({
-              itemName: item.itemName,
-              description: item.description,
-              quantity: parseFloat(item.quantity),
-              unit: item.unit,
-              stockQtyInInventory: parseFloat(item.stockQty || '0'),
-              reasonForRequest: item.reasonForRequest || null,
-              // Persist item-level jobOrderId when present
-              jobOrderId: item.jobOrderId || null,
-              urgencyLevel: item.urgencyLevel || 'NORMAL',
-              requiredDate: item.requiredDate ? new Date(item.requiredDate) : null,
-              preferredSupplier: item.preferredSupplier || null,
-              // NEW: per-line status
-              status: item.status || 'PENDING'
-            }))
+            create: items.map((item: any) => {
+              const createObj: any = {
+                itemName: item.itemName,
+                description: item.description,
+                quantity: parseFloat(item.quantity),
+                unit: item.unit,
+                stockQtyInInventory: parseFloat(item.stockQty || '0'),
+                reasonForRequest: item.reasonForRequest || null,
+                urgencyLevel: item.urgencyLevel || 'NORMAL',
+                requiredDate: item.requiredDate ? new Date(item.requiredDate) : null,
+                preferredSupplier: item.preferredSupplier || null,
+                // per-line status
+                status: item.status || 'PENDING'
+              }
+              // In nested create, set relation via connect instead of foreign key scalar
+              if (item.jobOrderId) {
+                createObj.jobOrder = { connect: { id: item.jobOrderId } }
+              }
+              return createObj
+            })
           } : undefined
         },
         include: {
