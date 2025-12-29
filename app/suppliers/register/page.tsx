@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Select } from '@/components/ui/select'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
-import { Upload, CheckCircle, AlertCircle, Building2 } from 'lucide-react'
+import { Upload, CheckCircle, AlertCircle, Building2, Save, Trash2 } from 'lucide-react'
 
 const SUPPLIER_CATEGORIES = [
   'Steel & Metal Structures',
@@ -37,6 +37,8 @@ export default function SupplierRegistrationPage() {
   const [step, setStep] = useState(0)
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({})
+  const [hasDraft, setHasDraft] = useState(false)
 
   const [formData, setFormData] = useState({
     companyName: '',
@@ -86,8 +88,32 @@ export default function SupplierRegistrationPage() {
     bankDocument: false
   })
 
+  // Load draft from localStorage on mount
+  useEffect(() => {
+    const savedDraft = localStorage.getItem('supplierRegistrationDraft')
+    if (savedDraft) {
+      try {
+        const draft = JSON.parse(savedDraft)
+        setFormData(draft.formData)
+        setUploads(draft.uploads)
+        setStep(draft.step)
+        setHasDraft(true)
+      } catch (error) {
+        console.error('Failed to load draft:', error)
+      }
+    }
+  }, [])
+
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
+    // Clear error for this field when user starts typing
+    if (validationErrors[field]) {
+      setValidationErrors(prev => {
+        const updated = { ...prev }
+        delete updated[field]
+        return updated
+      })
+    }
   }
 
   const handleFileSelect = (docType: keyof typeof documents, file: File | null) => {
@@ -113,25 +139,72 @@ export default function SupplierRegistrationPage() {
     }
   }
 
-  const canProceedStep = () => {
-    switch (step) {
+  const validateStep = (stepNum: number): boolean => {
+    const errors: Record<string, string> = {}
+
+    switch (stepNum) {
       case 0:
-        return formData.companyName && formData.email && formData.phone && formData.address && 
-               formData.category && formData.businessType
+        if (!formData.companyName) errors.companyName = 'Company name is required'
+        if (!formData.email) errors.email = 'Email is required'
+        if (!formData.phone) errors.phone = 'Phone number is required'
+        if (!formData.address) errors.address = 'Street address is required'
+        if (!formData.city) errors.city = 'City is required'
+        if (!formData.category) errors.category = 'Category is required'
+        if (!formData.businessType) errors.businessType = 'Business type is required'
+        break
       case 1:
-        return formData.crNumber && formData.taxIdNumber && uploads.cr && uploads.taxCard
+        if (!formData.crNumber) errors.crNumber = 'CR number is required'
+        if (!formData.taxIdNumber) errors.taxIdNumber = 'Tax ID is required'
+        if (!uploads.cr) errors.crDoc = 'CR document must be uploaded'
+        if (!uploads.taxCard) errors.taxDoc = 'Tax card must be uploaded'
+        break
       case 2:
-        return formData.contactName && formData.contactEmail && formData.contactPhone
+        if (!formData.contactName) errors.contactName = 'Contact name is required'
+        if (!formData.contactEmail) errors.contactEmail = 'Contact email is required'
+        if (!formData.contactPhone) errors.contactPhone = 'Contact phone is required'
+        break
       case 3:
-        return formData.bankName && formData.accountHolder && formData.iban
-      default:
-        return false
+        if (!formData.bankName) errors.bankName = 'Bank name is required'
+        if (!formData.accountHolder) errors.accountHolder = 'Account holder name is required'
+        if (!formData.iban) errors.iban = 'IBAN/Account number is required'
+        break
+    }
+
+    setValidationErrors(errors)
+    return Object.keys(errors).length === 0
+  }
+
+  const saveDraft = () => {
+    const draft = {
+      formData,
+      uploads,
+      step,
+      savedAt: new Date().toISOString()
+    }
+    localStorage.setItem('supplierRegistrationDraft', JSON.stringify(draft))
+    setMessage({ 
+      type: 'success', 
+      text: 'Application saved as draft. You can continue later!' 
+    })
+  }
+
+  const deleteDraft = () => {
+    if (confirm('Are you sure you want to delete the saved draft?')) {
+      localStorage.removeItem('supplierRegistrationDraft')
+      setHasDraft(false)
+      setMessage({ 
+        type: 'success', 
+        text: 'Draft deleted' 
+      })
     }
   }
 
+  const canProceedStep = (): boolean => {
+    return validateStep(step)
+  }
+
   const submitRegistration = async () => {
-    if (!canProceedStep()) {
-      setMessage({ type: 'error', text: 'Please fill all required fields' })
+    if (!validateStep(step)) {
       return
     }
 
@@ -174,6 +247,10 @@ export default function SupplierRegistrationPage() {
         throw new Error(error.error || 'Registration failed')
       }
 
+      // Clear draft on successful submission
+      localStorage.removeItem('supplierRegistrationDraft')
+      setHasDraft(false)
+
       setMessage({ 
         type: 'success', 
         text: 'Registration submitted successfully! Your application will be reviewed within 2-3 business days.' 
@@ -190,6 +267,10 @@ export default function SupplierRegistrationPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const getErrorMessage = (field: string) => {
+    return validationErrors[field]
   }
 
   return (
@@ -234,6 +315,21 @@ export default function SupplierRegistrationPage() {
           </div>
         )}
 
+        {/* Draft Indicator */}
+        {hasDraft && (
+          <div className="mb-6 p-4 rounded-lg bg-blue-50 border border-blue-200 flex items-center justify-between">
+            <p className="text-sm text-blue-900"><span className="font-semibold">✓ Draft Saved</span> Your application is saved as a draft</p>
+            <Button
+              onClick={deleteDraft}
+              variant="outline"
+              size="sm"
+              className="text-red-600 border-red-300 hover:bg-red-50"
+            >
+              <Trash2 className="h-4 w-4 mr-2" /> Delete Draft
+            </Button>
+          </div>
+        )}
+
         {/* Step 0: Company Information */}
         {step === 0 && (
           <Card>
@@ -244,12 +340,12 @@ export default function SupplierRegistrationPage() {
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label className="font-semibold">Company Name *</Label>
+                  <Label className="font-semibold">Company Name * {getErrorMessage('companyName') && <span className="text-red-600 text-xs">({getErrorMessage('companyName')})</span>}</Label>
                   <Input
                     value={formData.companyName}
                     onChange={(e) => handleInputChange('companyName', e.target.value)}
                     placeholder="Official company name"
-                    className="mt-2"
+                    className={`mt-2 ${getErrorMessage('companyName') ? 'border-red-500' : ''}`}
                   />
                 </div>
                 <div>
@@ -265,44 +361,44 @@ export default function SupplierRegistrationPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label className="font-semibold">Email Address *</Label>
+                  <Label className="font-semibold">Email Address * {getErrorMessage('email') && <span className="text-red-600 text-xs">({getErrorMessage('email')})</span>}</Label>
                   <Input
                     type="email"
                     value={formData.email}
                     onChange={(e) => handleInputChange('email', e.target.value)}
                     placeholder="company@example.com"
-                    className="mt-2"
+                    className={`mt-2 ${getErrorMessage('email') ? 'border-red-500' : ''}`}
                   />
                 </div>
                 <div>
-                  <Label className="font-semibold">Phone Number *</Label>
+                  <Label className="font-semibold">Phone Number * {getErrorMessage('phone') && <span className="text-red-600 text-xs">({getErrorMessage('phone')})</span>}</Label>
                   <Input
                     value={formData.phone}
                     onChange={(e) => handleInputChange('phone', e.target.value)}
                     placeholder="+974 4433 1234"
-                    className="mt-2"
+                    className={`mt-2 ${getErrorMessage('phone') ? 'border-red-500' : ''}`}
                   />
                 </div>
               </div>
 
               <div>
-                <Label className="font-semibold">Street Address *</Label>
+                <Label className="font-semibold">Street Address * {getErrorMessage('address') && <span className="text-red-600 text-xs">({getErrorMessage('address')})</span>}</Label>
                 <Input
                   value={formData.address}
                   onChange={(e) => handleInputChange('address', e.target.value)}
                   placeholder="Street address"
-                  className="mt-2"
+                  className={`mt-2 ${getErrorMessage('address') ? 'border-red-500' : ''}`}
                 />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <Label className="font-semibold">City *</Label>
+                  <Label className="font-semibold">City * {getErrorMessage('city') && <span className="text-red-600 text-xs">({getErrorMessage('city')})</span>}</Label>
                   <Input
                     value={formData.city}
                     onChange={(e) => handleInputChange('city', e.target.value)}
                     placeholder="Doha"
-                    className="mt-2"
+                    className={`mt-2 ${getErrorMessage('city') ? 'border-red-500' : ''}`}
                   />
                 </div>
                 <div>
@@ -348,8 +444,8 @@ export default function SupplierRegistrationPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label className="font-semibold">Product/Service Category *</Label>
-                  <Select value={formData.category} onChange={(e) => handleInputChange('category', e.target.value)}>
+                  <Label className="font-semibold">Product/Service Category * {getErrorMessage('category') && <span className="text-red-600 text-xs">({getErrorMessage('category')})</span>}</Label>
+                  <Select value={formData.category} onChange={(e) => handleInputChange('category', e.target.value)} className={getErrorMessage('category') ? 'border-red-500' : ''}>
                     <option value="">-- Select Category --</option>
                     {SUPPLIER_CATEGORIES.map(cat => (
                       <option key={cat} value={cat}>{cat}</option>
@@ -357,8 +453,8 @@ export default function SupplierRegistrationPage() {
                   </Select>
                 </div>
                 <div>
-                  <Label className="font-semibold">Business Type *</Label>
-                  <Select value={formData.businessType} onChange={(e) => handleInputChange('businessType', e.target.value)}>
+                  <Label className="font-semibold">Business Type * {getErrorMessage('businessType') && <span className="text-red-600 text-xs">({getErrorMessage('businessType')})</span>}</Label>
+                  <Select value={formData.businessType} onChange={(e) => handleInputChange('businessType', e.target.value)} className={getErrorMessage('businessType') ? 'border-red-500' : ''}>
                     <option value="">-- Select Type --</option>
                     {BUSINESS_TYPES.map(type => (
                       <option key={type} value={type}>{type}</option>
@@ -415,12 +511,12 @@ export default function SupplierRegistrationPage() {
                 <h3 className="font-semibold text-blue-900 mb-3">Commercial Registration (CR)</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                   <div>
-                    <Label className="font-semibold">CR Number *</Label>
+                    <Label className="font-semibold">CR Number * {getErrorMessage('crNumber') && <span className="text-red-600 text-xs">({getErrorMessage('crNumber')})</span>}</Label>
                     <Input
                       value={formData.crNumber}
                       onChange={(e) => handleInputChange('crNumber', e.target.value)}
                       placeholder="CR-1234567"
-                      className="mt-2"
+                      className={`mt-2 ${getErrorMessage('crNumber') ? 'border-red-500' : ''}`}
                     />
                   </div>
                   <div>
@@ -434,7 +530,7 @@ export default function SupplierRegistrationPage() {
                   </div>
                 </div>
                 <div>
-                  <Label className="font-semibold block mb-2">Upload CR Document (PDF/Image) *</Label>
+                  <Label className="font-semibold block mb-2">Upload CR Document (PDF/Image) * {getErrorMessage('crDoc') && <span className="text-red-600 text-xs">({getErrorMessage('crDoc')})</span>}</Label>
                   <div className="flex gap-2">
                     <Input
                       type="file"
@@ -460,12 +556,12 @@ export default function SupplierRegistrationPage() {
                 <h3 className="font-semibold text-amber-900 mb-3">Tax Registration (Tax Card/TRN)</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                   <div>
-                    <Label className="font-semibold">Tax ID Number *</Label>
+                    <Label className="font-semibold">Tax ID Number * {getErrorMessage('taxIdNumber') && <span className="text-red-600 text-xs">({getErrorMessage('taxIdNumber')})</span>}</Label>
                     <Input
                       value={formData.taxIdNumber}
                       onChange={(e) => handleInputChange('taxIdNumber', e.target.value)}
                       placeholder="TRN-1234567"
-                      className="mt-2"
+                      className={`mt-2 ${getErrorMessage('taxIdNumber') ? 'border-red-500' : ''}`}
                     />
                   </div>
                   <div>
@@ -479,7 +575,7 @@ export default function SupplierRegistrationPage() {
                   </div>
                 </div>
                 <div>
-                  <Label className="font-semibold block mb-2">Upload Tax Card/Certificate (PDF/Image) *</Label>
+                  <Label className="font-semibold block mb-2">Upload Tax Card/Certificate (PDF/Image) * {getErrorMessage('taxDoc') && <span className="text-red-600 text-xs">({getErrorMessage('taxDoc')})</span>}</Label>
                   <div className="flex gap-2">
                     <Input
                       type="file"
@@ -540,12 +636,12 @@ export default function SupplierRegistrationPage() {
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label className="font-semibold">Full Name *</Label>
+                  <Label className="font-semibold">Full Name * {getErrorMessage('contactName') && <span className="text-red-600 text-xs">({getErrorMessage('contactName')})</span>}</Label>
                   <Input
                     value={formData.contactName}
                     onChange={(e) => handleInputChange('contactName', e.target.value)}
                     placeholder="John Doe"
-                    className="mt-2"
+                    className={`mt-2 ${getErrorMessage('contactName') ? 'border-red-500' : ''}`}
                   />
                 </div>
                 <div>
@@ -561,22 +657,22 @@ export default function SupplierRegistrationPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label className="font-semibold">Email Address *</Label>
+                  <Label className="font-semibold">Email Address * {getErrorMessage('contactEmail') && <span className="text-red-600 text-xs">({getErrorMessage('contactEmail')})</span>}</Label>
                   <Input
                     type="email"
                     value={formData.contactEmail}
                     onChange={(e) => handleInputChange('contactEmail', e.target.value)}
                     placeholder="john@company.com"
-                    className="mt-2"
+                    className={`mt-2 ${getErrorMessage('contactEmail') ? 'border-red-500' : ''}`}
                   />
                 </div>
                 <div>
-                  <Label className="font-semibold">Office Phone *</Label>
+                  <Label className="font-semibold">Office Phone * {getErrorMessage('contactPhone') && <span className="text-red-600 text-xs">({getErrorMessage('contactPhone')})</span>}</Label>
                   <Input
                     value={formData.contactPhone}
                     onChange={(e) => handleInputChange('contactPhone', e.target.value)}
                     placeholder="+974 4433 1234"
-                    className="mt-2"
+                    className={`mt-2 ${getErrorMessage('contactPhone') ? 'border-red-500' : ''}`}
                   />
                 </div>
               </div>
@@ -654,33 +750,33 @@ export default function SupplierRegistrationPage() {
             <CardContent className="space-y-6">
               <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
                 <div>
-                  <Label className="font-semibold">Bank Name *</Label>
+                  <Label className="font-semibold">Bank Name * {getErrorMessage('bankName') && <span className="text-red-600 text-xs">({getErrorMessage('bankName')})</span>}</Label>
                   <Input
                     value={formData.bankName}
                     onChange={(e) => handleInputChange('bankName', e.target.value)}
                     placeholder="Commercial Bank of Qatar"
-                    className="mt-2"
+                    className={`mt-2 ${getErrorMessage('bankName') ? 'border-red-500' : ''}`}
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label className="font-semibold">Account Holder Name *</Label>
+                  <Label className="font-semibold">Account Holder Name * {getErrorMessage('accountHolder') && <span className="text-red-600 text-xs">({getErrorMessage('accountHolder')})</span>}</Label>
                   <Input
                     value={formData.accountHolder}
                     onChange={(e) => handleInputChange('accountHolder', e.target.value)}
                     placeholder="Company Legal Name"
-                    className="mt-2"
+                    className={`mt-2 ${getErrorMessage('accountHolder') ? 'border-red-500' : ''}`}
                   />
                 </div>
                 <div>
-                  <Label className="font-semibold">Account Number / IBAN *</Label>
+                  <Label className="font-semibold">Account Number / IBAN * {getErrorMessage('iban') && <span className="text-red-600 text-xs">({getErrorMessage('iban')})</span>}</Label>
                   <Input
                     value={formData.iban}
                     onChange={(e) => handleInputChange('iban', e.target.value)}
                     placeholder="Account/IBAN number"
-                    className="mt-2"
+                    className={`mt-2 ${getErrorMessage('iban') ? 'border-red-500' : ''}`}
                   />
                 </div>
               </div>
@@ -780,21 +876,35 @@ export default function SupplierRegistrationPage() {
 
         {/* Navigation Buttons */}
         <div className="flex gap-3 justify-between mt-8">
-          {step > 0 && (
+          <div className="flex gap-3">
+            {step > 0 && (
+              <Button
+                onClick={() => setStep(step - 1)}
+                variant="outline"
+                disabled={loading}
+              >
+                ← Previous
+              </Button>
+            )}
             <Button
-              onClick={() => setStep(step - 1)}
-              variant="outline"
+              onClick={saveDraft}
               disabled={loading}
+              variant="outline"
+              className="text-blue-600 border-blue-300 hover:bg-blue-50"
             >
-              ← Previous
+              <Save className="h-4 w-4 mr-2" /> Save as Draft
             </Button>
-          )}
+          </div>
 
-          <div className="flex gap-3 ml-auto">
+          <div className="flex gap-3">
             {step < 4 ? (
               <Button
-                onClick={() => setStep(step + 1)}
-                disabled={!canProceedStep() || loading}
+                onClick={() => {
+                  if (canProceedStep()) {
+                    setStep(step + 1)
+                  }
+                }}
+                disabled={loading || Object.keys(validationErrors).length > 0}
                 className="bg-blue-600 hover:bg-blue-700"
               >
                 Next →
@@ -802,9 +912,9 @@ export default function SupplierRegistrationPage() {
             ) : (
               <>
                 <Button
-                  onClick={submitRegistration}
-                  disabled={loading}
-                  className="bg-green-600 hover:bg-green-700"
+                  onClick={() => submitRegistration()}
+                  disabled={loading || Object.keys(validationErrors).length > 0}
+                  className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
                 >
                   {loading ? 'Submitting...' : 'Submit Application'}
                 </Button>
