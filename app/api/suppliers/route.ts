@@ -110,11 +110,14 @@ export async function POST(request: Request) {
     const body = await request.json()
 
     // Minimal validation
-    if (!body.name) return NextResponse.json({ error: 'name required' }, { status: 400 })
+    const primaryName = String((body.name ?? body.tradingName ?? body.contact?.name ?? body.email ?? '')).trim()
+    if (!primaryName) {
+      return NextResponse.json({ error: 'Supplier name required. Provide Name or Trading Name.' }, { status: 400 })
+    }
 
     // Build nested create payload
     const supplierData: any = {
-      name: body.name,
+      name: primaryName,
       tradingName: body.tradingName || null,
       contactPerson: body.contactPerson || null,
       email: body.email || null,
@@ -165,6 +168,10 @@ export async function POST(request: Request) {
       const created = await prisma.supplier.create({ data: supplierData, include: { contacts: true, capabilities: true, certifications: true, supplierPrices: true } })
       return NextResponse.json(created, { status: 201 })
     } catch (createErr: any) {
+      // Handle unique constraint on name
+      if (createErr?.code === 'P2002' && Array.isArray(createErr?.meta?.target) && createErr.meta.target.includes('Supplier_name_key')) {
+        return NextResponse.json({ error: 'A supplier with this name already exists.' }, { status: 409 })
+      }
       // existing runtime-fix handlers for missing tables (P2021) — attempt same logic as before for tables that may be missing
       const allowRuntimeFix = process.env.ALLOW_RUNTIME_SCHEMA_FIXES === 'true'
       if (allowRuntimeFix && createErr?.code === 'P2021' && createErr?.meta?.table) {
