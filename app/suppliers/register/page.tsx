@@ -228,6 +228,9 @@ export default function SupplierRegistrationPage() {
   }
 
   const submitRegistration = async () => {
+    // Clear any stale validation errors
+    setValidationErrors({})
+    
     // Validate ALL steps before submission
     const allErrors = validateAllSteps()
     if (Object.keys(allErrors).length > 0) {
@@ -484,7 +487,7 @@ export default function SupplierRegistrationPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div>
                   <Label className="font-semibold">Country *</Label>
                   <Select value={formData.country} onChange={(e) => handleInputChange('country', e.target.value)}>
@@ -505,7 +508,7 @@ export default function SupplierRegistrationPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div className={`p-3 rounded-lg ${getErrorMessage('category') ? 'bg-red-100 border border-red-500' : ''}`}>
                   <Label className={`font-semibold ${getErrorMessage('category') ? 'text-red-700' : ''}`}>
                     Product/Service Category * {getErrorMessage('category') && <span className="text-red-600 text-xs ml-1">({getErrorMessage('category')})</span>}
@@ -530,7 +533,7 @@ export default function SupplierRegistrationPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div>
                   <Label className="font-semibold">Year Established</Label>
                   <Input
@@ -578,7 +581,7 @@ export default function SupplierRegistrationPage() {
                 <h3 className={`font-semibold mb-3 ${getErrorMessage('crDoc') || getErrorMessage('crNumber') ? 'text-red-900' : 'text-blue-900'}`}>
                   Commercial Registration (CR)
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
                   <div>
                     <Label className={`font-semibold ${getErrorMessage('crNumber') ? 'text-red-700' : ''}`}>
                       CR Number {getErrorMessage('crNumber') && <span className="text-red-600 text-xs ml-1">({getErrorMessage('crNumber')})</span>}
@@ -629,7 +632,7 @@ export default function SupplierRegistrationPage() {
                 <h3 className={`font-semibold mb-3 ${getErrorMessage('taxDoc') || getErrorMessage('taxIdNumber') ? 'text-red-900' : 'text-amber-900'}`}>
                   Tax Registration (Tax Card/TRN)
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
                   <div>
                     <Label className={`font-semibold ${getErrorMessage('taxIdNumber') ? 'text-red-700' : ''}`}>
                       Tax ID Number {getErrorMessage('taxIdNumber') && <span className="text-red-600 text-xs ml-1">({getErrorMessage('taxIdNumber')})</span>}
@@ -796,7 +799,7 @@ export default function SupplierRegistrationPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   <div>
                     <Label className="font-semibold">Minimum Order Value</Label>
                     <Input
@@ -948,7 +951,7 @@ export default function SupplierRegistrationPage() {
                   <CardDescription>Please verify all information before submitting</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <div className={`border rounded-lg p-4 ${formData.companyName && formData.email && formData.phone && formData.address && formData.category && formData.businessType ? 'bg-green-50 border-green-300' : 'bg-red-50 border-red-300'}`}>
                       <h4 className="font-semibold text-slate-900 mb-3">Company Details</h4>
                       <div className="space-y-2 text-sm">
