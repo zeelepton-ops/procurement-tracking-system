@@ -235,7 +235,13 @@ export default function SupplierRegistrationPage() {
   }
 
   const submitRegistration = async () => {
-    if (!validateStep(step)) {
+    // Validate ALL steps before submission
+    const allErrors = validateAllSteps()
+    if (Object.keys(allErrors).length > 0) {
+      setMessage({ 
+        type: 'error', 
+        text: `Please complete all required fields. ${Object.keys(allErrors).length} field(s) still missing.` 
+      })
       return
     }
 
@@ -1041,8 +1047,9 @@ export default function SupplierRegistrationPage() {
               <>
                 <Button
                   onClick={() => submitRegistration()}
-                  disabled={loading || Object.keys(validationErrors).length > 0}
+                  disabled={loading || Object.keys(validateAllSteps()).length > 0}
                   className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                  title={Object.keys(validateAllSteps()).length > 0 ? 'Please fill all required fields' : 'Submit your application'}
                 >
                   {loading ? 'Submitting...' : 'Submit Application'}
                 </Button>
