@@ -761,12 +761,14 @@ export default function MaterialRequestPage() {
                             { label: 'Workshop', type: 'other' },
                             { label: 'Maintenance', type: 'other' },
                             { label: 'General', type: 'other' },
+                            { label: 'Machinery Repair', type: 'other' },
                             ...jobOrders.map(j => ({ id: j.id, label: `${j.jobNumber} - ${j.clientName || j.productName}`, meta: j.productName, type: 'job' })),
                             ...assets.map(a => ({ id: a.id, label: `${a.code} - ${a.name}`, meta: a.category || a.location || '', type: 'asset' })),
                           ]}
                           placeholder="Reason (type to search or enter text)"
                           inputClassName="h-7 px-1 rounded-md border border-slate-300 text-[11px] focus:z-10 focus:ring-2 focus:ring-blue-400 focus:outline-none"
                           className="w-full"
+                          dropdownMode
                         />
                       </ErrorBoundary>
                       {item.jobOrderId && item._linkedByJobSuggestion ? (

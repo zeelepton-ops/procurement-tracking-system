@@ -15,9 +15,11 @@ interface AutocompleteProps {
   inputClassName?: string
   // Optional callback invoked when a suggestion is explicitly selected (via mouse or Enter). If provided, this receives the full Suggestion object.
   onSelect?: (s: Suggestion) => void
+  // When true, behaves more like a dropdown: shows suggestions on focus even with empty query
+  dropdownMode?: boolean
 }
 
-export default function Autocomplete({ value, onChange, suggestions, placeholder, className, inputClassName, onSelect }: AutocompleteProps) {
+export default function Autocomplete({ value, onChange, suggestions, placeholder, className, inputClassName, onSelect, dropdownMode }: AutocompleteProps) {
   const [open, setOpen] = useState(false)
   const [activeIndex, setActiveIndex] = useState(-1)
   const [filtered, setFiltered] = useState<Suggestion[]>([])
@@ -29,15 +31,15 @@ export default function Autocomplete({ value, onChange, suggestions, placeholder
   useEffect(() => {
     const q = (value || '').trim().toLowerCase()
     if (!q) {
-      setFiltered(suggestions.slice(0, 8))
-      setOpen(false)
+      setFiltered(suggestions.slice(0, 50))
+      setOpen(!!dropdownMode)
       setActiveIndex(-1)
       setIgnoreOpenOnNextChange(false)
       return
     }
     const f = suggestions
       .filter(s => s.label.toLowerCase().includes(q) || (s.meta || '').toLowerCase().includes(q))
-      .slice(0, 8)
+      .slice(0, 50)
     setFiltered(f)
     setActiveIndex(-1)
     if (!ignoreOpenOnNextChange) {
@@ -131,7 +133,7 @@ export default function Autocomplete({ value, onChange, suggestions, placeholder
         ref={inputRef}
         value={value}
         onChange={(e) => { onChange(e.target.value); setIgnoreOpenOnNextChange(false); setOpen(true) }}
-        onFocus={() => { setIgnoreOpenOnNextChange(false); setOpen(filtered.length > 0) }}
+        onFocus={() => { setIgnoreOpenOnNextChange(false); setOpen(dropdownMode ? true : filtered.length > 0) }}
         onBlur={() => { setIgnoreOpenOnNextChange(true); setOpen(false) }}
         onKeyDown={onKeyDown}
         placeholder={placeholder}
