@@ -153,10 +153,7 @@ export default function SupplierRegistrationPage() {
         if (!formData.businessType) errors.businessType = 'Business type is required'
         break
       case 1:
-        if (!formData.crNumber) errors.crNumber = 'CR number is required'
-        if (!formData.taxIdNumber) errors.taxIdNumber = 'Tax ID is required'
-        if (!uploads.cr) errors.crDoc = 'CR document must be uploaded'
-        if (!uploads.taxCard) errors.taxDoc = 'Tax card must be uploaded'
+        // Documents are now optional
         break
       case 2:
         if (!formData.contactName) errors.contactName = 'Contact name is required'
@@ -164,9 +161,7 @@ export default function SupplierRegistrationPage() {
         if (!formData.contactPhone) errors.contactPhone = 'Contact phone is required'
         break
       case 3:
-        if (!formData.bankName) errors.bankName = 'Bank name is required'
-        if (!formData.accountHolder) errors.accountHolder = 'Account holder name is required'
-        if (!formData.iban) errors.iban = 'IBAN/Account number is required'
+        // Banking information is now optional
         break
     }
 
@@ -177,7 +172,7 @@ export default function SupplierRegistrationPage() {
   const validateAllSteps = (): Record<string, { field: string; step: number; error: string }> => {
     const allErrors: Record<string, { field: string; step: number; error: string }> = {}
 
-    // Step 0
+    // Step 0 - Company Information (Required)
     if (!formData.companyName) allErrors.companyName = { field: 'Company Name', step: 0, error: 'Company name is required' }
     if (!formData.email) allErrors.email = { field: 'Email Address', step: 0, error: 'Email is required' }
     if (!formData.phone) allErrors.phone = { field: 'Phone Number', step: 0, error: 'Phone number is required' }
@@ -186,21 +181,14 @@ export default function SupplierRegistrationPage() {
     if (!formData.category) allErrors.category = { field: 'Category', step: 0, error: 'Category is required' }
     if (!formData.businessType) allErrors.businessType = { field: 'Business Type', step: 0, error: 'Business type is required' }
 
-    // Step 1
-    if (!formData.crNumber) allErrors.crNumber = { field: 'CR Number', step: 1, error: 'CR number is required' }
-    if (!formData.taxIdNumber) allErrors.taxIdNumber = { field: 'Tax ID Number', step: 1, error: 'Tax ID is required' }
-    if (!uploads.cr) allErrors.crDoc = { field: 'CR Document', step: 1, error: 'CR document must be uploaded' }
-    if (!uploads.taxCard) allErrors.taxDoc = { field: 'Tax Card', step: 1, error: 'Tax card must be uploaded' }
+    // Step 1 - Documents (Optional)
 
-    // Step 2
+    // Step 2 - Contact Information (Required)
     if (!formData.contactName) allErrors.contactName = { field: 'Contact Name', step: 2, error: 'Contact name is required' }
     if (!formData.contactEmail) allErrors.contactEmail = { field: 'Contact Email', step: 2, error: 'Contact email is required' }
     if (!formData.contactPhone) allErrors.contactPhone = { field: 'Contact Phone', step: 2, error: 'Contact phone is required' }
 
-    // Step 3
-    if (!formData.bankName) allErrors.bankName = { field: 'Bank Name', step: 3, error: 'Bank name is required' }
-    if (!formData.accountHolder) allErrors.accountHolder = { field: 'Account Holder', step: 3, error: 'Account holder name is required' }
-    if (!formData.iban) allErrors.iban = { field: 'IBAN/Account Number', step: 3, error: 'IBAN/Account number is required' }
+    // Step 3 - Banking Information (Optional)
 
     return allErrors
   }
@@ -312,7 +300,7 @@ export default function SupplierRegistrationPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-slate-50 to-slate-100 py-12 px-4">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="text-center mb-12">
           <div className="flex items-center justify-center mb-4">
@@ -417,7 +405,7 @@ export default function SupplierRegistrationPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div className={`p-3 rounded-lg ${getErrorMessage('email') ? 'bg-red-100 border border-red-500' : ''}`}>
                   <Label className={`font-semibold ${getErrorMessage('email') ? 'text-red-700' : ''}`}>
                     Email Address * {getErrorMessage('email') && <span className="text-red-600 text-xs ml-1">({getErrorMessage('email')})</span>}
@@ -584,7 +572,7 @@ export default function SupplierRegistrationPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                   <div>
                     <Label className={`font-semibold ${getErrorMessage('crNumber') ? 'text-red-700' : ''}`}>
-                      CR Number * {getErrorMessage('crNumber') && <span className="text-red-600 text-xs ml-1">({getErrorMessage('crNumber')})</span>}
+                      CR Number {getErrorMessage('crNumber') && <span className="text-red-600 text-xs ml-1">({getErrorMessage('crNumber')})</span>}
                     </Label>
                     <Input
                       value={formData.crNumber}
@@ -594,7 +582,7 @@ export default function SupplierRegistrationPage() {
                     />
                   </div>
                   <div>
-                    <Label className="font-semibold">CR Expiry Date *</Label>
+                    <Label className="font-semibold">CR Expiry Date</Label>
                     <Input
                       type="date"
                       value={formData.crExpiry}
@@ -605,7 +593,7 @@ export default function SupplierRegistrationPage() {
                 </div>
                 <div>
                   <Label className={`font-semibold block mb-2 ${getErrorMessage('crDoc') ? 'text-red-700' : ''}`}>
-                    Upload CR Document (PDF/Image) * {getErrorMessage('crDoc') && <span className="text-red-600 text-xs ml-1">({getErrorMessage('crDoc')})</span>}
+                    Upload CR Document (PDF/Image) {getErrorMessage('crDoc') && <span className="text-red-600 text-xs ml-1">({getErrorMessage('crDoc')})</span>}
                   </Label>
                   <div className="flex gap-2">
                     <Input
@@ -635,7 +623,7 @@ export default function SupplierRegistrationPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                   <div>
                     <Label className={`font-semibold ${getErrorMessage('taxIdNumber') ? 'text-red-700' : ''}`}>
-                      Tax ID Number * {getErrorMessage('taxIdNumber') && <span className="text-red-600 text-xs ml-1">({getErrorMessage('taxIdNumber')})</span>}
+                      Tax ID Number {getErrorMessage('taxIdNumber') && <span className="text-red-600 text-xs ml-1">({getErrorMessage('taxIdNumber')})</span>}
                     </Label>
                     <Input
                       value={formData.taxIdNumber}
@@ -645,7 +633,7 @@ export default function SupplierRegistrationPage() {
                     />
                   </div>
                   <div>
-                    <Label className="font-semibold">Tax Card Expiry Date</Label>
+                    <Label className="font-semibold">Tax Card Expiry Date (Optional)</Label>
                     <Input
                       type="date"
                       value={formData.taxIdExpiry}
@@ -656,7 +644,7 @@ export default function SupplierRegistrationPage() {
                 </div>
                 <div>
                   <Label className={`font-semibold block mb-2 ${getErrorMessage('taxDoc') ? 'text-red-700' : ''}`}>
-                    Upload Tax Card/Certificate (PDF/Image) * {getErrorMessage('taxDoc') && <span className="text-red-600 text-xs ml-1">({getErrorMessage('taxDoc')})</span>}
+                    Upload Tax Card/Certificate (PDF/Image) {getErrorMessage('taxDoc') && <span className="text-red-600 text-xs ml-1">({getErrorMessage('taxDoc')})</span>}
                   </Label>
                   <div className="flex gap-2">
                     <Input
@@ -715,8 +703,8 @@ export default function SupplierRegistrationPage() {
               <CardTitle className="text-2xl">Primary Contact Person</CardTitle>
               <CardDescription>Information for our communication</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div className={`p-3 rounded-lg ${getErrorMessage('contactName') ? 'bg-red-100 border border-red-500' : ''}`}>
                   <Label className={`font-semibold ${getErrorMessage('contactName') ? 'text-red-700' : ''}`}>
                     Full Name * {getErrorMessage('contactName') && <span className="text-red-600 text-xs ml-1">({getErrorMessage('contactName')})</span>}
@@ -737,9 +725,6 @@ export default function SupplierRegistrationPage() {
                     className="mt-2"
                   />
                 </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className={`p-3 rounded-lg ${getErrorMessage('contactEmail') ? 'bg-red-100 border border-red-500' : ''}`}>
                   <Label className={`font-semibold ${getErrorMessage('contactEmail') ? 'text-red-700' : ''}`}>
                     Email Address * {getErrorMessage('contactEmail') && <span className="text-red-600 text-xs ml-1">({getErrorMessage('contactEmail')})</span>}
@@ -835,11 +820,11 @@ export default function SupplierRegistrationPage() {
               <CardTitle className="text-2xl">Banking & Payment Information</CardTitle>
               <CardDescription>Your bank details for payments and transfers</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className={`bg-purple-50 border-2 rounded-lg p-4 ${getErrorMessage('bankName') ? 'bg-red-100 border-red-500' : 'border-purple-200'}`}>
+            <CardContent className="space-y-4">
+              <div className={`bg-purple-50 border-2 rounded-lg p-3 ${getErrorMessage('bankName') ? 'bg-red-100 border-red-500' : 'border-purple-200'}`}>
                 <div>
                   <Label className={`font-semibold ${getErrorMessage('bankName') ? 'text-red-700' : ''}`}>
-                    Bank Name * {getErrorMessage('bankName') && <span className="text-red-600 text-xs ml-1">({getErrorMessage('bankName')})</span>}
+                    Bank Name {getErrorMessage('bankName') && <span className="text-red-600 text-xs ml-1">({getErrorMessage('bankName')})</span>}
                   </Label>
                   <Input
                     value={formData.bankName}
@@ -850,10 +835,10 @@ export default function SupplierRegistrationPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div className={`p-3 rounded-lg ${getErrorMessage('accountHolder') ? 'bg-red-100 border border-red-500' : ''}`}>
                   <Label className={`font-semibold ${getErrorMessage('accountHolder') ? 'text-red-700' : ''}`}>
-                    Account Holder Name * {getErrorMessage('accountHolder') && <span className="text-red-600 text-xs ml-1">({getErrorMessage('accountHolder')})</span>}
+                    Account Holder Name {getErrorMessage('accountHolder') && <span className="text-red-600 text-xs ml-1">({getErrorMessage('accountHolder')})</span>}
                   </Label>
                   <Input
                     value={formData.accountHolder}
@@ -864,7 +849,7 @@ export default function SupplierRegistrationPage() {
                 </div>
                 <div className={`p-3 rounded-lg ${getErrorMessage('iban') ? 'bg-red-100 border border-red-500' : ''}`}>
                   <Label className={`font-semibold ${getErrorMessage('iban') ? 'text-red-700' : ''}`}>
-                    Account Number / IBAN * {getErrorMessage('iban') && <span className="text-red-600 text-xs ml-1">({getErrorMessage('iban')})</span>}
+                    Account Number / IBAN {getErrorMessage('iban') && <span className="text-red-600 text-xs ml-1">({getErrorMessage('iban')})</span>}
                   </Label>
                   <Input
                     value={formData.iban}
