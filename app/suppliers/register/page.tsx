@@ -174,6 +174,37 @@ export default function SupplierRegistrationPage() {
     return Object.keys(errors).length === 0
   }
 
+  const validateAllSteps = (): Record<string, { field: string; step: number; error: string }> => {
+    const allErrors: Record<string, { field: string; step: number; error: string }> = {}
+
+    // Step 0
+    if (!formData.companyName) allErrors.companyName = { field: 'Company Name', step: 0, error: 'Company name is required' }
+    if (!formData.email) allErrors.email = { field: 'Email Address', step: 0, error: 'Email is required' }
+    if (!formData.phone) allErrors.phone = { field: 'Phone Number', step: 0, error: 'Phone number is required' }
+    if (!formData.address) allErrors.address = { field: 'Street Address', step: 0, error: 'Street address is required' }
+    if (!formData.city) allErrors.city = { field: 'City', step: 0, error: 'City is required' }
+    if (!formData.category) allErrors.category = { field: 'Category', step: 0, error: 'Category is required' }
+    if (!formData.businessType) allErrors.businessType = { field: 'Business Type', step: 0, error: 'Business type is required' }
+
+    // Step 1
+    if (!formData.crNumber) allErrors.crNumber = { field: 'CR Number', step: 1, error: 'CR number is required' }
+    if (!formData.taxIdNumber) allErrors.taxIdNumber = { field: 'Tax ID Number', step: 1, error: 'Tax ID is required' }
+    if (!uploads.cr) allErrors.crDoc = { field: 'CR Document', step: 1, error: 'CR document must be uploaded' }
+    if (!uploads.taxCard) allErrors.taxDoc = { field: 'Tax Card', step: 1, error: 'Tax card must be uploaded' }
+
+    // Step 2
+    if (!formData.contactName) allErrors.contactName = { field: 'Contact Name', step: 2, error: 'Contact name is required' }
+    if (!formData.contactEmail) allErrors.contactEmail = { field: 'Contact Email', step: 2, error: 'Contact email is required' }
+    if (!formData.contactPhone) allErrors.contactPhone = { field: 'Contact Phone', step: 2, error: 'Contact phone is required' }
+
+    // Step 3
+    if (!formData.bankName) allErrors.bankName = { field: 'Bank Name', step: 3, error: 'Bank name is required' }
+    if (!formData.accountHolder) allErrors.accountHolder = { field: 'Account Holder', step: 3, error: 'Account holder name is required' }
+    if (!formData.iban) allErrors.iban = { field: 'IBAN/Account Number', step: 3, error: 'IBAN/Account number is required' }
+
+    return allErrors
+  }
+
   const saveDraft = () => {
     const draft = {
       formData,
@@ -871,64 +902,104 @@ export default function SupplierRegistrationPage() {
 
         {/* Step 4: Review & Submit */}
         {step === 4 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-2xl">Review Your Application</CardTitle>
-              <CardDescription>Please verify all information before submitting</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="border rounded-lg p-4 bg-slate-50">
-                  <h4 className="font-semibold text-slate-900 mb-3">Company Details</h4>
-                  <div className="space-y-2 text-sm">
-                    <p><span className="font-medium text-slate-700">Company:</span> {formData.companyName}</p>
-                    <p><span className="font-medium text-slate-700">Category:</span> {formData.category}</p>
-                    <p><span className="font-medium text-slate-700">Type:</span> {formData.businessType}</p>
-                    <p><span className="font-medium text-slate-700">Email:</span> {formData.email}</p>
-                    <p><span className="font-medium text-slate-700">Phone:</span> {formData.phone}</p>
-                    <p><span className="font-medium text-slate-700">Address:</span> {formData.address}</p>
-                  </div>
-                </div>
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            {/* Left Sidebar - Missing Fields */}
+            <div>
+              <Card className={Object.keys(validateAllSteps()).length > 0 ? 'border-red-400 border-2 bg-red-50' : 'border-green-400 border-2 bg-green-50'}>
+                <CardHeader>
+                  <CardTitle className={`text-lg ${Object.keys(validateAllSteps()).length > 0 ? 'text-red-900' : 'text-green-900'}`}>
+                    {Object.keys(validateAllSteps()).length > 0 ? '❌ Complete These Fields' : '✅ All Fields Complete'}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {Object.keys(validateAllSteps()).length > 0 ? (
+                    <div className="space-y-3">
+                      {Object.entries(validateAllSteps()).map(([key, info]) => (
+                        <button
+                          key={key}
+                          onClick={() => setStep(info.step)}
+                          className="w-full text-left p-3 rounded-lg bg-white border-2 border-red-300 hover:bg-red-100 transition-colors"
+                        >
+                          <p className="font-semibold text-red-900 text-sm">{info.field}</p>
+                          <p className="text-xs text-red-700 mt-1">Step {info.step + 1}</p>
+                          <p className="text-xs text-red-600 mt-1">← Click to edit</p>
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="space-y-2 text-green-800">
+                      <p className="text-sm font-semibold">All required fields are filled!</p>
+                      <p className="text-xs">You can now submit your application.</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
 
-                <div className="border rounded-lg p-4 bg-slate-50">
-                  <h4 className="font-semibold text-slate-900 mb-3">Contact Person</h4>
-                  <div className="space-y-2 text-sm">
-                    <p><span className="font-medium text-slate-700">Name:</span> {formData.contactName}</p>
-                    <p><span className="font-medium text-slate-700">Title:</span> {formData.contactTitle}</p>
-                    <p><span className="font-medium text-slate-700">Email:</span> {formData.contactEmail}</p>
-                    <p><span className="font-medium text-slate-700">Phone:</span> {formData.contactPhone}</p>
-                    <p><span className="font-medium text-slate-700">Mobile:</span> {formData.contactMobile}</p>
-                  </div>
-                </div>
+            {/* Right Content - Review Summary */}
+            <div className="lg:col-span-3">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-2xl">Review Your Application</CardTitle>
+                  <CardDescription>Please verify all information before submitting</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className={`border rounded-lg p-4 ${formData.companyName && formData.email && formData.phone && formData.address && formData.category && formData.businessType ? 'bg-green-50 border-green-300' : 'bg-red-50 border-red-300'}`}>
+                      <h4 className="font-semibold text-slate-900 mb-3">Company Details</h4>
+                      <div className="space-y-2 text-sm">
+                        <p><span className="font-medium text-slate-700">Company:</span> <span className={!formData.companyName ? 'text-red-600 font-bold' : ''}>{formData.companyName || '❌ Missing'}</span></p>
+                        <p><span className="font-medium text-slate-700">Category:</span> <span className={!formData.category ? 'text-red-600 font-bold' : ''}>{formData.category || '❌ Missing'}</span></p>
+                        <p><span className="font-medium text-slate-700">Type:</span> <span className={!formData.businessType ? 'text-red-600 font-bold' : ''}>{formData.businessType || '❌ Missing'}</span></p>
+                        <p><span className="font-medium text-slate-700">Email:</span> <span className={!formData.email ? 'text-red-600 font-bold' : ''}>{formData.email || '❌ Missing'}</span></p>
+                        <p><span className="font-medium text-slate-700">Phone:</span> <span className={!formData.phone ? 'text-red-600 font-bold' : ''}>{formData.phone || '❌ Missing'}</span></p>
+                        <p><span className="font-medium text-slate-700">Address:</span> <span className={!formData.address ? 'text-red-600 font-bold' : ''}>{formData.address || '❌ Missing'}</span></p>
+                        <p><span className="font-medium text-slate-700">City:</span> <span className={!formData.city ? 'text-red-600 font-bold' : ''}>{formData.city || '❌ Missing'}</span></p>
+                      </div>
+                    </div>
 
-                <div className="border rounded-lg p-4 bg-slate-50">
-                  <h4 className="font-semibold text-slate-900 mb-3">Registration Documents</h4>
-                  <div className="space-y-2 text-sm">
-                    <p><span className="font-medium text-slate-700">CR Number:</span> {formData.crNumber}</p>
-                    <p><span className="font-medium text-slate-700">CR Document:</span> {uploads.cr ? '✓ Uploaded' : '✗ Missing'}</p>
-                    <p><span className="font-medium text-slate-700">Tax ID:</span> {formData.taxIdNumber}</p>
-                    <p><span className="font-medium text-slate-700">Tax Document:</span> {uploads.taxCard ? '✓ Uploaded' : '✗ Missing'}</p>
-                  </div>
-                </div>
+                    <div className={`border rounded-lg p-4 ${formData.contactName && formData.contactEmail && formData.contactPhone ? 'bg-green-50 border-green-300' : 'bg-red-50 border-red-300'}`}>
+                      <h4 className="font-semibold text-slate-900 mb-3">Contact Person</h4>
+                      <div className="space-y-2 text-sm">
+                        <p><span className="font-medium text-slate-700">Name:</span> <span className={!formData.contactName ? 'text-red-600 font-bold' : ''}>{formData.contactName || '❌ Missing'}</span></p>
+                        <p><span className="font-medium text-slate-700">Title:</span> {formData.contactTitle}</p>
+                        <p><span className="font-medium text-slate-700">Email:</span> <span className={!formData.contactEmail ? 'text-red-600 font-bold' : ''}>{formData.contactEmail || '❌ Missing'}</span></p>
+                        <p><span className="font-medium text-slate-700">Phone:</span> <span className={!formData.contactPhone ? 'text-red-600 font-bold' : ''}>{formData.contactPhone || '❌ Missing'}</span></p>
+                        <p><span className="font-medium text-slate-700">Mobile:</span> {formData.contactMobile}</p>
+                      </div>
+                    </div>
 
-                <div className="border rounded-lg p-4 bg-slate-50">
-                  <h4 className="font-semibold text-slate-900 mb-3">Business Terms</h4>
-                  <div className="space-y-2 text-sm">
-                    <p><span className="font-medium text-slate-700">Payment:</span> {formData.paymentTerms}</p>
-                    <p><span className="font-medium text-slate-700">Lead Time:</span> {formData.leadTimeDays} days</p>
-                    <p><span className="font-medium text-slate-700">Currency:</span> {formData.currency}</p>
-                    <p><span className="font-medium text-slate-700">Bank:</span> {formData.bankName}</p>
-                  </div>
-                </div>
-              </div>
+                    <div className={`border rounded-lg p-4 ${formData.crNumber && formData.taxIdNumber && uploads.cr && uploads.taxCard ? 'bg-green-50 border-green-300' : 'bg-red-50 border-red-300'}`}>
+                      <h4 className="font-semibold text-slate-900 mb-3">Registration Documents</h4>
+                      <div className="space-y-2 text-sm">
+                        <p><span className="font-medium text-slate-700">CR Number:</span> <span className={!formData.crNumber ? 'text-red-600 font-bold' : ''}>{formData.crNumber || '❌ Missing'}</span></p>
+                        <p><span className="font-medium text-slate-700">CR Document:</span> <span className={uploads.cr ? 'text-green-600 font-bold' : 'text-red-600 font-bold'}>{uploads.cr ? '✓ Uploaded' : '❌ Missing'}</span></p>
+                        <p><span className="font-medium text-slate-700">Tax ID:</span> <span className={!formData.taxIdNumber ? 'text-red-600 font-bold' : ''}>{formData.taxIdNumber || '❌ Missing'}</span></p>
+                        <p><span className="font-medium text-slate-700">Tax Document:</span> <span className={uploads.taxCard ? 'text-green-600 font-bold' : 'text-red-600 font-bold'}>{uploads.taxCard ? '✓ Uploaded' : '❌ Missing'}</span></p>
+                      </div>
+                    </div>
 
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <p className="text-sm text-green-900">
-                  <span className="font-semibold">✓ You're ready to submit!</span> By submitting, you confirm that all information is accurate. Our team will review your application within 2-3 business days.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+                    <div className={`border rounded-lg p-4 ${formData.bankName && formData.accountHolder && formData.iban ? 'bg-green-50 border-green-300' : 'bg-red-50 border-red-300'}`}>
+                      <h4 className="font-semibold text-slate-900 mb-3">Banking Information</h4>
+                      <div className="space-y-2 text-sm">
+                        <p><span className="font-medium text-slate-700">Bank:</span> <span className={!formData.bankName ? 'text-red-600 font-bold' : ''}>{formData.bankName || '❌ Missing'}</span></p>
+                        <p><span className="font-medium text-slate-700">Account Holder:</span> <span className={!formData.accountHolder ? 'text-red-600 font-bold' : ''}>{formData.accountHolder || '❌ Missing'}</span></p>
+                        <p><span className="font-medium text-slate-700">IBAN:</span> <span className={!formData.iban ? 'text-red-600 font-bold' : ''}>{formData.iban || '❌ Missing'}</span></p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {Object.keys(validateAllSteps()).length === 0 && (
+                    <div className="bg-green-50 border-2 border-green-300 rounded-lg p-4">
+                      <p className="text-sm text-green-900">
+                        <span className="font-semibold">✅ Complete!</span> All required information has been filled. Your application is ready to submit.
+                      </p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </div>
         )}
 
         {/* Navigation Buttons */}
