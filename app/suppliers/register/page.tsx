@@ -315,6 +315,25 @@ export default function SupplierRegistrationPage() {
           </div>
         )}
 
+        {/* Validation Errors Summary */}
+        {Object.keys(validationErrors).length > 0 && (
+          <div className="mb-6 p-4 rounded-lg bg-red-50 border-2 border-red-400">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="h-6 w-6 text-red-600 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <h3 className="font-bold text-red-900 mb-2">❌ Please fill the following required fields:</h3>
+                <ul className="space-y-1">
+                  {Object.entries(validationErrors).map(([field, error]) => (
+                    <li key={field} className="text-red-800 text-sm font-semibold flex items-center gap-2">
+                      <span className="text-red-600">▸</span> {error}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Draft Indicator */}
         {hasDraft && (
           <div className="mb-6 p-4 rounded-lg bg-blue-50 border border-blue-200 flex items-center justify-between">
@@ -339,13 +358,15 @@ export default function SupplierRegistrationPage() {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label className="font-semibold">Company Name * {getErrorMessage('companyName') && <span className="text-red-600 text-xs">({getErrorMessage('companyName')})</span>}</Label>
+                <div className={`p-3 rounded-lg ${getErrorMessage('companyName') ? 'bg-red-100 border border-red-500' : ''}`}>
+                  <Label className={`font-semibold ${getErrorMessage('companyName') ? 'text-red-700' : ''}`}>
+                    Company Name * {getErrorMessage('companyName') && <span className="text-red-600 text-xs ml-1">({getErrorMessage('companyName')})</span>}
+                  </Label>
                   <Input
                     value={formData.companyName}
                     onChange={(e) => handleInputChange('companyName', e.target.value)}
                     placeholder="Official company name"
-                    className={`mt-2 ${getErrorMessage('companyName') ? 'border-red-500' : ''}`}
+                    className={`mt-2 ${getErrorMessage('companyName') ? 'border-red-600 border-2 bg-red-50' : ''}`}
                   />
                 </div>
                 <div>
@@ -360,45 +381,53 @@ export default function SupplierRegistrationPage() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label className="font-semibold">Email Address * {getErrorMessage('email') && <span className="text-red-600 text-xs">({getErrorMessage('email')})</span>}</Label>
+                <div className={`p-3 rounded-lg ${getErrorMessage('email') ? 'bg-red-100 border border-red-500' : ''}`}>
+                  <Label className={`font-semibold ${getErrorMessage('email') ? 'text-red-700' : ''}`}>
+                    Email Address * {getErrorMessage('email') && <span className="text-red-600 text-xs ml-1">({getErrorMessage('email')})</span>}
+                  </Label>
                   <Input
                     type="email"
                     value={formData.email}
                     onChange={(e) => handleInputChange('email', e.target.value)}
                     placeholder="company@example.com"
-                    className={`mt-2 ${getErrorMessage('email') ? 'border-red-500' : ''}`}
+                    className={`mt-2 ${getErrorMessage('email') ? 'border-red-600 border-2 bg-red-50' : ''}`}
                   />
                 </div>
-                <div>
-                  <Label className="font-semibold">Phone Number * {getErrorMessage('phone') && <span className="text-red-600 text-xs">({getErrorMessage('phone')})</span>}</Label>
+                <div className={`p-3 rounded-lg ${getErrorMessage('phone') ? 'bg-red-100 border border-red-500' : ''}`}>
+                  <Label className={`font-semibold ${getErrorMessage('phone') ? 'text-red-700' : ''}`}>
+                    Phone Number * {getErrorMessage('phone') && <span className="text-red-600 text-xs ml-1">({getErrorMessage('phone')})</span>}
+                  </Label>
                   <Input
                     value={formData.phone}
                     onChange={(e) => handleInputChange('phone', e.target.value)}
                     placeholder="+974 4433 1234"
-                    className={`mt-2 ${getErrorMessage('phone') ? 'border-red-500' : ''}`}
+                    className={`mt-2 ${getErrorMessage('phone') ? 'border-red-600 border-2 bg-red-50' : ''}`}
                   />
                 </div>
               </div>
 
-              <div>
-                <Label className="font-semibold">Street Address * {getErrorMessage('address') && <span className="text-red-600 text-xs">({getErrorMessage('address')})</span>}</Label>
+              <div className={`p-3 rounded-lg ${getErrorMessage('address') ? 'bg-red-100 border border-red-500' : ''}`}>
+                <Label className={`font-semibold ${getErrorMessage('address') ? 'text-red-700' : ''}`}>
+                  Street Address * {getErrorMessage('address') && <span className="text-red-600 text-xs ml-1">({getErrorMessage('address')})</span>}
+                </Label>
                 <Input
                   value={formData.address}
                   onChange={(e) => handleInputChange('address', e.target.value)}
                   placeholder="Street address"
-                  className={`mt-2 ${getErrorMessage('address') ? 'border-red-500' : ''}`}
+                  className={`mt-2 ${getErrorMessage('address') ? 'border-red-600 border-2 bg-red-50' : ''}`}
                 />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <Label className="font-semibold">City * {getErrorMessage('city') && <span className="text-red-600 text-xs">({getErrorMessage('city')})</span>}</Label>
+                <div className={`p-3 rounded-lg ${getErrorMessage('city') ? 'bg-red-100 border border-red-500' : ''}`}>
+                  <Label className={`font-semibold ${getErrorMessage('city') ? 'text-red-700' : ''}`}>
+                    City * {getErrorMessage('city') && <span className="text-red-600 text-xs ml-1">({getErrorMessage('city')})</span>}
+                  </Label>
                   <Input
                     value={formData.city}
                     onChange={(e) => handleInputChange('city', e.target.value)}
                     placeholder="Doha"
-                    className={`mt-2 ${getErrorMessage('city') ? 'border-red-500' : ''}`}
+                    className={`mt-2 ${getErrorMessage('city') ? 'border-red-600 border-2 bg-red-50' : ''}`}
                   />
                 </div>
                 <div>
@@ -443,18 +472,22 @@ export default function SupplierRegistrationPage() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label className="font-semibold">Product/Service Category * {getErrorMessage('category') && <span className="text-red-600 text-xs">({getErrorMessage('category')})</span>}</Label>
-                  <Select value={formData.category} onChange={(e) => handleInputChange('category', e.target.value)} className={getErrorMessage('category') ? 'border-red-500' : ''}>
+                <div className={`p-3 rounded-lg ${getErrorMessage('category') ? 'bg-red-100 border border-red-500' : ''}`}>
+                  <Label className={`font-semibold ${getErrorMessage('category') ? 'text-red-700' : ''}`}>
+                    Product/Service Category * {getErrorMessage('category') && <span className="text-red-600 text-xs ml-1">({getErrorMessage('category')})</span>}
+                  </Label>
+                  <Select value={formData.category} onChange={(e) => handleInputChange('category', e.target.value)} className={getErrorMessage('category') ? 'border-red-600 border-2' : ''}>
                     <option value="">-- Select Category --</option>
                     {SUPPLIER_CATEGORIES.map(cat => (
                       <option key={cat} value={cat}>{cat}</option>
                     ))}
                   </Select>
                 </div>
-                <div>
-                  <Label className="font-semibold">Business Type * {getErrorMessage('businessType') && <span className="text-red-600 text-xs">({getErrorMessage('businessType')})</span>}</Label>
-                  <Select value={formData.businessType} onChange={(e) => handleInputChange('businessType', e.target.value)} className={getErrorMessage('businessType') ? 'border-red-500' : ''}>
+                <div className={`p-3 rounded-lg ${getErrorMessage('businessType') ? 'bg-red-100 border border-red-500' : ''}`}>
+                  <Label className={`font-semibold ${getErrorMessage('businessType') ? 'text-red-700' : ''}`}>
+                    Business Type * {getErrorMessage('businessType') && <span className="text-red-600 text-xs ml-1">({getErrorMessage('businessType')})</span>}
+                  </Label>
+                  <Select value={formData.businessType} onChange={(e) => handleInputChange('businessType', e.target.value)} className={getErrorMessage('businessType') ? 'border-red-600 border-2' : ''}>
                     <option value="">-- Select Type --</option>
                     {BUSINESS_TYPES.map(type => (
                       <option key={type} value={type}>{type}</option>
@@ -507,16 +540,20 @@ export default function SupplierRegistrationPage() {
               <CardDescription>Upload your company registration and tax documents</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <h3 className="font-semibold text-blue-900 mb-3">Commercial Registration (CR)</h3>
+              <div className={`rounded-lg p-4 ${getErrorMessage('crDoc') || getErrorMessage('crNumber') ? 'bg-red-100 border-2 border-red-500' : 'bg-blue-50 border border-blue-200'}`}>
+                <h3 className={`font-semibold mb-3 ${getErrorMessage('crDoc') || getErrorMessage('crNumber') ? 'text-red-900' : 'text-blue-900'}`}>
+                  Commercial Registration (CR)
+                </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                   <div>
-                    <Label className="font-semibold">CR Number * {getErrorMessage('crNumber') && <span className="text-red-600 text-xs">({getErrorMessage('crNumber')})</span>}</Label>
+                    <Label className={`font-semibold ${getErrorMessage('crNumber') ? 'text-red-700' : ''}`}>
+                      CR Number * {getErrorMessage('crNumber') && <span className="text-red-600 text-xs ml-1">({getErrorMessage('crNumber')})</span>}
+                    </Label>
                     <Input
                       value={formData.crNumber}
                       onChange={(e) => handleInputChange('crNumber', e.target.value)}
                       placeholder="CR-1234567"
-                      className={`mt-2 ${getErrorMessage('crNumber') ? 'border-red-500' : ''}`}
+                      className={`mt-2 ${getErrorMessage('crNumber') ? 'border-red-600 border-2 bg-red-50' : ''}`}
                     />
                   </div>
                   <div>
@@ -530,7 +567,9 @@ export default function SupplierRegistrationPage() {
                   </div>
                 </div>
                 <div>
-                  <Label className="font-semibold block mb-2">Upload CR Document (PDF/Image) * {getErrorMessage('crDoc') && <span className="text-red-600 text-xs">({getErrorMessage('crDoc')})</span>}</Label>
+                  <Label className={`font-semibold block mb-2 ${getErrorMessage('crDoc') ? 'text-red-700' : ''}`}>
+                    Upload CR Document (PDF/Image) * {getErrorMessage('crDoc') && <span className="text-red-600 text-xs ml-1">({getErrorMessage('crDoc')})</span>}
+                  </Label>
                   <div className="flex gap-2">
                     <Input
                       type="file"
@@ -552,16 +591,20 @@ export default function SupplierRegistrationPage() {
                 </div>
               </div>
 
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                <h3 className="font-semibold text-amber-900 mb-3">Tax Registration (Tax Card/TRN)</h3>
+              <div className={`rounded-lg p-4 ${getErrorMessage('taxDoc') || getErrorMessage('taxIdNumber') ? 'bg-red-100 border-2 border-red-500' : 'bg-amber-50 border border-amber-200'}`}>
+                <h3 className={`font-semibold mb-3 ${getErrorMessage('taxDoc') || getErrorMessage('taxIdNumber') ? 'text-red-900' : 'text-amber-900'}`}>
+                  Tax Registration (Tax Card/TRN)
+                </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                   <div>
-                    <Label className="font-semibold">Tax ID Number * {getErrorMessage('taxIdNumber') && <span className="text-red-600 text-xs">({getErrorMessage('taxIdNumber')})</span>}</Label>
+                    <Label className={`font-semibold ${getErrorMessage('taxIdNumber') ? 'text-red-700' : ''}`}>
+                      Tax ID Number * {getErrorMessage('taxIdNumber') && <span className="text-red-600 text-xs ml-1">({getErrorMessage('taxIdNumber')})</span>}
+                    </Label>
                     <Input
                       value={formData.taxIdNumber}
                       onChange={(e) => handleInputChange('taxIdNumber', e.target.value)}
                       placeholder="TRN-1234567"
-                      className={`mt-2 ${getErrorMessage('taxIdNumber') ? 'border-red-500' : ''}`}
+                      className={`mt-2 ${getErrorMessage('taxIdNumber') ? 'border-red-600 border-2 bg-red-50' : ''}`}
                     />
                   </div>
                   <div>
@@ -575,7 +618,9 @@ export default function SupplierRegistrationPage() {
                   </div>
                 </div>
                 <div>
-                  <Label className="font-semibold block mb-2">Upload Tax Card/Certificate (PDF/Image) * {getErrorMessage('taxDoc') && <span className="text-red-600 text-xs">({getErrorMessage('taxDoc')})</span>}</Label>
+                  <Label className={`font-semibold block mb-2 ${getErrorMessage('taxDoc') ? 'text-red-700' : ''}`}>
+                    Upload Tax Card/Certificate (PDF/Image) * {getErrorMessage('taxDoc') && <span className="text-red-600 text-xs ml-1">({getErrorMessage('taxDoc')})</span>}
+                  </Label>
                   <div className="flex gap-2">
                     <Input
                       type="file"
@@ -635,13 +680,15 @@ export default function SupplierRegistrationPage() {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label className="font-semibold">Full Name * {getErrorMessage('contactName') && <span className="text-red-600 text-xs">({getErrorMessage('contactName')})</span>}</Label>
+                <div className={`p-3 rounded-lg ${getErrorMessage('contactName') ? 'bg-red-100 border border-red-500' : ''}`}>
+                  <Label className={`font-semibold ${getErrorMessage('contactName') ? 'text-red-700' : ''}`}>
+                    Full Name * {getErrorMessage('contactName') && <span className="text-red-600 text-xs ml-1">({getErrorMessage('contactName')})</span>}
+                  </Label>
                   <Input
                     value={formData.contactName}
                     onChange={(e) => handleInputChange('contactName', e.target.value)}
                     placeholder="John Doe"
-                    className={`mt-2 ${getErrorMessage('contactName') ? 'border-red-500' : ''}`}
+                    className={`mt-2 ${getErrorMessage('contactName') ? 'border-red-600 border-2 bg-red-50' : ''}`}
                   />
                 </div>
                 <div>
@@ -656,23 +703,27 @@ export default function SupplierRegistrationPage() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label className="font-semibold">Email Address * {getErrorMessage('contactEmail') && <span className="text-red-600 text-xs">({getErrorMessage('contactEmail')})</span>}</Label>
+                <div className={`p-3 rounded-lg ${getErrorMessage('contactEmail') ? 'bg-red-100 border border-red-500' : ''}`}>
+                  <Label className={`font-semibold ${getErrorMessage('contactEmail') ? 'text-red-700' : ''}`}>
+                    Email Address * {getErrorMessage('contactEmail') && <span className="text-red-600 text-xs ml-1">({getErrorMessage('contactEmail')})</span>}
+                  </Label>
                   <Input
                     type="email"
                     value={formData.contactEmail}
                     onChange={(e) => handleInputChange('contactEmail', e.target.value)}
                     placeholder="john@company.com"
-                    className={`mt-2 ${getErrorMessage('contactEmail') ? 'border-red-500' : ''}`}
+                    className={`mt-2 ${getErrorMessage('contactEmail') ? 'border-red-600 border-2 bg-red-50' : ''}`}
                   />
                 </div>
-                <div>
-                  <Label className="font-semibold">Office Phone * {getErrorMessage('contactPhone') && <span className="text-red-600 text-xs">({getErrorMessage('contactPhone')})</span>}</Label>
+                <div className={`p-3 rounded-lg ${getErrorMessage('contactPhone') ? 'bg-red-100 border border-red-500' : ''}`}>
+                  <Label className={`font-semibold ${getErrorMessage('contactPhone') ? 'text-red-700' : ''}`}>
+                    Office Phone * {getErrorMessage('contactPhone') && <span className="text-red-600 text-xs ml-1">({getErrorMessage('contactPhone')})</span>}
+                  </Label>
                   <Input
                     value={formData.contactPhone}
                     onChange={(e) => handleInputChange('contactPhone', e.target.value)}
                     placeholder="+974 4433 1234"
-                    className={`mt-2 ${getErrorMessage('contactPhone') ? 'border-red-500' : ''}`}
+                    className={`mt-2 ${getErrorMessage('contactPhone') ? 'border-red-600 border-2 bg-red-50' : ''}`}
                   />
                 </div>
               </div>
@@ -748,35 +799,41 @@ export default function SupplierRegistrationPage() {
               <CardDescription>Your bank details for payments and transfers</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+              <div className={`bg-purple-50 border-2 rounded-lg p-4 ${getErrorMessage('bankName') ? 'bg-red-100 border-red-500' : 'border-purple-200'}`}>
                 <div>
-                  <Label className="font-semibold">Bank Name * {getErrorMessage('bankName') && <span className="text-red-600 text-xs">({getErrorMessage('bankName')})</span>}</Label>
+                  <Label className={`font-semibold ${getErrorMessage('bankName') ? 'text-red-700' : ''}`}>
+                    Bank Name * {getErrorMessage('bankName') && <span className="text-red-600 text-xs ml-1">({getErrorMessage('bankName')})</span>}
+                  </Label>
                   <Input
                     value={formData.bankName}
                     onChange={(e) => handleInputChange('bankName', e.target.value)}
                     placeholder="Commercial Bank of Qatar"
-                    className={`mt-2 ${getErrorMessage('bankName') ? 'border-red-500' : ''}`}
+                    className={`mt-2 ${getErrorMessage('bankName') ? 'border-red-600 border-2 bg-red-50' : ''}`}
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label className="font-semibold">Account Holder Name * {getErrorMessage('accountHolder') && <span className="text-red-600 text-xs">({getErrorMessage('accountHolder')})</span>}</Label>
+                <div className={`p-3 rounded-lg ${getErrorMessage('accountHolder') ? 'bg-red-100 border border-red-500' : ''}`}>
+                  <Label className={`font-semibold ${getErrorMessage('accountHolder') ? 'text-red-700' : ''}`}>
+                    Account Holder Name * {getErrorMessage('accountHolder') && <span className="text-red-600 text-xs ml-1">({getErrorMessage('accountHolder')})</span>}
+                  </Label>
                   <Input
                     value={formData.accountHolder}
                     onChange={(e) => handleInputChange('accountHolder', e.target.value)}
                     placeholder="Company Legal Name"
-                    className={`mt-2 ${getErrorMessage('accountHolder') ? 'border-red-500' : ''}`}
+                    className={`mt-2 ${getErrorMessage('accountHolder') ? 'border-red-600 border-2 bg-red-50' : ''}`}
                   />
                 </div>
-                <div>
-                  <Label className="font-semibold">Account Number / IBAN * {getErrorMessage('iban') && <span className="text-red-600 text-xs">({getErrorMessage('iban')})</span>}</Label>
+                <div className={`p-3 rounded-lg ${getErrorMessage('iban') ? 'bg-red-100 border border-red-500' : ''}`}>
+                  <Label className={`font-semibold ${getErrorMessage('iban') ? 'text-red-700' : ''}`}>
+                    Account Number / IBAN * {getErrorMessage('iban') && <span className="text-red-600 text-xs ml-1">({getErrorMessage('iban')})</span>}
+                  </Label>
                   <Input
                     value={formData.iban}
                     onChange={(e) => handleInputChange('iban', e.target.value)}
                     placeholder="Account/IBAN number"
-                    className={`mt-2 ${getErrorMessage('iban') ? 'border-red-500' : ''}`}
+                    className={`mt-2 ${getErrorMessage('iban') ? 'border-red-600 border-2 bg-red-50' : ''}`}
                   />
                 </div>
               </div>

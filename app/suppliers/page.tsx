@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Building2, MapPin, Phone, Mail, Award, Plus, Search, Filter } from 'lucide-react'
+import { Building2, MapPin, Phone, Mail, Award, Plus, Search, Filter, FileText, Trash2, Edit } from 'lucide-react'
 
 interface Supplier {
   id: string
@@ -25,6 +25,13 @@ interface Supplier {
   isActive: boolean
   crNumber?: string
   createdAt: string
+}
+
+interface Draft {
+  formData: any
+  uploads: any
+  step: number
+  savedAt: string
 }
 
 const SUPPLIER_CATEGORIES = [
@@ -47,10 +54,27 @@ export default function SuppliersPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('ALL')
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'PENDING' | 'APPROVED' | 'REJECTED' | 'SUSPENDED'>('APPROVED')
+  const [drafts, setDrafts] = useState<Draft[]>([])
 
   useEffect(() => {
     fetchSuppliers()
+    loadDrafts()
   }, [searchQuery, categoryFilter, statusFilter])
+
+  function loadDrafts() {
+    try {
+      const savedDraft = localStorage.getItem('supplierRegistrationDraft')
+      if (savedDraft) {
+        const draft = JSON.parse(savedDraft) as Draft
+        setDrafts([draft])
+      } else {
+        setDrafts([])
+      }
+    } catch (error) {
+      console.error('Failed to load drafts:', error)
+      setDrafts([])
+    }
+  }
 
   async function fetchSuppliers() {
     setLoading(true)
@@ -69,6 +93,17 @@ export default function SuppliersPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const deleteDraft = (index: number) => {
+    if (confirm('Are you sure you want to delete this draft?')) {
+      localStorage.removeItem('supplierRegistrationDraft')
+      setDrafts(drafts.filter((_, i) => i !== index))
+    }
+  }
+
+  const continueDraft = (index: number) => {
+    router.push('/suppliers/register')
   }
 
   const isAdmin = session?.user?.role === 'ADMIN'
@@ -148,6 +183,66 @@ export default function SuppliersPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Drafts Section */}
+        {drafts.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+              <FileText className="h-6 w-6 text-orange-500" /> Your Draft Applications ({drafts.length})
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {drafts.map((draft, idx) => (
+                <Card key={idx} className="border-orange-300 border-2 bg-orange-50 hover:shadow-lg transition-shadow">
+                  <CardHeader>
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <CardTitle className="text-lg text-orange-900">
+                          {draft.formData.companyName || 'Untitled Draft'}
+                        </CardTitle>
+                        <p className="text-sm text-orange-700 mt-1">
+                          Step {draft.step + 1} of 5 - {['Company Info', 'Documents', 'Contact', 'Banking', 'Review'][draft.step]}
+                        </p>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2 text-sm text-orange-800">
+                        <span>📅 Saved: {new Date(draft.savedAt).toLocaleDateString()}</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div
+                          className="bg-orange-500 h-2 rounded-full transition-all"
+                          style={{ width: `${((draft.step + 1) / 5) * 100}%` }}
+                        />
+                      </div>
+                      <p className="text-xs text-orange-700">
+                        Progress: {Math.round(((draft.step + 1) / 5) * 100)}% complete
+                      </p>
+                    </div>
+                    <div className="flex gap-2 mt-4">
+                      <Button
+                        onClick={() => continueDraft(idx)}
+                        className="flex-1 bg-orange-600 hover:bg-orange-700"
+                        size="sm"
+                      >
+                        <Edit className="h-4 w-4 mr-2" /> Continue
+                      </Button>
+                      <Button
+                        onClick={() => deleteDraft(idx)}
+                        variant="outline"
+                        size="sm"
+                        className="text-red-600 border-red-300 hover:bg-red-50"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Suppliers Grid */}
         {loading ? (
