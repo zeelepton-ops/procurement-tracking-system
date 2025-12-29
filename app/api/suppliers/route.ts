@@ -110,15 +110,18 @@ export async function POST(request: Request) {
     const body = await request.json()
 
     // Minimal validation
-    const primaryName = String((body.name ?? body.tradingName ?? body.contact?.name ?? body.email ?? '')).trim()
+    // Accept multiple client payload variants: companyName, name, tradingName, contact.name, or email
+    const primaryName = String((body.name ?? body.companyName ?? body.tradingName ?? body.contact?.name ?? body.email ?? '')).trim()
     if (!primaryName) {
-      return NextResponse.json({ error: 'Supplier name required. Provide Name or Trading Name.' }, { status: 400 })
+      // Help debug by echoing the received keys
+      const receivedKeys = Object.keys(body || {})
+      return NextResponse.json({ error: 'Supplier name required. Provide Company Name or Trading Name.', receivedKeys }, { status: 400 })
     }
 
     // Build nested create payload
     const supplierData: any = {
       name: primaryName,
-      tradingName: body.tradingName || null,
+      tradingName: body.tradingName || body.companyName || null,
       contactPerson: body.contactPerson || null,
       email: body.email || null,
       phone: body.phone || null,
@@ -130,13 +133,16 @@ export async function POST(request: Request) {
       businessType: body.businessType || null,
       yearEstablished: body.yearEstablished || null,
       crNumber: body.crNumber || null,
-      crDocumentUrl: body.crDocumentUrl || null,
-      taxCardUrl: body.taxCardUrl || null,
-      icvUrl: body.icvUrl || null,
+      // Map possible nested documents object from client
+      crDocumentUrl: body.crDocumentUrl ?? body.documents?.crUrl ?? null,
+      taxCardUrl: body.taxCardUrl ?? body.documents?.taxCardUrl ?? null,
+      icvUrl: body.icvUrl ?? body.documents?.icvUrl ?? null,
       paymentTerms: body.paymentTerms || null,
       leadTimeDays: body.leadTimeDays ?? null,
-      defaultCurrency: body.defaultCurrency || 'QAR',
-      taxId: body.taxId || null,
+      // Accept currency from either defaultCurrency or currency
+      defaultCurrency: body.defaultCurrency ?? body.currency ?? 'QAR',
+      // Accept taxIdNumber alias
+      taxId: body.taxId ?? body.taxIdNumber ?? null,
       tradeLicense: body.tradeLicense || null,
       notes: body.notes || null,
       status: body.status || undefined
@@ -162,6 +168,19 @@ export async function POST(request: Request) {
       supplierData.supplierPrices = { create: body.prices.map((p: any) => ({ itemKey: p.itemKey, unitPrice: Number(p.unitPrice) || 0, currency: p.currency || 'QAR', effectiveFrom: p.effectiveFrom ?? null })) }
     } else if (body.price) {
       supplierData.supplierPrices = { create: [{ itemKey: body.price.itemKey || 'UNKNOWN', unitPrice: Number(body.price.unitPrice) || 0, currency: body.price.currency || 'QAR', effectiveFrom: body.price.effectiveFrom ?? null }] }
+    }
+
+    // Optional bank details mapping
+    if (body.bankDetails && (body.bankDetails.bankName || body.bankDetails.accountHolder || body.bankDetails.iban)) {
+      supplierData.bankDetails = {
+        create: {
+          bankName: body.bankDetails.bankName ?? null,
+          accountName: body.bankDetails.accountHolder ?? null,
+          iban: body.bankDetails.iban ?? null,
+          currency: body.currency ?? body.defaultCurrency ?? 'QAR',
+          notes: body.bankDetails.notes ?? null
+        }
+      }
     }
 
     try {
