@@ -61,6 +61,7 @@ interface MaterialRequest {
   requestedAt: string
   createdAt: string
   items?: Array<{
+    id?: string
     itemName: string
     description: string
     quantity: number
@@ -86,7 +87,7 @@ export default function MaterialRequestPage() {
   const [selectedRequest, setSelectedRequest] = useState<MaterialRequest | null>(null)
   const [isEditing, setIsEditing] = useState(false)
   const [editData, setEditData] = useState<any>({})
-  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
+  const [deleteConfirm, setDeleteConfirm] = useState<{ requestId: string; itemId?: string } | null>(null)
   const [filters, setFilters] = useState({
     search: '',
     status: 'ALL',
@@ -497,26 +498,36 @@ export default function MaterialRequestPage() {
     return colors[urgency] || 'bg-blue-100 text-blue-700'
   }
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (requestId: string, itemId?: string) => {
     try {
       setLoading(true)
-      const res = await fetch(`/api/material-requests?id=${id}`, {
-        method: 'DELETE'
-      })
+      let res: Response
+      
+      if (itemId) {
+        // Delete individual item
+        res = await fetch(`/api/material-requests/${requestId}/items?itemId=${itemId}`, {
+          method: 'DELETE'
+        })
+      } else {
+        // Delete entire request
+        res = await fetch(`/api/material-requests?id=${requestId}`, {
+          method: 'DELETE'
+        })
+      }
     
       if (res.ok) {
         fetchMaterialRequests()
-        if (selectedRequest?.id === id) {
+        if (selectedRequest?.id === requestId && !itemId) {
           setSelectedRequest(null)
         }
         setDeleteConfirm(null)
       } else {
         const error = await res.json()
-        alert(error.error || 'Failed to delete material request')
+        alert(error.error || 'Failed to delete')
       }
     } catch (error) {
-      console.error('Failed to delete material request:', error)
-      alert('Failed to delete material request')
+      console.error('Failed to delete:', error)
+      alert('Failed to delete')
     } finally {
       setLoading(false)
     }
@@ -922,10 +933,10 @@ export default function MaterialRequestPage() {
                           </span>
                         </div>
                         <div className="w-[80px] flex-shrink-0">
-                          {deleteConfirm === req.id ? (
+                          {deleteConfirm?.requestId === req.id && deleteConfirm?.itemId === (req.items?.[idx]?.id || req.id) ? (
                             <div className="flex flex-col gap-1">
                               <button
-                                onClick={() => handleDelete(req.id)}
+                                onClick={() => handleDelete(req.id, req.items?.[idx]?.id)}
                                 className="px-2 py-0.5 bg-red-600 text-white text-[11px] rounded hover:bg-red-700"
                                 disabled={loading}
                               >
@@ -943,10 +954,13 @@ export default function MaterialRequestPage() {
                             <button
                               onClick={(e) => {
                                 e.stopPropagation()
-                                setDeleteConfirm(req.id)
+                                setDeleteConfirm({ 
+                                  requestId: req.id,
+                                  itemId: req.items?.[idx]?.id 
+                                })
                               }}
                               className="p-1.5 text-red-600 hover:bg-red-50 rounded"
-                              title="Delete material request"
+                              title="Delete this line item"
                             >
                               <Trash2 className="h-4 w-4" />
                             </button>

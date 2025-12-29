@@ -50,7 +50,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
-    const { poNumber, supplierName, supplierContact, orderDate, expectedDelivery, items } = body
+    const { poNumber, supplierName, supplierContact, paymentTerms, orderDate, expectedDelivery, items } = body
 
     if (!poNumber || !supplierName || !items || items.length === 0) {
       return NextResponse.json(
@@ -77,6 +77,7 @@ export async function POST(request: Request) {
           poNumber,
           supplierName,
           supplierContact: supplierContact || null,
+          paymentTerms: paymentTerms || null,
           orderDate: new Date(orderDate || Date.now()),
           expectedDelivery: expectedDelivery ? new Date(expectedDelivery) : null,
           purchaseOrderItems: {
@@ -116,7 +117,7 @@ export async function PUT(request: Request) {
     }
 
     const body = await request.json()
-    const { id, supplierName, supplierContact, orderDate, expectedDelivery, status } = body
+    const { id, supplierName, supplierContact, paymentTerms, orderDate, expectedDelivery, status } = body
 
     if (!id) {
       return NextResponse.json({ error: 'ID is required' }, { status: 400 })
@@ -127,6 +128,7 @@ export async function PUT(request: Request) {
       data: {
         supplierName: supplierName || undefined,
         supplierContact: supplierContact || undefined,
+        paymentTerms: paymentTerms || undefined,
         orderDate: orderDate ? new Date(orderDate) : undefined,
         expectedDelivery: expectedDelivery ? new Date(expectedDelivery) : undefined,
         status: status || undefined

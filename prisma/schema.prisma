@@ -213,6 +213,7 @@ model PurchaseOrder {
   poNumber        String  @unique
   supplierName    String
   supplierContact String?
+  paymentTerms    String?
 
   orderDate        DateTime  @default(now())
   expectedDelivery DateTime?

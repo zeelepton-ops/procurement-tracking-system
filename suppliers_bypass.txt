@@ -1,0 +1,13 @@
+HTTP/1.1 307 Temporary Redirect
+Cache-Control: public, max-age=0, must-revalidate
+Content-Type: text/plain
+Date: Sun, 28 Dec 2025 13:48:43 GMT
+Location: /api/suppliers
+Server: Vercel
+Set-Cookie: _vercel_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJieXBhc3MiOiJjaGF0Y2Nlc3MyMDI1MTIyNXplZXNoYW5uYnRjMTIzNCIsImF1ZCI6InByb2N1cmVtZW50LXRyYWNraW5nLXN5c3RlbS1tcGZlczVhNnQtemVlbGVwdG9uLW9wcy1wcm9qZWN0cy52ZXJjZWwuYXBwIiwiaWF0IjoxNzY2OTI5NzIzLCJzdWIiOiJwcm90ZWN0aW9uLWJ5cGFzcy1hdXRvbWF0aW9uIn0.-5bP0DGeDk8tDXkVUODo4MeuC3o0rIW6LVPCZpdco6o; Max-Age=604800; Path=/; Secure; HttpOnly; SameSite=Lax
+Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
+X-Robots-Tag: noindex
+X-Vercel-Id: dxb1::hjzdv-1766929723083-5a85d492ca3c
+Transfer-Encoding: chunked
+
+Redirecting...
