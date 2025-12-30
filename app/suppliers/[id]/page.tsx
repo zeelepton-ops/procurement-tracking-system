@@ -331,10 +331,18 @@ export default function SupplierDetailPage() {
 
         {/* Footer - Record Information */}
         <div className="mt-6 pt-3 border-t border-slate-200 text-xs text-slate-500 text-center no-print">
-          <div className="flex justify-center gap-6">
-            <div>Created: {supplier.createdAt ? new Date(supplier.createdAt).toLocaleString() : 'Not filled'}{supplier.createdBy && ` by ${supplier.createdBy}`}</div>
-            <div>Last Updated: {supplier.updatedAt ? new Date(supplier.updatedAt).toLocaleString() : 'Not filled'}{supplier.updatedBy && ` by ${supplier.updatedBy}`}</div>
-          </div>
+            <div className="flex justify-between items-center">
+              <div>
+                <span className="font-semibold">Created: </span>
+                {supplier.createdAt ? new Date(supplier.createdAt).toLocaleString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }) : 'Not filled'}
+                {supplier.createdBy && `, ${supplier.createdBy}`}
+              </div>
+              <div className="text-right">
+                <span className="font-semibold">Last Updated: </span>
+                {supplier.updatedAt ? new Date(supplier.updatedAt).toLocaleString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }) : 'Not filled'}
+                {supplier.updatedBy && `, ${supplier.updatedBy}`}
+              </div>
+            </div>
         </div>
       </div>
     </>
