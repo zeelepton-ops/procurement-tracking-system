@@ -291,8 +291,7 @@ export default function AssetsPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <Card className="lg:col-span-2">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">          <Card className="lg:col-span-3">
             <CardHeader>
               <CardTitle>Asset List</CardTitle>
               <div className="mt-4">
@@ -351,7 +350,7 @@ export default function AssetsPage() {
                       <tr className="text-left text-slate-600 text-xs">
                         <th className="py-1 pr-2 whitespace-nowrap">Code</th>
                         <th className="py-1 pr-2 whitespace-nowrap">Name</th>
-                        <th className="py-1 pr-2 whitespace-nowrap">Category</th>
+                        <th className="py-1 pr-3 whitespace-nowrap min-w-[160px]">Category</th>
                         <th className="py-1 pr-2 whitespace-nowrap">Category Prefix</th>
                         <th className="py-1 pr-2 whitespace-nowrap">Purchase Date</th>
                         <th className="py-1 pr-2 whitespace-nowrap">Manufacturer</th>
@@ -385,27 +384,28 @@ export default function AssetsPage() {
           </Card>
 
           <Card>
-            <CardHeader>
-              <CardTitle>{isEditing ? 'Edit Asset' : 'Add Asset'}</CardTitle>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-bold">{isEditing ? 'Edit Asset' : 'Add Asset'}</CardTitle>
             </CardHeader>
-            <CardContent>
-              <form className="space-y-3" onSubmit={handleSubmit}>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <Label htmlFor="code">Code</Label>
+            <CardContent className="p-3">
+              <form className="space-y-2" onSubmit={handleSubmit}>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="code" className="text-xs">Code</Label>
                     <Input
                       id="code"
                       required
                       value={draft.code}
                       onChange={(e) => setDraft({ ...draft, code: e.target.value })}
                       placeholder="10xxxx / 20xxxx / 30xxxx..."
+                      className="h-8 text-xs"
                     />
                   </div>
-                  <div className="space-y-1">
-                    <Label htmlFor="category">Category</Label>
+                  <div className="space-y-0.5">
+                    <Label htmlFor="category" className="text-xs">Category</Label>
                     <select
                       id="category"
-                      className="w-full px-3 py-2 border border-slate-200 rounded text-sm"
+                      className="w-full px-2 py-1.5 border border-slate-200 rounded text-xs h-8"
                       value={draft.category ?? ''}
                       onChange={(e) => {
                         const category = e.target.value || null
@@ -435,69 +435,75 @@ export default function AssetsPage() {
                 </div>
                 <p className="text-xs text-slate-500">Category codes start with: 10/20/30/40/50/60/70 for the categories above.</p>
 
-                <div className="space-y-1">
-                  <Label htmlFor="name">Name</Label>
+                <div className="space-y-0.5">
+                  <Label htmlFor="name" className="text-xs">Name</Label>
                   <Input
                     id="name"
                     required
                     value={draft.name}
                     onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+                    className="h-8 text-xs"
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <Label htmlFor="status">Status</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="status" className="text-xs">Status</Label>
                     <Input
                       id="status"
                       value={draft.status ?? ''}
                       onChange={(e) => setDraft({ ...draft, status: e.target.value })}
+                      className="h-8 text-xs"
                     />
                   </div>
-                  <div className="space-y-1">
-                    <Label htmlFor="location">Location</Label>
+                  <div className="space-y-0.5">
+                    <Label htmlFor="location" className="text-xs">Location</Label>
                     <Input
                       id="location"
                       value={draft.location ?? ''}
                       onChange={(e) => setDraft({ ...draft, location: e.target.value })}
+                      className="h-8 text-xs"
                     />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-3">
-                  <div className="space-y-1">
-                    <Label htmlFor="categoryPrefix">Category Prefix</Label>
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="categoryPrefix" className="text-xs">Category Prefix</Label>
                     <Input
                       id="categoryPrefix"
                       readOnly
                       value={draft.category ? CATEGORY_PREFIX[draft.category] : (draft.code ? draft.code.slice(0,2) : '')}
+                      className="h-8 text-xs"
                     />
                   </div>
-                  <div className="space-y-1">
-                    <Label htmlFor="dateOfPurchase">Date of Purchase</Label>
+                  <div className="space-y-0.5">
+                    <Label htmlFor="dateOfPurchase" className="text-xs">Date of Purchase</Label>
                     <Input
                       id="dateOfPurchase"
                       type="date"
                       value={draft.dateOfPurchase ? draft.dateOfPurchase.split('T')[0] : ''}
                       onChange={(e) => setDraft({ ...draft, dateOfPurchase: e.target.value || null })}
+                      className="h-8 text-xs"
                     />
                   </div>
-                  <div className="space-y-1">
-                    <Label htmlFor="manufacturer">Manufacturer</Label>
+                  <div className="space-y-0.5">
+                    <Label htmlFor="manufacturer" className="text-xs">Manufacturer</Label>
                     <Input
                       id="manufacturer"
                       value={draft.manufacturer ?? ''}
                       onChange={(e) => setDraft({ ...draft, manufacturer: e.target.value })}
+                      className="h-8 text-xs"
                     />
                   </div>
                 </div>
 
-                {error && <p className="text-sm text-red-600">{error}</p>}
+                {error && <p className="text-xs text-red-600">{error}</p>}
 
-                <div className="flex items-center gap-2">
-                  <Button type="submit" disabled={saving}>{saving ? 'Saving…' : isEditing ? 'Update' : 'Create'}</Button>
+                <div className="flex items-center gap-2 pt-1">
+                  <Button type="submit" disabled={saving} size="sm" className="text-xs h-8">{saving ? 'Saving…' : isEditing ? 'Update' : 'Create'}</Button>
                   {isEditing && (
-                    <Button type="button" variant="ghost" onClick={() => setDraft(emptyAsset)} disabled={saving}>
+                    <Button type="button" variant="ghost" onClick={() => setDraft(emptyAsset)} disabled={saving} size="sm" className="text-xs h-8">
                       Cancel
                     </Button>
                   )}
