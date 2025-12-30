@@ -358,7 +358,7 @@ export default function SuppliersPage() {
                   </div>
                 </div>
               </button>
-            )}))}
+            )})}
           </div>
         )}
 
