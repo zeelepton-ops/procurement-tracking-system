@@ -1031,10 +1031,7 @@ export default function SupplierRegistrationPage() {
                 <CardContent className="space-y-6 p-8 bg-gradient-to-b from-slate-50 to-white">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className={`border-2 rounded-xl p-5 shadow-sm transition-all ${formData.companyName && formData.email && formData.phone && formData.address && formData.category && formData.businessType ? 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-300' : 'bg-gradient-to-br from-red-50 to-rose-50 border-red-300'}`}>
-                      <h4 className="font-bold text-slate-900 mb-4 text-base flex items-center gap-2">
-                        <Building2 className="h-5 w-5" />
-                        <span>Company Details</span>
-                      </h4>
+                      <h4 className="font-bold text-slate-900 mb-4 text-base">Company Details</h4>
                       <div className="space-y-2 text-sm">
                         <p><span className="font-semibold text-slate-700">Company:</span> <span className={!formData.companyName ? 'text-red-600 font-bold' : 'text-slate-900'}>{formData.companyName || '��� Missing'}</span></p>
                         <p><span className="font-semibold text-slate-700">Category:</span> <span className={!formData.category ? 'text-red-600 font-bold' : 'text-slate-900'}>{formData.category || '��� Missing'}</span></p>
