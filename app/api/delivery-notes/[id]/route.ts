@@ -56,7 +56,6 @@ export async function PUT(
         country: body.country,
         division: body.division,
         department: body.department,
-        fabrication: body.fabrication,
         refPoNumber: body.refPoNumber,
         jobOrderId: body.jobOrderId || null,
         shipmentTo: body.shipmentTo,

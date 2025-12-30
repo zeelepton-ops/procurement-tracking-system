@@ -65,7 +65,6 @@ export async function POST(request: NextRequest) {
         country: body.country,
         division: body.division,
         department: body.department,
-        fabrication: body.fabrication,
         refPoNumber: body.refPoNumber,
         shipmentTo: body.shipmentTo,
         comments: body.comments,

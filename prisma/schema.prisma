@@ -569,7 +569,6 @@ model DeliveryNote {
   country             String?
   division            String?
   department          String?
-  fabrication         String?
   refPoNumber         String?
   jobSalesOrder       String?
   
@@ -608,15 +607,19 @@ model DeliveryNote {
 
 model DeliveryNoteItem {
   id                String       @id @default(cuid())
-  deliveryNoteId   String
-  deliveryNote     DeliveryNote @relation(fields: [deliveryNoteId], references: [id], onDelete: Cascade)
+  deliveryNoteId    String
+  deliveryNote      DeliveryNote @relation(fields: [deliveryNoteId], references: [id], onDelete: Cascade)
   
-  itemDescription  String
-  unit             String
-  quantity         Float
-  weight           Float?
-  remarks          String?
+  jobOrderItemId    String?       // Link to original job order item
+  itemDescription   String
+  unit              String
+  quantity          Float
+  deliveredQuantity Float         @default(0)
+  weight            Float?
+  remarks           String?
   
-  createdAt        DateTime     @default(now())
-  updatedAt        DateTime     @updatedAt
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  
+  @@index([deliveryNoteId])
 }
