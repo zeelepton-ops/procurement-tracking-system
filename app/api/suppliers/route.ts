@@ -131,7 +131,8 @@ export async function POST(request: Request) {
     const supplierData: any = {
       name: primaryName,
       tradingName: body.tradingName || body.companyName || null,
-      contactPerson: body.contactPerson || null,
+      // Map contactPerson from multiple possible sources
+      contactPerson: body.contactPerson || body.contactName || body.contact?.name || null,
       email: body.email || null,
       phone: body.phone || null,
       address: body.address || null,
@@ -153,7 +154,8 @@ export async function POST(request: Request) {
       // Accept taxIdNumber alias
       taxId: body.taxId ?? body.taxIdNumber ?? null,
       tradeLicense: body.tradeLicense || null,
-      notes: body.notes || null,
+      // Map businessDescription to notes
+      notes: body.notes || body.businessDescription || null,
       status: body.status || undefined
     }
 
