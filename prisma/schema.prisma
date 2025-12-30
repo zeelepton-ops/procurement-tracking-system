@@ -66,6 +66,7 @@ model JobOrder {
   materialRequestItems MaterialRequestItem[]
   editHistory          JobOrderEditHistory[]
   items                JobOrderItem[]
+  deliveryNotes        DeliveryNote[] @relation("DeliveryNoteToJobOrder")
 
   @@unique([jobNumber, isDeleted])
 }
@@ -554,4 +555,69 @@ model Asset {
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
   materialRequests MaterialRequest[]
+}
+
+model DeliveryNote {
+  id                  String               @id @default(cuid())
+  deliveryNoteNumber  String               @unique
+  date                DateTime             @default(now())
+  jobOrderId          String?
+  jobOrder            JobOrder?            @relation("DeliveryNoteToJobOrder", fields: [jobOrderId], references: [id], onDelete: SetNull)
+  
+  // Header Information
+  client              String?
+  country             String?
+  division            String?
+  department          String?
+  fabrication         String?
+  refPoNumber         String?
+  jobSalesOrder       String?
+  
+  // Items
+  items               DeliveryNoteItem[]
+  
+  // Shipping Details
+  shipmentTo          String?
+  totalQuantity       Float               @default(0)
+  totalWeight         Float               @default(0)
+  comments            String?
+  shipmentType        String?
+  
+  // Personnel
+  representativeName   String?
+  representativeNo    String?
+  qidNumber           String?
+  
+  // Vehicle Details
+  vehicleNumber       String?
+  vehicleType         String               @default("NBTC") // "NBTC", "CLIENT", "THIRD_PARTY"
+  
+  // Status
+  status              String               @default("DRAFT") // "DRAFT", "ISSUED", "DELIVERED"
+  issuedBy            String?
+  issuedAt            DateTime?
+  deliveredAt         DateTime?
+  
+  createdBy           String?
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  
+  @@unique([deliveryNoteNumber])
+  @@index([jobOrderId])
+  @@index([status])
+}
+
+model DeliveryNoteItem {
+  id                String       @id @default(cuid())
+  deliveryNoteId   String
+  deliveryNote     DeliveryNote @relation(fields: [deliveryNoteId], references: [id], onDelete: Cascade)
+  
+  itemDescription  String
+  unit             String
+  quantity         Float
+  weight           Float?
+  remarks          String?
+  
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
 }
