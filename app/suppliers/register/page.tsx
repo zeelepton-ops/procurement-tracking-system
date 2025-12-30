@@ -314,24 +314,41 @@ export default function SupplierRegistrationPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-slate-50 to-slate-100 py-12 px-4">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-8 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-12">
+        <div className="text-center mb-10">
           <div className="flex items-center justify-center mb-4">
-            <Building2 className="h-12 w-12 text-blue-600" />
+            <div className="bg-gradient-to-br from-blue-600 to-indigo-600 p-4 rounded-2xl shadow-lg">
+              <Building2 className="h-10 w-10 text-white" />
+            </div>
           </div>
-          <h1 className="text-4xl font-bold text-slate-900 mb-2">Supplier Registration</h1>
-          <p className="text-lg text-slate-600">Register your company to supply materials and services</p>
+          <h1 className="text-4xl md:text-5xl font-extrabold bg-gradient-to-r from-blue-700 via-indigo-600 to-blue-800 bg-clip-text text-transparent mb-3">Supplier Registration</h1>
+          <p className="text-base md:text-lg text-slate-600 font-medium">Join our network of trusted suppliers</p>
         </div>
 
         {/* Progress Indicator */}
-        <div className="mb-12">
-          <div className="flex justify-between mb-4">
+        <div className="mb-10 bg-white rounded-xl shadow-md p-6">
+          <div className="flex justify-between items-center gap-2">
             {['Company Info', 'Documents', 'Contact', 'Banking', 'Review'].map((label, idx) => (
-              <div key={idx} className="flex-1 px-1">
-                <div className={`h-3 rounded-full transition-all ${idx <= step ? 'bg-blue-600' : 'bg-slate-300'}`} />
-                <p className="text-xs font-semibold text-slate-600 mt-2 text-center">{label}</p>
+              <div key={idx} className="flex-1 relative">
+                <div className="flex flex-col items-center">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 ${
+                    idx < step ? 'bg-gradient-to-br from-green-500 to-green-600 text-white shadow-lg' :
+                    idx === step ? 'bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-lg ring-4 ring-blue-200' :
+                    'bg-slate-200 text-slate-500'
+                  }`}>
+                    {idx < step ? '✓' : idx + 1}
+                  </div>
+                  <p className={`text-xs font-semibold mt-2 text-center ${
+                    idx <= step ? 'text-blue-700' : 'text-slate-500'
+                  }`}>{label}</p>
+                </div>
+                {idx < 4 && (
+                  <div className={`absolute top-5 left-[60%] w-full h-1 -z-10 transition-all duration-300 ${
+                    idx < step ? 'bg-gradient-to-r from-green-500 to-blue-600' : 'bg-slate-200'
+                  }`} />
+                )}
               </div>
             ))}
           </div>
@@ -339,17 +356,17 @@ export default function SupplierRegistrationPage() {
 
         {/* Alert Messages */}
         {message && (
-          <div className={`mb-6 p-4 rounded-lg flex items-center gap-3 ${
+          <div className={`mb-6 p-4 rounded-xl flex items-center gap-3 shadow-md border-l-4 ${
             message.type === 'success' 
-              ? 'bg-green-50 border border-green-200' 
-              : 'bg-red-50 border border-red-200'
+              ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-500' 
+              : 'bg-gradient-to-r from-red-50 to-rose-50 border-red-500'
           }`}>
             {message.type === 'success' ? (
-              <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />
+              <CheckCircle className="h-6 w-6 text-green-600 flex-shrink-0" />
             ) : (
-              <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0" />
+              <AlertCircle className="h-6 w-6 text-red-600 flex-shrink-0" />
             )}
-            <span className={`text-sm ${message.type === 'success' ? 'text-green-700' : 'text-red-700'}`}>
+            <span className={`text-sm font-medium ${message.type === 'success' ? 'text-green-800' : 'text-red-800'}`}>
               {message.text}
             </span>
           </div>
@@ -357,15 +374,19 @@ export default function SupplierRegistrationPage() {
 
         {/* Validation Errors Summary */}
         {Object.keys(validationErrors).length > 0 && (
-          <div className="mb-6 p-4 rounded-lg bg-red-50 border-2 border-red-400">
-            <div className="flex items-start gap-3">
-              <AlertCircle className="h-6 w-6 text-red-600 flex-shrink-0 mt-0.5" />
+          <div className="mb-6 p-5 rounded-xl bg-gradient-to-r from-red-50 to-rose-50 border-l-4 border-red-500 shadow-lg">
+            <div className="flex items-start gap-4">
+              <div className="bg-red-100 p-2 rounded-lg">
+                <AlertCircle className="h-6 w-6 text-red-600 flex-shrink-0" />
+              </div>
               <div className="flex-1">
-                <h3 className="font-bold text-red-900 mb-2">❌ Please fill the following required fields:</h3>
-                <ul className="space-y-1">
+                <h3 className="font-bold text-red-900 text-lg mb-3 flex items-center gap-2">
+                  <span>⚠️ Required Information Missing</span>
+                </h3>
+                <ul className="space-y-2 bg-white rounded-lg p-3 shadow-sm">
                   {Object.entries(validationErrors).map(([field, error]) => (
-                    <li key={field} className="text-red-800 text-sm font-semibold flex items-center gap-2">
-                      <span className="text-red-600">▸</span> {error}
+                    <li key={field} className="text-red-800 text-sm font-medium flex items-center gap-2 py-1">
+                      <span className="text-red-500 font-bold">•</span> {error}
                     </li>
                   ))}
                 </ul>
@@ -376,13 +397,21 @@ export default function SupplierRegistrationPage() {
 
         {/* Draft Indicator */}
         {hasDraft && (
-          <div className="mb-6 p-4 rounded-lg bg-blue-50 border border-blue-200 flex items-center justify-between">
-            <p className="text-sm text-blue-900"><span className="font-semibold">✓ Draft Saved</span> Your application is saved as a draft</p>
+          <div className="mb-6 p-4 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500 shadow-md flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="bg-blue-100 p-2 rounded-lg">
+                <Save className="h-5 w-5 text-blue-600" />
+              </div>
+              <p className="text-sm text-blue-900">
+                <span className="font-bold">Draft Saved</span>
+                <span className="text-blue-700 ml-2">• Your progress has been saved</span>
+              </p>
+            </div>
             <Button
               onClick={deleteDraft}
               variant="outline"
               size="sm"
-              className="text-red-600 border-red-300 hover:bg-red-50"
+              className="text-red-600 border-red-300 hover:bg-red-50 hover:border-red-400 transition-all"
             >
               <Trash2 className="h-4 w-4 mr-2" /> Delete Draft
             </Button>
@@ -391,12 +420,12 @@ export default function SupplierRegistrationPage() {
 
         {/* Step 0: Company Information */}
         {step === 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-2xl">Company Information</CardTitle>
-              <CardDescription>Provide basic information about your company</CardDescription>
+          <Card className="shadow-xl border-0 rounded-2xl overflow-hidden">
+            <CardHeader className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white pb-8">
+              <CardTitle className="text-3xl font-bold">Company Information</CardTitle>
+              <CardDescription className="text-blue-100 text-base">Provide basic information about your company</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-6 p-8 bg-gradient-to-b from-white to-slate-50">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className={`p-3 rounded-lg ${getErrorMessage('companyName') ? 'bg-red-100 border border-red-500' : ''}`}>
                   <Label className={`font-semibold ${getErrorMessage('companyName') ? 'text-red-700' : ''}`}>
@@ -574,12 +603,12 @@ export default function SupplierRegistrationPage() {
 
         {/* Step 1: Documents */}
         {step === 1 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-2xl">Business Documents</CardTitle>
-              <CardDescription>Upload your company registration and tax documents</CardDescription>
+          <Card className="shadow-xl border-0 rounded-2xl overflow-hidden">
+            <CardHeader className="bg-gradient-to-r from-amber-600 to-orange-600 text-white pb-8">
+              <CardTitle className="text-3xl font-bold">Business Documents</CardTitle>
+              <CardDescription className="text-amber-100 text-base">Upload your company registration and tax documents</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-6 p-8 bg-gradient-to-b from-white to-slate-50">
               <div className={`rounded-lg p-4 ${getErrorMessage('crDoc') || getErrorMessage('crNumber') ? 'bg-red-100 border-2 border-red-500' : 'bg-blue-50 border border-blue-200'}`}>
                 <h3 className={`font-semibold mb-3 ${getErrorMessage('crDoc') || getErrorMessage('crNumber') ? 'text-red-900' : 'text-blue-900'}`}>
                   Commercial Registration (CR)
@@ -749,12 +778,12 @@ export default function SupplierRegistrationPage() {
 
         {/* Step 2: Contact Information */}
         {step === 2 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-2xl">Primary Contact Person</CardTitle>
-              <CardDescription>Information for our communication</CardDescription>
+          <Card className="shadow-xl border-0 rounded-2xl overflow-hidden">
+            <CardHeader className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white pb-8">
+              <CardTitle className="text-3xl font-bold">Primary Contact Person</CardTitle>
+              <CardDescription className="text-emerald-100 text-base">Information for our communication</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 p-8 bg-gradient-to-b from-white to-slate-50">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div className={`p-3 rounded-lg ${getErrorMessage('contactName') ? 'bg-red-100 border border-red-500' : ''}`}>
                   <Label className={`font-semibold ${getErrorMessage('contactName') ? 'text-red-700' : ''}`}>
@@ -866,13 +895,13 @@ export default function SupplierRegistrationPage() {
 
         {/* Step 3: Banking Information */}
         {step === 3 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-2xl">Banking & Payment Information</CardTitle>
-              <CardDescription>Your bank details for payments and transfers</CardDescription>
+          <Card className="shadow-xl border-0 rounded-2xl overflow-hidden">
+            <CardHeader className="bg-gradient-to-r from-purple-600 to-pink-600 text-white pb-8">
+              <CardTitle className="text-3xl font-bold">Banking & Payment Information</CardTitle>
+              <CardDescription className="text-purple-100 text-base">Your bank details for payments and transfers</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className={`bg-purple-50 border-2 rounded-lg p-3 ${getErrorMessage('bankName') ? 'bg-red-100 border-red-500' : 'border-purple-200'}`}>
+            <CardContent className="space-y-4 p-8 bg-gradient-to-b from-white to-slate-50">
+              <div className={`bg-purple-50 border-2 rounded-xl p-4 shadow-sm ${getErrorMessage('bankName') ? 'bg-red-100 border-red-500' : 'border-purple-200'}`}>
                 <div>
                   <Label className={`font-semibold ${getErrorMessage('bankName') ? 'text-red-700' : ''}`}>
                     Bank Name {getErrorMessage('bankName') && <span className="text-red-600 text-xs ml-1">({getErrorMessage('bankName')})</span>}
@@ -947,15 +976,25 @@ export default function SupplierRegistrationPage() {
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             {/* Left Sidebar - Missing Fields */}
             <div>
-              <Card className={Object.keys(validateAllSteps()).length > 0 ? 'border-red-400 border-2 bg-red-50' : 'border-green-400 border-2 bg-green-50'}>
-                <CardHeader>
-                  <CardTitle className={`text-lg ${Object.keys(validateAllSteps()).length > 0 ? 'text-red-900' : 'text-green-900'}`}>
-                    {Object.keys(validateAllSteps()).length > 0 ? '❌ Complete These Fields' : '✅ All Fields Complete'}
+              <Card className={`shadow-xl border-0 rounded-2xl overflow-hidden ${Object.keys(validateAllSteps()).length > 0 ? 'ring-2 ring-red-400' : 'ring-2 ring-green-400'}`}>
+                <CardHeader className={`pb-6 ${Object.keys(validateAllSteps()).length > 0 ? 'bg-gradient-to-br from-red-500 to-rose-600' : 'bg-gradient-to-br from-green-500 to-emerald-600'}`}>
+                  <CardTitle className="text-lg text-white font-bold flex items-center gap-2">
+                    {Object.keys(validateAllSteps()).length > 0 ? (
+                      <>
+                        <AlertCircle className="h-6 w-6" />
+                        <span>Complete These</span>
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle className="h-6 w-6" />
+                        <span>All Complete</span>
+                      </>
+                    )}
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="p-4 bg-gradient-to-b from-white to-slate-50">
                   {Object.keys(validateAllSteps()).length > 0 ? (
-                    <div className="space-y-3">
+                    <div className="space-y-2">
                       {Object.entries(validateAllSteps()).map(([key, info]) => (
                         <button
                           key={key}
@@ -964,18 +1003,23 @@ export default function SupplierRegistrationPage() {
                             setMessage({ type: 'success', text: '' })
                             setStep(info.step)
                           }}
-                          className="w-full text-left p-3 rounded-lg bg-white border-2 border-red-300 hover:bg-red-100 transition-colors"
+                          className="w-full text-left p-3 rounded-xl bg-gradient-to-r from-red-50 to-rose-50 border-2 border-red-300 hover:border-red-400 hover:shadow-md transition-all"
                         >
-                          <p className="font-semibold text-red-900 text-sm">{info.field}</p>
-                          <p className="text-xs text-red-700 mt-1">Step {info.step + 1}</p>
-                          <p className="text-xs text-red-600 mt-1">← Click to edit</p>
+                          <p className="font-bold text-red-900 text-sm">{info.field}</p>
+                          <p className="text-xs text-red-700 mt-1 flex items-center gap-1">
+                            <span className="bg-red-200 px-2 py-0.5 rounded-full">Step {info.step + 1}</span>
+                          </p>
+                          <p className="text-xs text-red-600 mt-1 font-medium">← Click to edit</p>
                         </button>
                       ))}
                     </div>
                   ) : (
-                    <div className="space-y-2 text-green-800">
-                      <p className="text-sm font-semibold">All required fields are filled!</p>
-                      <p className="text-xs">You can now submit your application.</p>
+                    <div className="space-y-3 text-center">
+                      <div className="bg-green-100 p-4 rounded-xl">
+                        <CheckCircle className="h-12 w-12 text-green-600 mx-auto mb-2" />
+                        <p className="text-sm font-bold text-green-900">All Required Fields Complete!</p>
+                        <p className="text-xs text-green-700 mt-1">Ready to submit</p>
+                      </div>
                     </div>
                   )}
                 </CardContent>
@@ -984,62 +1028,71 @@ export default function SupplierRegistrationPage() {
 
             {/* Right Content - Review Summary */}
             <div className="lg:col-span-3">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-2xl">Review Your Application</CardTitle>
-                  <CardDescription>Please verify all information before submitting</CardDescription>
+              <Card className="shadow-xl border-0 rounded-2xl overflow-hidden">
+                <CardHeader className="bg-gradient-to-r from-slate-700 to-slate-900 text-white pb-8">
+                  <CardTitle className="text-3xl font-bold">Review Your Application</CardTitle>
+                  <CardDescription className="text-slate-300 text-base">Please verify all information before submitting</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <div className={`border rounded-lg p-4 ${formData.companyName && formData.email && formData.phone && formData.address && formData.category && formData.businessType ? 'bg-green-50 border-green-300' : 'bg-red-50 border-red-300'}`}>
-                      <h4 className="font-semibold text-slate-900 mb-3">Company Details</h4>
+                <CardContent className="space-y-6 p-8 bg-gradient-to-b from-slate-50 to-white">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className={`border-2 rounded-xl p-5 shadow-sm transition-all ${formData.companyName && formData.email && formData.phone && formData.address && formData.category && formData.businessType ? 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-300' : 'bg-gradient-to-br from-red-50 to-rose-50 border-red-300'}`}>
+                      <h4 className="font-bold text-slate-900 mb-4 text-base flex items-center gap-2">
+                        <Building2 className="h-5 w-5" />
+                        <span>Company Details</span>
+                      </h4>
                       <div className="space-y-2 text-sm">
-                        <p><span className="font-medium text-slate-700">Company:</span> <span className={!formData.companyName ? 'text-red-600 font-bold' : ''}>{formData.companyName || '❌ Missing'}</span></p>
-                        <p><span className="font-medium text-slate-700">Category:</span> <span className={!formData.category ? 'text-red-600 font-bold' : ''}>{formData.category || '❌ Missing'}</span></p>
-                        <p><span className="font-medium text-slate-700">Type:</span> <span className={!formData.businessType ? 'text-red-600 font-bold' : ''}>{formData.businessType || '❌ Missing'}</span></p>
-                        <p><span className="font-medium text-slate-700">Email:</span> <span className={!formData.email ? 'text-red-600 font-bold' : ''}>{formData.email || '❌ Missing'}</span></p>
-                        <p><span className="font-medium text-slate-700">Phone:</span> <span className={!formData.phone ? 'text-red-600 font-bold' : ''}>{formData.phone || '❌ Missing'}</span></p>
-                        <p><span className="font-medium text-slate-700">Address:</span> <span className={!formData.address ? 'text-red-600 font-bold' : ''}>{formData.address || '❌ Missing'}</span></p>
-                        <p><span className="font-medium text-slate-700">City:</span> <span className={!formData.city ? 'text-red-600 font-bold' : ''}>{formData.city || '❌ Missing'}</span></p>
+                        <p><span className="font-semibold text-slate-700">Company:</span> <span className={!formData.companyName ? 'text-red-600 font-bold' : 'text-slate-900'}>{formData.companyName || '❌ Missing'}</span></p>
+                        <p><span className="font-semibold text-slate-700">Category:</span> <span className={!formData.category ? 'text-red-600 font-bold' : 'text-slate-900'}>{formData.category || '❌ Missing'}</span></p>
+                        <p><span className="font-semibold text-slate-700">Type:</span> <span className={!formData.businessType ? 'text-red-600 font-bold' : 'text-slate-900'}>{formData.businessType || '❌ Missing'}</span></p>
+                        <p><span className="font-semibold text-slate-700">Email:</span> <span className={!formData.email ? 'text-red-600 font-bold' : 'text-slate-900'}>{formData.email || '❌ Missing'}</span></p>
+                        <p><span className="font-semibold text-slate-700">Phone:</span> <span className={!formData.phone ? 'text-red-600 font-bold' : 'text-slate-900'}>{formData.phone || '❌ Missing'}</span></p>
+                        <p><span className="font-semibold text-slate-700">Address:</span> <span className={!formData.address ? 'text-red-600 font-bold' : 'text-slate-900'}>{formData.address || '❌ Missing'}</span></p>
+                        <p><span className="font-semibold text-slate-700">City:</span> <span className={!formData.city ? 'text-red-600 font-bold' : 'text-slate-900'}>{formData.city || '❌ Missing'}</span></p>
                       </div>
                     </div>
 
-                    <div className={`border rounded-lg p-4 ${formData.contactName && formData.contactEmail && formData.contactPhone ? 'bg-green-50 border-green-300' : 'bg-red-50 border-red-300'}`}>
-                      <h4 className="font-semibold text-slate-900 mb-3">Contact Person</h4>
+                    <div className={`border-2 rounded-xl p-5 shadow-sm transition-all ${formData.contactName && formData.contactEmail && formData.contactPhone ? 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-300' : 'bg-gradient-to-br from-red-50 to-rose-50 border-red-300'}`}>
+                      <h4 className="font-bold text-slate-900 mb-4 text-base">Contact Person</h4>
                       <div className="space-y-2 text-sm">
-                        <p><span className="font-medium text-slate-700">Name:</span> <span className={!formData.contactName ? 'text-red-600 font-bold' : ''}>{formData.contactName || '❌ Missing'}</span></p>
-                        <p><span className="font-medium text-slate-700">Title:</span> {formData.contactTitle}</p>
-                        <p><span className="font-medium text-slate-700">Email:</span> <span className={!formData.contactEmail ? 'text-red-600 font-bold' : ''}>{formData.contactEmail || '❌ Missing'}</span></p>
-                        <p><span className="font-medium text-slate-700">Phone:</span> <span className={!formData.contactPhone ? 'text-red-600 font-bold' : ''}>{formData.contactPhone || '❌ Missing'}</span></p>
-                        <p><span className="font-medium text-slate-700">Mobile:</span> {formData.contactMobile}</p>
+                        <p><span className="font-semibold text-slate-700">Name:</span> <span className={!formData.contactName ? 'text-red-600 font-bold' : 'text-slate-900'}>{formData.contactName || '❌ Missing'}</span></p>
+                        <p><span className="font-semibold text-slate-700">Title:</span> <span className="text-slate-900">{formData.contactTitle}</span></p>
+                        <p><span className="font-semibold text-slate-700">Email:</span> <span className={!formData.contactEmail ? 'text-red-600 font-bold' : 'text-slate-900'}>{formData.contactEmail || '❌ Missing'}</span></p>
+                        <p><span className="font-semibold text-slate-700">Phone:</span> <span className={!formData.contactPhone ? 'text-red-600 font-bold' : 'text-slate-900'}>{formData.contactPhone || '❌ Missing'}</span></p>
+                        <p><span className="font-semibold text-slate-700">Mobile:</span> <span className="text-slate-900">{formData.contactMobile}</span></p>
                       </div>
                     </div>
 
-                    <div className={`border rounded-lg p-4 ${formData.crNumber && formData.taxIdNumber && uploads.cr && uploads.taxCard ? 'bg-green-50 border-green-300' : 'bg-red-50 border-red-300'}`}>
-                      <h4 className="font-semibold text-slate-900 mb-3">Registration Documents</h4>
+                    <div className={`border-2 rounded-xl p-5 shadow-sm transition-all ${formData.crNumber && formData.taxIdNumber && uploads.cr && uploads.taxCard ? 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-300' : 'bg-gradient-to-br from-red-50 to-rose-50 border-red-300'}`}>
+                      <h4 className="font-bold text-slate-900 mb-4 text-base">Registration Documents</h4>
                       <div className="space-y-2 text-sm">
-                        <p><span className="font-medium text-slate-700">CR Number:</span> <span className={!formData.crNumber ? 'text-red-600 font-bold' : ''}>{formData.crNumber || '❌ Missing'}</span></p>
-                        <p><span className="font-medium text-slate-700">CR Document:</span> <span className={uploads.cr ? 'text-green-600 font-bold' : 'text-red-600 font-bold'}>{uploads.cr ? '✓ Uploaded' : '❌ Missing'}</span></p>
-                        <p><span className="font-medium text-slate-700">Tax ID:</span> <span className={!formData.taxIdNumber ? 'text-red-600 font-bold' : ''}>{formData.taxIdNumber || '❌ Missing'}</span></p>
-                        <p><span className="font-medium text-slate-700">Tax Document:</span> <span className={uploads.taxCard ? 'text-green-600 font-bold' : 'text-red-600 font-bold'}>{uploads.taxCard ? '✓ Uploaded' : '❌ Missing'}</span></p>
+                        <p><span className="font-semibold text-slate-700">CR Number:</span> <span className={!formData.crNumber ? 'text-red-600 font-bold' : 'text-slate-900'}>{formData.crNumber || '❌ Missing'}</span></p>
+                        <p><span className="font-semibold text-slate-700">CR Document:</span> <span className={uploads.cr ? 'text-green-600 font-bold' : 'text-red-600 font-bold'}>{uploads.cr ? '✓ Uploaded' : '❌ Missing'}</span></p>
+                        <p><span className="font-semibold text-slate-700">Tax ID:</span> <span className={!formData.taxIdNumber ? 'text-red-600 font-bold' : 'text-slate-900'}>{formData.taxIdNumber || '❌ Missing'}</span></p>
+                        <p><span className="font-semibold text-slate-700">Tax Document:</span> <span className={uploads.taxCard ? 'text-green-600 font-bold' : 'text-red-600 font-bold'}>{uploads.taxCard ? '✓ Uploaded' : '❌ Missing'}</span></p>
                       </div>
                     </div>
 
-                    <div className={`border rounded-lg p-4 ${formData.bankName && formData.accountHolder && formData.iban ? 'bg-green-50 border-green-300' : 'bg-red-50 border-red-300'}`}>
-                      <h4 className="font-semibold text-slate-900 mb-3">Banking Information</h4>
+                    <div className={`border-2 rounded-xl p-5 shadow-sm transition-all ${formData.bankName && formData.accountHolder && formData.iban ? 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-300' : 'bg-gradient-to-br from-red-50 to-rose-50 border-red-300'}`}>
+                      <h4 className="font-bold text-slate-900 mb-4 text-base">Banking Information</h4>
                       <div className="space-y-2 text-sm">
-                        <p><span className="font-medium text-slate-700">Bank:</span> <span className={!formData.bankName ? 'text-red-600 font-bold' : ''}>{formData.bankName || '❌ Missing'}</span></p>
-                        <p><span className="font-medium text-slate-700">Account Holder:</span> <span className={!formData.accountHolder ? 'text-red-600 font-bold' : ''}>{formData.accountHolder || '❌ Missing'}</span></p>
-                        <p><span className="font-medium text-slate-700">IBAN:</span> <span className={!formData.iban ? 'text-red-600 font-bold' : ''}>{formData.iban || '❌ Missing'}</span></p>
+                        <p><span className="font-semibold text-slate-700">Bank:</span> <span className={!formData.bankName ? 'text-red-600 font-bold' : 'text-slate-900'}>{formData.bankName || '❌ Missing'}</span></p>
+                        <p><span className="font-semibold text-slate-700">Account Holder:</span> <span className={!formData.accountHolder ? 'text-red-600 font-bold' : 'text-slate-900'}>{formData.accountHolder || '❌ Missing'}</span></p>
+                        <p><span className="font-semibold text-slate-700">IBAN:</span> <span className={!formData.iban ? 'text-red-600 font-bold' : 'text-slate-900'}>{formData.iban || '❌ Missing'}</span></p>
                       </div>
                     </div>
                   </div>
 
                   {Object.keys(validateAllSteps()).length === 0 && (
-                    <div className="bg-green-50 border-2 border-green-300 rounded-lg p-4">
-                      <p className="text-sm text-green-900">
-                        <span className="font-semibold">✅ Complete!</span> All required information has been filled. Your application is ready to submit.
-                      </p>
+                    <div className="bg-gradient-to-r from-green-50 via-emerald-50 to-green-50 border-2 border-green-400 rounded-2xl p-6 shadow-lg">
+                      <div className="flex items-center gap-4">
+                        <div className="bg-green-500 p-3 rounded-full">
+                          <CheckCircle className="h-8 w-8 text-white" />
+                        </div>
+                        <div>
+                          <p className="text-lg font-bold text-green-900 mb-1">✅ Application Complete!</p>
+                          <p className="text-sm text-green-800">All required information has been filled. Your application is ready to submit.</p>
+                        </div>
+                      </div>
                     </div>
                   )}
                 </CardContent>
@@ -1049,7 +1102,7 @@ export default function SupplierRegistrationPage() {
         )}
 
         {/* Navigation Buttons */}
-        <div className="flex gap-3 justify-between mt-8">
+        <div className="flex gap-3 justify-between mt-10 bg-white rounded-xl shadow-md p-6">
           <div className="flex gap-3">
             {step > 0 && (
               <Button
@@ -1060,6 +1113,7 @@ export default function SupplierRegistrationPage() {
                 }}
                 variant="outline"
                 disabled={loading}
+                className="border-slate-300 hover:bg-slate-50 hover:border-slate-400 transition-all shadow-sm font-semibold"
               >
                 ← Previous
               </Button>
@@ -1068,7 +1122,7 @@ export default function SupplierRegistrationPage() {
               onClick={saveDraft}
               disabled={loading}
               variant="outline"
-              className="text-blue-600 border-blue-300 hover:bg-blue-50"
+              className="text-blue-600 border-blue-300 hover:bg-blue-50 hover:border-blue-400 transition-all shadow-sm font-semibold"
             >
               <Save className="h-4 w-4 mr-2" /> Save as Draft
             </Button>
@@ -1085,24 +1139,25 @@ export default function SupplierRegistrationPage() {
                   }
                 }}
                 disabled={loading || Object.keys(validationErrors).length > 0}
-                className="bg-blue-600 hover:bg-blue-700"
+                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all font-semibold px-8"
               >
-                Next →
+                Next Step →
               </Button>
             ) : (
               <>
                 <Button
                   onClick={() => submitRegistration()}
                   disabled={loading || Object.keys(validateAllSteps()).length > 0}
-                  className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                  className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed text-white shadow-lg hover:shadow-xl transition-all font-bold px-10"
                   title={Object.keys(validateAllSteps()).length > 0 ? 'Please fill all required fields' : 'Submit your application'}
                 >
-                  {loading ? 'Submitting...' : 'Submit Application'}
+                  {loading ? '⏳ Submitting...' : '✓ Submit Application'}
                 </Button>
                 <Button
                   onClick={() => router.back()}
                   variant="outline"
                   disabled={loading}
+                  className="border-slate-300 hover:bg-slate-50 hover:border-slate-400 transition-all shadow-sm font-semibold"
                 >
                   Cancel
                 </Button>
