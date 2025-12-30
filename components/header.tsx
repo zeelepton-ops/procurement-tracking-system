@@ -52,11 +52,12 @@ export default function Header() {
               />
               <span className="text-lg font-bold text-slate-900 whitespace-nowrap">Procurement System</span>
             </Link>
+          </div>
 
-            <nav className="flex gap-1 ml-4">
-              {navItems.map((item, idx) => {
-                const Icon = item.icon
-                const isActive = pathname === item.href || (item.children && item.children.some((c: any) => pathname === c.href))
+          <nav className="flex gap-1">
+            {navItems.map((item, idx) => {
+              const Icon = item.icon
+              const isActive = pathname === item.href || (item.children && item.children.some((c: any) => pathname === c.href))
 
                 if (item.children) {
                   return (
@@ -74,16 +75,26 @@ export default function Header() {
                         closeTimeoutRef.current = window.setTimeout(() => setOpenIndex(null), 150)
                       }}
                     >
-                      <button
-                        onClick={() => setOpenIndex(openIndex === idx ? null : idx)}
-                        aria-expanded={openIndex === idx}
+                      <Link
+                        href={item.href}
+                        onClick={(e) => {
+                          // Allow navigation to parent page
+                          setOpenIndex(null)
+                        }}
                         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap ${
                           isActive ? 'bg-blue-100 text-blue-700 font-medium' : 'text-slate-600 hover:bg-slate-100'
                         }`}
+                        onMouseEnter={() => {
+                          if (closeTimeoutRef.current) {
+                            clearTimeout(closeTimeoutRef.current)
+                            closeTimeoutRef.current = null
+                          }
+                          setOpenIndex(idx)
+                        }}
                       >
                         <Icon className="h-4 w-4 flex-shrink-0" />
                         <span className="text-sm">{item.label}</span>
-                      </button>
+                      </Link>
 
                       {openIndex === idx && (
                         <div
@@ -132,8 +143,8 @@ export default function Header() {
               })}
             </nav>
           </div>
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-slate-600 hidden md:block">{session.user?.email}</span>
+
+          <div className="flex items-center">
             <Button
               variant="outline"
               size="sm"
@@ -144,6 +155,10 @@ export default function Header() {
               <span className="text-sm">Logout</span>
             </Button>
           </div>
+        </div>
+        {/* Email on second line */}
+        <div className="flex justify-end mt-1">
+          <span className="text-xs text-slate-500">{session.user?.email}</span>
         </div>
       </div>
     </header>
