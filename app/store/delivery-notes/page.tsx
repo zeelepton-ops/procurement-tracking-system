@@ -22,8 +22,9 @@ interface DeliveryNote {
   country: string | null
   division: string | null
   department: string | null
-  fabrication: string | null
   refPoNumber: string | null
+  shipmentTo: string | null
+  shipmentType: string | null
   status: string
   totalQuantity: number
   totalWeight: number
@@ -35,6 +36,13 @@ interface JobOrder {
   jobNumber: string
   productName: string
   clientName?: string
+  poContractNo?: string
+  items?: Array<{
+    id: string
+    workDescription: string
+    quantity?: number
+    unit?: string
+  }>
 }
 
 export default function DeliveryNotesPage() {
@@ -50,20 +58,28 @@ export default function DeliveryNotesPage() {
     deliveryNoteNumber: '',
     jobOrderId: '',
     client: '',
-    country: '',
+    country: 'Qatar',
     division: '',
     department: '',
-    fabrication: '',
     refPoNumber: '',
     jobSalesOrder: '',
     shipmentTo: '',
     comments: '',
-    shipmentType: '',
+    shipmentType: 'Land',
     representativeName: '',
     representativeNo: '',
     qidNumber: '',
     vehicleNumber: '',
-    vehicleType: 'NBTC'
+    vehicleType: 'NBTC',
+    lineItems: [] as Array<{
+      id: string
+      jobOrderItemId?: string
+      description: string
+      unit: string
+      quantity: number
+      deliveredQuantity: number
+      remarks?: string
+    }>
   })
 
   useEffect(() => {
@@ -106,17 +122,74 @@ export default function DeliveryNotesPage() {
     // Auto-fill from selected job order
     const selectedJobOrder = jobOrders.find(jo => jo.id === jobOrderId)
     if (selectedJobOrder) {
+      // Extract line items from job order
+      const lineItems = (selectedJobOrder.items || []).map((item: any) => ({
+        id: item.id || `temp-${Math.random()}`,
+        jobOrderItemId: item.id,
+        description: item.workDescription || '',
+        unit: item.unit || '',
+        quantity: item.quantity || 0,
+        deliveredQuantity: 0,
+        remarks: ''
+      }))
+
       setFormData(prev => ({
         ...prev,
         jobSalesOrder: selectedJobOrder.jobNumber,
         client: selectedJobOrder.clientName || prev.client,
-        refPoNumber: prev.refPoNumber
+        shipmentTo: selectedJobOrder.clientName || '', // Default to Client Name
+        refPoNumber: selectedJobOrder.poContractNo || '', // Pull from Job Order PO
+        country: 'Qatar', // Default to Qatar
+        shipmentType: 'Land', // Default to Land
+        lineItems: lineItems // Populate line items from job order
       }))
     }
   }
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }))
+    setFormData(prev => {
+      const updated = { ...prev, [field]: value }
+      
+      // Auto-set department based on division
+      if (field === 'division') {
+        if (value === 'Workshop') {
+          updated.department = 'Fabrication'
+        } else if (value === 'Manufacturing') {
+          updated.department = 'Pipe Mill'
+        }
+      }
+      
+      return updated
+    })
+  }
+
+  const handleLineItemChange = (index: number, field: string, value: any) => {
+    setFormData(prev => {
+      const items = [...prev.lineItems]
+      items[index] = { ...items[index], [field]: value }
+      return { ...prev, lineItems: items }
+    })
+  }
+
+  const addLineItem = () => {
+    setFormData(prev => ({
+      ...prev,
+      lineItems: [...prev.lineItems, {
+        id: `temp-${Math.random()}`,
+        description: '',
+        unit: '',
+        quantity: 0,
+        deliveredQuantity: 0,
+        remarks: ''
+      }]
+    }))
+  }
+
+  const removeLineItem = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      lineItems: prev.lineItems.filter((_, i) => i !== index)
+    }))
   }
 
   const getSuggestions = (field: string, value: string): string[] => {
@@ -173,20 +246,20 @@ export default function DeliveryNotesPage() {
       deliveryNoteNumber: '',
       jobOrderId: '',
       client: '',
-      country: '',
+      country: 'Qatar',
       division: '',
       department: '',
-      fabrication: '',
       refPoNumber: '',
       jobSalesOrder: '',
       shipmentTo: '',
       comments: '',
-      shipmentType: '',
+      shipmentType: 'Land',
       representativeName: '',
       representativeNo: '',
       qidNumber: '',
       vehicleNumber: '',
-      vehicleType: 'NBTC'
+      vehicleType: 'NBTC',
+      lineItems: []
     })
     setShowSuggestions({})
   }
@@ -196,20 +269,20 @@ export default function DeliveryNotesPage() {
       deliveryNoteNumber: note.deliveryNoteNumber,
       jobOrderId: note.jobOrderId || '',
       client: note.client || '',
-      country: note.country || '',
+      country: note.country || 'Qatar',
       division: note.division || '',
       department: note.department || '',
-      fabrication: note.fabrication || '',
       refPoNumber: note.refPoNumber || '',
       jobSalesOrder: note.jobOrder?.jobNumber || '',
-      shipmentTo: '',
+      shipmentTo: note.shipmentTo || '',
       comments: '',
-      shipmentType: '',
+      shipmentType: note.shipmentType || 'Land',
       representativeName: '',
       representativeNo: '',
       qidNumber: '',
       vehicleNumber: '',
-      vehicleType: 'NBTC'
+      vehicleType: 'NBTC',
+      lineItems: []
     })
     setEditingId(note.id)
     setShowForm(true)
@@ -367,31 +440,25 @@ export default function DeliveryNotesPage() {
                     </div>
                     <div>
                       <Label className="font-semibold">Division</Label>
-                      <Input
+                      <select
                         value={formData.division}
                         onChange={(e) => handleInputChange('division', e.target.value)}
-                        placeholder="Division"
-                        className="mt-2"
-                      />
+                        className="mt-2 px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+                      >
+                        <option value="">Select Division</option>
+                        <option value="Workshop">Workshop</option>
+                        <option value="Manufacturing">Manufacturing</option>
+                      </select>
                     </div>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                     <div>
                       <Label className="font-semibold">Department</Label>
                       <Input
                         value={formData.department}
-                        onChange={(e) => handleInputChange('department', e.target.value)}
-                        placeholder="Department"
-                        className="mt-2"
-                      />
-                    </div>
-                    <div>
-                      <Label className="font-semibold">Fabrication</Label>
-                      <Input
-                        value={formData.fabrication}
-                        onChange={(e) => handleInputChange('fabrication', e.target.value)}
-                        placeholder="Fabrication"
-                        className="mt-2"
+                        disabled
+                        placeholder="Auto-filled based on Division"
+                        className="mt-2 bg-slate-100"
                       />
                     </div>
                     <div>
@@ -421,12 +488,15 @@ export default function DeliveryNotesPage() {
                     </div>
                     <div>
                       <Label className="font-semibold">Shipment Type</Label>
-                      <Input
+                      <select
                         value={formData.shipmentType}
                         onChange={(e) => handleInputChange('shipmentType', e.target.value)}
-                        placeholder="e.g., AIR, SEA, LAND"
-                        className="mt-2"
-                      />
+                        className="mt-2 px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+                      >
+                        <option value="Land">Land</option>
+                        <option value="Sea">Sea</option>
+                        <option value="Air">Air</option>
+                      </select>
                     </div>
                   </div>
                   <div className="mt-4">
@@ -501,6 +571,97 @@ export default function DeliveryNotesPage() {
                       </select>
                     </div>
                   </div>
+                </div>
+
+                {/* Section 6: Line Items */}
+                <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="font-semibold text-slate-900">Line Items</h3>
+                    <Button
+                      type="button"
+                      onClick={addLineItem}
+                      className="bg-blue-600 hover:bg-blue-700"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Item
+                    </Button>
+                  </div>
+                  
+                  {formData.lineItems.length > 0 ? (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b border-slate-300 bg-slate-100">
+                            <th className="text-left px-3 py-2 font-semibold">Description</th>
+                            <th className="text-left px-3 py-2 font-semibold">Unit</th>
+                            <th className="text-left px-3 py-2 font-semibold">Qty</th>
+                            <th className="text-left px-3 py-2 font-semibold">Delivered Qty</th>
+                            <th className="text-left px-3 py-2 font-semibold">Remarks</th>
+                            <th className="text-center px-3 py-2 font-semibold">Action</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {formData.lineItems.map((item, index) => (
+                            <tr key={item.id} className="border-b border-slate-200 hover:bg-slate-50">
+                              <td className="px-3 py-2">
+                                <Input
+                                  value={item.description}
+                                  onChange={(e) => handleLineItemChange(index, 'description', e.target.value)}
+                                  placeholder="Description"
+                                  className="text-sm"
+                                />
+                              </td>
+                              <td className="px-3 py-2">
+                                <Input
+                                  value={item.unit}
+                                  onChange={(e) => handleLineItemChange(index, 'unit', e.target.value)}
+                                  placeholder="e.g., NOS, KG, MTR"
+                                  className="text-sm"
+                                />
+                              </td>
+                              <td className="px-3 py-2">
+                                <Input
+                                  type="number"
+                                  value={item.quantity}
+                                  onChange={(e) => handleLineItemChange(index, 'quantity', parseFloat(e.target.value))}
+                                  placeholder="0"
+                                  className="text-sm"
+                                />
+                              </td>
+                              <td className="px-3 py-2">
+                                <Input
+                                  type="number"
+                                  value={item.deliveredQuantity}
+                                  onChange={(e) => handleLineItemChange(index, 'deliveredQuantity', parseFloat(e.target.value))}
+                                  placeholder="0"
+                                  className="text-sm"
+                                />
+                              </td>
+                              <td className="px-3 py-2">
+                                <Input
+                                  value={item.remarks || ''}
+                                  onChange={(e) => handleLineItemChange(index, 'remarks', e.target.value)}
+                                  placeholder="Remarks"
+                                  className="text-sm"
+                                />
+                              </td>
+                              <td className="px-3 py-2 text-center">
+                                <Button
+                                  type="button"
+                                  onClick={() => removeLineItem(index)}
+                                  className="bg-red-600 hover:bg-red-700 h-8 px-2"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <p className="text-slate-500 text-center py-4">Select a job order to auto-populate line items</p>
+                  )}
                 </div>
 
                 {/* Form Buttons */}
