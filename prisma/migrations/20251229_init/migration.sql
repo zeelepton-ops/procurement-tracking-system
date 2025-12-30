@@ -1,5 +1,9 @@
--- CreateEnum
-CREATE TYPE "SupplierStatus" AS ENUM ('PENDING', 'APPROVED', 'REJECTED', 'SUSPENDED');
+-- CreateEnum (Only if not already exists)
+DO $$ BEGIN
+  CREATE TYPE "SupplierStatus" AS ENUM ('PENDING', 'APPROVED', 'REJECTED', 'SUSPENDED');
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
 
 -- CreateTable
 CREATE TABLE "User" (
