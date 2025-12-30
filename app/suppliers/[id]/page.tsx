@@ -168,11 +168,13 @@ export default function SupplierDetailPage() {
           {supplier.contacts?.length > 0 && (
             <div className="col-span-full mt-2 pt-2 border-t">
               <h3 className="font-semibold mb-1 text-sm">Additional Contacts</h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-1 text-xs">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-1 text-xs">
                 {supplier.contacts.map((c: any) => (
                   <div key={c.id} className="p-1 bg-slate-50 rounded border">
-                    <div className="font-semibold">{displayValue(c.name)} {c.isPrimary && <span className="text-slate-500">(P)</span>}</div>
-                    <div className="text-slate-600">{displayValue(c.role)} | {displayValue(c.email)} | {displayValue(c.phone)}</div>
+                    <div className="font-semibold truncate">{displayValue(c.name)} {c.isPrimary && <span className="text-slate-500">(P)</span>}</div>
+                    <div className="text-slate-600 truncate">{displayValue(c.role)}</div>
+                    <div className="text-slate-600 truncate">{displayValue(c.email)}</div>
+                    <div className="text-slate-600 truncate">{displayValue(c.phone)}</div>
                   </div>
                 ))}
               </div>
@@ -262,12 +264,11 @@ export default function SupplierDetailPage() {
           )}
         </div>
 
-        {/* Timestamps */}
-        <div className="border rounded-lg p-5 bg-white shadow-sm print-section">
-          <h2 className="text-lg font-bold mb-3 border-b pb-2 text-slate-800">Record Information</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-1 text-xs">
-            <div><span className="font-semibold">Created:</span> {supplier.createdAt ? new Date(supplier.createdAt).toLocaleDateString() : 'Not filled'}</div>
-            <div><span className="font-semibold">Updated:</span> {supplier.updatedAt ? new Date(supplier.updatedAt).toLocaleDateString() : 'Not filled'}</div>
+        {/* Footer - Record Information */}
+        <div className="mt-6 pt-3 border-t border-slate-200 text-xs text-slate-500 text-center no-print">
+          <div className="flex justify-center gap-6">
+            <div>Created: {supplier.createdAt ? new Date(supplier.createdAt).toLocaleString() : 'Not filled'}</div>
+            <div>Last Updated: {supplier.updatedAt ? new Date(supplier.updatedAt).toLocaleString() : 'Not filled'}</div>
           </div>
         </div>
       </div>
