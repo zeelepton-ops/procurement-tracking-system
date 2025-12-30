@@ -45,6 +45,31 @@ export default function SupplierDetailPage() {
     fetchSupplier()
   }
 
+  async function updateStatus(status: string, notePrefix: string) {
+    const remark = prompt(`${notePrefix} remarks (optional):`, '') || ''
+    const body = { id, status, notes: remark ? `${notePrefix}: ${remark}` : undefined }
+    const res = await fetch('/api/suppliers', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+    if (!res.ok) return alert('Failed to update status')
+    alert('Status updated')
+    fetchSupplier()
+  }
+
+  async function removeSupplier() {
+    if (!confirm('Delete this supplier?')) return
+    const res = await fetch(`/api/suppliers?id=${id}`, { method: 'DELETE' })
+    if (!res.ok) return alert('Delete failed')
+    alert('Deleted')
+    router.push('/suppliers')
+  }
+
+  function handlePrint() {
+    window.print()
+  }
+
+  function handleEdit() {
+    router.push(`/suppliers/register?id=${id}`)
+  }
+
   if (loading) return <div className="p-4">Loading...</div>
   if (!supplier) return <div className="p-4">Not found</div>
 
@@ -70,6 +95,11 @@ export default function SupplierDetailPage() {
         <div className="flex gap-2">
           <Button onClick={() => router.push('/suppliers')}>Back</Button>
           {supplier.status === 'PENDING' && <Button onClick={approve}>Approve</Button>}
+          <Button onClick={handleEdit} variant="outline">Edit</Button>
+          <Button onClick={() => updateStatus('SUSPENDED', 'Hold')} variant="outline">Hold</Button>
+          <Button onClick={() => updateStatus('SUSPENDED', 'Blacklisted')} variant="destructive">Blacklist</Button>
+          <Button onClick={removeSupplier} variant="outline">Delete</Button>
+          <Button onClick={handlePrint} variant="outline">Print</Button>
         </div>
       </div>
 
