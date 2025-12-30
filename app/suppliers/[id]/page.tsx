@@ -78,13 +78,14 @@ export default function SupplierDetailPage() {
       <style jsx global>{`
         @media print {
           .no-print { display: none !important; }
-          .print-container { max-width: 100%; padding: 10px; }
-          .print-section { page-break-inside: avoid; margin-bottom: 8px; border: 1px solid #ddd; padding: 8px; }
-          .print-header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 8px; margin-bottom: 10px; }
-          .print-grid { gap: 4px !important; }
-          body { font-size: 9pt; line-height: 1.3; }
-          h2 { font-size: 11pt; margin-bottom: 6px; }
-          h3 { font-size: 10pt; margin-bottom: 4px; }
+          .print-container { max-width: 100%; padding: 5px; }
+          .print-section { page-break-inside: avoid; margin-bottom: 4px; border: 1px solid #ddd; padding: 5px; }
+          .print-header { border-bottom: 2px solid #333; padding-bottom: 4px; margin-bottom: 5px; }
+          .print-grid { gap: 2px !important; }
+          body { font-size: 7.5pt; line-height: 1.2; }
+          h2 { font-size: 9pt; margin-bottom: 3px; font-weight: 600; }
+          h3 { font-size: 8pt; margin-bottom: 2px; font-weight: 600; }
+          .text-sm, .text-xs { font-size: 7pt !important; }
         }
       `}</style>
       <div className="max-w-7xl mx-auto p-6 print-container">
@@ -119,22 +120,22 @@ export default function SupplierDetailPage() {
 
         {/* Print Header */}
         <div className="hidden print:block print-header">
-          <div className="flex items-start justify-between">
-            <div className="flex items-center gap-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
               <img 
                 src="https://i.ibb.co/nMjzX2GS/Logo-NBTC-Transparent.png" 
                 alt="NBTC Logo"
                 className="h-8 w-auto"
               />
               <div>
-                <h1 className="text-xl font-bold text-slate-800">Supplier Profile</h1>
-                <p className="text-sm text-slate-600">{displayValue(supplier.name !== supplier.tradingName ? `${supplier.name} (${supplier.tradingName})` : supplier.name)}</p>
+                <h1 className="text-sm font-bold text-slate-800">Supplier Profile</h1>
+                <p className="text-xs text-slate-600">{displayValue(supplier.name !== supplier.tradingName ? `${supplier.name} (${supplier.tradingName})` : supplier.name)}</p>
               </div>
             </div>
             <div className="text-right text-xs">
-              <div className="font-semibold text-slate-700">Status: <span className="text-blue-600">{displayValue(supplier.status)}</span></div>
-              <div className="text-slate-600 mt-1">{displayValue(supplier.category)}</div>
-              <div className="text-slate-600">{displayValue(supplier.businessType)}</div>
+              <span className="font-semibold">Status: {displayValue(supplier.status)}</span> | 
+              <span>{displayValue(supplier.category)}</span> | 
+              <span>{displayValue(supplier.businessType)}</span>
             </div>
           </div>
         </div>
@@ -142,40 +143,36 @@ export default function SupplierDetailPage() {
         {/* Company Information */}
         <div className="border rounded-lg p-5 bg-white mb-4 shadow-sm print-section">
           <h2 className="text-lg font-bold mb-3 border-b pb-2 text-slate-800">Company Information</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-2 text-sm print-grid">
-            <div><span className="font-semibold">Company Name:</span> {displayValue(supplier.name)}</div>
-            <div><span className="font-semibold">Trading Name:</span> {displayValue(supplier.tradingName)}</div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-1 text-sm print-grid">
+            <div><span className="font-semibold">Company:</span> {displayValue(supplier.name)}</div>
+            <div><span className="font-semibold">Trading:</span> {displayValue(supplier.tradingName)}</div>
             <div><span className="font-semibold">Category:</span> {displayValue(supplier.category)}</div>
-            <div><span className="font-semibold">Business Type:</span> {displayValue(supplier.businessType)}</div>
-            <div><span className="font-semibold">Year Established:</span> {displayValue(supplier.yearEstablished)}</div>
-            <div><span className="font-semibold">Website:</span> {displayValue(supplier.website)}</div>
-            <div className="col-span-2"><span className="font-semibold">Description:</span> {displayValue(supplier.notes)}</div>
+            <div><span className="font-semibold">Type:</span> {displayValue(supplier.businessType)}</div>
+            <div><span className="font-semibold">Established:</span> {displayValue(supplier.yearEstablished)}</div>
+            <div className="col-span-3"><span className="font-semibold">Website:</span> {displayValue(supplier.website)}</div>
+            <div className="col-span-4"><span className="font-semibold">Description:</span> {displayValue(supplier.notes)}</div>
           </div>
         </div>
 
         {/* Contact Details */}
         <div className="border rounded-lg p-5 bg-white mb-4 shadow-sm print-section">
           <h2 className="text-lg font-bold mb-3 border-b pb-2 text-slate-800">Contact Details</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-2 text-sm print-grid">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-1 text-sm print-grid">
             <div><span className="font-semibold">Email:</span> {displayValue(supplier.email)}</div>
             <div><span className="font-semibold">Phone:</span> {displayValue(supplier.phone)}</div>
-            <div><span className="font-semibold">Address:</span> {displayValue(supplier.address)}</div>
+            <div className="col-span-2"><span className="font-semibold">Address:</span> {displayValue(supplier.address)}</div>
             <div><span className="font-semibold">City:</span> {displayValue(supplier.city)}</div>
             <div><span className="font-semibold">Country:</span> {displayValue(supplier.country)}</div>
-            <div><span className="font-semibold">Contact Person:</span> {displayValue(supplier.contactPerson)}</div>
+            <div className="col-span-2"><span className="font-semibold">Contact Person:</span> {displayValue(supplier.contactPerson)}</div>
           </div>
           {supplier.contacts?.length > 0 && (
-            <div className="col-span-full mt-3 pt-3 border-t">
-              <h3 className="font-semibold mb-2 text-sm">Additional Contacts</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            <div className="col-span-full mt-2 pt-2 border-t">
+              <h3 className="font-semibold mb-1 text-sm">Additional Contacts</h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-1 text-xs">
                 {supplier.contacts.map((c: any) => (
-                  <div key={c.id} className="p-2 bg-slate-50 rounded text-xs border">
-                    <div className="font-semibold">{displayValue(c.name)} {c.isPrimary && <span className="text-slate-500">(Primary)</span>}</div>
-                    <div className="flex gap-4 mt-1 text-slate-600">
-                      <div>Role: {displayValue(c.role)}</div>
-                      <div>Email: {displayValue(c.email)}</div>
-                      <div>Phone: {displayValue(c.phone)}</div>
-                    </div>
+                  <div key={c.id} className="p-1 bg-slate-50 rounded border">
+                    <div className="font-semibold">{displayValue(c.name)} {c.isPrimary && <span className="text-slate-500">(P)</span>}</div>
+                    <div className="text-slate-600">{displayValue(c.role)} | {displayValue(c.email)} | {displayValue(c.phone)}</div>
                   </div>
                 ))}
               </div>
@@ -186,18 +183,16 @@ export default function SupplierDetailPage() {
         {/* Financial & Payment Terms */}
         <div className="border rounded-lg p-5 bg-white mb-4 shadow-sm print-section">
           <h2 className="text-lg font-bold mb-3 border-b pb-2 text-slate-800">Financial & Payment Terms</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-2 text-sm print-grid">
-            <div><span className="font-semibold">Payment Terms:</span> {displayValue(supplier.paymentTerms)}</div>
-            <div><span className="font-semibold">Lead Time (Days):</span> {displayValue(supplier.leadTimeDays)}</div>
-            <div><span className="font-semibold">Default Currency:</span> {displayValue(supplier.defaultCurrency)}</div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-1 text-sm print-grid">
+            <div><span className="font-semibold">Payment:</span> {displayValue(supplier.paymentTerms)}</div>
+            <div><span className="font-semibold">Lead Time:</span> {displayValue(supplier.leadTimeDays)} days</div>
+            <div><span className="font-semibold">Currency:</span> {displayValue(supplier.defaultCurrency)}</div>
             <div><span className="font-semibold">Rating:</span> {supplier.rating ? `${supplier.rating}/5` : 'Not filled'}</div>
-            <div><span className="font-semibold">Preferred Supplier:</span> {supplier.preferred ? 'Yes' : 'No'}</div>
-            <div><span className="font-semibold">Active:</span> {supplier.isActive ? 'Yes' : 'No'}</div>
           </div>
           {supplier.bankDetails && (
-            <div className="col-span-full mt-3 pt-3 border-t">
-              <h3 className="font-semibold mb-2 text-sm">Banking Details</h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+            <div className="col-span-full mt-2 pt-2 border-t">
+              <h3 className="font-semibold mb-1 text-sm">Banking Details</h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-1 text-xs">
                 <div><span className="font-semibold">Bank:</span> {displayValue(supplier.bankDetails.bankName)}</div>
                 <div><span className="font-semibold">Account:</span> {displayValue(supplier.bankDetails.accountName)}</div>
                 <div><span className="font-semibold">IBAN:</span> {displayValue(supplier.bankDetails.iban)}</div>
@@ -209,14 +204,14 @@ export default function SupplierDetailPage() {
 
         {/* Registration & Legal */}
         <div className="border rounded-lg p-5 bg-white mb-4 shadow-sm print-section">
-          <h2 className="text-lg font-bold mb-3 border-b pb-2 text-slate-800">Registration & Legal Information</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-2 text-sm print-grid">
-            <div><span className="font-semibold">CR Number:</span> {displayValue(supplier.crNumber)}</div>
-            <div><span className="font-semibold">CR Document:</span> {displayValue(supplier.crDocumentUrl)}</div>
+          <h2 className="text-lg font-bold mb-3 border-b pb-2 text-slate-800">Registration & Legal</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-1 text-sm print-grid">
+            <div><span className="font-semibold">CR:</span> {displayValue(supplier.crNumber)}</div>
+            <div><span className="font-semibold">CR Doc:</span> {displayValue(supplier.crDocumentUrl)}</div>
             <div><span className="font-semibold">Tax ID:</span> {displayValue(supplier.taxId)}</div>
             <div><span className="font-semibold">Tax Card:</span> {displayValue(supplier.taxCardUrl)}</div>
-            <div><span className="font-semibold">ICV Certificate:</span> {displayValue(supplier.icvUrl)}</div>
-            <div><span className="font-semibold">Trade License:</span> {displayValue(supplier.tradeLicense)}</div>
+            <div><span className="font-semibold">ICV Cert:</span> {displayValue(supplier.icvUrl)}</div>
+            <div><span className="font-semibold">Trade Lic:</span> {displayValue(supplier.tradeLicense)}</div>
           </div>
         </div>
 
@@ -224,12 +219,11 @@ export default function SupplierDetailPage() {
         {supplier.capabilities?.length > 0 && (
           <div className="border rounded-lg p-5 bg-white mb-4 shadow-sm print-section">
             <h2 className="text-lg font-bold mb-3 border-b pb-2 text-slate-800">Capabilities</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-1 text-xs">
               {supplier.capabilities.map((c: any) => (
-                <div key={c.id} className="p-2 bg-slate-50 rounded text-xs border">
+                <div key={c.id} className="p-1 bg-slate-50 rounded border">
                   <div className="font-semibold">{displayValue(c.category)} — {displayValue(c.name)}</div>
-                  <div className="text-slate-700 mt-1">{displayValue(c.details)}</div>
-                  {c.capacity && <div className="text-slate-600 mt-1">Capacity: {displayValue(c.capacity)}</div>}
+                  <div className="text-slate-700">{displayValue(c.details)}</div>
                 </div>
               ))}
             </div>
@@ -240,15 +234,11 @@ export default function SupplierDetailPage() {
         {supplier.certifications?.length > 0 && (
           <div className="border rounded-lg p-5 bg-white mb-4 shadow-sm print-section">
             <h2 className="text-lg font-bold mb-3 border-b pb-2 text-slate-800">Certifications</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-1 text-xs">
               {supplier.certifications.map((c: any) => (
-                <div key={c.id} className="p-2 bg-slate-50 rounded text-xs border">
+                <div key={c.id} className="p-1 bg-slate-50 rounded border">
                   <div className="font-semibold">{displayValue(c.name)}</div>
-                  <div className="flex gap-3 mt-1 text-slate-600">
-                    <div>Cert #: {displayValue(c.certNumber)}</div>
-                    <div>Issued By: {displayValue(c.issuedBy)}</div>
-                    <div>Valid: {c.validFrom ? new Date(c.validFrom).toLocaleDateString() : 'N/A'} - {c.validTo ? new Date(c.validTo).toLocaleDateString() : 'N/A'}</div>
-                  </div>
+                  <div className="text-slate-600">{displayValue(c.certNumber)} | {displayValue(c.issuedBy)}</div>
                 </div>
               ))}
             </div>
@@ -259,15 +249,11 @@ export default function SupplierDetailPage() {
         <div className="border rounded-lg p-5 bg-white mb-4 shadow-sm print-section">
           <h2 className="text-lg font-bold mb-3 border-b pb-2 text-slate-800">Documents</h2>
           {supplier.documents?.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-1 text-xs">
               {supplier.documents.map((d: any) => (
-                <div key={d.id} className="p-2 bg-slate-50 rounded flex items-center justify-between text-xs border">
-                  <div>
-                    <div className="font-semibold">{displayValue(d.type)}</div>
-                    <div className="text-slate-600">{displayValue(d.filename)}</div>
-                    <div className="text-slate-500">Uploaded: {d.uploadedAt ? new Date(d.uploadedAt).toLocaleDateString() : 'N/A'}</div>
-                  </div>
-                  <a href={d.url} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline no-print text-xs">View</a>
+                <div key={d.id} className="p-1 bg-slate-50 rounded border">
+                  <div className="font-semibold">{displayValue(d.type)}</div>
+                  <div className="text-slate-600">{displayValue(d.filename)}</div>
                 </div>
               ))}
             </div>
@@ -278,10 +264,10 @@ export default function SupplierDetailPage() {
 
         {/* Timestamps */}
         <div className="border rounded-lg p-5 bg-white shadow-sm print-section">
-          <h2 className="text-lg font-bold mb-3 border-b pb-2 text-slate-800">Record Information</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 text-xs">
-            <div><span className="font-semibold">Created:</span> {supplier.createdAt ? new Date(supplier.createdAt).toLocaleString() : 'Not filled'}</div>
-            <div><span className="font-semibold">Updated:</span> {supplier.updatedAt ? new Date(supplier.updatedAt).toLocaleString() : 'Not filled'}</div>
+          <h2 className="text-lg font-bold mb-3 border-b pb-2 text-slate-800">Record Info</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-1 text-xs">
+            <div><span className="font-semibold">Created:</span> {supplier.createdAt ? new Date(supplier.createdAt).toLocaleDateString() : 'Not filled'}</div>
+            <div><span className="font-semibold">Updated:</span> {supplier.updatedAt ? new Date(supplier.updatedAt).toLocaleDateString() : 'Not filled'}</div>
           </div>
         </div>
       </div>
