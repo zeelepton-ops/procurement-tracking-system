@@ -602,7 +602,6 @@ model DeliveryNote {
   createdAt           DateTime             @default(now())
   updatedAt           DateTime             @updatedAt
   
-  @@unique([deliveryNoteNumber])
   @@index([jobOrderId])
   @@index([status])
 }
