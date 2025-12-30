@@ -71,3 +71,18 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+/* Print Styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  body {
+    background: white;
+  }
+  
+  @page {
+    margin: 0.5cm;
+  }
+}
