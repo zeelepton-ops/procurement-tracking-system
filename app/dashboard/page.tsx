@@ -103,7 +103,7 @@ export default function StatusDashboardPage() {
       filtered = filtered.filter(r =>
         r.requestNumber.toLowerCase().includes(term) ||
         r.itemName.toLowerCase().includes(term) ||
-        r.jobOrder.jobNumber.toLowerCase().includes(term)
+        (r.jobOrder?.jobNumber || '').toLowerCase().includes(term)
       )
     }
     
@@ -347,8 +347,8 @@ export default function StatusDashboardPage() {
                         </td>
                         <td className="px-4 py-3">
                           <div>
-                            <p className="text-sm font-medium text-slate-900">{request.jobOrder.jobNumber}</p>
-                            <p className="text-xs text-slate-600">{request.jobOrder.productName}</p>
+                            <p className="text-sm font-medium text-slate-900">{request.jobOrder?.jobNumber || 'N/A'}</p>
+                            <p className="text-xs text-slate-600">{request.jobOrder?.productName || 'No job order'}</p>
                           </div>
                         </td>
                         <td className="px-4 py-3">
@@ -356,9 +356,9 @@ export default function StatusDashboardPage() {
                         </td>
                         <td className="px-4 py-3">
                           <p className="text-sm text-slate-900">{request.quantity} {request.unit}</p>
-                          {request.purchaseOrderItems.length > 0 && (
+                          {request.purchaseOrderItems?.length > 0 && (
                             <p className="text-xs text-green-600">
-                              Received: {request.purchaseOrderItems[0].receivedQuantity} {request.unit}
+                              Received: {request.purchaseOrderItems[0]?.receivedQuantity || 0} {request.unit}
                             </p>
                           )}
                         </td>
@@ -382,17 +382,17 @@ export default function StatusDashboardPage() {
                         </td>
                         <td className="px-4 py-3">
                           <div className="space-y-1">
-                            {request.procurementActions.length > 0 && (
+                            {request.procurementActions?.length > 0 && (
                               <p className="text-xs text-slate-600">
-                                Last: {request.procurementActions[0].actionType.replace(/_/g, ' ')}
+                                Last: {request.procurementActions[0]?.actionType?.replace(/_/g, ' ') || 'N/A'}
                               </p>
                             )}
-                            {request.purchaseOrderItems.length > 0 && (
+                            {request.purchaseOrderItems?.length > 0 && (
                               <p className="text-xs text-blue-600">
-                                PO: {request.purchaseOrderItems[0].purchaseOrder.poNumber}
+                                PO: {request.purchaseOrderItems[0]?.purchaseOrder?.poNumber || 'N/A'}
                               </p>
                             )}
-                            {request.purchaseOrderItems.length === 0 && request.procurementActions.length === 0 && (
+                            {(!request.purchaseOrderItems || request.purchaseOrderItems.length === 0) && (!request.procurementActions || request.procurementActions.length === 0) && (
                               <p className="text-xs text-slate-400">No updates yet</p>
                             )}
                           </div>
