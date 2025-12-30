@@ -34,6 +34,12 @@ interface Draft {
   savedAt: string
 }
 
+const displayValue = (value: string | undefined | null, placeholder = 'Not filled') => {
+  if (!value) return placeholder
+  const trimmed = String(value).trim()
+  return trimmed.length ? trimmed : placeholder
+}
+
 const SUPPLIER_CATEGORIES = [
   'Steel Structures',
   'Equipment & Machinery',
@@ -244,17 +250,11 @@ export default function SuppliersPage() {
           </div>
         )}
 
-        {/* Suppliers Grid */}
+        {/* Suppliers List (line items) */}
         {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="space-y-2">
             {[...Array(6)].map((_, i) => (
-              <Card key={i} className="animate-pulse">
-                <CardContent className="pt-6">
-                  <div className="h-6 bg-slate-200 rounded mb-4" />
-                  <div className="h-4 bg-slate-200 rounded mb-2" />
-                  <div className="h-4 bg-slate-200 rounded w-3/4" />
-                </CardContent>
-              </Card>
+              <div key={i} className="h-16 bg-slate-200 rounded animate-pulse" />
             ))}
           </div>
         ) : suppliers.length === 0 ? (
@@ -266,39 +266,21 @@ export default function SuppliersPage() {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {suppliers.map(supplier => (
-              <Card
+          <div className="bg-white rounded-xl shadow divide-y border border-slate-200">
+            {suppliers.map((supplier) => (
+              <button
                 key={supplier.id}
-                className="hover:shadow-lg transition-shadow cursor-pointer"
+                className="w-full text-left px-4 py-4 hover:bg-slate-50 transition flex flex-col gap-2"
                 onClick={() => router.push(`/suppliers/${supplier.id}`)}
               >
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <CardTitle className="text-lg">{supplier.name}</CardTitle>
-                      {supplier.tradingName && (
-                        <p className="text-sm text-slate-600 mt-1">{supplier.tradingName}</p>
-                      )}
-                    </div>
-                    {supplier.rating && supplier.rating > 0 && (
-                      <div className="flex items-center gap-1 ml-2">
-                        <Award className="h-4 w-4 text-yellow-500" />
-                        <span className="text-sm font-medium">{supplier.rating.toFixed(1)}</span>
-                      </div>
-                    )}
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {/* Category & Status */}
-                    <div className="flex items-center justify-between">
-                      {supplier.category && (
-                        <span className="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-full">
-                          {supplier.category}
-                        </span>
-                      )}
-                      <span className={`text-xs px-3 py-1 rounded-full font-medium ${
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="text-lg font-semibold text-slate-900 truncate">{supplier.name}</div>
+                    <div className="text-sm text-slate-600 truncate">{displayValue(supplier.tradingName)}</div>
+                    <div className="flex flex-wrap items-center gap-2 mt-2 text-xs text-slate-600">
+                      <span className="px-2 py-1 rounded-full bg-slate-100 text-slate-700">{displayValue(supplier.category)}</span>
+                      <span className="px-2 py-1 rounded-full bg-slate-100 text-slate-700">{displayValue(supplier.businessType)}</span>
+                      <span className={`px-2 py-1 rounded-full font-medium ${
                         supplier.status === 'APPROVED' ? 'bg-green-100 text-green-700' :
                         supplier.status === 'PENDING' ? 'bg-yellow-100 text-yellow-700' :
                         supplier.status === 'REJECTED' ? 'bg-red-100 text-red-700' :
@@ -307,59 +289,23 @@ export default function SuppliersPage() {
                         {supplier.status}
                       </span>
                     </div>
-
-                    {/* Business Type */}
-                    {supplier.businessType && (
-                      <p className="text-sm text-slate-600">
-                        <span className="font-medium">Type:</span> {supplier.businessType}
-                      </p>
-                    )}
-
-                    {/* Location */}
-                    {(supplier.city || supplier.country) && (
-                      <div className="flex items-start gap-2 text-sm text-slate-600">
-                        <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                        <span>{[supplier.city, supplier.country].filter(Boolean).join(', ')}</span>
-                      </div>
-                    )}
-
-                    {/* Contact Info */}
-                    <div className="space-y-1">
-                      {supplier.email && (
-                        <div className="flex items-center gap-2 text-sm text-slate-600 truncate">
-                          <Mail className="h-4 w-4 flex-shrink-0" />
-                          <span className="truncate">{supplier.email}</span>
-                        </div>
-                      )}
-                      {supplier.phone && (
-                        <div className="flex items-center gap-2 text-sm text-slate-600">
-                          <Phone className="h-4 w-4 flex-shrink-0" />
-                          <span>{supplier.phone}</span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* CR Number */}
-                    {supplier.crNumber && (
-                      <p className="text-xs text-slate-500 border-t pt-3">
-                        <span className="font-medium">CR:</span> {supplier.crNumber}
-                      </p>
-                    )}
                   </div>
-                </CardContent>
-                <div className="px-6 pb-4">
-                  <Button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      router.push(`/suppliers/${supplier.id}`)
-                    }}
-                    variant="outline"
-                    className="w-full"
-                  >
-                    View Details
-                  </Button>
+                  <div className="text-right text-sm text-slate-600 min-w-[180px]">
+                    <div className="flex items-center justify-end gap-2">
+                      <Mail className="h-4 w-4 text-slate-400" />
+                      <span className="truncate">{displayValue(supplier.email)}</span>
+                    </div>
+                    <div className="flex items-center justify-end gap-2 mt-1">
+                      <Phone className="h-4 w-4 text-slate-400" />
+                      <span>{displayValue(supplier.phone)}</span>
+                    </div>
+                    <div className="flex items-center justify-end gap-2 mt-1">
+                      <MapPin className="h-4 w-4 text-slate-400" />
+                      <span className="truncate">{displayValue([supplier.city, supplier.country].filter(Boolean).join(', '))}</span>
+                    </div>
+                  </div>
                 </div>
-              </Card>
+              </button>
             ))}
           </div>
         )}

@@ -5,13 +5,18 @@ import { useParams, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
+const displayValue = (value: any, placeholder = 'Not filled') => {
+  if (value === null || value === undefined) return placeholder
+  const str = String(value).trim()
+  return str.length ? str : placeholder
+}
+
 export default function SupplierDetailPage() {
   const params = useParams()
   const id = (params as any).id
   const router = useRouter()
   const [supplier, setSupplier] = useState<any | null>(null)
   const [loading, setLoading] = useState(true)
-  const [tab, setTab] = useState<'overview'|'contacts'|'capabilities'|'documents'>('overview')
   const [files, setFiles] = useState<File[]>([])
   const [notes, setNotes] = useState('')
 
@@ -44,11 +49,23 @@ export default function SupplierDetailPage() {
   if (!supplier) return <div className="p-4">Not found</div>
 
   return (
-    <div className="max-w-4xl mx-auto p-4">
-      <div className="flex items-center justify-between mb-4">
+    <div className="max-w-5xl mx-auto p-4 space-y-6">
+      <div className="flex items-start justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold">{supplier.name}</h1>
-          <div className="text-sm text-slate-600">{supplier.tradingName}</div>
+          <h1 className="text-2xl font-bold text-slate-900">{displayValue(supplier.name)}</h1>
+          <p className="text-sm text-slate-600">{displayValue(supplier.tradingName)}</p>
+          <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+            <span className="px-2 py-1 rounded-full bg-slate-100 text-slate-700">{displayValue(supplier.category)}</span>
+            <span className="px-2 py-1 rounded-full bg-slate-100 text-slate-700">{displayValue(supplier.businessType)}</span>
+            <span className={`px-2 py-1 rounded-full font-medium ${
+              supplier.status === 'APPROVED' ? 'bg-green-100 text-green-700' :
+              supplier.status === 'PENDING' ? 'bg-yellow-100 text-yellow-700' :
+              supplier.status === 'REJECTED' ? 'bg-red-100 text-red-700' :
+              'bg-gray-100 text-gray-700'
+            }`}>
+              {displayValue(supplier.status)}
+            </span>
+          </div>
         </div>
         <div className="flex gap-2">
           <Button onClick={() => router.push('/suppliers')}>Back</Button>
@@ -56,69 +73,79 @@ export default function SupplierDetailPage() {
         </div>
       </div>
 
-      <nav className="flex gap-2 mb-4">
-        <button onClick={() => setTab('overview')} className={`px-3 py-1 rounded ${tab === 'overview' ? 'bg-blue-100' : 'hover:bg-slate-100'}`}>Overview</button>
-        <button onClick={() => setTab('contacts')} className={`px-3 py-1 rounded ${tab === 'contacts' ? 'bg-blue-100' : 'hover:bg-slate-100'}`}>Contacts</button>
-        <button onClick={() => setTab('capabilities')} className={`px-3 py-1 rounded ${tab === 'capabilities' ? 'bg-blue-100' : 'hover:bg-slate-100'}`}>Capabilities</button>
-        <button onClick={() => setTab('documents')} className={`px-3 py-1 rounded ${tab === 'documents' ? 'bg-blue-100' : 'hover:bg-slate-100'}`}>Documents</button>
-      </nav>
-
-      {tab === 'overview' && (
-        <div className="border p-4 rounded">
-          <div><strong>Address:</strong> {supplier.address}</div>
-          <div><strong>Email:</strong> {supplier.email}</div>
-          <div><strong>Phone:</strong> {supplier.phone}</div>
-          <div><strong>Payment terms:</strong> {supplier.paymentTerms}</div>
-          <div><strong>Notes:</strong> {supplier.notes}</div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="border rounded-lg p-4 bg-white">
+          <h3 className="font-semibold mb-3">Overview</h3>
+          <div className="space-y-2 text-sm text-slate-700">
+            <div><strong>Address:</strong> {displayValue(supplier.address)}</div>
+            <div><strong>Email:</strong> {displayValue(supplier.email)}</div>
+            <div><strong>Phone:</strong> {displayValue(supplier.phone)}</div>
+            <div><strong>City/Country:</strong> {displayValue([supplier.city, supplier.country].filter(Boolean).join(', '))}</div>
+            <div><strong>CR Number:</strong> {displayValue(supplier.crNumber)}</div>
+            <div><strong>Payment terms:</strong> {displayValue(supplier.paymentTerms)}</div>
+            <div><strong>Notes:</strong> {displayValue(supplier.notes)}</div>
+          </div>
         </div>
-      )}
 
-      {tab === 'contacts' && (
-        <div>
-          <h3 className="font-semibold mb-2">Contacts</h3>
-          {supplier.contacts?.map((c: any) => (
-            <div key={c.id} className="p-2 border rounded mb-2">
-              <div className="font-semibold">{c.name} {c.isPrimary ? <span className="text-sm text-slate-500">(Primary)</span> : null}</div>
-              <div className="text-sm">{c.role} • {c.email} • {c.phone}</div>
-            </div>
-          ))}
+        <div className="border rounded-lg p-4 bg-white">
+          <h3 className="font-semibold mb-3">Contacts</h3>
+          {supplier.contacts?.length ? (
+            supplier.contacts.map((c: any) => (
+              <div key={c.id} className="p-2 border rounded mb-2">
+                <div className="font-semibold">{displayValue(c.name)} {c.isPrimary ? <span className="text-sm text-slate-500">(Primary)</span> : null}</div>
+                <div className="text-sm text-slate-700 space-y-1">
+                  <div>Role: {displayValue(c.role)}</div>
+                  <div>Email: {displayValue(c.email)}</div>
+                  <div>Phone: {displayValue(c.phone)}</div>
+                </div>
+              </div>
+            ))
+          ) : (
+            <p className="text-sm text-slate-600">Not filled</p>
+          )}
         </div>
-      )}
+      </div>
 
-      {tab === 'capabilities' && (
-        <div>
-          <h3 className="font-semibold mb-2">Capabilities</h3>
-          {supplier.capabilities?.map((c: any) => (
-            <div key={c.id} className="p-2 border rounded mb-2">
-              <div className="font-semibold">{c.category} — {c.name}</div>
-              <div className="text-sm">{c.details}</div>
-            </div>
-          ))}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="border rounded-lg p-4 bg-white">
+          <h3 className="font-semibold mb-3">Capabilities</h3>
+          {supplier.capabilities?.length ? (
+            supplier.capabilities.map((c: any) => (
+              <div key={c.id} className="p-2 border rounded mb-2">
+                <div className="font-semibold">{displayValue(c.category)} — {displayValue(c.name)}</div>
+                <div className="text-sm text-slate-700">{displayValue(c.details)}</div>
+              </div>
+            ))
+          ) : (
+            <p className="text-sm text-slate-600">Not filled</p>
+          )}
         </div>
-      )}
 
-      {tab === 'documents' && (
-        <div>
-          <h3 className="font-semibold mb-2">Documents</h3>
+        <div className="border rounded-lg p-4 bg-white">
+          <h3 className="font-semibold mb-3">Documents</h3>
           <input type="file" multiple onChange={(e) => setFiles(Array.from(e.target.files || []))} />
           <div className="mt-2 flex gap-2">
             <Button onClick={upload}>Upload</Button>
           </div>
-          <div className="mt-4">
-            {supplier.documents?.map((d: any) => (
-              <div key={d.id} className="p-2 border rounded mb-2 flex items-center justify-between">
-                <div>
-                  <div className="font-semibold">{d.type}</div>
-                  <div className="text-sm text-slate-600">{d.filename}</div>
+          <div className="mt-4 space-y-2">
+            {supplier.documents?.length ? (
+              supplier.documents.map((d: any) => (
+                <div key={d.id} className="p-2 border rounded flex items-center justify-between">
+                  <div>
+                    <div className="font-semibold">{displayValue(d.type)}</div>
+                    <div className="text-sm text-slate-600">{displayValue(d.filename)}</div>
+                  </div>
+                  <div>
+                    <a href={d.url} target="_blank" rel="noreferrer" className="text-sm text-blue-600">Download</a>
+                  </div>
                 </div>
-                <div>
-                  <a href={d.url} target="_blank" rel="noreferrer" className="text-sm text-blue-600">Download</a>
-                </div>
-              </div>
-            ))}
+              ))
+            ) : (
+              <p className="text-sm text-slate-600">Not filled</p>
+            )}
           </div>
         </div>
-      )}
+      </div>
     </div>
   )
 }
