@@ -19,6 +19,7 @@ export default function SupplierDetailPage() {
   const [loading, setLoading] = useState(true)
   const [files, setFiles] = useState<File[]>([])
   const [notes, setNotes] = useState('')
+  const primaryContact = supplier?.contacts?.find((c: any) => c.isPrimary) || supplier?.contacts?.[0]
 
   useEffect(() => { fetchSupplier() }, [id])
 
@@ -163,7 +164,7 @@ export default function SupplierDetailPage() {
             <div className="col-span-2"><span className="font-semibold">Address:</span> {displayValue(supplier.address)}</div>
             <div><span className="font-semibold">City:</span> {displayValue(supplier.city)}</div>
             <div><span className="font-semibold">Country:</span> {displayValue(supplier.country)}</div>
-            <div className="col-span-2"><span className="font-semibold">Contact Person:</span> {displayValue(supplier.contactPerson)}</div>
+            <div className="col-span-2"><span className="font-semibold">Contact Person:</span> {displayValue(supplier.contactPerson || primaryContact?.name)}</div>
           </div>
           {supplier.contacts?.length > 0 && (
             <div className="col-span-full mt-2 pt-2 border-t">
@@ -189,7 +190,6 @@ export default function SupplierDetailPage() {
             <div><span className="font-semibold">Payment Terms:</span> {displayValue(supplier.paymentTerms)}</div>
             <div><span className="font-semibold">Lead Time:</span> {displayValue(supplier.leadTimeDays)} days</div>
             <div><span className="font-semibold">Currency:</span> {displayValue(supplier.defaultCurrency)}</div>
-            <div><span className="font-semibold">Rating:</span> {supplier.rating ? `${supplier.rating}/5` : 'Not filled'}</div>
           </div>
           {supplier.bankDetails && (
             <div className="col-span-full mt-2 pt-2 border-t">
@@ -198,7 +198,6 @@ export default function SupplierDetailPage() {
                 <div><span className="font-semibold">Bank Name:</span> {displayValue(supplier.bankDetails.bankName)}</div>
                 <div><span className="font-semibold">Account Name:</span> {displayValue(supplier.bankDetails.accountName)}</div>
                 <div><span className="font-semibold">IBAN:</span> {displayValue(supplier.bankDetails.iban)}</div>
-                <div><span className="font-semibold">SWIFT:</span> {displayValue(supplier.bankDetails.swift)}</div>
               </div>
             </div>
           )}
