@@ -24,6 +24,12 @@ interface Supplier {
   status: string
   isActive: boolean
   crNumber?: string
+  crDocumentUrl?: string
+  taxCardUrl?: string
+  icvUrl?: string
+  tradeLicense?: string
+  icvCertificateScore?: number
+  documents?: { type: string }[]
   createdAt: string
 }
 
@@ -267,20 +273,24 @@ export default function SuppliersPage() {
           </Card>
         ) : (
           <div className="bg-white rounded-xl shadow divide-y border border-slate-200">
-            {suppliers.map((supplier) => (
+            {suppliers.map((supplier) => {
+              const hasCRDoc = supplier.crDocumentUrl || supplier.documents?.some(d => d.type === 'CR')
+              const hasTaxCard = supplier.taxCardUrl || supplier.documents?.some(d => d.type === 'Tax Card')
+              const hasICV = supplier.icvUrl || supplier.documents?.some(d => d.type === 'ICV')
+              const hasTradeLicense = supplier.tradeLicense || supplier.documents?.some(d => d.type === 'Trade License')
+              
+              return (
               <button
                 key={supplier.id}
-                className="w-full text-left px-4 py-4 hover:bg-slate-50 transition flex flex-col gap-2"
+                className="w-full text-left px-6 py-5 hover:bg-slate-50 transition border-l-4 hover:border-l-blue-500 border-l-transparent"
                 onClick={() => router.push(`/suppliers/${supplier.id}`)}
               >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <div className="text-lg font-semibold text-slate-900 truncate">{supplier.name}</div>
-                    <div className="text-sm text-slate-600 truncate">{displayValue(supplier.tradingName)}</div>
-                    <div className="flex flex-wrap items-center gap-2 mt-2 text-xs text-slate-600">
-                      <span className="px-2 py-1 rounded-full bg-slate-100 text-slate-700">{displayValue(supplier.category)}</span>
-                      <span className="px-2 py-1 rounded-full bg-slate-100 text-slate-700">{displayValue(supplier.businessType)}</span>
-                      <span className={`px-2 py-1 rounded-full font-medium ${
+                <div className="flex items-start justify-between gap-6">
+                  {/* Left: Company Info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="text-lg font-bold text-slate-900 truncate">{supplier.name}</div>
+                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
                         supplier.status === 'APPROVED' ? 'bg-green-100 text-green-700' :
                         supplier.status === 'PENDING' ? 'bg-yellow-100 text-yellow-700' :
                         supplier.status === 'REJECTED' ? 'bg-red-100 text-red-700' :
@@ -289,24 +299,66 @@ export default function SuppliersPage() {
                         {supplier.status}
                       </span>
                     </div>
-                  </div>
-                  <div className="text-right text-sm text-slate-600 min-w-[180px]">
-                    <div className="flex items-center justify-end gap-2">
-                      <Mail className="h-4 w-4 text-slate-400" />
-                      <span className="truncate">{displayValue(supplier.email)}</span>
+                    <div className="text-sm text-slate-600 mb-3">{displayValue(supplier.tradingName)}</div>
+                    <div className="flex flex-wrap items-center gap-2 text-xs">
+                      <span className="px-2.5 py-1 rounded-md bg-slate-100 text-slate-700 font-medium">{displayValue(supplier.category)}</span>
+                      <span className="px-2.5 py-1 rounded-md bg-slate-100 text-slate-700">{displayValue(supplier.businessType)}</span>
                     </div>
-                    <div className="flex items-center justify-end gap-2 mt-1">
-                      <Phone className="h-4 w-4 text-slate-400" />
+                  </div>
+
+                  {/* Middle: Contact Info */}
+                  <div className="flex-shrink-0 text-sm text-slate-600 space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      <Mail className="h-3.5 w-3.5 text-slate-400" />
+                      <span className="truncate max-w-[200px]">{displayValue(supplier.email)}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Phone className="h-3.5 w-3.5 text-slate-400" />
                       <span>{displayValue(supplier.phone)}</span>
                     </div>
-                    <div className="flex items-center justify-end gap-2 mt-1">
-                      <MapPin className="h-4 w-4 text-slate-400" />
-                      <span className="truncate">{displayValue([supplier.city, supplier.country].filter(Boolean).join(', '))}</span>
+                    <div className="flex items-center gap-2">
+                      <MapPin className="h-3.5 w-3.5 text-slate-400" />
+                      <span className="truncate max-w-[200px]">{displayValue([supplier.city, supplier.country].filter(Boolean).join(', '))}</span>
                     </div>
+                  </div>
+
+                  {/* Right: Documents Status */}
+                  <div className="flex-shrink-0 text-xs space-y-1.5">
+                    <div className="font-semibold text-slate-700 mb-2">Documents</div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-slate-600 w-24">CR Document:</span>
+                      <span className={`px-2 py-0.5 rounded font-medium ${
+                        hasCRDoc ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                      }`}>{hasCRDoc ? 'Uploaded' : 'Missing'}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-slate-600 w-24">Tax Card:</span>
+                      <span className={`px-2 py-0.5 rounded font-medium ${
+                        hasTaxCard ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                      }`}>{hasTaxCard ? 'Uploaded' : 'Missing'}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-slate-600 w-24">ICV Certificate:</span>
+                      <span className={`px-2 py-0.5 rounded font-medium ${
+                        hasICV ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                      }`}>{hasICV ? 'Uploaded' : 'Missing'}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-slate-600 w-24">Trade License:</span>
+                      <span className={`px-2 py-0.5 rounded font-medium ${
+                        hasTradeLicense ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                      }`}>{hasTradeLicense ? 'Uploaded' : 'Missing'}</span>
+                    </div>
+                    {supplier.icvCertificateScore && (
+                      <div className="flex items-center gap-2 mt-2 pt-2 border-t">
+                        <span className="text-slate-600 w-24">ICV Score:</span>
+                        <span className="font-semibold text-blue-700">{supplier.icvCertificateScore}%</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </button>
-            ))}
+            )}))}
           </div>
         )}
 

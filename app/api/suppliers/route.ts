@@ -17,7 +17,16 @@ export async function GET(request: Request) {
     const whereClause = Object.keys(where).length ? where : undefined
 
     try {
-      const suppliers = await prisma.supplier.findMany({ where: whereClause, orderBy: { name: 'asc' }, include: { contacts: true, capabilities: true, supplierPrices: true } })
+      const suppliers = await prisma.supplier.findMany({ 
+        where: whereClause, 
+        orderBy: { name: 'asc' }, 
+        include: { 
+          contacts: true, 
+          capabilities: true, 
+          supplierPrices: true,
+          documents: { select: { type: true } }
+        } 
+      })
       return NextResponse.json(suppliers)
     } catch (innerErr: any) {
       // If the SupplierContact table is missing in the DB, we *may* attempt an idempotent CREATE TABLE to repair schema then retry once.

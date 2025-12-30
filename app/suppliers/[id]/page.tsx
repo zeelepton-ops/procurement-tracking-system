@@ -78,10 +78,13 @@ export default function SupplierDetailPage() {
       <style jsx global>{`
         @media print {
           .no-print { display: none !important; }
-          .print-container { max-width: 100%; padding: 20px; }
-          .print-section { page-break-inside: avoid; margin-bottom: 20px; border: 1px solid #ddd; padding: 15px; }
-          .print-header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; }
-          body { font-size: 12pt; }
+          .print-container { max-width: 100%; padding: 10px; }
+          .print-section { page-break-inside: avoid; margin-bottom: 8px; border: 1px solid #ddd; padding: 8px; }
+          .print-header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 8px; margin-bottom: 10px; }
+          .print-grid { gap: 4px !important; }
+          body { font-size: 9pt; line-height: 1.3; }
+          h2 { font-size: 11pt; margin-bottom: 6px; }
+          h3 { font-size: 10pt; margin-bottom: 4px; }
         }
       `}</style>
       <div className="max-w-7xl mx-auto p-6 print-container">
@@ -122,9 +125,9 @@ export default function SupplierDetailPage() {
         </div>
 
         {/* Company Information */}
-        <div className="border rounded-lg p-6 bg-white mb-6 print-section">
-          <h2 className="text-xl font-bold mb-4 border-b pb-2">Company Information</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3 text-sm">
+        <div className="border rounded-lg p-5 bg-white mb-4 shadow-sm print-section">
+          <h2 className="text-lg font-bold mb-3 border-b pb-2 text-slate-800">Company Information</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-2 text-sm print-grid">
             <div><span className="font-semibold">Company Name:</span> {displayValue(supplier.name)}</div>
             <div><span className="font-semibold">Trading Name:</span> {displayValue(supplier.tradingName)}</div>
             <div><span className="font-semibold">Category:</span> {displayValue(supplier.category)}</div>
@@ -136,9 +139,9 @@ export default function SupplierDetailPage() {
         </div>
 
         {/* Contact Details */}
-        <div className="border rounded-lg p-6 bg-white mb-6 print-section">
-          <h2 className="text-xl font-bold mb-4 border-b pb-2">Contact Details</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3 text-sm">
+        <div className="border rounded-lg p-5 bg-white mb-4 shadow-sm print-section">
+          <h2 className="text-lg font-bold mb-3 border-b pb-2 text-slate-800">Contact Details</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-2 text-sm print-grid">
             <div><span className="font-semibold">Email:</span> {displayValue(supplier.email)}</div>
             <div><span className="font-semibold">Phone:</span> {displayValue(supplier.phone)}</div>
             <div><span className="font-semibold">Address:</span> {displayValue(supplier.address)}</div>
@@ -147,13 +150,13 @@ export default function SupplierDetailPage() {
             <div><span className="font-semibold">Contact Person:</span> {displayValue(supplier.contactPerson)}</div>
           </div>
           {supplier.contacts?.length > 0 && (
-            <div className="mt-4">
-              <h3 className="font-semibold mb-2">Additional Contacts</h3>
-              <div className="space-y-2">
+            <div className="col-span-full mt-3 pt-3 border-t">
+              <h3 className="font-semibold mb-2 text-sm">Additional Contacts</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 {supplier.contacts.map((c: any) => (
-                  <div key={c.id} className="p-3 bg-slate-50 rounded text-sm">
-                    <div className="font-semibold">{displayValue(c.name)} {c.isPrimary && <span className="text-xs text-slate-500">(Primary)</span>}</div>
-                    <div className="grid grid-cols-2 gap-2 mt-1">
+                  <div key={c.id} className="p-2 bg-slate-50 rounded text-xs border">
+                    <div className="font-semibold">{displayValue(c.name)} {c.isPrimary && <span className="text-slate-500">(Primary)</span>}</div>
+                    <div className="flex gap-4 mt-1 text-slate-600">
                       <div>Role: {displayValue(c.role)}</div>
                       <div>Email: {displayValue(c.email)}</div>
                       <div>Phone: {displayValue(c.phone)}</div>
@@ -166,9 +169,9 @@ export default function SupplierDetailPage() {
         </div>
 
         {/* Registration & Legal */}
-        <div className="border rounded-lg p-6 bg-white mb-6 print-section">
-          <h2 className="text-xl font-bold mb-4 border-b pb-2">Registration & Legal Information</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3 text-sm">
+        <div className="border rounded-lg p-5 bg-white mb-4 shadow-sm print-section">
+          <h2 className="text-lg font-bold mb-3 border-b pb-2 text-slate-800">Registration & Legal Information</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-2 text-sm print-grid">
             <div><span className="font-semibold">CR Number:</span> {displayValue(supplier.crNumber)}</div>
             <div><span className="font-semibold">CR Document:</span> {displayValue(supplier.crDocumentUrl)}</div>
             <div><span className="font-semibold">Tax ID:</span> {displayValue(supplier.taxId)}</div>
@@ -179,9 +182,9 @@ export default function SupplierDetailPage() {
         </div>
 
         {/* Financial & Terms */}
-        <div className="border rounded-lg p-6 bg-white mb-6 print-section">
-          <h2 className="text-xl font-bold mb-4 border-b pb-2">Financial & Payment Terms</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3 text-sm">
+        <div className="border rounded-lg p-5 bg-white mb-4 shadow-sm print-section">
+          <h2 className="text-lg font-bold mb-3 border-b pb-2 text-slate-800">Financial & Payment Terms</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-2 text-sm print-grid">
             <div><span className="font-semibold">Payment Terms:</span> {displayValue(supplier.paymentTerms)}</div>
             <div><span className="font-semibold">Lead Time (Days):</span> {displayValue(supplier.leadTimeDays)}</div>
             <div><span className="font-semibold">Default Currency:</span> {displayValue(supplier.defaultCurrency)}</div>
@@ -190,11 +193,11 @@ export default function SupplierDetailPage() {
             <div><span className="font-semibold">Active:</span> {supplier.isActive ? 'Yes' : 'No'}</div>
           </div>
           {supplier.bankDetails && (
-            <div className="mt-4 p-3 bg-slate-50 rounded">
-              <h3 className="font-semibold mb-2">Banking Details</h3>
-              <div className="grid grid-cols-2 gap-2 text-sm">
-                <div><span className="font-semibold">Bank Name:</span> {displayValue(supplier.bankDetails.bankName)}</div>
-                <div><span className="font-semibold">Account Name:</span> {displayValue(supplier.bankDetails.accountName)}</div>
+            <div className="col-span-full mt-3 pt-3 border-t">
+              <h3 className="font-semibold mb-2 text-sm">Banking Details</h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+                <div><span className="font-semibold">Bank:</span> {displayValue(supplier.bankDetails.bankName)}</div>
+                <div><span className="font-semibold">Account:</span> {displayValue(supplier.bankDetails.accountName)}</div>
                 <div><span className="font-semibold">IBAN:</span> {displayValue(supplier.bankDetails.iban)}</div>
                 <div><span className="font-semibold">SWIFT:</span> {displayValue(supplier.bankDetails.swift)}</div>
               </div>
@@ -204,14 +207,14 @@ export default function SupplierDetailPage() {
 
         {/* Capabilities */}
         {supplier.capabilities?.length > 0 && (
-          <div className="border rounded-lg p-6 bg-white mb-6 print-section">
-            <h2 className="text-xl font-bold mb-4 border-b pb-2">Capabilities</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="border rounded-lg p-5 bg-white mb-4 shadow-sm print-section">
+            <h2 className="text-lg font-bold mb-3 border-b pb-2 text-slate-800">Capabilities</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
               {supplier.capabilities.map((c: any) => (
-                <div key={c.id} className="p-3 bg-slate-50 rounded text-sm">
+                <div key={c.id} className="p-2 bg-slate-50 rounded text-xs border">
                   <div className="font-semibold">{displayValue(c.category)} — {displayValue(c.name)}</div>
                   <div className="text-slate-700 mt-1">{displayValue(c.details)}</div>
-                  {c.capacity && <div className="text-xs text-slate-600 mt-1">Capacity: {displayValue(c.capacity)}</div>}
+                  {c.capacity && <div className="text-slate-600 mt-1">Capacity: {displayValue(c.capacity)}</div>}
                 </div>
               ))}
             </div>
@@ -220,17 +223,16 @@ export default function SupplierDetailPage() {
 
         {/* Certifications */}
         {supplier.certifications?.length > 0 && (
-          <div className="border rounded-lg p-6 bg-white mb-6 print-section">
-            <h2 className="text-xl font-bold mb-4 border-b pb-2">Certifications</h2>
-            <div className="space-y-3">
+          <div className="border rounded-lg p-5 bg-white mb-4 shadow-sm print-section">
+            <h2 className="text-lg font-bold mb-3 border-b pb-2 text-slate-800">Certifications</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
               {supplier.certifications.map((c: any) => (
-                <div key={c.id} className="p-3 bg-slate-50 rounded text-sm">
+                <div key={c.id} className="p-2 bg-slate-50 rounded text-xs border">
                   <div className="font-semibold">{displayValue(c.name)}</div>
-                  <div className="grid grid-cols-2 gap-2 mt-1 text-xs">
+                  <div className="flex gap-3 mt-1 text-slate-600">
                     <div>Cert #: {displayValue(c.certNumber)}</div>
                     <div>Issued By: {displayValue(c.issuedBy)}</div>
-                    <div>Valid From: {c.validFrom ? new Date(c.validFrom).toLocaleDateString() : 'Not filled'}</div>
-                    <div>Valid To: {c.validTo ? new Date(c.validTo).toLocaleDateString() : 'Not filled'}</div>
+                    <div>Valid: {c.validFrom ? new Date(c.validFrom).toLocaleDateString() : 'N/A'} - {c.validTo ? new Date(c.validTo).toLocaleDateString() : 'N/A'}</div>
                   </div>
                 </div>
               ))}
@@ -239,34 +241,30 @@ export default function SupplierDetailPage() {
         )}
 
         {/* Documents */}
-        <div className="border rounded-lg p-6 bg-white mb-6 print-section">
-          <h2 className="text-xl font-bold mb-4 border-b pb-2">Documents</h2>
-          <div className="no-print mb-4">
-            <input type="file" multiple onChange={(e) => setFiles(Array.from(e.target.files || []))} className="mb-2" />
-            <Button onClick={upload}>Upload</Button>
-          </div>
+        <div className="border rounded-lg p-5 bg-white mb-4 shadow-sm print-section">
+          <h2 className="text-lg font-bold mb-3 border-b pb-2 text-slate-800">Documents</h2>
           {supplier.documents?.length > 0 ? (
-            <div className="space-y-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
               {supplier.documents.map((d: any) => (
-                <div key={d.id} className="p-3 bg-slate-50 rounded flex items-center justify-between text-sm">
+                <div key={d.id} className="p-2 bg-slate-50 rounded flex items-center justify-between text-xs border">
                   <div>
                     <div className="font-semibold">{displayValue(d.type)}</div>
-                    <div className="text-xs text-slate-600">{displayValue(d.filename)}</div>
-                    <div className="text-xs text-slate-500">Uploaded: {d.uploadedAt ? new Date(d.uploadedAt).toLocaleDateString() : 'N/A'}</div>
+                    <div className="text-slate-600">{displayValue(d.filename)}</div>
+                    <div className="text-slate-500">Uploaded: {d.uploadedAt ? new Date(d.uploadedAt).toLocaleDateString() : 'N/A'}</div>
                   </div>
-                  <a href={d.url} target="_blank" rel="noreferrer" className="text-blue-600 no-print">Download</a>
+                  <a href={d.url} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline no-print text-xs">View</a>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-sm text-slate-600">No documents uploaded</p>
+            <p className="text-xs text-slate-600">No documents uploaded</p>
           )}
         </div>
 
         {/* Timestamps */}
-        <div className="border rounded-lg p-6 bg-white print-section">
-          <h2 className="text-xl font-bold mb-4 border-b pb-2">Record Information</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3 text-sm">
+        <div className="border rounded-lg p-5 bg-white shadow-sm print-section">
+          <h2 className="text-lg font-bold mb-3 border-b pb-2 text-slate-800">Record Information</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 text-xs">
             <div><span className="font-semibold">Created:</span> {supplier.createdAt ? new Date(supplier.createdAt).toLocaleString() : 'Not filled'}</div>
             <div><span className="font-semibold">Updated:</span> {supplier.updatedAt ? new Date(supplier.updatedAt).toLocaleString() : 'Not filled'}</div>
           </div>
