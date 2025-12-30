@@ -124,7 +124,7 @@ export default function SupplierDetailPage() {
               <img 
                 src="https://i.ibb.co/nMjzX2GS/Logo-NBTC-Transparent.png" 
                 alt="NBTC Logo"
-                className="h-16 w-auto"
+                className="h-8 w-auto"
               />
               <div>
                 <h1 className="text-xl font-bold text-slate-800">Supplier Profile</h1>
@@ -183,20 +183,7 @@ export default function SupplierDetailPage() {
           )}
         </div>
 
-        {/* Registration & Legal */}
-        <div className="border rounded-lg p-5 bg-white mb-4 shadow-sm print-section">
-          <h2 className="text-lg font-bold mb-3 border-b pb-2 text-slate-800">Registration & Legal Information</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-2 text-sm print-grid">
-            <div><span className="font-semibold">CR Number:</span> {displayValue(supplier.crNumber)}</div>
-            <div><span className="font-semibold">CR Document:</span> {displayValue(supplier.crDocumentUrl)}</div>
-            <div><span className="font-semibold">Tax ID:</span> {displayValue(supplier.taxId)}</div>
-            <div><span className="font-semibold">Tax Card:</span> {displayValue(supplier.taxCardUrl)}</div>
-            <div><span className="font-semibold">ICV Certificate:</span> {displayValue(supplier.icvUrl)}</div>
-            <div><span className="font-semibold">Trade License:</span> {displayValue(supplier.tradeLicense)}</div>
-          </div>
-        </div>
-
-        {/* Financial & Terms */}
+        {/* Financial & Payment Terms */}
         <div className="border rounded-lg p-5 bg-white mb-4 shadow-sm print-section">
           <h2 className="text-lg font-bold mb-3 border-b pb-2 text-slate-800">Financial & Payment Terms</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-2 text-sm print-grid">
@@ -218,6 +205,19 @@ export default function SupplierDetailPage() {
               </div>
             </div>
           )}
+        </div>
+
+        {/* Registration & Legal */}
+        <div className="border rounded-lg p-5 bg-white mb-4 shadow-sm print-section">
+          <h2 className="text-lg font-bold mb-3 border-b pb-2 text-slate-800">Registration & Legal Information</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-2 text-sm print-grid">
+            <div><span className="font-semibold">CR Number:</span> {displayValue(supplier.crNumber)}</div>
+            <div><span className="font-semibold">CR Document:</span> {displayValue(supplier.crDocumentUrl)}</div>
+            <div><span className="font-semibold">Tax ID:</span> {displayValue(supplier.taxId)}</div>
+            <div><span className="font-semibold">Tax Card:</span> {displayValue(supplier.taxCardUrl)}</div>
+            <div><span className="font-semibold">ICV Certificate:</span> {displayValue(supplier.icvUrl)}</div>
+            <div><span className="font-semibold">Trade License:</span> {displayValue(supplier.tradeLicense)}</div>
+          </div>
         </div>
 
         {/* Capabilities */}
