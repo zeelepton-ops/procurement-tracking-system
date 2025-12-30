@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Select } from '@/components/ui/select'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
-import { Upload, CheckCircle, AlertCircle, Building2, Save, Trash2 } from 'lucide-react'
+import { Upload, CheckCircle, AlertCircle, Save, Trash2 } from 'lucide-react'
 
 const SUPPLIER_CATEGORIES = [
   'Steel & Metal Structures',
@@ -317,14 +317,9 @@ export default function SupplierRegistrationPage() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-10">
-          <div className="flex items-center justify-center mb-4">
-            <div className="bg-gradient-to-br from-blue-600 to-indigo-600 p-4 rounded-2xl shadow-lg">
-              <Building2 className="h-10 w-10 text-white" />
-            </div>
-          </div>
-          <h1 className="text-4xl md:text-5xl font-extrabold bg-gradient-to-r from-blue-700 via-indigo-600 to-blue-800 bg-clip-text text-transparent mb-3">Supplier Registration</h1>
-          <p className="text-base md:text-lg text-slate-600 font-medium">Join our network of trusted suppliers</p>
+        <div className="mb-10 text-left">
+          <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2">Supplier Registration</h1>
+          <p className="text-sm md:text-base text-slate-600 font-medium">Join our network of trusted suppliers</p>
         </div>
 
         {/* Progress Indicator */}
@@ -338,7 +333,7 @@ export default function SupplierRegistrationPage() {
                     idx === step ? 'bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-lg ring-4 ring-blue-200' :
                     'bg-slate-200 text-slate-500'
                   }`}>
-                    {idx < step ? '✓' : idx + 1}
+                    {idx < step ? 'ԣ�' : idx + 1}
                   </div>
                   <p className={`text-xs font-semibold mt-2 text-center ${
                     idx <= step ? 'text-blue-700' : 'text-slate-500'
@@ -381,12 +376,12 @@ export default function SupplierRegistrationPage() {
               </div>
               <div className="flex-1">
                 <h3 className="font-bold text-red-900 text-lg mb-3 flex items-center gap-2">
-                  <span>⚠️ Required Information Missing</span>
+                  <span>��ᴩ� Required Information Missing</span>
                 </h3>
                 <ul className="space-y-2 bg-white rounded-lg p-3 shadow-sm">
                   {Object.entries(validationErrors).map(([field, error]) => (
                     <li key={field} className="text-red-800 text-sm font-medium flex items-center gap-2 py-1">
-                      <span className="text-red-500 font-bold">•</span> {error}
+                      <span className="text-red-500 font-bold">���</span> {error}
                     </li>
                   ))}
                 </ul>
@@ -404,7 +399,7 @@ export default function SupplierRegistrationPage() {
               </div>
               <p className="text-sm text-blue-900">
                 <span className="font-bold">Draft Saved</span>
-                <span className="text-blue-700 ml-2">• Your progress has been saved</span>
+                <span className="text-blue-700 ml-2">��� Your progress has been saved</span>
               </p>
             </div>
             <Button
@@ -421,11 +416,11 @@ export default function SupplierRegistrationPage() {
         {/* Step 0: Company Information */}
         {step === 0 && (
           <Card className="shadow-xl border-0 rounded-2xl overflow-hidden">
-            <CardHeader className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white pb-8">
-              <CardTitle className="text-3xl font-bold">Company Information</CardTitle>
-              <CardDescription className="text-blue-100 text-base">Provide basic information about your company</CardDescription>
+            <CardHeader className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white pb-6">
+              <CardTitle className="text-2xl md:text-3xl font-bold">Company Information</CardTitle>
+              <CardDescription className="text-blue-100 text-sm md:text-base">Provide basic information about your company</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6 p-8 bg-gradient-to-b from-white to-slate-50">
+            <CardContent className="space-y-4 p-6 bg-white">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className={`p-3 rounded-lg ${getErrorMessage('companyName') ? 'bg-red-100 border border-red-500' : ''}`}>
                   <Label className={`font-semibold ${getErrorMessage('companyName') ? 'text-red-700' : ''}`}>
@@ -449,8 +444,8 @@ export default function SupplierRegistrationPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <div className={`p-3 rounded-lg ${getErrorMessage('email') ? 'bg-red-100 border border-red-500' : ''}`}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
+                <div className={`p-3 rounded-lg ${getErrorMessage('email') ? 'border-2 border-red-500 bg-red-50' : 'border border-slate-200 bg-white'}`}>
                   <Label className={`font-semibold ${getErrorMessage('email') ? 'text-red-700' : ''}`}>
                     Email Address * {getErrorMessage('email') && <span className="text-red-600 text-xs ml-1">({getErrorMessage('email')})</span>}
                   </Label>
@@ -459,10 +454,10 @@ export default function SupplierRegistrationPage() {
                     value={formData.email}
                     onChange={(e) => handleInputChange('email', e.target.value)}
                     placeholder="company@example.com"
-                    className={`mt-2 ${getErrorMessage('email') ? 'border-red-600 border-2 bg-red-50' : ''}`}
+                    className={`mt-2 ${getErrorMessage('email') ? 'border-red-600 bg-red-50' : ''}`}
                   />
                 </div>
-                <div className={`p-3 rounded-lg ${getErrorMessage('phone') ? 'bg-red-100 border border-red-500' : ''}`}>
+                <div className={`p-3 rounded-lg ${getErrorMessage('phone') ? 'border-2 border-red-500 bg-red-50' : 'border border-slate-200 bg-white'}`}>
                   <Label className={`font-semibold ${getErrorMessage('phone') ? 'text-red-700' : ''}`}>
                     Phone Number * {getErrorMessage('phone') && <span className="text-red-600 text-xs ml-1">({getErrorMessage('phone')})</span>}
                   </Label>
@@ -470,7 +465,7 @@ export default function SupplierRegistrationPage() {
                     value={formData.phone}
                     onChange={(e) => handleInputChange('phone', e.target.value)}
                     placeholder="+974 4433 1234"
-                    className={`mt-2 ${getErrorMessage('phone') ? 'border-red-600 border-2 bg-red-50' : ''}`}
+                    className={`mt-2 ${getErrorMessage('phone') ? 'border-red-600 bg-red-50' : ''}`}
                   />
                 </div>
               </div>
@@ -519,8 +514,8 @@ export default function SupplierRegistrationPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
+                <div className="p-3 rounded-lg border border-slate-200 bg-white">
                   <Label className="font-semibold">Country *</Label>
                   <Select value={formData.country} onChange={(e) => handleInputChange('country', e.target.value)}>
                     <option value="Qatar">Qatar</option>
@@ -529,7 +524,7 @@ export default function SupplierRegistrationPage() {
                     <option value="Other">Other</option>
                   </Select>
                 </div>
-                <div>
+                <div className="p-3 rounded-lg border border-slate-200 bg-white">
                   <Label className="font-semibold">Website</Label>
                   <Input
                     value={formData.website}
@@ -540,8 +535,8 @@ export default function SupplierRegistrationPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <div className={`p-3 rounded-lg ${getErrorMessage('category') ? 'bg-red-100 border border-red-500' : ''}`}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
+                <div className={`p-3 rounded-lg ${getErrorMessage('category') ? 'border-2 border-red-500 bg-red-50' : 'border border-slate-200 bg-white'}`}>
                   <Label className={`font-semibold ${getErrorMessage('category') ? 'text-red-700' : ''}`}>
                     Product/Service Category * {getErrorMessage('category') && <span className="text-red-600 text-xs ml-1">({getErrorMessage('category')})</span>}
                   </Label>
@@ -552,7 +547,7 @@ export default function SupplierRegistrationPage() {
                     ))}
                   </Select>
                 </div>
-                <div className={`p-3 rounded-lg ${getErrorMessage('businessType') ? 'bg-red-100 border border-red-500' : ''}`}>
+                <div className={`p-3 rounded-lg ${getErrorMessage('businessType') ? 'border-2 border-red-500 bg-red-50' : 'border border-slate-200 bg-white'}`}>
                   <Label className={`font-semibold ${getErrorMessage('businessType') ? 'text-red-700' : ''}`}>
                     Business Type * {getErrorMessage('businessType') && <span className="text-red-600 text-xs ml-1">({getErrorMessage('businessType')})</span>}
                   </Label>
@@ -565,8 +560,8 @@ export default function SupplierRegistrationPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
+                <div className="p-3 rounded-lg border border-slate-200 bg-white">
                   <Label className="font-semibold">Year Established</Label>
                   <Input
                     type="number"
@@ -575,7 +570,7 @@ export default function SupplierRegistrationPage() {
                     className="mt-2"
                   />
                 </div>
-                <div>
+                <div className="p-3 rounded-lg border border-slate-200 bg-white">
                   <Label className="font-semibold">Number of Employees</Label>
                   <Input
                     type="number"
@@ -587,7 +582,7 @@ export default function SupplierRegistrationPage() {
                 </div>
               </div>
 
-              <div>
+              <div className="p-3 rounded-lg border border-slate-200 bg-white">
                 <Label className="font-semibold">Business Description</Label>
                 <Textarea
                   value={formData.businessDescription}
@@ -1009,7 +1004,7 @@ export default function SupplierRegistrationPage() {
                           <p className="text-xs text-red-700 mt-1 flex items-center gap-1">
                             <span className="bg-red-200 px-2 py-0.5 rounded-full">Step {info.step + 1}</span>
                           </p>
-                          <p className="text-xs text-red-600 mt-1 font-medium">← Click to edit</p>
+                          <p className="text-xs text-red-600 mt-1 font-medium">��� Click to edit</p>
                         </button>
                       ))}
                     </div>
@@ -1041,23 +1036,23 @@ export default function SupplierRegistrationPage() {
                         <span>Company Details</span>
                       </h4>
                       <div className="space-y-2 text-sm">
-                        <p><span className="font-semibold text-slate-700">Company:</span> <span className={!formData.companyName ? 'text-red-600 font-bold' : 'text-slate-900'}>{formData.companyName || '❌ Missing'}</span></p>
-                        <p><span className="font-semibold text-slate-700">Category:</span> <span className={!formData.category ? 'text-red-600 font-bold' : 'text-slate-900'}>{formData.category || '❌ Missing'}</span></p>
-                        <p><span className="font-semibold text-slate-700">Type:</span> <span className={!formData.businessType ? 'text-red-600 font-bold' : 'text-slate-900'}>{formData.businessType || '❌ Missing'}</span></p>
-                        <p><span className="font-semibold text-slate-700">Email:</span> <span className={!formData.email ? 'text-red-600 font-bold' : 'text-slate-900'}>{formData.email || '❌ Missing'}</span></p>
-                        <p><span className="font-semibold text-slate-700">Phone:</span> <span className={!formData.phone ? 'text-red-600 font-bold' : 'text-slate-900'}>{formData.phone || '❌ Missing'}</span></p>
-                        <p><span className="font-semibold text-slate-700">Address:</span> <span className={!formData.address ? 'text-red-600 font-bold' : 'text-slate-900'}>{formData.address || '❌ Missing'}</span></p>
-                        <p><span className="font-semibold text-slate-700">City:</span> <span className={!formData.city ? 'text-red-600 font-bold' : 'text-slate-900'}>{formData.city || '❌ Missing'}</span></p>
+                        <p><span className="font-semibold text-slate-700">Company:</span> <span className={!formData.companyName ? 'text-red-600 font-bold' : 'text-slate-900'}>{formData.companyName || '��� Missing'}</span></p>
+                        <p><span className="font-semibold text-slate-700">Category:</span> <span className={!formData.category ? 'text-red-600 font-bold' : 'text-slate-900'}>{formData.category || '��� Missing'}</span></p>
+                        <p><span className="font-semibold text-slate-700">Type:</span> <span className={!formData.businessType ? 'text-red-600 font-bold' : 'text-slate-900'}>{formData.businessType || '��� Missing'}</span></p>
+                        <p><span className="font-semibold text-slate-700">Email:</span> <span className={!formData.email ? 'text-red-600 font-bold' : 'text-slate-900'}>{formData.email || '��� Missing'}</span></p>
+                        <p><span className="font-semibold text-slate-700">Phone:</span> <span className={!formData.phone ? 'text-red-600 font-bold' : 'text-slate-900'}>{formData.phone || '��� Missing'}</span></p>
+                        <p><span className="font-semibold text-slate-700">Address:</span> <span className={!formData.address ? 'text-red-600 font-bold' : 'text-slate-900'}>{formData.address || '��� Missing'}</span></p>
+                        <p><span className="font-semibold text-slate-700">City:</span> <span className={!formData.city ? 'text-red-600 font-bold' : 'text-slate-900'}>{formData.city || '��� Missing'}</span></p>
                       </div>
                     </div>
 
                     <div className={`border-2 rounded-xl p-5 shadow-sm transition-all ${formData.contactName && formData.contactEmail && formData.contactPhone ? 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-300' : 'bg-gradient-to-br from-red-50 to-rose-50 border-red-300'}`}>
                       <h4 className="font-bold text-slate-900 mb-4 text-base">Contact Person</h4>
                       <div className="space-y-2 text-sm">
-                        <p><span className="font-semibold text-slate-700">Name:</span> <span className={!formData.contactName ? 'text-red-600 font-bold' : 'text-slate-900'}>{formData.contactName || '❌ Missing'}</span></p>
+                        <p><span className="font-semibold text-slate-700">Name:</span> <span className={!formData.contactName ? 'text-red-600 font-bold' : 'text-slate-900'}>{formData.contactName || '��� Missing'}</span></p>
                         <p><span className="font-semibold text-slate-700">Title:</span> <span className="text-slate-900">{formData.contactTitle}</span></p>
-                        <p><span className="font-semibold text-slate-700">Email:</span> <span className={!formData.contactEmail ? 'text-red-600 font-bold' : 'text-slate-900'}>{formData.contactEmail || '❌ Missing'}</span></p>
-                        <p><span className="font-semibold text-slate-700">Phone:</span> <span className={!formData.contactPhone ? 'text-red-600 font-bold' : 'text-slate-900'}>{formData.contactPhone || '❌ Missing'}</span></p>
+                        <p><span className="font-semibold text-slate-700">Email:</span> <span className={!formData.contactEmail ? 'text-red-600 font-bold' : 'text-slate-900'}>{formData.contactEmail || '��� Missing'}</span></p>
+                        <p><span className="font-semibold text-slate-700">Phone:</span> <span className={!formData.contactPhone ? 'text-red-600 font-bold' : 'text-slate-900'}>{formData.contactPhone || '��� Missing'}</span></p>
                         <p><span className="font-semibold text-slate-700">Mobile:</span> <span className="text-slate-900">{formData.contactMobile}</span></p>
                       </div>
                     </div>
@@ -1065,19 +1060,19 @@ export default function SupplierRegistrationPage() {
                     <div className={`border-2 rounded-xl p-5 shadow-sm transition-all ${formData.crNumber && formData.taxIdNumber && uploads.cr && uploads.taxCard ? 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-300' : 'bg-gradient-to-br from-red-50 to-rose-50 border-red-300'}`}>
                       <h4 className="font-bold text-slate-900 mb-4 text-base">Registration Documents</h4>
                       <div className="space-y-2 text-sm">
-                        <p><span className="font-semibold text-slate-700">CR Number:</span> <span className={!formData.crNumber ? 'text-red-600 font-bold' : 'text-slate-900'}>{formData.crNumber || '❌ Missing'}</span></p>
-                        <p><span className="font-semibold text-slate-700">CR Document:</span> <span className={uploads.cr ? 'text-green-600 font-bold' : 'text-red-600 font-bold'}>{uploads.cr ? '✓ Uploaded' : '❌ Missing'}</span></p>
-                        <p><span className="font-semibold text-slate-700">Tax ID:</span> <span className={!formData.taxIdNumber ? 'text-red-600 font-bold' : 'text-slate-900'}>{formData.taxIdNumber || '❌ Missing'}</span></p>
-                        <p><span className="font-semibold text-slate-700">Tax Document:</span> <span className={uploads.taxCard ? 'text-green-600 font-bold' : 'text-red-600 font-bold'}>{uploads.taxCard ? '✓ Uploaded' : '❌ Missing'}</span></p>
+                        <p><span className="font-semibold text-slate-700">CR Number:</span> <span className={!formData.crNumber ? 'text-red-600 font-bold' : 'text-slate-900'}>{formData.crNumber || '��� Missing'}</span></p>
+                        <p><span className="font-semibold text-slate-700">CR Document:</span> <span className={uploads.cr ? 'text-green-600 font-bold' : 'text-red-600 font-bold'}>{uploads.cr ? 'ԣ� Uploaded' : '��� Missing'}</span></p>
+                        <p><span className="font-semibold text-slate-700">Tax ID:</span> <span className={!formData.taxIdNumber ? 'text-red-600 font-bold' : 'text-slate-900'}>{formData.taxIdNumber || '��� Missing'}</span></p>
+                        <p><span className="font-semibold text-slate-700">Tax Document:</span> <span className={uploads.taxCard ? 'text-green-600 font-bold' : 'text-red-600 font-bold'}>{uploads.taxCard ? 'ԣ� Uploaded' : '��� Missing'}</span></p>
                       </div>
                     </div>
 
                     <div className={`border-2 rounded-xl p-5 shadow-sm transition-all ${formData.bankName && formData.accountHolder && formData.iban ? 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-300' : 'bg-gradient-to-br from-red-50 to-rose-50 border-red-300'}`}>
                       <h4 className="font-bold text-slate-900 mb-4 text-base">Banking Information</h4>
                       <div className="space-y-2 text-sm">
-                        <p><span className="font-semibold text-slate-700">Bank:</span> <span className={!formData.bankName ? 'text-red-600 font-bold' : 'text-slate-900'}>{formData.bankName || '❌ Missing'}</span></p>
-                        <p><span className="font-semibold text-slate-700">Account Holder:</span> <span className={!formData.accountHolder ? 'text-red-600 font-bold' : 'text-slate-900'}>{formData.accountHolder || '❌ Missing'}</span></p>
-                        <p><span className="font-semibold text-slate-700">IBAN:</span> <span className={!formData.iban ? 'text-red-600 font-bold' : 'text-slate-900'}>{formData.iban || '❌ Missing'}</span></p>
+                        <p><span className="font-semibold text-slate-700">Bank:</span> <span className={!formData.bankName ? 'text-red-600 font-bold' : 'text-slate-900'}>{formData.bankName || '��� Missing'}</span></p>
+                        <p><span className="font-semibold text-slate-700">Account Holder:</span> <span className={!formData.accountHolder ? 'text-red-600 font-bold' : 'text-slate-900'}>{formData.accountHolder || '��� Missing'}</span></p>
+                        <p><span className="font-semibold text-slate-700">IBAN:</span> <span className={!formData.iban ? 'text-red-600 font-bold' : 'text-slate-900'}>{formData.iban || '��� Missing'}</span></p>
                       </div>
                     </div>
                   </div>
@@ -1089,7 +1084,7 @@ export default function SupplierRegistrationPage() {
                           <CheckCircle className="h-8 w-8 text-white" />
                         </div>
                         <div>
-                          <p className="text-lg font-bold text-green-900 mb-1">✅ Application Complete!</p>
+                          <p className="text-lg font-bold text-green-900 mb-1">ԣ� Application Complete!</p>
                           <p className="text-sm text-green-800">All required information has been filled. Your application is ready to submit.</p>
                         </div>
                       </div>
@@ -1115,7 +1110,7 @@ export default function SupplierRegistrationPage() {
                 disabled={loading}
                 className="border-slate-300 hover:bg-slate-50 hover:border-slate-400 transition-all shadow-sm font-semibold"
               >
-                ← Previous
+                ��� Previous
               </Button>
             )}
             <Button
@@ -1141,7 +1136,7 @@ export default function SupplierRegistrationPage() {
                 disabled={loading || Object.keys(validationErrors).length > 0}
                 className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all font-semibold px-8"
               >
-                Next Step →
+                Next Step ���
               </Button>
             ) : (
               <>
@@ -1151,7 +1146,7 @@ export default function SupplierRegistrationPage() {
                   className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed text-white shadow-lg hover:shadow-xl transition-all font-bold px-10"
                   title={Object.keys(validateAllSteps()).length > 0 ? 'Please fill all required fields' : 'Submit your application'}
                 >
-                  {loading ? '⏳ Submitting...' : '✓ Submit Application'}
+                  {loading ? '�Ŧ Submitting...' : 'ԣ� Submit Application'}
                 </Button>
                 <Button
                   onClick={() => router.back()}
