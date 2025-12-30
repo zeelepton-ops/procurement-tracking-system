@@ -59,6 +59,9 @@ export default function SupplierRegistrationPage() {
     crExpiry: '',
     taxIdNumber: '',
     taxIdExpiry: '',
+    icvScore: '',
+    icvCertificateNumber: '',
+    icvExpiry: '',
     contactName: '',
     contactTitle: '',
     contactEmail: '',
@@ -682,6 +685,42 @@ export default function SupplierRegistrationPage() {
               <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                 <h3 className="font-semibold text-green-900 mb-3">ICV Certificate (Optional)</h3>
                 <p className="text-sm text-green-700 mb-3">If applicable, upload your In-Country Value certification</p>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+                  <div>
+                    <Label className="font-semibold block mb-2">ICV Score (%)</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      max="100"
+                      placeholder="e.g., 45.50"
+                      value={formData.icvScore}
+                      onChange={(e) => handleInputChange('icvScore', e.target.value)}
+                      disabled={loading}
+                    />
+                  </div>
+                  <div>
+                    <Label className="font-semibold block mb-2">ICV Certificate Number</Label>
+                    <Input
+                      type="text"
+                      placeholder="Certificate Number"
+                      value={formData.icvCertificateNumber}
+                      onChange={(e) => handleInputChange('icvCertificateNumber', e.target.value)}
+                      disabled={loading}
+                    />
+                  </div>
+                  <div>
+                    <Label className="font-semibold block mb-2">ICV Expiry Date</Label>
+                    <Input
+                      type="date"
+                      value={formData.icvExpiry}
+                      onChange={(e) => handleInputChange('icvExpiry', e.target.value)}
+                      disabled={loading}
+                    />
+                  </div>
+                </div>
+                
                 <div>
                   <Label className="font-semibold block mb-2">Upload ICV Certificate</Label>
                   <div className="flex gap-2">

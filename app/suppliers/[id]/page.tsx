@@ -208,11 +208,17 @@ export default function SupplierDetailPage() {
           <h2 className="text-lg font-bold mb-3 border-b pb-2 text-slate-800">Registration & Legal Information</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-1 text-sm print-grid">
             <div><span className="font-semibold">CR Number:</span> {displayValue(supplier.crNumber)}</div>
+            <div><span className="font-semibold">CR Expiry:</span> {displayValue(supplier.crExpiry ? new Date(supplier.crExpiry).toLocaleDateString() : null)}</div>
             <div><span className="font-semibold">CR Document:</span> {displayValue(supplier.crDocumentUrl)}</div>
             <div><span className="font-semibold">Tax ID:</span> {displayValue(supplier.taxId)}</div>
+            <div><span className="font-semibold">Tax ID Expiry:</span> {displayValue(supplier.taxIdExpiry ? new Date(supplier.taxIdExpiry).toLocaleDateString() : null)}</div>
             <div><span className="font-semibold">Tax Card:</span> {displayValue(supplier.taxCardUrl)}</div>
-            <div><span className="font-semibold">ICV Certificate:</span> {displayValue(supplier.icvUrl)}</div>
             <div><span className="font-semibold">Trade License:</span> {displayValue(supplier.tradeLicense)}</div>
+            <div></div>
+            <div><span className="font-semibold">ICV Score:</span> {displayValue(supplier.icvScore ? `${supplier.icvScore}%` : null)}</div>
+            <div><span className="font-semibold">ICV Certificate No.:</span> {displayValue(supplier.icvCertificateNumber)}</div>
+            <div><span className="font-semibold">ICV Expiry:</span> {displayValue(supplier.icvExpiry ? new Date(supplier.icvExpiry).toLocaleDateString() : null)}</div>
+            <div><span className="font-semibold">ICV Certificate:</span> {displayValue(supplier.icvUrl)}</div>
           </div>
         </div>
 

@@ -309,6 +309,9 @@ model Supplier {
   taxIdExpiry   DateTime?
   taxCardUrl    String? // Tax Card/Tax ID Document
   icvUrl        String? // ICV Certificate
+  icvScore      Float?  // ICV Score (percentage)
+  icvCertificateNumber String?
+  icvExpiry     DateTime?
   
   // Financial & Terms
   rating            Float?
