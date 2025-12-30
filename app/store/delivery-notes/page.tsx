@@ -36,7 +36,7 @@ interface JobOrder {
   jobNumber: string
   productName: string
   clientName?: string
-  poContractNo?: string
+  lpoContractNo?: string
   items?: Array<{
     id: string
     workDescription: string
@@ -138,7 +138,7 @@ export default function DeliveryNotesPage() {
         jobSalesOrder: selectedJobOrder.jobNumber,
         client: selectedJobOrder.clientName || prev.client,
         shipmentTo: selectedJobOrder.clientName || '', // Default to Client Name
-        refPoNumber: selectedJobOrder.poContractNo || '', // Pull from Job Order PO
+        refPoNumber: selectedJobOrder.lpoContractNo || '', // Pull from Job Order LPO/Contract No
         country: 'Qatar', // Default to Qatar
         shipmentType: 'Land', // Default to Land
         lineItems: lineItems // Populate line items from job order
