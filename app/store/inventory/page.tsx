@@ -312,9 +312,9 @@ export default function InventoryPage() {
                 <div className="text-sm text-slate-600">No inventory yet.</div>
               ) : (
                 <div className="overflow-x-auto">
-                  <table className="min-w-full text-sm">
+                  <table className="min-w-full text-xs">
                     <thead>
-                      <tr className="text-left text-slate-600">
+                      <tr className="text-left text-slate-600 text-xs">
                         <th className="py-1 pr-3">Name</th>
                         <th className="py-1 pr-3">Description</th>
                         <th className="py-1 pr-3">Qty</th>
@@ -349,42 +349,45 @@ export default function InventoryPage() {
           </Card>
 
           <Card>
-            <CardHeader>
-              <CardTitle>{isEditing ? 'Edit Item' : 'Add Item'}</CardTitle>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-bold">{isEditing ? 'Edit Item' : 'Add Item'}</CardTitle>
             </CardHeader>
-            <CardContent>
-              <form className="space-y-3" onSubmit={handleSubmit}>
-                <div className="space-y-1">
-                  <Label htmlFor="name">Name</Label>
+            <CardContent className="p-3">
+              <form className="space-y-2" onSubmit={handleSubmit}>
+                <div className="space-y-0.5">
+                  <Label htmlFor="name" className="text-xs">Name</Label>
                   <Input
                     id="name"
                     required
                     value={draft.itemName}
                     onChange={(e) => setDraft({ ...draft, itemName: e.target.value })}
+                    className="h-8 text-xs"
                   />
                 </div>
 
-                <div className="grid grid-cols-3 gap-3">
-                  <div className="space-y-1">
-                    <Label htmlFor="quantity">Quantity</Label>
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="quantity" className="text-xs">Quantity</Label>
                     <Input
                       id="quantity"
                       type="number"
                       value={draft.currentStock}
                       onChange={(e) => setDraft({ ...draft, currentStock: Number(e.target.value) })}
+                      className="h-8 text-xs"
                     />
                   </div>
-                  <div className="space-y-1">
-                    <Label htmlFor="unit">Unit</Label>
+                  <div className="space-y-0.5">
+                    <Label htmlFor="unit" className="text-xs">Unit</Label>
                     <Input
                       id="unit"
                       required
                       value={draft.unit}
                       onChange={(e) => setDraft({ ...draft, unit: e.target.value })}
+                      className="h-8 text-xs"
                     />
                   </div>
-                  <div className="space-y-1">
-                    <Label htmlFor="minimumQuantity">Minimum</Label>
+                  <div className="space-y-0.5">
+                    <Label htmlFor="minimumQuantity" className="text-xs">Minimum</Label>
                     <Input
                       id="minimumQuantity"
                       type="number"
@@ -393,35 +396,38 @@ export default function InventoryPage() {
                         const val = e.target.value
                         setDraft({ ...draft, minimumStock: val === '' ? null : Number(val) })
                       }}
+                      className="h-8 text-xs"
                     />
                   </div>
                 </div>
 
-                <div className="space-y-1">
-                  <Label htmlFor="location">Location</Label>
+                <div className="space-y-0.5">
+                  <Label htmlFor="location" className="text-xs">Location</Label>
                   <Input
                     id="location"
                     value={draft.location ?? ''}
                     onChange={(e) => setDraft({ ...draft, location: e.target.value })}
+                    className="h-8 text-xs"
                   />
                 </div>
 
-                <div className="space-y-1">
-                  <Label htmlFor="description">Description</Label>
+                <div className="space-y-0.5">
+                  <Label htmlFor="description" className="text-xs">Description</Label>
                   <Textarea
                     id="description"
-                    rows={3}
+                    rows={2}
                     value={draft.description ?? ''}
                     onChange={(e) => setDraft({ ...draft, description: e.target.value })}
+                    className="text-xs p-2"
                   />
                 </div>
 
-                {error && <p className="text-sm text-red-600">{error}</p>}
+                {error && <p className="text-xs text-red-600">{error}</p>}
 
-                <div className="flex items-center gap-2">
-                  <Button type="submit" disabled={saving}>{saving ? 'Saving…' : isEditing ? 'Update' : 'Create'}</Button>
+                <div className="flex items-center gap-2 pt-1">
+                  <Button type="submit" disabled={saving} size="sm" className="text-xs h-8">{saving ? 'Saving…' : isEditing ? 'Update' : 'Create'}</Button>
                   {isEditing && (
-                    <Button type="button" variant="ghost" onClick={() => setDraft(emptyItem)} disabled={saving}>
+                    <Button type="button" variant="ghost" onClick={() => setDraft(emptyItem)} disabled={saving} size="sm" className="text-xs h-8">
                       Cancel
                     </Button>
                   )}
