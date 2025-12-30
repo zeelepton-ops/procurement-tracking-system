@@ -142,7 +142,6 @@ export default function Header() {
               )
             })}
           </nav>
-        </div>
 
           <div className="flex items-center">
             <Button
