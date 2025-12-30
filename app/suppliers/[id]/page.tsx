@@ -119,9 +119,24 @@ export default function SupplierDetailPage() {
 
         {/* Print Header */}
         <div className="hidden print:block print-header">
-          <h1 className="text-2xl font-bold">{displayValue(supplier.name)}</h1>
-          <p className="text-sm">{displayValue(supplier.tradingName)}</p>
-          <p className="text-xs mt-2">Status: {displayValue(supplier.status)} | Category: {displayValue(supplier.category)} | Type: {displayValue(supplier.businessType)}</p>
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-4">
+              <img 
+                src="https://i.ibb.co/nMjzX2GS/Logo-NBTC-Transparent.png" 
+                alt="NBTC Logo"
+                className="h-16 w-auto"
+              />
+              <div>
+                <h1 className="text-xl font-bold text-slate-800">Supplier Profile</h1>
+                <p className="text-sm text-slate-600">{displayValue(supplier.name !== supplier.tradingName ? `${supplier.name} (${supplier.tradingName})` : supplier.name)}</p>
+              </div>
+            </div>
+            <div className="text-right text-xs">
+              <div className="font-semibold text-slate-700">Status: <span className="text-blue-600">{displayValue(supplier.status)}</span></div>
+              <div className="text-slate-600 mt-1">{displayValue(supplier.category)}</div>
+              <div className="text-slate-600">{displayValue(supplier.businessType)}</div>
+            </div>
+          </div>
         </div>
 
         {/* Company Information */}
