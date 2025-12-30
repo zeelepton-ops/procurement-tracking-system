@@ -29,7 +29,9 @@ export async function POST(request: Request, { params }: { params: { id: string 
 
     if (!file || !file.name) return NextResponse.json({ error: 'File is required' }, { status: 400 })
 
-    const uploadsDir = path.join(process.cwd(), 'public', 'uploads', 'suppliers', id)
+    // In serverless (Vercel) we cannot write to the project directory; use /tmp by default there.
+    const uploadsRoot = process.env.UPLOAD_BASE_DIR || (process.env.VERCEL ? '/tmp/uploads' : path.join(process.cwd(), 'public', 'uploads'))
+    const uploadsDir = path.join(uploadsRoot, 'suppliers', id)
     fs.mkdirSync(uploadsDir, { recursive: true })
 
     // ensure filename safety
@@ -39,7 +41,8 @@ export async function POST(request: Request, { params }: { params: { id: string 
     const buffer = Buffer.from(await file.arrayBuffer())
     fs.writeFileSync(filepath, buffer)
 
-    const url = `/uploads/suppliers/${id}/${filename}`
+    // Public URL is only valid when using a public uploads folder; on Vercel /tmp is not publicly served.
+    const url = uploadsRoot.startsWith('/tmp') ? `file://${filepath}` : `/uploads/suppliers/${id}/${filename}`
 
     const doc = await prisma.supplierDocument.create({
       data: {
