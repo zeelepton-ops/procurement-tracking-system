@@ -91,7 +91,9 @@ export default function DeliveryNotesPage() {
     try {
       const res = await fetch('/api/job-orders')
       const data = await res.json()
-      setJobOrders(Array.isArray(data) ? data : [])
+      // API returns { jobs: [...], totalCount: ... }
+      const jobsArray = Array.isArray(data) ? data : (data?.jobs || [])
+      setJobOrders(jobsArray)
     } catch (error) {
       console.error('Failed to fetch job orders:', error)
       setJobOrders([])
