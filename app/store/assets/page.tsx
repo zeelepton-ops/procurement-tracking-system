@@ -101,10 +101,18 @@ export default function AssetsPage() {
     setError(null)
     try {
       const res = await fetch('/api/assets')
-      if (!res.ok) throw new Error('Failed to load assets')
+      console.log('Assets API response status:', res.status)
+      if (!res.ok) {
+        const errorData = await res.json()
+        console.error('Assets API error:', errorData)
+        throw new Error(errorData.error || 'Failed to load assets')
+      }
       const data = await res.json()
+      console.log('Assets data received:', data)
+      console.log('Assets count:', data?.length || 0)
       setAssets(data ?? [])
     } catch (err) {
+      console.error('Load assets error:', err)
       setError(err instanceof Error ? err.message : 'Unexpected error')
     } finally {
       setLoading(false)

@@ -28,16 +28,31 @@ async function ensureAssetTable() {
 export async function GET() {
   try {
     await ensureAssetTable()
-    const assets = await prisma.$queryRaw<any[]>`
-      SELECT "id", "code", "name", "category", "location", "status", "quantity", "dateOfPurchase", "manufacturer", "isActive", "createdAt", "updatedAt"
-      FROM "Asset"
-      WHERE "isActive" = TRUE
-      ORDER BY "code" ASC
-    `
-    return NextResponse.json(assets)
+    
+    // Try using Prisma client first (more reliable)
+    try {
+      const assets = await prisma.asset.findMany({
+        where: { isActive: true },
+        orderBy: { code: 'asc' }
+      })
+      console.log('Assets fetched via Prisma client:', assets.length)
+      return NextResponse.json(assets)
+    } catch (prismaError) {
+      console.warn('Prisma client failed, falling back to raw query:', prismaError)
+      
+      // Fallback to raw query
+      const assets = await prisma.$queryRaw<any[]>`
+        SELECT "id", "code", "name", "category", "location", "status", "quantity", "dateOfPurchase", "manufacturer", "isActive", "createdAt", "updatedAt"
+        FROM "Asset"
+        WHERE "isActive" = TRUE
+        ORDER BY "code" ASC
+      `
+      console.log('Assets fetched via raw query:', assets.length)
+      return NextResponse.json(assets)
+    }
   } catch (error) {
     console.error('Failed to fetch assets:', error)
-    return NextResponse.json({ error: 'Failed to fetch assets' }, { status: 500 })
+    return NextResponse.json({ error: 'Failed to fetch assets', details: error instanceof Error ? error.message : String(error) }, { status: 500 })
   }
 }
 
