@@ -68,11 +68,15 @@ export default function DeliveryNotesPage() {
   const fetchDeliveryNotes = async () => {
     try {
       const res = await fetch('/api/delivery-notes')
+      if (!res.ok) {
+        throw new Error(`API error: ${res.status}`)
+      }
       const data = await res.json()
-      setDeliveryNotes(data)
+      setDeliveryNotes(Array.isArray(data) ? data : [])
       setLoading(false)
     } catch (error) {
       console.error('Failed to fetch delivery notes:', error)
+      setDeliveryNotes([])
       setLoading(false)
     }
   }
