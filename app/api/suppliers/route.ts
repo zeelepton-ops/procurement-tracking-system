@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { Prisma } from '@prisma/client'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 
 export async function GET(request: Request) {
   try {
@@ -116,6 +118,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    const session = await getServerSession(authOptions)
     const body = await request.json()
 
     // Minimal validation
@@ -137,26 +140,32 @@ export async function POST(request: Request) {
       phone: body.phone || null,
       address: body.address || null,
       city: body.city || null,
+      state: body.state || null,
+      postalCode: body.postalCode || null,
       country: body.country || null,
       website: body.website || null,
       category: body.category || null,
       businessType: body.businessType || null,
       yearEstablished: body.yearEstablished || null,
+      numberOfEmployees: body.numberOfEmployees || null,
       crNumber: body.crNumber || null,
+      crExpiry: body.crExpiry || null,
       // Map possible nested documents object from client
       crDocumentUrl: body.crDocumentUrl ?? body.documents?.crUrl ?? null,
+      taxId: body.taxId ?? body.taxIdNumber ?? null,
+      taxIdExpiry: body.taxIdExpiry || null,
       taxCardUrl: body.taxCardUrl ?? body.documents?.taxCardUrl ?? null,
       icvUrl: body.icvUrl ?? body.documents?.icvUrl ?? null,
       paymentTerms: body.paymentTerms || null,
       leadTimeDays: body.leadTimeDays ?? null,
+      minimumOrderValue: body.minimumOrderValue || null,
       // Accept currency from either defaultCurrency or currency
       defaultCurrency: body.defaultCurrency ?? body.currency ?? 'QAR',
-      // Accept taxIdNumber alias
-      taxId: body.taxId ?? body.taxIdNumber ?? null,
       tradeLicense: body.tradeLicense || null,
       // Map businessDescription to notes
       notes: body.notes || body.businessDescription || null,
-      status: body.status || undefined
+      status: body.status || undefined,
+      createdBy: session?.user?.email || session?.user?.name || 'System'
     }
 
     // Optional nested creates

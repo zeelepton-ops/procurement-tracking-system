@@ -290,6 +290,8 @@ model Supplier {
   phone         String?
   address       String?
   city          String?
+  state         String?
+  postalCode    String?
   country       String?
   website       String?
   
@@ -297,23 +299,27 @@ model Supplier {
   category      String? // e.g., "Steel Structures", "Equipment", "Materials", etc.
   businessType  String? // e.g., "Manufacturer", "Distributor", "Service Provider"
   yearEstablished Int?
+  numberOfEmployees Int?
   
   // Registration Documents
   crNumber      String?
+  crExpiry      DateTime?
   crDocumentUrl String? // Commercial Registration
+  taxId         String?
+  taxIdExpiry   DateTime?
   taxCardUrl    String? // Tax Card/Tax ID Document
   icvUrl        String? // ICV Certificate
   
   // Financial & Terms
-  rating        Float?
-  isActive        Boolean @default(true)
-  paymentTerms    String?
-  leadTimeDays    Int?
-  defaultCurrency String? @default("QAR")
-  taxId           String?
-  tradeLicense    String?
-  preferred       Boolean @default(false)
-  notes           String?
+  rating            Float?
+  isActive          Boolean @default(true)
+  paymentTerms      String?
+  leadTimeDays      Int?
+  minimumOrderValue Float?
+  defaultCurrency   String? @default("QAR")
+  tradeLicense      String?
+  preferred         Boolean @default(false)
+  notes             String?
 
   // Relations
   supplierPrices   SupplierPrice[]
@@ -331,6 +337,8 @@ model Supplier {
 
   status SupplierStatus @default(PENDING)
 
+  createdBy String?
+  updatedBy String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

@@ -266,8 +266,8 @@ export default function SupplierDetailPage() {
         {/* Footer - Record Information */}
         <div className="mt-6 pt-3 border-t border-slate-200 text-xs text-slate-500 text-center no-print">
           <div className="flex justify-center gap-6">
-            <div>Created: {supplier.createdAt ? new Date(supplier.createdAt).toLocaleString() : 'Not filled'}</div>
-            <div>Last Updated: {supplier.updatedAt ? new Date(supplier.updatedAt).toLocaleString() : 'Not filled'}</div>
+            <div>Created: {supplier.createdAt ? new Date(supplier.createdAt).toLocaleString() : 'Not filled'}{supplier.createdBy && ` by ${supplier.createdBy}`}</div>
+            <div>Last Updated: {supplier.updatedAt ? new Date(supplier.updatedAt).toLocaleString() : 'Not filled'}{supplier.updatedBy && ` by ${supplier.updatedBy}`}</div>
           </div>
         </div>
       </div>

@@ -40,7 +40,13 @@ export async function PATCH(request: Request, { params }: { params: { id: string
       return NextResponse.json({ error: 'Unauthorized to change status' }, { status: 403 })
     }
 
-    const updated = await prisma.supplier.update({ where: { id }, data: body })
+    // Add updatedBy field
+    const dataToUpdate = {
+      ...body,
+      updatedBy: session?.user?.email || session?.user?.name || 'Unknown'
+    }
+
+    const updated = await prisma.supplier.update({ where: { id }, data: dataToUpdate })
     return NextResponse.json(updated)
   } catch (err: any) {
     console.error('PATCH supplier failed', err)
