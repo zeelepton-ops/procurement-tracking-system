@@ -144,11 +144,11 @@ export default function SupplierDetailPage() {
         <div className="border rounded-lg p-5 bg-white mb-4 shadow-sm print-section">
           <h2 className="text-lg font-bold mb-3 border-b pb-2 text-slate-800">Company Information</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-1 text-sm print-grid">
-            <div><span className="font-semibold">Company:</span> {displayValue(supplier.name)}</div>
-            <div><span className="font-semibold">Trading:</span> {displayValue(supplier.tradingName)}</div>
+            <div><span className="font-semibold">Company Name:</span> {displayValue(supplier.name)}</div>
+            <div><span className="font-semibold">Trading Name:</span> {displayValue(supplier.tradingName)}</div>
             <div><span className="font-semibold">Category:</span> {displayValue(supplier.category)}</div>
-            <div><span className="font-semibold">Type:</span> {displayValue(supplier.businessType)}</div>
-            <div><span className="font-semibold">Established:</span> {displayValue(supplier.yearEstablished)}</div>
+            <div><span className="font-semibold">Business Type:</span> {displayValue(supplier.businessType)}</div>
+            <div><span className="font-semibold">Year Established:</span> {displayValue(supplier.yearEstablished)}</div>
             <div className="col-span-3"><span className="font-semibold">Website:</span> {displayValue(supplier.website)}</div>
             <div className="col-span-4"><span className="font-semibold">Description:</span> {displayValue(supplier.notes)}</div>
           </div>
@@ -184,7 +184,7 @@ export default function SupplierDetailPage() {
         <div className="border rounded-lg p-5 bg-white mb-4 shadow-sm print-section">
           <h2 className="text-lg font-bold mb-3 border-b pb-2 text-slate-800">Financial & Payment Terms</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-1 text-sm print-grid">
-            <div><span className="font-semibold">Payment:</span> {displayValue(supplier.paymentTerms)}</div>
+            <div><span className="font-semibold">Payment Terms:</span> {displayValue(supplier.paymentTerms)}</div>
             <div><span className="font-semibold">Lead Time:</span> {displayValue(supplier.leadTimeDays)} days</div>
             <div><span className="font-semibold">Currency:</span> {displayValue(supplier.defaultCurrency)}</div>
             <div><span className="font-semibold">Rating:</span> {supplier.rating ? `${supplier.rating}/5` : 'Not filled'}</div>
@@ -193,8 +193,8 @@ export default function SupplierDetailPage() {
             <div className="col-span-full mt-2 pt-2 border-t">
               <h3 className="font-semibold mb-1 text-sm">Banking Details</h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-1 text-xs">
-                <div><span className="font-semibold">Bank:</span> {displayValue(supplier.bankDetails.bankName)}</div>
-                <div><span className="font-semibold">Account:</span> {displayValue(supplier.bankDetails.accountName)}</div>
+                <div><span className="font-semibold">Bank Name:</span> {displayValue(supplier.bankDetails.bankName)}</div>
+                <div><span className="font-semibold">Account Name:</span> {displayValue(supplier.bankDetails.accountName)}</div>
                 <div><span className="font-semibold">IBAN:</span> {displayValue(supplier.bankDetails.iban)}</div>
                 <div><span className="font-semibold">SWIFT:</span> {displayValue(supplier.bankDetails.swift)}</div>
               </div>
@@ -204,14 +204,14 @@ export default function SupplierDetailPage() {
 
         {/* Registration & Legal */}
         <div className="border rounded-lg p-5 bg-white mb-4 shadow-sm print-section">
-          <h2 className="text-lg font-bold mb-3 border-b pb-2 text-slate-800">Registration & Legal</h2>
+          <h2 className="text-lg font-bold mb-3 border-b pb-2 text-slate-800">Registration & Legal Information</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-1 text-sm print-grid">
-            <div><span className="font-semibold">CR:</span> {displayValue(supplier.crNumber)}</div>
-            <div><span className="font-semibold">CR Doc:</span> {displayValue(supplier.crDocumentUrl)}</div>
+            <div><span className="font-semibold">CR Number:</span> {displayValue(supplier.crNumber)}</div>
+            <div><span className="font-semibold">CR Document:</span> {displayValue(supplier.crDocumentUrl)}</div>
             <div><span className="font-semibold">Tax ID:</span> {displayValue(supplier.taxId)}</div>
             <div><span className="font-semibold">Tax Card:</span> {displayValue(supplier.taxCardUrl)}</div>
-            <div><span className="font-semibold">ICV Cert:</span> {displayValue(supplier.icvUrl)}</div>
-            <div><span className="font-semibold">Trade Lic:</span> {displayValue(supplier.tradeLicense)}</div>
+            <div><span className="font-semibold">ICV Certificate:</span> {displayValue(supplier.icvUrl)}</div>
+            <div><span className="font-semibold">Trade License:</span> {displayValue(supplier.tradeLicense)}</div>
           </div>
         </div>
 
@@ -264,7 +264,7 @@ export default function SupplierDetailPage() {
 
         {/* Timestamps */}
         <div className="border rounded-lg p-5 bg-white shadow-sm print-section">
-          <h2 className="text-lg font-bold mb-3 border-b pb-2 text-slate-800">Record Info</h2>
+          <h2 className="text-lg font-bold mb-3 border-b pb-2 text-slate-800">Record Information</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-1 text-xs">
             <div><span className="font-semibold">Created:</span> {supplier.createdAt ? new Date(supplier.createdAt).toLocaleDateString() : 'Not filled'}</div>
             <div><span className="font-semibold">Updated:</span> {supplier.updatedAt ? new Date(supplier.updatedAt).toLocaleDateString() : 'Not filled'}</div>
