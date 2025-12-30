@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { ChevronDown, ArrowLeft } from 'lucide-react'
 
 const displayValue = (value: any, placeholder = 'Not filled') => {
   if (value === null || value === undefined) return placeholder
@@ -19,6 +20,7 @@ export default function SupplierDetailPage() {
   const [loading, setLoading] = useState(true)
   const [files, setFiles] = useState<File[]>([])
   const [notes, setNotes] = useState('')
+  const [showStatusDropdown, setShowStatusDropdown] = useState(false)
   const primaryContact = supplier?.contacts?.find((c: any) => c.isPrimary) || supplier?.contacts?.[0]
 
   useEffect(() => { fetchSupplier() }, [id])
@@ -108,13 +110,56 @@ export default function SupplierDetailPage() {
               </span>
             </div>
           </div>
-          <div className="flex gap-2 flex-wrap">
-            <Button onClick={() => router.push('/suppliers')}>Back</Button>
+          <div className="flex gap-2 flex-wrap relative">
+            <Button onClick={() => router.push('/suppliers')} variant="outline" size="sm" className="gap-1">
+              <ArrowLeft className="h-4 w-4" /> Back
+            </Button>
             {supplier.status === 'PENDING' && <Button onClick={approve}>Approve</Button>}
             <Button onClick={handleEdit} variant="outline">Edit</Button>
-            <Button onClick={() => updateStatus('SUSPENDED', 'Hold')} variant="outline">Hold</Button>
-            <Button onClick={() => updateStatus('SUSPENDED', 'Blacklisted')} variant="destructive">Blacklist</Button>
-            <Button onClick={removeSupplier} variant="outline">Delete</Button>
+            
+            {/* Status Actions Dropdown */}
+            <div className="relative">
+              <Button 
+                onClick={() => setShowStatusDropdown(!showStatusDropdown)}
+                variant="outline"
+                className="gap-1"
+              >
+                Actions <ChevronDown className="h-4 w-4" />
+              </Button>
+              
+              {showStatusDropdown && (
+                <div className="absolute right-0 mt-1 w-40 bg-white border border-slate-200 rounded-lg shadow-lg z-10">
+                  <button
+                    onClick={() => {
+                      updateStatus('SUSPENDED', 'Hold')
+                      setShowStatusDropdown(false)
+                    }}
+                    className="w-full text-left px-4 py-2 hover:bg-slate-100 text-sm border-b border-slate-100"
+                  >
+                    🔒 Hold
+                  </button>
+                  <button
+                    onClick={() => {
+                      updateStatus('SUSPENDED', 'Blacklisted')
+                      setShowStatusDropdown(false)
+                    }}
+                    className="w-full text-left px-4 py-2 hover:bg-red-50 text-sm border-b border-slate-100 text-red-600"
+                  >
+                    🚫 Blacklist
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (confirm('Delete this supplier?')) removeSupplier()
+                      setShowStatusDropdown(false)
+                    }}
+                    className="w-full text-left px-4 py-2 hover:bg-red-50 text-sm text-red-600"
+                  >
+                    🗑️ Delete
+                  </button>
+                </div>
+              )}
+            </div>
+            
             <Button onClick={handlePrint} variant="outline">Print</Button>
           </div>
         </div>
