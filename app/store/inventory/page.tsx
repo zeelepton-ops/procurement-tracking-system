@@ -79,10 +79,18 @@ export default function InventoryPage() {
     setError(null)
     try {
       const res = await fetch('/api/inventory')
-      if (!res.ok) throw new Error('Failed to load inventory')
+      console.log('Inventory API response status:', res.status)
+      if (!res.ok) {
+        const errorData = await res.json()
+        console.error('Inventory API error:', errorData)
+        throw new Error(errorData.error || 'Failed to load inventory')
+      }
       const data = await res.json()
+      console.log('Inventory data received:', data)
+      console.log('Items count:', data?.length || 0)
       setItems(data ?? [])
     } catch (err) {
+      console.error('Load inventory error:', err)
       setError(err instanceof Error ? err.message : 'Unexpected error')
     } finally {
       setLoading(false)

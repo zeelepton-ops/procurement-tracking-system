@@ -8,10 +8,11 @@ export async function GET() {
         itemName: 'asc'
       }
     })
-    
+    console.log('Inventory items fetched:', inventory.length)
     return NextResponse.json(inventory)
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to fetch inventory' }, { status: 500 })
+    console.error('Failed to fetch inventory:', error)
+    return NextResponse.json({ error: 'Failed to fetch inventory', details: error instanceof Error ? error.message : String(error) }, { status: 500 })
   }
 }
 
