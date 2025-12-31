@@ -79,13 +79,13 @@ export default function DeliveryNotePrintPage() {
       <style jsx global>{`
         @page {
           size: A4;
-          margin: 1.0in 0.75in 1.5in 0.25in;
+          margin: 1.0in 0.5in 1.5in 0.5in;
         }
         @media print {
           body {
             margin: 0;
             padding: 0;
-            transform: scale(1.02);
+            transform: scale(1.01);
             transform-origin: top left;
           }
           .no-print {
