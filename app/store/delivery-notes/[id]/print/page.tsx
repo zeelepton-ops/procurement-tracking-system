@@ -130,7 +130,7 @@ export default function DeliveryNotePrintPage() {
               <td style={{ border: '1px solid #000', padding: '2px', fontWeight: 'bold', width: 'auto', backgroundColor: '#f5f5f5', whiteSpace: 'nowrap' }}>Country</td>
               <td style={{ border: '1px solid #000', padding: '2px' }}>{dn.country || ''}</td>
               <td style={{ border: '1px solid #000', padding: '2px', fontWeight: 'bold', width: 'auto', backgroundColor: '#f5f5f5', whiteSpace: 'nowrap' }}>Division</td>
-              <td style={{ border: '1px solid #000', padding: '2px' }}>{dn.division || ''}
+              <td style={{ border: '1px solid #000', padding: '2px' }}>{dn.division || ''}</td>
             </tr>
           </tbody>
         </table>
