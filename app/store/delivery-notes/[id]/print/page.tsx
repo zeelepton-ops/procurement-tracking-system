@@ -48,6 +48,13 @@ export default function DeliveryNotePrintPage() {
     fetchDeliveryNote()
   }, [id])
 
+  // Set document title for print filename
+  useEffect(() => {
+    if (deliveryNote) {
+      document.title = `DN - ${deliveryNote.deliveryNoteNumber} - ${deliveryNote.client || 'N/A'} - ${deliveryNote.department || 'N/A'}`
+    }
+  }, [deliveryNote])
+
   const fetchDeliveryNote = async () => {
     try {
       const res = await fetch(`/api/delivery-notes/${id}`)
@@ -66,13 +73,6 @@ export default function DeliveryNotePrintPage() {
   }
 
   const dn = deliveryNote
-
-  // Set document title for print filename
-  useEffect(() => {
-    if (dn) {
-      document.title = `DN - ${dn.deliveryNoteNumber} - ${dn.client || 'N/A'} - ${dn.department || 'N/A'}`
-    }
-  }, [dn])
 
   return (
     <>
