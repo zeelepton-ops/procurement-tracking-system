@@ -97,10 +97,10 @@ export default function DeliveryNotePrintPage() {
       `}</style>
       
       <div className="bg-white" style={{ fontFamily: 'Courier New, Courier, monospace', fontSize: '11px', maxWidth: '100%' }}>
-          {/* Control Number - Top Right */}
-          <div style={{ textAlign: 'right', marginBottom: '5px' }}>
-            <span style={{ fontSize: '11px', color: '#666' }}>Control No. NBTC-FO/SP 04 Rev.0</span>
-          </div>
+        {/* Control Number - Top Right */}
+        <div style={{ textAlign: 'right', marginBottom: '5px' }}>
+          <span style={{ fontSize: '11px', color: '#666' }}>Control No. NBTC-FO/SP 04 Rev.0</span>
+        </div>
 
         {/* Header */}
         <div style={{ marginBottom: '12px', borderBottom: '2px solid #000', paddingBottom: '8px' }}>
