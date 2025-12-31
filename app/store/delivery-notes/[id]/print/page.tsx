@@ -85,6 +85,8 @@ export default function DeliveryNotePrintPage() {
           body {
             margin: 0;
             padding: 0;
+            transform: scale(1.1);
+            transform-origin: top left;
           }
           .no-print {
             display: none;
@@ -96,7 +98,7 @@ export default function DeliveryNotePrintPage() {
         }
       `}</style>
       
-      <div className="bg-white" style={{ fontFamily: 'Arial, sans-serif', fontSize: '11px', maxWidth: '100%' }}>
+      <div className="bg-white" style={{ fontFamily: '"Courier New", Courier, monospace', fontSize: '11px', maxWidth: '100%' }}>
           {/* Control Number - Top Right */}
           <div style={{ textAlign: 'right', marginBottom: '5px' }}>
             <span style={{ fontSize: '9px', color: '#666' }}>Control No. NBTC-FO/SP 04 Rev.0</span>
