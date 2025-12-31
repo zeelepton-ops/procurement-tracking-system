@@ -389,45 +389,15 @@ export default function DeliveryNotesPage() {
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
-                {/* Section 1: Delivery Note Number and Job Order */}
+                {/* Line 1: Delivery Note Number, Country, Division, Department */}
                 <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
-                  <h3 className="font-semibold text-slate-900 mb-2 text-sm">Delivery Note Header</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                     <div>
                       <Label className="font-semibold text-xs">Delivery Note Number *</Label>
                       <Input
                         value={formData.deliveryNoteNumber}
                         onChange={(e) => handleInputChange('deliveryNoteNumber', e.target.value)}
                         placeholder="e.g., 15767/25"
-                        className="mt-1 h-9 text-sm"
-                      />
-                    </div>
-                    <div>
-                      <Label className="font-semibold text-xs">Job Order</Label>
-                      <select
-                        value={formData.jobOrderId}
-                        onChange={(e) => handleJobOrderChange(e.target.value)}
-                        className="w-full mt-1 h-9 px-3 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      >
-                        <option value="">-- Select Job Order --</option>
-                        {jobOrders.map(jo => (
-                          <option key={jo.id} value={jo.id}>{jo.jobNumber} - {jo.productName}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Section 2: Client and Header Information */}
-                <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
-                  <h3 className="font-semibold text-slate-900 mb-2 text-sm">Client & Project Details</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <div>
-                      <Label className="font-semibold text-xs">Client</Label>
-                      <Input
-                        value={formData.client}
-                        onChange={(e) => handleInputChange('client', e.target.value)}
-                        placeholder="Client name"
                         className="mt-1 h-9 text-sm"
                       />
                     </div>
@@ -452,15 +422,28 @@ export default function DeliveryNotesPage() {
                         <option value="Manufacturing">Manufacturing</option>
                       </select>
                     </div>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
                     <div>
                       <Label className="font-semibold text-xs">Department</Label>
                       <Input
                         value={formData.department}
                         disabled
-                        placeholder="Auto-filled based on Division"
+                        placeholder="Auto-filled"
                         className="mt-1 h-9 text-sm bg-slate-100"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Line 2: Client, Ref/PO, Job Order */}
+                <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div>
+                      <Label className="font-semibold text-xs">Client</Label>
+                      <Input
+                        value={formData.client}
+                        onChange={(e) => handleInputChange('client', e.target.value)}
+                        placeholder="Client name"
+                        className="mt-1 h-9 text-sm"
                       />
                     </div>
                     <div>
@@ -472,110 +455,23 @@ export default function DeliveryNotesPage() {
                         className="mt-1 h-9 text-sm"
                       />
                     </div>
-                  </div>
-                </div>
-
-                {/* Section 3: Shipment Details */}
-                <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
-                  <h3 className="font-semibold text-slate-900 mb-2 text-sm">Shipment Information</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
-                      <Label className="font-semibold text-xs">Shipment To</Label>
-                      <Input
-                        value={formData.shipmentTo}
-                        onChange={(e) => handleInputChange('shipmentTo', e.target.value)}
-                        placeholder="Shipment location"
-                        className="mt-1 h-9 text-sm"
-                      />
-                    </div>
-                    <div>
-                      <Label className="font-semibold text-xs">Shipment Type</Label>
+                      <Label className="font-semibold text-xs">Job Order</Label>
                       <select
-                        value={formData.shipmentType}
-                        onChange={(e) => handleInputChange('shipmentType', e.target.value)}
-                        className="mt-1 h-9 px-3 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
-                      >
-                        <option value="Land">Land</option>
-                        <option value="Sea">Sea</option>
-                        <option value="Air">Air</option>
-                      </select>
-                    </div>
-                  </div>
-                  <div className="mt-3">
-                    <Label className="font-semibold text-xs">Comments</Label>
-                    <Textarea
-                      value={formData.comments}
-                      onChange={(e) => handleInputChange('comments', e.target.value)}
-                      placeholder="Additional comments"
-                      rows={2}
-                      className="mt-1 text-sm"
-                    />
-                  </div>
-                </div>
-
-                {/* Section 4: Personnel & QID */}
-                <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
-                  <h3 className="font-semibold text-slate-900 mb-2 text-sm">Personnel Information</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <div>
-                      <Label className="font-semibold text-xs">Representative Name</Label>
-                      <Input
-                        value={formData.representativeName}
-                        onChange={(e) => handleInputChange('representativeName', e.target.value)}
-                        placeholder="Name"
-                        className="mt-1 h-9 text-sm"
-                      />
-                    </div>
-                    <div>
-                      <Label className="font-semibold text-xs">Representative No.</Label>
-                      <Input
-                        value={formData.representativeNo}
-                        onChange={(e) => handleInputChange('representativeNo', e.target.value)}
-                        placeholder="No."
-                        className="mt-1 h-9 text-sm"
-                      />
-                    </div>
-                    <div>
-                      <Label className="font-semibold text-xs">QID Number</Label>
-                      <Input
-                        value={formData.qidNumber}
-                        onChange={(e) => handleInputChange('qidNumber', e.target.value)}
-                        placeholder="QID"
-                        className="mt-1 h-9 text-sm"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Section 5: Vehicle Details */}
-                <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
-                  <h3 className="font-semibold text-slate-900 mb-2 text-sm">Vehicle Details</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div>
-                      <Label className="font-semibold text-xs">Vehicle Number</Label>
-                      <Input
-                        value={formData.vehicleNumber}
-                        onChange={(e) => handleInputChange('vehicleNumber', e.target.value)}
-                        placeholder="Vehicle No."
-                        className="mt-1 h-9 text-sm"
-                      />
-                    </div>
-                    <div>
-                      <Label className="font-semibold text-xs">Vehicle Type</Label>
-                      <select
-                        value={formData.vehicleType}
-                        onChange={(e) => handleInputChange('vehicleType', e.target.value)}
+                        value={formData.jobOrderId}
+                        onChange={(e) => handleJobOrderChange(e.target.value)}
                         className="w-full mt-1 h-9 px-3 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
-                        <option value="NBTC">NBTC</option>
-                        <option value="CLIENT">Client</option>
-                        <option value="THIRD_PARTY">Third Party</option>
+                        <option value="">-- Select Job Order --</option>
+                        {jobOrders.map(jo => (
+                          <option key={jo.id} value={jo.id}>{jo.jobNumber} - {jo.productName}</option>
+                        ))}
                       </select>
                     </div>
                   </div>
                 </div>
 
-                {/* Section 6: Line Items */}
+                {/* Line 3: Line Items */}
                 <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="font-semibold text-slate-900 text-sm">Line Items</h3>
@@ -685,6 +581,60 @@ export default function DeliveryNotesPage() {
                   ) : (
                     <p className="text-slate-500 text-center py-4">Select a job order to auto-populate line items</p>
                   )}
+                </div>
+
+                {/* Line 4: Personnel & Vehicle */}
+                <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
+                  <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+                    <div>
+                      <Label className="font-semibold text-xs">Representative Name</Label>
+                      <Input
+                        value={formData.representativeName}
+                        onChange={(e) => handleInputChange('representativeName', e.target.value)}
+                        placeholder="Name"
+                        className="mt-1 h-9 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <Label className="font-semibold text-xs">Representative No.</Label>
+                      <Input
+                        value={formData.representativeNo}
+                        onChange={(e) => handleInputChange('representativeNo', e.target.value)}
+                        placeholder="No."
+                        className="mt-1 h-9 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <Label className="font-semibold text-xs">QID Number</Label>
+                      <Input
+                        value={formData.qidNumber}
+                        onChange={(e) => handleInputChange('qidNumber', e.target.value)}
+                        placeholder="QID"
+                        className="mt-1 h-9 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <Label className="font-semibold text-xs">Vehicle Number</Label>
+                      <Input
+                        value={formData.vehicleNumber}
+                        onChange={(e) => handleInputChange('vehicleNumber', e.target.value)}
+                        placeholder="Vehicle No."
+                        className="mt-1 h-9 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <Label className="font-semibold text-xs">Vehicle Type</Label>
+                      <select
+                        value={formData.vehicleType}
+                        onChange={(e) => handleInputChange('vehicleType', e.target.value)}
+                        className="w-full mt-1 h-9 px-3 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="NBTC">NBTC</option>
+                        <option value="CLIENT">Client</option>
+                        <option value="THIRD_PARTY">Third Party</option>
+                      </select>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Form Buttons */}
