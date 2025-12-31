@@ -91,20 +91,12 @@ export default function DeliveryNotePrintPage() {
           }
           .signature-section {
             page-break-inside: avoid;
-            position: absolute;
-            bottom: 1.5in;
-            left: 0.5in;
-            right: 0.5in;
-            width: calc(100% - 1in);
-          }
-          .content-wrapper {
-            min-height: calc(11in - 2.5in - 1.5in);
+            margin-top: 20px;
           }
         }
       `}</style>
       
       <div className="bg-white" style={{ fontFamily: 'Arial, sans-serif', fontSize: '11px', maxWidth: '100%' }}>
-        <div className="content-wrapper">
           {/* Control Number - Top Right */}
           <div style={{ textAlign: 'right', marginBottom: '5px' }}>
             <span style={{ fontSize: '9px', color: '#666' }}>Control No. NBTC-FO/SP 04 Rev.0</span>
@@ -240,7 +232,6 @@ export default function DeliveryNotePrintPage() {
             )}
           </tbody>
         </table>
-        </div>
 
         {/* Signature Grid - Fixed at bottom */}
         <div className="signature-section">
