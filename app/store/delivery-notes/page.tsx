@@ -75,11 +75,15 @@ export default function DeliveryNotesPage() {
       id: string
       jobOrderItemId?: string
       description: string
-      subDescription?: string
-      unit: string
-      quantity: number
-      deliveredQuantity: number
-      remarks?: string
+      balanceQty: number
+      totalQty: number  // From job order for reference
+      subItems: Array<{
+        id: string
+        subDescription: string
+        unit: string
+        deliveredQuantity: number
+        remarks?: string
+      }>
     }>
   })
 
@@ -123,15 +127,20 @@ export default function DeliveryNotesPage() {
     // Auto-fill from selected job order
     const selectedJobOrder = jobOrders.find(jo => jo.id === jobOrderId)
     if (selectedJobOrder) {
-      // Extract line items from job order
+      // Extract line items from job order with balance qty and sub-items structure
       const lineItems = (selectedJobOrder.items || []).map((item: any) => ({
         id: item.id || `temp-${Math.random()}`,
         jobOrderItemId: item.id,
         description: item.workDescription || '',
-        unit: item.unit || '',
-        quantity: item.quantity || 0,
-        deliveredQuantity: 0,
-        remarks: ''
+        balanceQty: item.quantity || 0,  // Initially balance = total (no previous deliveries)
+        totalQty: item.quantity || 0,
+        subItems: [{
+          id: `sub-${Math.random()}`,
+          subDescription: '',
+          unit: item.unit || '',
+          deliveredQuantity: 0,
+          remarks: ''
+        }]
       }))
 
       setFormData(prev => ({
@@ -164,34 +173,34 @@ export default function DeliveryNotesPage() {
     })
   }
 
-  const handleLineItemChange = (index: number, field: string, value: any) => {
+  const handleSubItemChange = (lineIndex: number, subIndex: number, field: string, value: any) => {
     setFormData(prev => {
       const items = [...prev.lineItems]
-      items[index] = { ...items[index], [field]: value }
+      items[lineIndex].subItems[subIndex] = { ...items[lineIndex].subItems[subIndex], [field]: value }
       return { ...prev, lineItems: items }
     })
   }
 
-  const addLineItem = () => {
-    setFormData(prev => ({
-      ...prev,
-      lineItems: [...prev.lineItems, {
-        id: `temp-${Math.random()}`,
-        description: '',
+  const addSubItem = (lineIndex: number) => {
+    setFormData(prev => {
+      const items = [...prev.lineItems]
+      items[lineIndex].subItems.push({
+        id: `sub-${Math.random()}`,
         subDescription: '',
         unit: '',
-        quantity: 0,
         deliveredQuantity: 0,
         remarks: ''
-      }]
-    }))
+      })
+      return { ...prev, lineItems: items }
+    })
   }
 
-  const removeLineItem = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      lineItems: prev.lineItems.filter((_, i) => i !== index)
-    }))
+  const removeSubItem = (lineIndex: number, subIndex: number) => {
+    setFormData(prev => {
+      const items = [...prev.lineItems]
+      items[lineIndex].subItems = items[lineIndex].subItems.filter((_, i) => i !== subIndex)
+      return { ...prev, lineItems: items }
+    })
   }
 
   const getSuggestions = (field: string, value: string): string[] => {
@@ -473,17 +482,7 @@ export default function DeliveryNotesPage() {
 
                 {/* Line 3: Line Items */}
                 <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-semibold text-slate-900 text-sm">Line Items</h3>
-                    <Button
-                      type="button"
-                      onClick={addLineItem}
-                      className="bg-blue-600 hover:bg-blue-700 h-8 text-xs"
-                    >
-                      <Plus className="h-3 w-3 mr-1" />
-                      Add Item
-                    </Button>
-                  </div>
+                  <h3 className="font-semibold text-slate-900 text-sm">Line Items (from Job Order)</h3>
                   
                   {formData.lineItems.length > 0 ? (
                     <>
@@ -491,88 +490,103 @@ export default function DeliveryNotesPage() {
                         <table className="w-full text-xs">
                           <thead>
                             <tr className="border-b border-slate-300 bg-slate-100">
-                              <th className="text-left px-2 py-1 font-semibold w-[35%]">Description</th>
-                              <th className="text-left px-2 py-1 font-semibold w-[8%]">Unit</th>
-                              <th className="text-left px-2 py-1 font-semibold w-[10%]">Total Qty</th>
-                              <th className="text-left px-2 py-1 font-semibold w-[10%]">Delivery Qty</th>
-                              <th className="text-left px-2 py-1 font-semibold w-[22%]">Remarks</th>
-                              <th className="text-center px-2 py-1 font-semibold w-[5%]">Action</th>
+                              <th className="text-left px-2 py-1 font-semibold w-[30%]">Line Item Description</th>
+                              <th className="text-left px-2 py-1 font-semibold w-[10%]">Balance Qty</th>
+                              <th className="text-left px-2 py-1 font-semibold w-[60%]">Sub Items (Description, Unit, Delivered Qty, Remarks)</th>
                             </tr>
                           </thead>
                           <tbody>
-                            {formData.lineItems.map((item, index) => (
+                            {formData.lineItems.map((item, lineIndex) => (
                               <React.Fragment key={item.id}>
-                                <tr className="border-b border-slate-200 hover:bg-slate-50">
+                                {/* Parent Line Item Row */}
+                                <tr className="border-b border-slate-200 bg-slate-50 font-semibold">
                                   <td className="px-2 py-1">
-                                    <Input
-                                      value={item.description}
-                                      onChange={(e) => handleLineItemChange(index, 'description', e.target.value)}
-                                      placeholder="Description"
-                                      className="text-xs h-8 mb-1"
-                                    />
-                                    <Input
-                                      value={item.subDescription || ''}
-                                      onChange={(e) => handleLineItemChange(index, 'subDescription', e.target.value)}
-                                      placeholder="Sub Description"
-                                      className="text-xs h-7 text-slate-600 bg-slate-50"
-                                    />
+                                    <div className="text-xs font-semibold">{item.description}</div>
                                   </td>
                                   <td className="px-2 py-1">
-                                    <Input
-                                      value={item.unit}
-                                      onChange={(e) => handleLineItemChange(index, 'unit', e.target.value)}
-                                      placeholder="Unit"
-                                      className="text-xs h-8 w-full"
-                                    />
+                                    <div className="text-xs font-semibold text-blue-600">{item.balanceQty}</div>
                                   </td>
-                                  <td className="px-2 py-1">
-                                    <Input
-                                      type="number"
-                                      value={item.quantity}
-                                      onChange={(e) => handleLineItemChange(index, 'quantity', parseFloat(e.target.value) || 0)}
-                                      placeholder="0"
-                                      className="text-xs h-8 w-full"
-                                    />
-                                  </td>
-                                  <td className="px-2 py-1">
-                                    <Input
-                                      type="number"
-                                      value={item.deliveredQuantity}
-                                      onChange={(e) => handleLineItemChange(index, 'deliveredQuantity', parseFloat(e.target.value) || 0)}
-                                      placeholder="0"
-                                      className="text-xs h-8 w-full"
-                                    />
-                                  </td>
-                                  <td className="px-2 py-1">
-                                    <Input
-                                      value={item.remarks || ''}
-                                      onChange={(e) => handleLineItemChange(index, 'remarks', e.target.value)}
-                                      placeholder="Remarks"
-                                      className="text-xs h-8"
-                                    />
-                                  </td>
-                                  <td className="px-2 py-1 text-center">
+                                  <td className="px-2 py-1 text-right">
                                     <Button
                                       type="button"
-                                      onClick={() => removeLineItem(index)}
-                                      className="bg-red-600 hover:bg-red-700 h-7 w-7 p-0"
+                                      onClick={() => addSubItem(lineIndex)}
+                                      className="bg-blue-500 hover:bg-blue-600 h-6 px-2 text-xs"
                                     >
-                                      <Trash2 className="h-3 w-3" />
+                                      <Plus className="h-2 w-2 mr-1" />
+                                      Add Sub Item
                                     </Button>
                                   </td>
                                 </tr>
+
+                                {/* Sub Items Rows */}
+                                {item.subItems.map((subItem, subIndex) => (
+                                  <tr key={subItem.id} className="border-b border-slate-100 hover:bg-slate-100">
+                                    <td className="px-2 py-1 pl-8">
+                                      <Input
+                                        value={subItem.subDescription}
+                                        onChange={(e) => handleSubItemChange(lineIndex, subIndex, 'subDescription', e.target.value)}
+                                        placeholder="Sub Item Description"
+                                        className="text-xs h-7"
+                                      />
+                                    </td>
+                                    <td className="px-2 py-1">
+                                      <Input
+                                        value={subItem.unit}
+                                        onChange={(e) => handleSubItemChange(lineIndex, subIndex, 'unit', e.target.value)}
+                                        placeholder="Unit"
+                                        className="text-xs h-7 w-full"
+                                      />
+                                    </td>
+                                    <td className="px-2 py-1">
+                                      <div className="grid grid-cols-12 gap-1">
+                                        <div className="col-span-3">
+                                          <label className="text-xs text-slate-500">Del.Qty</label>
+                                          <Input
+                                            type="number"
+                                            value={subItem.deliveredQuantity}
+                                            onChange={(e) => handleSubItemChange(lineIndex, subIndex, 'deliveredQuantity', parseFloat(e.target.value) || 0)}
+                                            placeholder="0"
+                                            className="text-xs h-7 w-full"
+                                          />
+                                        </div>
+                                        <div className="col-span-7">
+                                          <label className="text-xs text-slate-500">Remarks</label>
+                                          <Input
+                                            value={subItem.remarks || ''}
+                                            onChange={(e) => handleSubItemChange(lineIndex, subIndex, 'remarks', e.target.value)}
+                                            placeholder="Remarks"
+                                            className="text-xs h-7"
+                                          />
+                                        </div>
+                                        <div className="col-span-2 flex items-end">
+                                          <Button
+                                            type="button"
+                                            onClick={() => removeSubItem(lineIndex, subIndex)}
+                                            className="bg-red-600 hover:bg-red-700 h-7 w-7 p-0"
+                                          >
+                                            <Trash2 className="h-3 w-3" />
+                                          </Button>
+                                        </div>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                ))}
                               </React.Fragment>
                             ))}
                           </tbody>
                         </table>
                       </div>
                       {(() => {
-                        const allSameUnit = formData.lineItems.every((item, _, arr) => item.unit && item.unit === arr[0].unit)
-                        const totalDeliveryQty = formData.lineItems.reduce((sum, item) => sum + (item.deliveredQuantity || 0), 0)
-                        return allSameUnit && formData.lineItems.length > 0 && formData.lineItems[0].unit ? (
+                        const allSameUnit = formData.lineItems.every(item => 
+                          item.subItems.every(si => si.unit && si.unit === item.subItems[0]?.unit)
+                        )
+                        const totalDeliveryQty = formData.lineItems.reduce((sum, item) => 
+                          sum + item.subItems.reduce((subSum, si) => subSum + (si.deliveredQuantity || 0), 0), 0
+                        )
+                        return allSameUnit && formData.lineItems.length > 0 && formData.lineItems[0].subItems[0]?.unit ? (
                           <div className="mt-2 text-right">
                             <span className="text-xs font-semibold text-slate-700">
-                              Total Delivery Quantity: {totalDeliveryQty.toFixed(2)} {formData.lineItems[0].unit}
+                              Total Delivery Quantity: {totalDeliveryQty.toFixed(2)} {formData.lineItems[0].subItems[0]?.unit}
                             </span>
                           </div>
                         ) : null
