@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 
 interface DeliveryNote {
@@ -44,18 +44,7 @@ export default function DeliveryNotePrintPage() {
   const [deliveryNote, setDeliveryNote] = useState<DeliveryNote | null>(null)
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    fetchDeliveryNote()
-  }, [id])
-
-  // Set document title for print filename
-  useEffect(() => {
-    if (deliveryNote) {
-      document.title = `DN - ${deliveryNote.deliveryNoteNumber} - ${deliveryNote.client || 'N/A'} - ${deliveryNote.department || 'N/A'}`
-    }
-  }, [deliveryNote])
-
-  const fetchDeliveryNote = async () => {
+  const fetchDeliveryNote = useCallback(async () => {
     try {
       const res = await fetch(`/api/delivery-notes/${id}`)
       const data = await res.json()
@@ -66,7 +55,17 @@ export default function DeliveryNotePrintPage() {
       console.error('Failed to fetch delivery note:', error)
       setLoading(false)
     }
-  }
+  }, [id])
+
+  useEffect(() => {
+    fetchDeliveryNote()
+  }, [fetchDeliveryNote])
+
+  useEffect(() => {
+    if (deliveryNote) {
+      document.title = `DN - ${deliveryNote.deliveryNoteNumber} - ${deliveryNote.client || 'N/A'} - ${deliveryNote.department || 'N/A'}`
+    }
+  }, [deliveryNote])
 
   if (loading || !deliveryNote) {
     return <div className="p-8">Loading delivery note...</div>
