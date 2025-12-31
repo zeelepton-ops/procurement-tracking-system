@@ -175,9 +175,9 @@ export default function DeliveryNotePrintPage() {
                 </td>
               </tr>
             )}
-            {/* Add empty rows to fill template, max 15 total rows */}
-            {(!dn.items || dn.items.length < 15) &&
-              Array.from({ length: Math.max(0, 15 - (dn.items?.length || 0)) }).map((_, i) => (
+            {/* Add empty rows to fill template, max 8 total rows */}
+            {(!dn.items || dn.items.length < 8) &&
+              Array.from({ length: Math.max(0, 8 - (dn.items?.length || 0)) }).map((_, i) => (
                 <tr key={`empty-${i}`}>
                   <td style={{ borderLeft: '1px solid #000', borderRight: '1px solid #000', padding: '20px 4px', height: '35px' }}></td>
                   <td style={{ borderRight: '1px solid #000', padding: '20px 4px', height: '35px' }}></td>
