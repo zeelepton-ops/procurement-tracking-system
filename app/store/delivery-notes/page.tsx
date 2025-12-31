@@ -28,6 +28,15 @@ interface DeliveryNote {
   status: string
   totalQuantity: number
   totalWeight: number
+  items?: Array<{
+    id: string
+    itemDescription: string
+    unit: string
+    quantity: number
+    deliveredQuantity: number
+    remarks?: string
+    jobOrderItemId?: string
+  }>
   createdAt: string
 }
 
@@ -53,6 +62,7 @@ export default function DeliveryNotesPage() {
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [showSuggestions, setShowSuggestions] = useState<{ [key: string]: boolean }>({})
+  const [expandedNotes, setExpandedNotes] = useState<Set<string>>(new Set())
 
   const [formData, setFormData] = useState({
     deliveryNoteNumber: '',
@@ -691,6 +701,7 @@ export default function DeliveryNotesPage() {
                 <table className="w-full">
                   <thead className="bg-slate-100 border-b border-slate-200">
                     <tr>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700 uppercase w-12">Expand</th>
                       <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700 uppercase">DN Number</th>
                       <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Job Order</th>
                       <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Client</th>
@@ -702,65 +713,123 @@ export default function DeliveryNotesPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200">
-                    {deliveryNotes.map(note => (
-                      <tr key={note.id} className="hover:bg-slate-50 transition-colors">
-                        <td className="px-4 py-3 font-medium text-slate-900">{note.deliveryNoteNumber}</td>
-                        <td className="px-4 py-3 text-sm text-slate-600">{note.jobOrder?.jobNumber || 'N/A'}</td>
-                        <td className="px-4 py-3 text-sm text-slate-600">{note.client || 'N/A'}</td>
-                        <td className="px-4 py-3 text-sm text-slate-900">{note.totalQuantity}</td>
-                        <td className="px-4 py-3 text-sm text-slate-900">{note.totalWeight}</td>
-                        <td className="px-4 py-3">
-                          <span className={`px-2 py-1 rounded text-xs font-medium ${
-                            note.status === 'DELIVERED' ? 'bg-green-100 text-green-800' :
-                            note.status === 'ISSUED' ? 'bg-blue-100 text-blue-800' :
-                            'bg-yellow-100 text-yellow-800'
-                          }`}>
-                            {note.status}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-sm text-slate-600">
-                          {new Date(note.createdAt).toLocaleDateString()}
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="flex gap-2">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleView(note.id)}
-                              title="View Details"
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handlePrint(note.id)}
-                              title="Print"
-                            >
-                              <Printer className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleEdit(note)}
-                              className="text-blue-600"
-                              title="Edit"
-                            >
-                              Edit
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleDelete(note.id)}
-                              className="text-red-600"
-                              title="Delete"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
+                    {deliveryNotes.map(note => {
+                      const isExpanded = expandedNotes.has(note.id)
+                      return (
+                        <React.Fragment key={note.id}>
+                          <tr className="hover:bg-slate-50 transition-colors">
+                            <td className="px-4 py-3">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => {
+                                  const newExpanded = new Set(expandedNotes)
+                                  if (isExpanded) {
+                                    newExpanded.delete(note.id)
+                                  } else {
+                                    newExpanded.add(note.id)
+                                  }
+                                  setExpandedNotes(newExpanded)
+                                }}
+                                className="h-6 w-6 p-0"
+                              >
+                                {isExpanded ? '▼' : '▶'}
+                              </Button>
+                            </td>
+                            <td className="px-4 py-3 font-medium text-slate-900">{note.deliveryNoteNumber}</td>
+                            <td className="px-4 py-3 text-sm text-slate-600">{note.jobOrder?.jobNumber || 'N/A'}</td>
+                            <td className="px-4 py-3 text-sm text-slate-600">{note.client || 'N/A'}</td>
+                            <td className="px-4 py-3 text-sm text-slate-900">{note.totalQuantity}</td>
+                            <td className="px-4 py-3 text-sm text-slate-900">{note.totalWeight}</td>
+                            <td className="px-4 py-3">
+                              <span className={`px-2 py-1 rounded text-xs font-medium ${
+                                note.status === 'DELIVERED' ? 'bg-green-100 text-green-800' :
+                                note.status === 'ISSUED' ? 'bg-blue-100 text-blue-800' :
+                                'bg-yellow-100 text-yellow-800'
+                              }`}>
+                                {note.status}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 text-sm text-slate-600">
+                              {new Date(note.createdAt).toLocaleDateString()}
+                            </td>
+                            <td className="px-4 py-3">
+                              <div className="flex gap-2">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleView(note.id)}
+                                  title="View Details"
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handlePrint(note.id)}
+                                  title="Print"
+                                >
+                                  <Printer className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleEdit(note)}
+                                  className="text-blue-600"
+                                  title="Edit"
+                                >
+                                  Edit
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleDelete(note.id)}
+                                  className="text-red-600"
+                                  title="Delete"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </td>
+                          </tr>
+                          {isExpanded && note.items && note.items.length > 0 && (
+                            <tr>
+                              <td colSpan={9} className="px-4 py-3 bg-slate-50">
+                                <div className="ml-8">
+                                  <h4 className="text-sm font-semibold text-slate-700 mb-2">Line Items:</h4>
+                                  <table className="w-full border border-slate-200">
+                                    <thead className="bg-slate-200">
+                                      <tr>
+                                        <th className="px-3 py-2 text-left text-xs font-semibold text-slate-700">Description</th>
+                                        <th className="px-3 py-2 text-left text-xs font-semibold text-slate-700">Unit</th>
+                                        <th className="px-3 py-2 text-left text-xs font-semibold text-slate-700">Total Qty</th>
+                                        <th className="px-3 py-2 text-left text-xs font-semibold text-slate-700">Delivered Qty</th>
+                                        <th className="px-3 py-2 text-left text-xs font-semibold text-slate-700">Balance Qty</th>
+                                        <th className="px-3 py-2 text-left text-xs font-semibold text-slate-700">Remarks</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody className="bg-white divide-y divide-slate-200">
+                                      {note.items.map(item => (
+                                        <tr key={item.id}>
+                                          <td className="px-3 py-2 text-sm text-slate-900">{item.itemDescription}</td>
+                                          <td className="px-3 py-2 text-sm text-slate-600">{item.unit}</td>
+                                          <td className="px-3 py-2 text-sm text-slate-900">{item.quantity}</td>
+                                          <td className="px-3 py-2 text-sm text-slate-900 font-medium">{item.deliveredQuantity}</td>
+                                          <td className="px-3 py-2 text-sm text-blue-600 font-medium">
+                                            {item.quantity - item.deliveredQuantity}
+                                          </td>
+                                          <td className="px-3 py-2 text-sm text-slate-600">{item.remarks || '-'}</td>
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </React.Fragment>
+                      )
+                    })}
                   </tbody>
                 </table>
               </div>
