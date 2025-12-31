@@ -143,7 +143,7 @@ export default function DeliveryNoteDetailPage() {
         </div>
 
         {/* Main Details */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-sm">Delivery Note Number</CardTitle>
@@ -174,6 +174,18 @@ export default function DeliveryNoteDetailPage() {
               }`}>
                 {dn.status}
               </span>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm">Job Order No.</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-xl font-bold text-slate-900">{dn.jobOrder?.jobNumber || 'N/A'}</p>
+              {dn.jobOrder && (
+                <p className="text-xs text-slate-600 mt-1">{dn.jobOrder.productName}</p>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -210,13 +222,6 @@ export default function DeliveryNoteDetailPage() {
                 <p className="text-base font-medium">{dn.refPoNumber || 'N/A'}</p>
               </div>
             </div>
-            {dn.jobOrder && (
-              <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                <p className="text-sm font-semibold text-slate-600 mb-2">Job Order</p>
-                <p className="text-base font-bold text-blue-700">{dn.jobOrder.jobNumber}</p>
-                <p className="text-sm text-slate-600">{dn.jobOrder.productName}</p>
-              </div>
-            )}
           </CardContent>
         </Card>
 
