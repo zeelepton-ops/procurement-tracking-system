@@ -49,6 +49,11 @@ export async function PUT(
 
     const body = await request.json()
 
+    // First, delete existing items
+    await prisma.deliveryNoteItem.deleteMany({
+      where: { deliveryNoteId: params.id }
+    })
+
     const deliveryNote = await prisma.deliveryNote.update({
       where: { id: params.id },
       data: {
@@ -65,7 +70,24 @@ export async function PUT(
         representativeNo: body.representativeNo,
         qidNumber: body.qidNumber,
         vehicleNumber: body.vehicleNumber,
-        vehicleType: body.vehicleType
+        vehicleType: body.vehicleType,
+        // Update totals
+        totalQuantity: body.lineItems?.reduce((sum: number, item: any) => {
+          return sum + item.subItems.reduce((subSum: number, subItem: any) => subSum + (subItem.deliveredQuantity || 0), 0)
+        }, 0) || 0,
+        // Recreate items
+        items: {
+          create: body.lineItems?.flatMap((lineItem: any) => 
+            lineItem.subItems.map((subItem: any) => ({
+              itemDescription: subItem.subDescription,
+              unit: subItem.unit,
+              quantity: lineItem.totalQty || 0,
+              deliveredQuantity: subItem.deliveredQuantity || 0,
+              remarks: subItem.remarks || null,
+              jobOrderItemId: lineItem.jobOrderItemId || null
+            }))
+          ) || []
+        }
       },
       include: {
         jobOrder: {

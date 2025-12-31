@@ -74,7 +74,25 @@ export async function POST(request: NextRequest) {
         qidNumber: body.qidNumber,
         vehicleNumber: body.vehicleNumber,
         vehicleType: body.vehicleType,
-        createdBy: session.user.email
+        createdBy: session.user.email,
+        // Calculate totals from lineItems
+        totalQuantity: body.lineItems?.reduce((sum: number, item: any) => {
+          return sum + item.subItems.reduce((subSum: number, subItem: any) => subSum + (subItem.deliveredQuantity || 0), 0)
+        }, 0) || 0,
+        totalWeight: 0, // Can be calculated if weight data is available
+        status: 'DRAFT',
+        items: {
+          create: body.lineItems?.flatMap((lineItem: any) => 
+            lineItem.subItems.map((subItem: any) => ({
+              itemDescription: subItem.subDescription,
+              unit: subItem.unit,
+              quantity: lineItem.totalQty || 0,
+              deliveredQuantity: subItem.deliveredQuantity || 0,
+              remarks: subItem.remarks || null,
+              jobOrderItemId: lineItem.jobOrderItemId || null
+            }))
+          ) || []
+        }
       },
       include: {
         jobOrder: {
