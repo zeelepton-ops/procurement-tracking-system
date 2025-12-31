@@ -85,7 +85,7 @@ export default function DeliveryNotePrintPage() {
           body {
             margin: 0;
             padding: 0;
-            transform: scale(1.04);
+            transform: scale(1.02);
             transform-origin: top left;
           }
           .no-print {
