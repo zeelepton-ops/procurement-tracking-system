@@ -367,16 +367,14 @@ export default function DeliveryNotesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-slate-900">Delivery Notes</h1>
-          <p className="text-slate-600 mt-2">Manage delivery of materials for job orders</p>
-        </div>
-
-        {/* Create Button */}
-        <div className="mb-6">
+        {/* Header with Button */}
+        <div className="mb-4 flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900">Delivery Notes</h1>
+            <p className="text-slate-600 mt-1 text-sm">Manage delivery of materials for job orders</p>
+          </div>
           <Button
             onClick={() => {
               setShowForm(!showForm)
