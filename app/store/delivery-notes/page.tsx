@@ -796,6 +796,16 @@ export default function DeliveryNotesPage() {
                             <tr>
                               <td colSpan={9} className="px-4 py-3 bg-slate-50">
                                 <div className="ml-8">
+                                  <div className="flex gap-6 mb-3 text-sm">
+                                    <div><span className="font-semibold">Delivery Note Number:</span> {note.deliveryNoteNumber}</div>
+                                    <div><span className="font-semibold">Date:</span> {new Date(note.createdAt).toLocaleDateString()}</div>
+                                    <div><span className="font-semibold">Status:</span> <span className={`px-2 py-1 rounded text-xs font-medium ${
+                                      note.status === 'DELIVERED' ? 'bg-green-100 text-green-800' :
+                                      note.status === 'ISSUED' ? 'bg-blue-100 text-blue-800' :
+                                      'bg-yellow-100 text-yellow-800'
+                                    }`}>{note.status}</span></div>
+                                    <div><span className="font-semibold">Job Order No.:</span> {note.jobOrder?.jobNumber || 'N/A'}</div>
+                                  </div>
                                   <h4 className="text-sm font-semibold text-slate-700 mb-2">Line Items:</h4>
                                   <table className="w-full border border-slate-200">
                                     <thead className="bg-slate-200">
