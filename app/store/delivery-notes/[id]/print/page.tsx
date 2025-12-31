@@ -67,6 +67,13 @@ export default function DeliveryNotePrintPage() {
 
   const dn = deliveryNote
 
+  // Set document title for print filename
+  useEffect(() => {
+    if (dn) {
+      document.title = `DN - ${dn.deliveryNoteNumber} - ${dn.client || 'N/A'} - ${dn.department || 'N/A'}`
+    }
+  }, [dn])
+
   return (
     <>
       <style jsx global>{`
@@ -84,16 +91,24 @@ export default function DeliveryNotePrintPage() {
           }
           .signature-section {
             page-break-inside: avoid;
-            margin-top: 60px;
+            position: absolute;
+            bottom: 1.5in;
+            left: 0.5in;
+            right: 0.5in;
+            width: calc(100% - 1in);
+          }
+          .content-wrapper {
+            min-height: calc(11in - 2.5in - 1.5in);
           }
         }
       `}</style>
       
       <div className="bg-white" style={{ fontFamily: 'Arial, sans-serif', fontSize: '11px', maxWidth: '100%' }}>
-        {/* Control Number - Top Right */}
-        <div style={{ textAlign: 'right', marginBottom: '5px' }}>
-          <span style={{ fontSize: '9px', color: '#666' }}>Control No. NBTC-FO/SP 04 Rev.0</span>
-        </div>
+        <div className="content-wrapper">
+          {/* Control Number - Top Right */}
+          <div style={{ textAlign: 'right', marginBottom: '5px' }}>
+            <span style={{ fontSize: '9px', color: '#666' }}>Control No. NBTC-FO/SP 04 Rev.0</span>
+          </div>
 
         {/* Header */}
         <div style={{ marginBottom: '12px', borderBottom: '2px solid #000', paddingBottom: '8px' }}>
@@ -160,9 +175,9 @@ export default function DeliveryNotePrintPage() {
                 </td>
               </tr>
             )}
-            {/* Add 3-5 empty rows max for template */}
-            {(!dn.items || dn.items.length < 5) &&
-              Array.from({ length: Math.min(5, Math.max(0, 5 - (dn.items?.length || 0))) }).map((_, i) => (
+            {/* Add empty rows to fill template, max 15 total rows */}
+            {(!dn.items || dn.items.length < 15) &&
+              Array.from({ length: Math.max(0, 15 - (dn.items?.length || 0)) }).map((_, i) => (
                 <tr key={`empty-${i}`}>
                   <td style={{ borderLeft: '1px solid #000', borderRight: '1px solid #000', padding: '20px 4px', height: '35px' }}></td>
                   <td style={{ borderRight: '1px solid #000', padding: '20px 4px', height: '35px' }}></td>
@@ -225,6 +240,7 @@ export default function DeliveryNotePrintPage() {
             )}
           </tbody>
         </table>
+        </div>
 
         {/* Signature Grid - Fixed at bottom */}
         <div className="signature-section">
