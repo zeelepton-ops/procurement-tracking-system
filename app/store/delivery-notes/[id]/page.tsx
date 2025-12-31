@@ -125,7 +125,7 @@ export default function DeliveryNoteDetailPage() {
               Print
             </Button>
             <Button
-              onClick={() => router.push(`/store/delivery-notes/${id}/edit`)}
+              onClick={() => router.push('/store/delivery-notes')}
               variant="outline"
             >
               <Edit className="h-4 w-4 mr-2" />
