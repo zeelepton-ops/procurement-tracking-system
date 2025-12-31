@@ -623,3 +623,62 @@ model DeliveryNoteItem {
   
   @@index([deliveryNoteId])
 }
+
+// Workers Transportation Scheduling Models
+model Worker {
+  id          String   @id @default(cuid())
+  name        String
+  qid         String?  @unique
+  phone       String?
+  shift       String   @default("DAY") // DAY, NIGHT
+  priority    Int      @default(0) // Higher number = higher priority
+  department  String?
+  position    String?
+  isActive    Boolean  @default(true)
+  
+  schedules   TransportSchedule[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Vehicle {
+  id                String   @id @default(cuid())
+  vehicleNumber     String   @unique
+  vehicleName       String?
+  seats             Int      @default(0)
+  vehicleType       String?  // BUS, VAN, CAR
+  isAvailable       Boolean  @default(true)
+  driver            String?
+  driverPhone       String?
+  
+  schedules         TransportSchedule[]
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model TransportSchedule {
+  id          String    @id @default(cuid())
+  date        DateTime
+  shift       String    // DAY, NIGHT
+  
+  workerId    String
+  worker      Worker    @relation(fields: [workerId], references: [id], onDelete: Cascade)
+  
+  vehicleId   String
+  vehicle     Vehicle   @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  
+  pickupTime  String?
+  dropTime    String?
+  route       String?
+  status      String    @default("SCHEDULED") // SCHEDULED, COMPLETED, CANCELLED
+  
+  createdBy   String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  @@index([date, shift])
+  @@index([workerId])
+  @@index([vehicleId])
+}
