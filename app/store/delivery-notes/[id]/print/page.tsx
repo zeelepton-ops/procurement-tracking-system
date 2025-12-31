@@ -72,7 +72,7 @@ export default function DeliveryNotePrintPage() {
       <style jsx global>{`
         @page {
           size: A4;
-          margin: 1.5in 0.5in 1.5in 0.5in;
+          margin: 1.0in 0.5in 1.5in 0.5in;
         }
         @media print {
           body {
@@ -92,7 +92,7 @@ export default function DeliveryNotePrintPage() {
       <div className="bg-white" style={{ fontFamily: 'Arial, sans-serif', fontSize: '11px', maxWidth: '100%' }}>
         {/* Control Number - Top Right */}
         <div style={{ textAlign: 'right', marginBottom: '5px' }}>
-          <span style={{ fontSize: '8px', color: '#666' }}>Control No. NBTC-FO/SP 04 Rev.0</span>
+          <span style={{ fontSize: '9px', color: '#666' }}>Control No. NBTC-FO/SP 04 Rev.0</span>
         </div>
 
         {/* Header */}
@@ -100,7 +100,7 @@ export default function DeliveryNotePrintPage() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ width: '30%' }}></div>
             <h2 style={{ fontSize: '20px', fontWeight: 'bold', margin: 0 }}>DELIVERY NOTE</h2>
-            <div style={{ fontSize: '11px', textAlign: 'right', width: '30%' }}>
+            <div style={{ fontSize: '13px', textAlign: 'right', width: '30%' }}>
               <div><strong>DN No:</strong> {dn.deliveryNoteNumber}</div>
               <div><strong>Date:</strong> {new Date(dn.date).toLocaleDateString('en-GB')}</div>
             </div>
@@ -111,12 +111,12 @@ export default function DeliveryNotePrintPage() {
         <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #000', marginBottom: '10px', fontSize: '10px' }}>
           <tbody>
             <tr>
-              <td style={{ border: '1px solid #000', padding: '4px', fontWeight: 'bold', width: '15%', backgroundColor: '#f5f5f5' }}>Client</td>
-              <td style={{ border: '1px solid #000', padding: '4px', width: '18%' }}>{dn.client || ''}</td>
-              <td style={{ border: '1px solid #000', padding: '4px', fontWeight: 'bold', width: '15%', backgroundColor: '#f5f5f5' }}>Ref/PO No.</td>
-              <td style={{ border: '1px solid #000', padding: '4px', width: '18%' }}>{dn.refPoNumber || ''}</td>
-              <td style={{ border: '1px solid #000', padding: '4px', fontWeight: 'bold', width: '15%', backgroundColor: '#f5f5f5' }}>Job Order</td>
-              <td style={{ border: '1px solid #000', padding: '4px' }}>{dn.jobOrder?.jobNumber || ''}</td>
+              <td style={{ border: '1px solid #000', padding: '4px', fontWeight: 'bold', width: '11%', backgroundColor: '#f5f5f5' }}>Client</td>
+              <td style={{ border: '1px solid #000', padding: '4px', width: '36%' }}>{dn.client || ''}</td>
+              <td style={{ border: '1px solid #000', padding: '4px', fontWeight: 'bold', width: '10%', backgroundColor: '#f5f5f5' }}>Ref/PO No.</td>
+              <td style={{ border: '1px solid #000', padding: '4px', width: '10%' }}>{dn.refPoNumber || ''}</td>
+              <td style={{ border: '1px solid #000', padding: '4px', fontWeight: 'bold', width: '10%', backgroundColor: '#f5f5f5' }}>Job Order</td>
+              <td style={{ border: '1px solid #000', padding: '4px', width: '23%' }}>{dn.jobOrder?.jobNumber || ''}</td>
             </tr>
             <tr>
               <td style={{ border: '1px solid #000', padding: '4px', fontWeight: 'bold', backgroundColor: '#f5f5f5' }}>Department</td>
@@ -138,7 +138,7 @@ export default function DeliveryNotePrintPage() {
               <th style={{ border: '1px solid #000', padding: '5px', fontWeight: 'bold', width: '60px', fontSize: '10px' }}>Unit</th>
               <th style={{ border: '1px solid #000', padding: '5px', fontWeight: 'bold', width: '60px', fontSize: '10px' }}>Quantity</th>
               <th style={{ border: '1px solid #000', padding: '5px', fontWeight: 'bold', width: '70px', fontSize: '10px' }}>Weight(KG)</th>
-              <th style={{ border: '1px solid #000', padding: '5px', fontWeight: 'bold', width: '120px', fontSize: '10px' }}>Remarks</th>
+              <th style={{ border: '1px solid #000', padding: '5px', fontWeight: 'bold', width: '100px', fontSize: '10px' }}>Remarks</th>
             </tr>
           </thead>
           <tbody>
@@ -228,46 +228,44 @@ export default function DeliveryNotePrintPage() {
           <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #000', fontSize: '10px' }}>
             <thead>
               <tr style={{ backgroundColor: '#f5f5f5' }}>
-                <th style={{ border: '1px solid #000', padding: '5px', fontWeight: 'bold', width: '25%' }}>Prepared By</th>
-                <th style={{ border: '1px solid #000', padding: '5px', fontWeight: 'bold', width: '25%' }}>Checked By</th>
-                <th style={{ border: '1px solid #000', padding: '5px', fontWeight: 'bold', width: '25%' }}>Approved By</th>
-                <th style={{ border: '1px solid #000', padding: '5px', fontWeight: 'bold', width: '25%' }}>Received By</th>
+                <th style={{ border: '1px solid #000', padding: '5px', fontWeight: 'bold', width: '23%' }}>Prepared By</th>
+                <th style={{ border: '1px solid #000', padding: '5px', fontWeight: 'bold', width: '23%' }}>Checked By</th>
+                <th style={{ border: '1px solid #000', padding: '5px', fontWeight: 'bold', width: '23%' }}>Approved By</th>
+                <th style={{ border: '1px solid #000', padding: '5px', fontWeight: 'bold', width: '31%' }}>Received By</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td style={{ border: '1px solid #000', padding: '40px 5px', verticalAlign: 'bottom' }}>
-                  <div style={{ borderTop: '1px solid #000', paddingTop: '3px', marginTop: '35px' }}>
+                <td style={{ border: '1px solid #000', padding: '5px', verticalAlign: 'top' }}>
+                  <div style={{ marginTop: '45px' }}>
                     <div>Signature: ______________</div>
-                    <div style={{ marginTop: '3px' }}>Date: ______________</div>
+                    <div style={{ marginTop: '3px', marginBottom: 0 }}>Date: ______________</div>
                   </div>
                 </td>
-                <td style={{ border: '1px solid #000', padding: '40px 5px', verticalAlign: 'bottom' }}>
-                  <div style={{ borderTop: '1px solid #000', paddingTop: '3px', marginTop: '35px' }}>
+                <td style={{ border: '1px solid #000', padding: '5px', verticalAlign: 'top' }}>
+                  <div style={{ marginTop: '45px' }}>
                     <div>Signature: ______________</div>
-                    <div style={{ marginTop: '3px' }}>Date: ______________</div>
+                    <div style={{ marginTop: '3px', marginBottom: 0 }}>Date: ______________</div>
                   </div>
                 </td>
-                <td style={{ border: '1px solid #000', padding: '40px 5px', verticalAlign: 'bottom' }}>
-                  <div style={{ borderTop: '1px solid #000', paddingTop: '3px', marginTop: '35px' }}>
+                <td style={{ border: '1px solid #000', padding: '5px', verticalAlign: 'top' }}>
+                  <div style={{ marginTop: '45px' }}>
                     <div>Signature: ______________</div>
-                    <div style={{ marginTop: '3px' }}>Date: ______________</div>
+                    <div style={{ marginTop: '3px', marginBottom: 0 }}>Date: ______________</div>
                   </div>
                 </td>
-                <td style={{ border: '1px solid #000', padding: '40px 5px', verticalAlign: 'bottom' }}>
-                  <div style={{ borderTop: '1px solid #000', paddingTop: '3px', marginTop: '35px' }}>
+                <td style={{ border: '1px solid #000', padding: '5px', verticalAlign: 'top' }}>
+                  <div style={{ marginTop: '45px' }}>
                     <div>Signature: ______________</div>
-                    <div style={{ marginTop: '3px' }}>Date: ______________</div>
+                    <div style={{ marginTop: '3px', marginBottom: 0 }}>Date: ______________</div>
+                  </div>
+                  <div style={{ textAlign: 'center', marginTop: '8px', fontSize: '9px', fontStyle: 'italic' }}>
+                    <p style={{ margin: 0 }}>"Received the above goods in order"</p>
                   </div>
                 </td>
               </tr>
             </tbody>
           </table>
-          
-          {/* Footer - Will appear in the 1.5 inch bottom margin */}
-          <div style={{ textAlign: 'center', marginTop: '10px', fontSize: '9px', fontStyle: 'italic' }}>
-            <p style={{ margin: '3px 0' }}>"Received the above goods in order"</p>
-          </div>
         </div>
       </div>
     </>
