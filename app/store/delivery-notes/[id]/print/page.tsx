@@ -83,11 +83,8 @@ export default function DeliveryNotePrintPage() {
             display: none;
           }
           .signature-section {
-            position: fixed;
-            bottom: 1.5in;
-            left: 0.5in;
-            right: 0.5in;
-            width: calc(100% - 1in);
+            page-break-inside: avoid;
+            margin-top: 30px;
           }
         }
       `}</style>
