@@ -402,9 +402,10 @@ export default function DeliveryNotesPage() {
               }}
               className="bg-blue-600 hover:bg-blue-700"
             >
-            <Plus className="h-4 w-4 mr-2" />
-            {showForm ? 'Cancel' : 'New Delivery Note'}
-          </Button>
+              <Plus className="h-4 w-4 mr-2" />
+              {showForm ? 'Cancel' : 'New Delivery Note'}
+            </Button>
+          </div>
         </div>
 
         {/* Form */}
