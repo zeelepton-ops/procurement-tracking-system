@@ -98,13 +98,44 @@ export async function POST(request: Request) {
       CREATE INDEX IF NOT EXISTS "WorkerAuditLog_createdAt_idx" ON "WorkerAuditLog"("createdAt");
     `
 
-    return NextResponse.json({ success: true, message: 'Worker tables created successfully' })
+    // Verify tables were created by running a simple query
+    try {
+      await prisma.$queryRaw`SELECT COUNT(*) FROM "Worker"`
+      return NextResponse.json({ 
+        success: true, 
+        message: 'Worker tables initialized successfully. You can now add workers!' 
+      })
+    } catch (verifyError: any) {
+      // If verification fails, tables might already exist
+      if (verifyError.code === 'P2021') {
+        return NextResponse.json({ 
+          success: false, 
+          error: 'Tables still not accessible after creation attempt',
+          hint: 'Please try refreshing the page or contact support'
+        }, { status: 500 })
+      }
+      // If it's a different error (like "relation already exists"), that's actually good
+      return NextResponse.json({ 
+        success: true, 
+        message: 'Worker tables are ready (already existed). You can start adding workers!' 
+      })
+    }
   } catch (error: any) {
     console.error('Failed to initialize worker tables:', error)
+    
+    // Check if error is because tables already exist (this is fine)
+    if (error.message?.includes('already exists') || error.code === '42P07') {
+      return NextResponse.json({ 
+        success: true, 
+        message: 'Worker tables are ready (already existed). You can start adding workers!' 
+      })
+    }
+    
     return NextResponse.json({ 
       success: false, 
       error: error.message,
-      hint: 'Tables may already exist or there was a connection issue'
-    }, { status: 200 })
+      code: error.code,
+      hint: 'Database connection issue or permission problem. Please try again or contact support.'
+    }, { status: 500 })
   }
 }

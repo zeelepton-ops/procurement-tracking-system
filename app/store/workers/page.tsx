@@ -109,15 +109,20 @@ export default function WorkersPage() {
       const data = await res.json()
       
       if (data.success) {
-        alert('Tables initialized successfully! You can now add workers.')
+        alert(data.message || 'Tables initialized successfully! You can now add workers.')
         setShowInitButton(false)
         await fetchWorkers()
       } else {
-        alert('Initialization note: ' + (data.hint || data.error))
+        alert('Error: ' + (data.error || 'Unknown error') + '\n\n' + (data.hint || 'Please try again'))
+        // If tables already exist, hide the button and try to fetch workers
+        if (data.error?.includes('already exist')) {
+          setShowInitButton(false)
+          await fetchWorkers()
+        }
       }
     } catch (error) {
       console.error('Failed to initialize:', error)
-      alert('Failed to initialize tables')
+      alert('Failed to initialize tables. Please check your connection and try again.')
     }
   }
 
