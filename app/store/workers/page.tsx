@@ -83,8 +83,8 @@ export default function WorkersPage() {
     shift2End: '05:00',
     shift1NextDay: false,
     shift2NextDay: true,
-    lunchStart: '12:00',
-    lunchEnd: '13:00',
+    lunch1Hours: 1,
+    lunch2Hours: 1,
     workdaySelection: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
     weekendSelection: ['Sat', 'Sun']
   })
@@ -100,6 +100,7 @@ export default function WorkersPage() {
   const [attendanceForm, setAttendanceForm] = useState({
     workerId: '',
     date: '',
+    shift: 'shift1',
     status: 'PRESENT',
     checkIn: '',
     checkOut: '',
@@ -228,17 +229,12 @@ export default function WorkersPage() {
           diffMs = diffMs + 24 * 60 * 60 * 1000
         }
         calculatedHours = diffMs > 0 ? Number((diffMs / (1000 * 60 * 60)).toFixed(2)) : 0
+      }
 
-        // Deduct lunch overlap if within the window
-        if (attendanceForm.date && attendanceSettings.lunchStart && attendanceSettings.lunchEnd) {
-          const lunchStart = new Date(`${attendanceForm.date}T${attendanceSettings.lunchStart}`)
-          const lunchEnd = new Date(`${attendanceForm.date}T${attendanceSettings.lunchEnd}`)
-          const overlap = Math.max(0, Math.min(end.getTime(), lunchEnd.getTime()) - Math.max(start.getTime(), lunchStart.getTime()))
-          if (overlap > 0) {
-            const lunchHours = overlap / (1000 * 60 * 60)
-            calculatedHours = Math.max(0, Number((calculatedHours - lunchHours).toFixed(2)))
-          }
-        }
+      // Deduct lunch hours based on selected shift
+      const lunchHours = attendanceForm.shift === 'shift2' ? attendanceSettings.lunch2Hours : attendanceSettings.lunch1Hours
+      if (calculatedHours !== null && lunchHours) {
+        calculatedHours = Math.max(0, Number((calculatedHours - lunchHours).toFixed(2)))
       }
 
       const workHours = calculatedHours !== null ? calculatedHours : (attendanceForm.workHours ? Number(attendanceForm.workHours) : null)
@@ -861,19 +857,21 @@ export default function WorkersPage() {
                   </label>
                 </div>
                 <div>
-                  <Label>Lunch Start</Label>
+                  <Label>Shift 1 Lunch Hours</Label>
                   <Input
-                    type="time"
-                    value={attendanceSettings.lunchStart}
-                    onChange={(e) => setAttendanceSettings({ ...attendanceSettings, lunchStart: e.target.value })}
+                    type="number"
+                    step="0.1"
+                    value={attendanceSettings.lunch1Hours}
+                    onChange={(e) => setAttendanceSettings({ ...attendanceSettings, lunch1Hours: Number(e.target.value) })}
                   />
                 </div>
                 <div>
-                  <Label>Lunch End</Label>
+                  <Label>Shift 2 Lunch Hours</Label>
                   <Input
-                    type="time"
-                    value={attendanceSettings.lunchEnd}
-                    onChange={(e) => setAttendanceSettings({ ...attendanceSettings, lunchEnd: e.target.value })}
+                    type="number"
+                    step="0.1"
+                    value={attendanceSettings.lunch2Hours}
+                    onChange={(e) => setAttendanceSettings({ ...attendanceSettings, lunch2Hours: Number(e.target.value) })}
                   />
                 </div>
               </div>
@@ -889,6 +887,17 @@ export default function WorkersPage() {
                       <option value="single">Single worker</option>
                       <option value="filtered">All filtered workers ({filteredWorkers.length})</option>
                       <option value="multi">Choose workers</option>
+                    </select>
+                  </div>
+                  <div>
+                    <Label>Shift</Label>
+                    <select
+                      value={attendanceForm.shift}
+                      onChange={(e) => setAttendanceForm({ ...attendanceForm, shift: e.target.value })}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+                    >
+                      <option value="shift1">Shift 1</option>
+                      <option value="shift2">Shift 2</option>
                     </select>
                   </div>
                   <div>
