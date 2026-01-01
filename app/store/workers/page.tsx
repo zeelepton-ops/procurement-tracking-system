@@ -827,6 +827,14 @@ export default function WorkersPage() {
                     value={attendanceSettings.shift1End}
                     onChange={(e) => setAttendanceSettings({ ...attendanceSettings, shift1End: e.target.value })}
                   />
+                  <label className="flex items-center gap-2 text-sm mt-1">
+                    <input
+                      type="checkbox"
+                      checked={attendanceSettings.shift1NextDay}
+                      onChange={(e) => setAttendanceSettings({ ...attendanceSettings, shift1NextDay: e.target.checked })}
+                    />
+                    Ends next day
+                  </label>
                 </div>
                 <div>
                   <Label>Shift 2 Start</Label>
@@ -843,6 +851,14 @@ export default function WorkersPage() {
                     value={attendanceSettings.shift2End}
                     onChange={(e) => setAttendanceSettings({ ...attendanceSettings, shift2End: e.target.value })}
                   />
+                  <label className="flex items-center gap-2 text-sm mt-1">
+                    <input
+                      type="checkbox"
+                      checked={attendanceSettings.shift2NextDay}
+                      onChange={(e) => setAttendanceSettings({ ...attendanceSettings, shift2NextDay: e.target.checked })}
+                    />
+                    Ends next day
+                  </label>
                 </div>
                 <div>
                   <Label>Lunch Start</Label>
