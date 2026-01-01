@@ -152,12 +152,12 @@ export default function DeliveryNotePrintPage() {
             {dn.items && dn.items.length > 0 ? (
               dn.items.map((item, idx) => (
                 <tr key={item.id}>
-                  <td style={{ borderLeft: '1px solid #000', borderRight: '1px solid #000', padding: '2px', textAlign: 'center', fontSize: '12px', height: '30px' }}>{idx + 1}</td>
-                  <td style={{ borderRight: '1px solid #000', padding: '2px', fontSize: '12px', height: '30px' }}>{item.itemDescription}</td>
-                  <td style={{ borderRight: '1px solid #000', padding: '2px', textAlign: 'center', fontSize: '12px', height: '30px' }}>{item.unit}</td>
-                  <td style={{ borderRight: '1px solid #000', padding: '2px', textAlign: 'center', fontSize: '12px', height: '30px' }}>{item.quantity}</td>
-                  <td style={{ borderRight: '1px solid #000', padding: '2px', textAlign: 'center', fontSize: '12px', height: '30px' }}>{item.weight || ''}</td>
-                  <td style={{ borderRight: '1px solid #000', padding: '2px', fontSize: '12px', height: '30px' }}>{item.remarks || ''}</td>
+                  <td style={{ borderLeft: '1px solid #000', borderRight: '1px solid #000', padding: '2px', textAlign: 'center', fontSize: '12px', height: '40px' }}>{idx + 1}</td>
+                  <td style={{ borderRight: '1px solid #000', padding: '2px', fontSize: '12px', height: '40px' }}>{item.itemDescription}</td>
+                  <td style={{ borderRight: '1px solid #000', padding: '2px', textAlign: 'center', fontSize: '12px', height: '40px' }}>{item.unit}</td>
+                  <td style={{ borderRight: '1px solid #000', padding: '2px', textAlign: 'center', fontSize: '12px', height: '40px' }}>{item.quantity}</td>
+                  <td style={{ borderRight: '1px solid #000', padding: '2px', textAlign: 'center', fontSize: '12px', height: '40px' }}>{item.weight || ''}</td>
+                  <td style={{ borderRight: '1px solid #000', padding: '2px', fontSize: '12px', height: '40px' }}>{item.remarks || ''}</td>
                 </tr>
               ))
             ) : (
@@ -171,12 +171,12 @@ export default function DeliveryNotePrintPage() {
             {(!dn.items || dn.items.length < 8) &&
               Array.from({ length: Math.max(0, 8 - (dn.items?.length || 0)) }).map((_, i) => (
                 <tr key={`empty-${i}`}>
-                  <td style={{ borderLeft: '1px solid #000', borderRight: '1px solid #000', padding: '15px 4px', height: '30px' }}></td>
-                  <td style={{ borderRight: '1px solid #000', padding: '15px 4px', height: '30px' }}></td>
-                  <td style={{ borderRight: '1px solid #000', padding: '15px 4px', height: '30px' }}></td>
-                  <td style={{ borderRight: '1px solid #000', padding: '15px 4px', height: '30px' }}></td>
-                  <td style={{ borderRight: '1px solid #000', padding: '15px 4px', height: '30px' }}></td>
-                  <td style={{ borderRight: '1px solid #000', padding: '15px 4px', height: '30px' }}></td>
+                  <td style={{ borderLeft: '1px solid #000', borderRight: '1px solid #000', padding: '15px 4px', height: '40px' }}></td>
+                  <td style={{ borderRight: '1px solid #000', padding: '15px 4px', height: '40px' }}></td>
+                  <td style={{ borderRight: '1px solid #000', padding: '15px 4px', height: '40px' }}></td>
+                  <td style={{ borderRight: '1px solid #000', padding: '15px 4px', height: '40px' }}></td>
+                  <td style={{ borderRight: '1px solid #000', padding: '15px 4px', height: '40px' }}></td>
+                  <td style={{ borderRight: '1px solid #000', padding: '15px 4px', height: '40px' }}></td>
                 </tr>
               ))}
             {/* Total Row */}
