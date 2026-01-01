@@ -1,5 +1,5 @@
 {
-  "buildCommand": "npm run build",
+  "buildCommand": "prisma db push --accept-data-loss && prisma generate && next build",
   "devCommand": "npm run dev",
   "installCommand": "npm install"
 }
