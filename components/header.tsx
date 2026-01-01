@@ -5,7 +5,7 @@ import { useSession, signOut } from 'next-auth/react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { Package, FileText, BarChart3, LogOut, Briefcase, Users, Boxes, User, ChevronDown } from 'lucide-react'
+import { Package, FileText, BarChart3, LogOut, Briefcase, Users, Boxes, User, ChevronDown, Settings } from 'lucide-react'
 
 export default function Header() {
   const { data: session } = useSession()
@@ -42,11 +42,6 @@ export default function Header() {
     },
     { href: '/store', label: 'Store', icon: Boxes },
   ]
-
-  // Add Users link for admin only
-  if (session?.user?.role === 'ADMIN') {
-    navItems.push({ href: '/users', label: 'Users', icon: Users })
-  }
 
   return (
     <header className="bg-white/90 backdrop-blur border-b border-slate-200 sticky top-0 z-50 no-print shadow-sm">
@@ -177,8 +172,26 @@ export default function Header() {
                   <div className="text-sm font-semibold text-slate-900">{session.user?.name || 'User'}</div>
                   <div className="text-xs text-slate-500 truncate">{session.user?.email}</div>
                 </div>
-                <button
+                <Link
+                  href="/profile"
                   className="w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                  onClick={() => setUserMenuOpen(false)}
+                >
+                  <Settings className="h-4 w-4" />
+                  Profile Settings
+                </Link>
+                {session?.user?.role === 'ADMIN' && (
+                  <Link
+                    href="/users"
+                    className="w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                    onClick={() => setUserMenuOpen(false)}
+                  >
+                    <Users className="h-4 w-4" />
+                    Users
+                  </Link>
+                )}
+                <button
+                  className="w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100 mt-1 pt-2"
                   onClick={() => {
                     setUserMenuOpen(false)
                     signOut({ callbackUrl: '/login' })
