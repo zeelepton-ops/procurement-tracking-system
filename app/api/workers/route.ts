@@ -45,7 +45,8 @@ export async function GET(request: Request) {
     return NextResponse.json(workers)
   } catch (error) {
     console.error('Failed to fetch workers:', error)
-    return NextResponse.json({ error: 'Failed to fetch workers' }, { status: 500 })
+    // Return empty array instead of error object to prevent frontend iteration errors
+    return NextResponse.json([])
   }
 }
 
