@@ -29,18 +29,29 @@ export async function GET(request: Request) {
       ]
     }
 
-    const workers = await prisma.worker.findMany({
-      where: whereClause,
-      orderBy: { createdAt: 'desc' },
-      include: {
-        _count: {
-          select: {
-            attendances: true,
-            salaries: true
+    // Try to fetch workers, but handle table not existing
+    let workers = []
+    try {
+      workers = await prisma.worker.findMany({
+        where: whereClause,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          _count: {
+            select: {
+              attendances: true,
+              salaries: true
+            }
           }
         }
+      })
+    } catch (dbError: any) {
+      // If table doesn't exist (P2021), return empty array
+      if (dbError.code === 'P2021') {
+        console.log('Worker table does not exist yet - initialization needed')
+        return NextResponse.json([])
       }
-    })
+      throw dbError
+    }
 
     return NextResponse.json(workers)
   } catch (error) {
@@ -60,14 +71,25 @@ export async function POST(request: Request) {
     const body = await request.json()
 
     // Check for duplicate QID or Passport
-    const existingWorker = await prisma.worker.findFirst({
-      where: {
-        OR: [
-          { qid: body.qid },
-          { passportNo: body.passportNo }
-        ]
+    let existingWorker = null
+    try {
+      existingWorker = await prisma.worker.findFirst({
+        where: {
+          OR: [
+            { qid: body.qid },
+            { passportNo: body.passportNo }
+          ]
+        }
+      })
+    } catch (dbError: any) {
+      // If table doesn't exist, return helpful error
+      if (dbError.code === 'P2021') {
+        return NextResponse.json({ 
+          error: 'Worker tables not initialized. Please click the "Initialize Tables" button first.' 
+        }, { status: 400 })
       }
-    })
+      throw dbError
+    }
 
     if (existingWorker) {
       return NextResponse.json({ 
