@@ -273,6 +273,7 @@ export default function WorkersPage() {
       setAttendanceForm({
         workerId: '',
         date: '',
+        shift: 'shift1',
         status: 'PRESENT',
         checkIn: '',
         checkOut: '',
