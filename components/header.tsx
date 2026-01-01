@@ -61,8 +61,8 @@ export default function Header() {
                 style={{ width: '70px', height: 'auto', objectFit: 'contain' }}
               />
               <div className="flex flex-col leading-tight">
-                <span className="text-lg font-bold text-slate-900 whitespace-nowrap">Procurement System</span>
-                <span className="text-xs text-slate-500">Materials & Delivery</span>
+                <span className="text-lg font-bold text-slate-900 whitespace-nowrap">Project ERP System</span>
+                <span className="text-xs text-slate-500">Operations, Procurement & Delivery</span>
               </div>
             </Link>
           </div>
