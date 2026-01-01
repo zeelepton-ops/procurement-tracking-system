@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Plus, FileText, Printer, Trash2, Eye } from 'lucide-react'
+import { Plus, FileText, Printer, Trash2, Eye, Settings } from 'lucide-react'
 
 interface DeliveryNote {
   id: string
@@ -385,14 +385,23 @@ export default function DeliveryNotesPage() {
             <h1 className="text-3xl font-bold text-slate-900">Delivery Notes</h1>
             <p className="text-slate-600 mt-1 text-sm">Manage delivery of materials for job orders</p>
           </div>
-          <Button
-            onClick={() => {
-              setShowForm(!showForm)
-              if (showForm) resetForm()
-              setEditingId(null)
-            }}
-            className="bg-blue-600 hover:bg-blue-700"
-          >
+          <div className="flex gap-2">
+            <Button
+              onClick={() => router.push('/store/delivery-notes/print-settings')}
+              variant="outline"
+              className="bg-white"
+            >
+              <Settings className="mr-2 h-4 w-4" />
+              Print Settings
+            </Button>
+            <Button
+              onClick={() => {
+                setShowForm(!showForm)
+                if (showForm) resetForm()
+                setEditingId(null)
+              }}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
             <Plus className="h-4 w-4 mr-2" />
             {showForm ? 'Cancel' : 'New Delivery Note'}
           </Button>
