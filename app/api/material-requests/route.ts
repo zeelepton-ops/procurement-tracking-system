@@ -79,27 +79,50 @@ export async function GET(request: Request) {
         return NextResponse.json(requests)
       }
 
-      // Full payload with items
+      // Full payload with items - optimized for dashboard by limiting relations
       const requests = await prisma.materialRequest.findMany({
         where: {
           isDeleted: false
         },
         include: {
-          jobOrder: true,
-          items: true,
+          jobOrder: {
+            select: {
+              id: true,
+              jobNumber: true,
+              productName: true,
+              drawingRef: true
+            }
+          },
           procurementActions: {
+            select: {
+              id: true,
+              actionType: true,
+              actionDate: true,
+              actionBy: true
+            },
             orderBy: { actionDate: 'desc' },
             take: 1
           },
           purchaseOrderItems: {
-            include: {
-              purchaseOrder: true
+            select: {
+              id: true,
+              quantity: true,
+              receivedQuantity: true,
+              purchaseOrder: {
+                select: {
+                  id: true,
+                  poNumber: true,
+                  status: true
+                }
+              }
             }
           }
         },
         orderBy: {
           createdAt: 'desc'
-        }
+        },
+        take: pageSize,
+        skip
       })
 
       // Ensure all records have a status field (fallback to PENDING if missing)

@@ -152,35 +152,33 @@ export default function StatusDashboardPage() {
         {/* Header */}
         <div className="mb-4">
           <div className="flex items-center justify-between mb-1">
-            <div className="flex items-center gap-4">
-              <h1 className="text-3xl font-bold text-slate-900">Live Status Dashboard</h1>
-              <div className="flex items-center gap-2 border-l pl-4">
-                <span className="text-sm font-medium text-slate-600">View as:</span>
-                <Button
-                  size="sm"
-                  variant={userRole === 'production' ? 'default' : 'outline'}
-                  onClick={() => setUserRole('production')}
-                  className="h-7 text-xs"
-                >
-                  Production
-                </Button>
-                <Button
-                  size="sm"
-                  variant={userRole === 'store' ? 'default' : 'outline'}
-                  onClick={() => setUserRole('store')}
-                  className="h-7 text-xs"
-                >
-                  Store
-                </Button>
-                <Button
-                  size="sm"
-                  variant={userRole === 'project' ? 'default' : 'outline'}
-                  onClick={() => setUserRole('project')}
-                  className="h-7 text-xs"
-                >
-                  Project
-                </Button>
-              </div>
+            <h1 className="text-3xl font-bold text-slate-900">Live Status Dashboard</h1>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-slate-600">View as:</span>
+              <Button
+                size="sm"
+                variant={userRole === 'production' ? 'default' : 'outline'}
+                onClick={() => setUserRole('production')}
+                className="h-7 text-xs"
+              >
+                Production
+              </Button>
+              <Button
+                size="sm"
+                variant={userRole === 'store' ? 'default' : 'outline'}
+                onClick={() => setUserRole('store')}
+                className="h-7 text-xs"
+              >
+                Store
+              </Button>
+              <Button
+                size="sm"
+                variant={userRole === 'project' ? 'default' : 'outline'}
+                onClick={() => setUserRole('project')}
+                className="h-7 text-xs"
+              >
+                Project
+              </Button>
             </div>
           </div>
           <div className="flex items-center justify-between">

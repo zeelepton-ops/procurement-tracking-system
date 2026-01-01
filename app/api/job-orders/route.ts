@@ -101,26 +101,32 @@ export async function GET(request: Request) {
     // Some material request items store the job as free-text in `reasonForRequest` (e.g. "7549 - CLIC Qatar ...").
     // We therefore count items where the parent MR's jobOrderId = job.id OR the item's reasonForRequest contains the jobNumber.
     const jobIds = jobOrders.map(j => j.id)
+    const jobNumbersMap = new Map(jobOrders.map(j => [j.id, j.jobNumber]))
     let itemCounts: Array<{ jobOrderId: string; count: number }> = []
 
     if (jobIds.length > 0) {
       try {
-        // Run per-job item count queries in parallel (page size is small so this is acceptable)
-        const counts = await Promise.all(jobOrders.map(async (j) => {
-          const rows = await prisma.$queryRaw<any>`
-            SELECT COUNT(*)::int AS cnt
-            FROM "MaterialRequestItem" mri
-            JOIN "MaterialRequest" mr ON mr.id = mri."materialRequestId" AND mr."isDeleted" = FALSE
-            WHERE mri."isDeleted" = FALSE
-              AND (
-                mr."jobOrderId" = ${j.id}
-                OR (mri."jobOrderId" IS NOT NULL AND mri."jobOrderId" = ${j.id})
-                OR (mri."reasonForRequest" IS NOT NULL AND mri."reasonForRequest" ILIKE ${'%' + j.jobNumber + '%'})
+        // Use a single aggregated query instead of parallel queries for better performance
+        const rows = await prisma.$queryRaw<any>`
+          SELECT 
+            COALESCE(mr."jobOrderId", mri."jobOrderId") as "jobOrderId",
+            COUNT(*)::int AS cnt
+          FROM "MaterialRequestItem" mri
+          JOIN "MaterialRequest" mr ON mr.id = mri."materialRequestId" AND mr."isDeleted" = FALSE
+          WHERE mri."isDeleted" = FALSE
+            AND (
+              mr."jobOrderId" = ANY(${jobIds}::text[])
+              OR mri."jobOrderId" = ANY(${jobIds}::text[])
+              OR EXISTS (
+                SELECT 1 FROM unnest(${jobIds}::text[]) jid
+                WHERE mri."reasonForRequest" ILIKE '%' || (
+                  SELECT "jobNumber" FROM "JobOrder" WHERE id = jid
+                ) || '%'
               )
-          `
-          return { jobOrderId: j.id, count: (rows && rows[0] && Number(rows[0].cnt)) || 0 }
-        }))
-        itemCounts = counts
+            )
+          GROUP BY COALESCE(mr."jobOrderId", mri."jobOrderId")
+        `
+        itemCounts = rows.map((r: any) => ({ jobOrderId: r.jobOrderId, count: r.cnt }))
       } catch (err) {
         console.warn('Failed to compute material request item counts, falling back to MR-level counts', err)
         // Fallback: count material requests by jobOrderId as before

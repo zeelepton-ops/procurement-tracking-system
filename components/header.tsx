@@ -53,7 +53,7 @@ export default function Header() {
               <img 
                 src="https://i.ibb.co/nMjzX2GS/Logo-NBTC-Transparent.png" 
                 alt="NBTC Logo"
-                style={{ width: '70px', height: 'auto', objectFit: 'contain' }}
+                className="h-10 w-auto object-contain"
               />
               <div className="flex flex-col leading-tight">
                 <span className="text-lg font-bold text-slate-900 whitespace-nowrap">Project ERP System</span>
