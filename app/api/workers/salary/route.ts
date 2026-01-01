@@ -51,23 +51,41 @@ export async function POST(request: Request) {
 
     const body = await request.json()
 
-    // Calculate overtime pay and total salary
-    const overtimePay = (body.overtimeHours || 0) * (body.overtimeRate || 0)
-    const totalSalary = (body.basicSalary || 0) + overtimePay + (body.allowances || 0) - (body.deductions || 0)
+    // Settings
+    const basicHours = body.basicHours ?? 8
+    const monthsPerYear = body.monthsPerYear ?? 12
+    const weekdayFactor = body.weekdayFactor ?? 1
+    const weekendFactor = body.weekendFactor ?? 1.5
+    const holidayFactor = body.holidayFactor ?? 2
+
+    const basicSalaryNum = body.basicSalary || 0
+    const overtimeHoursNum = body.overtimeHours || 0
+    const allowancesNum = body.allowances || 0
+    const deductionsNum = body.deductions || 0
+
+    const hourlyRate = (basicSalaryNum * monthsPerYear) / 365 / basicHours
+    const dayType: 'weekday' | 'weekend' | 'holiday' = body.dayType || body.paymentStatus || 'weekday'
+    let factor = weekdayFactor
+    if (dayType === 'weekend') factor = weekendFactor
+    if (dayType === 'holiday') factor = holidayFactor
+
+    const baseDaySalary = basicHours * hourlyRate
+    const overtimePay = overtimeHoursNum * hourlyRate * factor
+    const totalSalary = baseDaySalary + overtimePay + allowancesNum - deductionsNum
 
     const salary = await prisma.workerSalary.create({
       data: {
         workerId: body.workerId,
         month: body.month,
         basicSalary: body.basicSalary,
-        overtimeHours: body.overtimeHours || 0,
-        overtimeRate: body.overtimeRate || 0,
+        overtimeHours: overtimeHoursNum,
+        overtimeRate: hourlyRate,
         overtimePay,
-        allowances: body.allowances || 0,
-        deductions: body.deductions || 0,
+        allowances: allowancesNum,
+        deductions: deductionsNum,
         totalSalary,
         paidDate: body.paidDate ? new Date(body.paidDate) : null,
-        paymentStatus: body.paymentStatus || 'PENDING',
+        paymentStatus: dayType,
         paymentMethod: body.paymentMethod || null,
         notes: body.notes || null,
         createdBy: session.user?.email || 'system'
@@ -91,19 +109,31 @@ export async function PUT(request: Request) {
     const body = await request.json()
     const { id, ...updateData } = body
 
-    // Recalculate if salary components changed
-    if (updateData.basicSalary || updateData.overtimeHours || updateData.overtimeRate || 
-        updateData.allowances || updateData.deductions) {
+    // Recalculate if salary components changed using same formula
+    if (updateData.basicSalary || updateData.overtimeHours || updateData.allowances || updateData.deductions) {
       const existing = await prisma.workerSalary.findUnique({ where: { id } })
       if (existing) {
+        const basicHours = updateData.basicHours ?? 8
+        const monthsPerYear = updateData.monthsPerYear ?? 12
+        const weekdayFactor = updateData.weekdayFactor ?? 1
+        const weekendFactor = updateData.weekendFactor ?? 1.5
+        const holidayFactor = updateData.holidayFactor ?? 2
+        const dayType: 'weekday' | 'weekend' | 'holiday' = updateData.dayType || existing.paymentStatus as any || 'weekday'
+
         const basicSalary = updateData.basicSalary ?? existing.basicSalary
         const overtimeHours = updateData.overtimeHours ?? existing.overtimeHours
-        const overtimeRate = updateData.overtimeRate ?? existing.overtimeRate
         const allowances = updateData.allowances ?? existing.allowances
         const deductions = updateData.deductions ?? existing.deductions
-        
-        updateData.overtimePay = overtimeHours * overtimeRate
-        updateData.totalSalary = basicSalary + updateData.overtimePay + allowances - deductions
+
+        const hourlyRate = (basicSalary * monthsPerYear) / 365 / basicHours
+        let factor = weekdayFactor
+        if (dayType === 'weekend') factor = weekendFactor
+        if (dayType === 'holiday') factor = holidayFactor
+
+        updateData.overtimeRate = hourlyRate
+        updateData.overtimePay = overtimeHours * hourlyRate * factor
+        updateData.totalSalary = (basicHours * hourlyRate) + updateData.overtimePay + allowances - deductions
+        updateData.paymentStatus = dayType
       }
     }
 

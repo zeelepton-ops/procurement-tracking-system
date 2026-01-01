@@ -73,6 +73,20 @@ export default function WorkersPage() {
   const [showAttendanceForm, setShowAttendanceForm] = useState(false)
   const [showSalaryForm, setShowSalaryForm] = useState(false)
 
+  const [attendanceSettings, setAttendanceSettings] = useState({
+    basicHours: 8,
+    workdays: 'Mon-Fri',
+    weekends: 'Sat-Sun'
+  })
+
+  const [salarySettings, setSalarySettings] = useState({
+    basicHours: 8,
+    monthsPerYear: 12,
+    weekdayFactor: 1,
+    weekendFactor: 1.5,
+    holidayFactor: 2
+  })
+
   const [attendanceForm, setAttendanceForm] = useState({
     workerId: '',
     date: '',
@@ -92,7 +106,7 @@ export default function WorkersPage() {
     overtimeRate: '',
     allowances: '',
     deductions: '',
-    paymentStatus: 'PENDING',
+    paymentStatus: 'weekday',
     paymentMethod: '',
     paidDate: '',
     notes: ''
@@ -190,13 +204,27 @@ export default function WorkersPage() {
     }
 
     try {
+      // Auto-calc work hours from check-in/out
+      let calculatedHours: number | null = null
+      if (attendanceForm.checkIn && attendanceForm.checkOut) {
+        const start = new Date(attendanceForm.checkIn)
+        const end = new Date(attendanceForm.checkOut)
+        const diffMs = end.getTime() - start.getTime()
+        calculatedHours = diffMs > 0 ? Number((diffMs / (1000 * 60 * 60)).toFixed(2)) : 0
+      }
+
+      const workHours = calculatedHours !== null ? calculatedHours : (attendanceForm.workHours ? Number(attendanceForm.workHours) : null)
+      const overtimeHours = workHours !== null && workHours > attendanceSettings.basicHours
+        ? Number((workHours - attendanceSettings.basicHours).toFixed(2))
+        : (attendanceForm.overtimeHours ? Number(attendanceForm.overtimeHours) : 0)
+
       const res = await fetch('/api/workers/attendance', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...attendanceForm,
-          workHours: attendanceForm.workHours ? Number(attendanceForm.workHours) : null,
-          overtimeHours: attendanceForm.overtimeHours ? Number(attendanceForm.overtimeHours) : null
+          workHours,
+          overtimeHours
         })
       })
 
@@ -227,16 +255,46 @@ export default function WorkersPage() {
     }
 
     try {
+      const basicHours = salarySettings.basicHours || 8
+      const monthsPerYear = salarySettings.monthsPerYear || 12
+      const weekdayFactor = salarySettings.weekdayFactor || 1
+      const weekendFactor = salarySettings.weekendFactor || 1.5
+      const holidayFactor = salarySettings.holidayFactor || 2
+
+      const basicSalaryNum = Number(salaryForm.basicSalary)
+      const overtimeHoursNum = salaryForm.overtimeHours ? Number(salaryForm.overtimeHours) : 0
+      const allowancesNum = salaryForm.allowances ? Number(salaryForm.allowances) : 0
+      const deductionsNum = salaryForm.deductions ? Number(salaryForm.deductions) : 0
+
+      const hourlyRate = ((basicSalaryNum || 0) * monthsPerYear) / 365 / basicHours
+      const dayType = salaryForm.paymentStatus || 'weekday'
+      let factor = weekdayFactor
+      if (dayType === 'weekend') factor = weekendFactor
+      if (dayType === 'holiday') factor = holidayFactor
+
+      const baseDaySalary = basicHours * hourlyRate
+      const overtimePay = overtimeHoursNum * hourlyRate * factor
+      const totalSalary = baseDaySalary + overtimePay + allowancesNum - deductionsNum
+
       const res = await fetch('/api/workers/salary', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...salaryForm,
-          basicSalary: Number(salaryForm.basicSalary),
-          overtimeHours: salaryForm.overtimeHours ? Number(salaryForm.overtimeHours) : 0,
-          overtimeRate: salaryForm.overtimeRate ? Number(salaryForm.overtimeRate) : 0,
-          allowances: salaryForm.allowances ? Number(salaryForm.allowances) : 0,
-          deductions: salaryForm.deductions ? Number(salaryForm.deductions) : 0
+          dayType,
+          basicSalary: basicSalaryNum,
+          overtimeHours: overtimeHoursNum,
+          overtimeRate: hourlyRate,
+          allowances: allowancesNum,
+          deductions: deductionsNum,
+          hourlyRate,
+          overtimePay,
+          totalSalary,
+          basicHours,
+          monthsPerYear,
+          weekdayFactor,
+          weekendFactor,
+          holidayFactor
         })
       })
 
@@ -250,7 +308,7 @@ export default function WorkersPage() {
         overtimeRate: '',
         allowances: '',
         deductions: '',
-        paymentStatus: 'PENDING',
+        paymentStatus: 'weekday',
         paymentMethod: '',
         paidDate: '',
         notes: ''
@@ -660,6 +718,30 @@ export default function WorkersPage() {
                   {showAttendanceForm ? 'Close Form' : 'Add Attendance'}
                 </Button>
               </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-4 p-3 border rounded-lg bg-slate-50">
+                <div>
+                  <Label>Basic Hours</Label>
+                  <Input
+                    type="number"
+                    value={attendanceSettings.basicHours}
+                    onChange={(e) => setAttendanceSettings({ ...attendanceSettings, basicHours: Number(e.target.value) })}
+                  />
+                </div>
+                <div>
+                  <Label>Workdays (info)</Label>
+                  <Input
+                    value={attendanceSettings.workdays}
+                    onChange={(e) => setAttendanceSettings({ ...attendanceSettings, workdays: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label>Weekends (info)</Label>
+                  <Input
+                    value={attendanceSettings.weekends}
+                    onChange={(e) => setAttendanceSettings({ ...attendanceSettings, weekends: e.target.value })}
+                  />
+                </div>
+              </div>
               {showAttendanceForm && (
                 <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3">
                   <div>
@@ -775,6 +857,51 @@ export default function WorkersPage() {
                   {showSalaryForm ? 'Close Form' : 'Add Salary'}
                 </Button>
               </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-4 p-3 border rounded-lg bg-slate-50">
+                <div>
+                  <Label>Basic Hours</Label>
+                  <Input
+                    type="number"
+                    value={salarySettings.basicHours}
+                    onChange={(e) => setSalarySettings({ ...salarySettings, basicHours: Number(e.target.value) })}
+                  />
+                </div>
+                <div>
+                  <Label>Months / Year</Label>
+                  <Input
+                    type="number"
+                    value={salarySettings.monthsPerYear}
+                    onChange={(e) => setSalarySettings({ ...salarySettings, monthsPerYear: Number(e.target.value) })}
+                  />
+                </div>
+                <div>
+                  <Label>Weekday OT Factor</Label>
+                  <Input
+                    type="number"
+                    step="0.1"
+                    value={salarySettings.weekdayFactor}
+                    onChange={(e) => setSalarySettings({ ...salarySettings, weekdayFactor: Number(e.target.value) })}
+                  />
+                </div>
+                <div>
+                  <Label>Weekend OT Factor</Label>
+                  <Input
+                    type="number"
+                    step="0.1"
+                    value={salarySettings.weekendFactor}
+                    onChange={(e) => setSalarySettings({ ...salarySettings, weekendFactor: Number(e.target.value) })}
+                  />
+                </div>
+                <div>
+                  <Label>Holiday OT Factor</Label>
+                  <Input
+                    type="number"
+                    step="0.1"
+                    value={salarySettings.holidayFactor}
+                    onChange={(e) => setSalarySettings({ ...salarySettings, holidayFactor: Number(e.target.value) })}
+                  />
+                </div>
+              </div>
               {showSalaryForm && (
                 <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3">
                   <div>
@@ -803,10 +930,6 @@ export default function WorkersPage() {
                     <Input type="number" step="0.1" value={salaryForm.overtimeHours} onChange={(e) => setSalaryForm({ ...salaryForm, overtimeHours: e.target.value })} />
                   </div>
                   <div>
-                    <Label>Overtime Rate</Label>
-                    <Input type="number" step="0.01" value={salaryForm.overtimeRate} onChange={(e) => setSalaryForm({ ...salaryForm, overtimeRate: e.target.value })} />
-                  </div>
-                  <div>
                     <Label>Allowances</Label>
                     <Input type="number" step="0.01" value={salaryForm.allowances} onChange={(e) => setSalaryForm({ ...salaryForm, allowances: e.target.value })} />
                   </div>
@@ -815,15 +938,15 @@ export default function WorkersPage() {
                     <Input type="number" step="0.01" value={salaryForm.deductions} onChange={(e) => setSalaryForm({ ...salaryForm, deductions: e.target.value })} />
                   </div>
                   <div>
-                    <Label>Payment Status</Label>
+                    <Label>Day Type</Label>
                     <select
                       value={salaryForm.paymentStatus}
                       onChange={(e) => setSalaryForm({ ...salaryForm, paymentStatus: e.target.value })}
                       className="w-full px-3 py-2 border border-slate-300 rounded-lg"
                     >
-                      <option value="PENDING">Pending</option>
-                      <option value="PARTIAL">Partial</option>
-                      <option value="PAID">Paid</option>
+                      <option value="weekday">Weekday</option>
+                      <option value="weekend">Weekend</option>
+                      <option value="holiday">Holiday</option>
                     </select>
                   </div>
                   <div>
@@ -880,9 +1003,9 @@ export default function WorkersPage() {
                         <td className="px-4 py-3 text-sm font-semibold text-slate-900">{sal.totalSalary}</td>
                         <td className="px-4 py-3 text-sm">
                           <span className={`px-2 py-1 text-xs rounded-full ${
-                            sal.paymentStatus === 'PAID' ? 'bg-green-100 text-green-700' :
-                            sal.paymentStatus === 'PARTIAL' ? 'bg-orange-100 text-orange-700' :
-                            'bg-yellow-100 text-yellow-700'
+                            sal.paymentStatus === 'holiday' ? 'bg-purple-100 text-purple-700' :
+                            sal.paymentStatus === 'weekend' ? 'bg-orange-100 text-orange-700' :
+                            'bg-blue-100 text-blue-700'
                           }`}>
                             {sal.paymentStatus}
                           </span>
