@@ -76,7 +76,13 @@ export default function WorkersPage() {
   const [attendanceSettings, setAttendanceSettings] = useState({
     basicHours: 8,
     workdays: 'Mon-Fri',
-    weekends: 'Sat-Sun'
+    weekends: 'Sat-Sun',
+    shift1Start: '08:00',
+    shift1End: '17:00',
+    shift2Start: '20:00',
+    shift2End: '05:00',
+    lunchStart: '12:00',
+    lunchEnd: '13:00'
   })
 
   const [salarySettings, setSalarySettings] = useState({
@@ -211,6 +217,17 @@ export default function WorkersPage() {
         const end = new Date(attendanceForm.checkOut)
         const diffMs = end.getTime() - start.getTime()
         calculatedHours = diffMs > 0 ? Number((diffMs / (1000 * 60 * 60)).toFixed(2)) : 0
+
+        // Deduct lunch overlap if within the window
+        if (attendanceForm.date && attendanceSettings.lunchStart && attendanceSettings.lunchEnd) {
+          const lunchStart = new Date(`${attendanceForm.date}T${attendanceSettings.lunchStart}`)
+          const lunchEnd = new Date(`${attendanceForm.date}T${attendanceSettings.lunchEnd}`)
+          const overlap = Math.max(0, Math.min(end.getTime(), lunchEnd.getTime()) - Math.max(start.getTime(), lunchStart.getTime()))
+          if (overlap > 0) {
+            const lunchHours = overlap / (1000 * 60 * 60)
+            calculatedHours = Math.max(0, Number((calculatedHours - lunchHours).toFixed(2)))
+          }
+        }
       }
 
       const workHours = calculatedHours !== null ? calculatedHours : (attendanceForm.workHours ? Number(attendanceForm.workHours) : null)
@@ -739,6 +756,54 @@ export default function WorkersPage() {
                   <Input
                     value={attendanceSettings.weekends}
                     onChange={(e) => setAttendanceSettings({ ...attendanceSettings, weekends: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label>Shift 1 Start</Label>
+                  <Input
+                    type="time"
+                    value={attendanceSettings.shift1Start}
+                    onChange={(e) => setAttendanceSettings({ ...attendanceSettings, shift1Start: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label>Shift 1 End</Label>
+                  <Input
+                    type="time"
+                    value={attendanceSettings.shift1End}
+                    onChange={(e) => setAttendanceSettings({ ...attendanceSettings, shift1End: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label>Shift 2 Start</Label>
+                  <Input
+                    type="time"
+                    value={attendanceSettings.shift2Start}
+                    onChange={(e) => setAttendanceSettings({ ...attendanceSettings, shift2Start: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label>Shift 2 End</Label>
+                  <Input
+                    type="time"
+                    value={attendanceSettings.shift2End}
+                    onChange={(e) => setAttendanceSettings({ ...attendanceSettings, shift2End: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label>Lunch Start</Label>
+                  <Input
+                    type="time"
+                    value={attendanceSettings.lunchStart}
+                    onChange={(e) => setAttendanceSettings({ ...attendanceSettings, lunchStart: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label>Lunch End</Label>
+                  <Input
+                    type="time"
+                    value={attendanceSettings.lunchEnd}
+                    onChange={(e) => setAttendanceSettings({ ...attendanceSettings, lunchEnd: e.target.value })}
                   />
                 </div>
               </div>
