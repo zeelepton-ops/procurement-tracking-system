@@ -81,8 +81,18 @@ export default function WorkersPage() {
     shift1End: '17:00',
     shift2Start: '20:00',
     shift2End: '05:00',
+    shift1NextDay: false,
+    shift2NextDay: true,
     lunchStart: '12:00',
-    lunchEnd: '13:00'
+    lunchEnd: '13:00',
+    workdayStart: '08:00',
+    workdayEnd: '17:00',
+    workdayNextDay: false,
+    weekendStart: '09:00',
+    weekendEnd: '14:00',
+    weekendNextDay: false,
+    workdaySelection: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+    weekendSelection: ['Sat', 'Sun']
   })
 
   const [salarySettings, setSalarySettings] = useState({
@@ -103,6 +113,9 @@ export default function WorkersPage() {
     overtimeHours: '',
     notes: ''
   })
+
+  const [attendanceScope, setAttendanceScope] = useState<'single' | 'filtered' | 'multi'>('single')
+  const [selectedWorkerIds, setSelectedWorkerIds] = useState<string[]>([])
 
   const [salaryForm, setSalaryForm] = useState({
     workerId: '',
@@ -204,8 +217,8 @@ export default function WorkersPage() {
   }
 
   const submitAttendance = async () => {
-    if (!attendanceForm.workerId || !attendanceForm.date) {
-      alert('Worker and date are required')
+    if (!attendanceForm.date) {
+      alert('Date is required')
       return
     }
 
@@ -215,7 +228,11 @@ export default function WorkersPage() {
       if (attendanceForm.checkIn && attendanceForm.checkOut) {
         const start = new Date(attendanceForm.checkIn)
         const end = new Date(attendanceForm.checkOut)
-        const diffMs = end.getTime() - start.getTime()
+        let diffMs = end.getTime() - start.getTime()
+        if (diffMs < 0) {
+          // Crosses midnight
+          diffMs = diffMs + 24 * 60 * 60 * 1000
+        }
         calculatedHours = diffMs > 0 ? Number((diffMs / (1000 * 60 * 60)).toFixed(2)) : 0
 
         // Deduct lunch overlap if within the window
@@ -235,17 +252,33 @@ export default function WorkersPage() {
         ? Number((workHours - attendanceSettings.basicHours).toFixed(2))
         : (attendanceForm.overtimeHours ? Number(attendanceForm.overtimeHours) : 0)
 
-      const res = await fetch('/api/workers/attendance', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...attendanceForm,
-          workHours,
-          overtimeHours
-        })
-      })
+      const targets: string[] =
+        attendanceScope === 'single'
+          ? (attendanceForm.workerId ? [attendanceForm.workerId] : [])
+          : attendanceScope === 'filtered'
+            ? filteredWorkers.map(w => w.id)
+            : selectedWorkerIds
 
-      if (!res.ok) throw new Error('Failed to save attendance')
+      if (targets.length === 0) {
+        alert('Select at least one worker')
+        return
+      }
+
+      const payloadBase = {
+        ...attendanceForm,
+        workHours,
+        overtimeHours
+      }
+
+      await Promise.all(
+        targets.map((id) =>
+          fetch('/api/workers/attendance', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ...payloadBase, workerId: id })
+          })
+        )
+      )
 
       setAttendanceForm({
         workerId: '',
@@ -257,6 +290,7 @@ export default function WorkersPage() {
         overtimeHours: '',
         notes: ''
       })
+      setSelectedWorkerIds([])
       setShowAttendanceForm(false)
       await fetchAttendances()
     } catch (error) {
@@ -745,18 +779,84 @@ export default function WorkersPage() {
                   />
                 </div>
                 <div>
-                  <Label>Workdays (info)</Label>
-                  <Input
-                    value={attendanceSettings.workdays}
-                    onChange={(e) => setAttendanceSettings({ ...attendanceSettings, workdays: e.target.value })}
-                  />
+                  <Label>Workdays</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map((d) => (
+                      <label key={d} className="flex items-center gap-1 text-sm">
+                        <input
+                          type="checkbox"
+                          checked={attendanceSettings.workdaySelection.includes(d)}
+                          onChange={(e) => {
+                            const next = e.target.checked
+                              ? [...attendanceSettings.workdaySelection, d]
+                              : attendanceSettings.workdaySelection.filter(x => x !== d)
+                            setAttendanceSettings({ ...attendanceSettings, workdaySelection: next })
+                          }}
+                        />
+                        {d}
+                      </label>
+                    ))}
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 mt-2">
+                    <Input
+                      type="time"
+                      value={attendanceSettings.workdayStart}
+                      onChange={(e) => setAttendanceSettings({ ...attendanceSettings, workdayStart: e.target.value })}
+                    />
+                    <Input
+                      type="time"
+                      value={attendanceSettings.workdayEnd}
+                      onChange={(e) => setAttendanceSettings({ ...attendanceSettings, workdayEnd: e.target.value })}
+                    />
+                  </div>
+                  <label className="flex items-center gap-2 text-sm mt-1">
+                    <input
+                      type="checkbox"
+                      checked={attendanceSettings.workdayNextDay}
+                      onChange={(e) => setAttendanceSettings({ ...attendanceSettings, workdayNextDay: e.target.checked })}
+                    />
+                    End next day
+                  </label>
                 </div>
                 <div>
-                  <Label>Weekends (info)</Label>
-                  <Input
-                    value={attendanceSettings.weekends}
-                    onChange={(e) => setAttendanceSettings({ ...attendanceSettings, weekends: e.target.value })}
-                  />
+                  <Label>Weekends</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map((d) => (
+                      <label key={d} className="flex items-center gap-1 text-sm">
+                        <input
+                          type="checkbox"
+                          checked={attendanceSettings.weekendSelection.includes(d)}
+                          onChange={(e) => {
+                            const next = e.target.checked
+                              ? [...attendanceSettings.weekendSelection, d]
+                              : attendanceSettings.weekendSelection.filter(x => x !== d)
+                            setAttendanceSettings({ ...attendanceSettings, weekendSelection: next })
+                          }}
+                        />
+                        {d}
+                      </label>
+                    ))}
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 mt-2">
+                    <Input
+                      type="time"
+                      value={attendanceSettings.weekendStart}
+                      onChange={(e) => setAttendanceSettings({ ...attendanceSettings, weekendStart: e.target.value })}
+                    />
+                    <Input
+                      type="time"
+                      value={attendanceSettings.weekendEnd}
+                      onChange={(e) => setAttendanceSettings({ ...attendanceSettings, weekendEnd: e.target.value })}
+                    />
+                  </div>
+                  <label className="flex items-center gap-2 text-sm mt-1">
+                    <input
+                      type="checkbox"
+                      checked={attendanceSettings.weekendNextDay}
+                      onChange={(e) => setAttendanceSettings({ ...attendanceSettings, weekendNextDay: e.target.checked })}
+                    />
+                    End next day
+                  </label>
                 </div>
                 <div>
                   <Label>Shift 1 Start</Label>
@@ -810,17 +910,53 @@ export default function WorkersPage() {
               {showAttendanceForm && (
                 <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3">
                   <div>
-                    <Label>Worker</Label>
+                    <Label>Scope</Label>
                     <select
-                      value={attendanceForm.workerId}
-                      onChange={(e) => setAttendanceForm({ ...attendanceForm, workerId: e.target.value })}
+                      value={attendanceScope}
+                      onChange={(e) => setAttendanceScope(e.target.value as any)}
                       className="w-full px-3 py-2 border border-slate-300 rounded-lg"
                     >
-                      <option value="">Select worker...</option>
-                      {workers.map((w) => (
-                        <option key={w.id} value={w.id}>{w.name} - {w.qid}</option>
-                      ))}
+                      <option value="single">Single worker</option>
+                      <option value="filtered">All filtered workers ({filteredWorkers.length})</option>
+                      <option value="multi">Choose workers</option>
                     </select>
+                  </div>
+                  <div>
+                    <Label>Worker</Label>
+                    {attendanceScope === 'single' && (
+                      <select
+                        value={attendanceForm.workerId}
+                        onChange={(e) => setAttendanceForm({ ...attendanceForm, workerId: e.target.value })}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+                      >
+                        <option value="">Select worker...</option>
+                        {workers.map((w) => (
+                          <option key={w.id} value={w.id}>{w.name} - {w.qid}</option>
+                        ))}
+                      </select>
+                    )}
+                    {attendanceScope === 'multi' && (
+                      <div className="max-h-48 overflow-y-auto border rounded-lg p-2">
+                        {filteredWorkers.map((w) => (
+                          <label key={w.id} className="flex items-center gap-2 text-sm py-1">
+                            <input
+                              type="checkbox"
+                              checked={selectedWorkerIds.includes(w.id)}
+                              onChange={(e) => {
+                                const next = e.target.checked
+                                  ? [...selectedWorkerIds, w.id]
+                                  : selectedWorkerIds.filter(id => id !== w.id)
+                                setSelectedWorkerIds(next)
+                              }}
+                            />
+                            <span>{w.name} ({w.qid})</span>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                    {attendanceScope === 'filtered' && (
+                      <div className="text-sm text-slate-600 mt-2">Will apply to {filteredWorkers.length} filtered workers</div>
+                    )}
                   </div>
                   <div>
                     <Label>Date</Label>
