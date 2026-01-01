@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 import { 
   Users, Plus, Search, FileDown, Upload, Calendar, DollarSign, 
   ClipboardList, History, Edit, Trash2, X, AlertCircle 
@@ -69,6 +70,33 @@ export default function WorkersPage() {
   const [salaries, setSalaries] = useState<any[]>([])
   const [auditLogs, setAuditLogs] = useState<any[]>([])
   const [showInitButton, setShowInitButton] = useState(false)
+  const [showAttendanceForm, setShowAttendanceForm] = useState(false)
+  const [showSalaryForm, setShowSalaryForm] = useState(false)
+
+  const [attendanceForm, setAttendanceForm] = useState({
+    workerId: '',
+    date: '',
+    status: 'PRESENT',
+    checkIn: '',
+    checkOut: '',
+    workHours: '',
+    overtimeHours: '',
+    notes: ''
+  })
+
+  const [salaryForm, setSalaryForm] = useState({
+    workerId: '',
+    month: '',
+    basicSalary: '',
+    overtimeHours: '',
+    overtimeRate: '',
+    allowances: '',
+    deductions: '',
+    paymentStatus: 'PENDING',
+    paymentMethod: '',
+    paidDate: '',
+    notes: ''
+  })
 
   useEffect(() => {
     fetchWorkers()
@@ -152,6 +180,86 @@ export default function WorkersPage() {
       setSalaries(Array.isArray(data) ? data : [])
     } catch (error) {
       console.error('Failed to fetch salaries:', error)
+    }
+  }
+
+  const submitAttendance = async () => {
+    if (!attendanceForm.workerId || !attendanceForm.date) {
+      alert('Worker and date are required')
+      return
+    }
+
+    try {
+      const res = await fetch('/api/workers/attendance', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...attendanceForm,
+          workHours: attendanceForm.workHours ? Number(attendanceForm.workHours) : null,
+          overtimeHours: attendanceForm.overtimeHours ? Number(attendanceForm.overtimeHours) : null
+        })
+      })
+
+      if (!res.ok) throw new Error('Failed to save attendance')
+
+      setAttendanceForm({
+        workerId: '',
+        date: '',
+        status: 'PRESENT',
+        checkIn: '',
+        checkOut: '',
+        workHours: '',
+        overtimeHours: '',
+        notes: ''
+      })
+      setShowAttendanceForm(false)
+      await fetchAttendances()
+    } catch (error) {
+      console.error('Failed to save attendance:', error)
+      alert('Failed to save attendance')
+    }
+  }
+
+  const submitSalary = async () => {
+    if (!salaryForm.workerId || !salaryForm.month || !salaryForm.basicSalary) {
+      alert('Worker, month, and basic salary are required')
+      return
+    }
+
+    try {
+      const res = await fetch('/api/workers/salary', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...salaryForm,
+          basicSalary: Number(salaryForm.basicSalary),
+          overtimeHours: salaryForm.overtimeHours ? Number(salaryForm.overtimeHours) : 0,
+          overtimeRate: salaryForm.overtimeRate ? Number(salaryForm.overtimeRate) : 0,
+          allowances: salaryForm.allowances ? Number(salaryForm.allowances) : 0,
+          deductions: salaryForm.deductions ? Number(salaryForm.deductions) : 0
+        })
+      })
+
+      if (!res.ok) throw new Error('Failed to save salary')
+
+      setSalaryForm({
+        workerId: '',
+        month: '',
+        basicSalary: '',
+        overtimeHours: '',
+        overtimeRate: '',
+        allowances: '',
+        deductions: '',
+        paymentStatus: 'PENDING',
+        paymentMethod: '',
+        paidDate: '',
+        notes: ''
+      })
+      setShowSalaryForm(false)
+      await fetchSalaries()
+    } catch (error) {
+      console.error('Failed to save salary:', error)
+      alert('Failed to save salary')
     }
   }
 
@@ -543,10 +651,74 @@ export default function WorkersPage() {
         {activeTab === 'attendance' && (
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <ClipboardList className="h-5 w-5 text-blue-600" />
-                Attendance Records
-              </CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <ClipboardList className="h-5 w-5 text-blue-600" />
+                  Attendance Records
+                </CardTitle>
+                <Button variant="outline" onClick={() => setShowAttendanceForm((s) => !s)}>
+                  {showAttendanceForm ? 'Close Form' : 'Add Attendance'}
+                </Button>
+              </div>
+              {showAttendanceForm && (
+                <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div>
+                    <Label>Worker</Label>
+                    <select
+                      value={attendanceForm.workerId}
+                      onChange={(e) => setAttendanceForm({ ...attendanceForm, workerId: e.target.value })}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+                    >
+                      <option value="">Select worker...</option>
+                      {workers.map((w) => (
+                        <option key={w.id} value={w.id}>{w.name} - {w.qid}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <Label>Date</Label>
+                    <Input type="date" value={attendanceForm.date} onChange={(e) => setAttendanceForm({ ...attendanceForm, date: e.target.value })} />
+                  </div>
+                  <div>
+                    <Label>Status</Label>
+                    <select
+                      value={attendanceForm.status}
+                      onChange={(e) => setAttendanceForm({ ...attendanceForm, status: e.target.value })}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+                    >
+                      <option value="PRESENT">Present</option>
+                      <option value="ABSENT">Absent</option>
+                      <option value="HALF_DAY">Half Day</option>
+                      <option value="LEAVE">Leave</option>
+                      <option value="HOLIDAY">Holiday</option>
+                    </select>
+                  </div>
+                  <div>
+                    <Label>Check In</Label>
+                    <Input type="datetime-local" value={attendanceForm.checkIn} onChange={(e) => setAttendanceForm({ ...attendanceForm, checkIn: e.target.value })} />
+                  </div>
+                  <div>
+                    <Label>Check Out</Label>
+                    <Input type="datetime-local" value={attendanceForm.checkOut} onChange={(e) => setAttendanceForm({ ...attendanceForm, checkOut: e.target.value })} />
+                  </div>
+                  <div>
+                    <Label>Work Hours</Label>
+                    <Input type="number" step="0.1" value={attendanceForm.workHours} onChange={(e) => setAttendanceForm({ ...attendanceForm, workHours: e.target.value })} />
+                  </div>
+                  <div>
+                    <Label>Overtime Hours</Label>
+                    <Input type="number" step="0.1" value={attendanceForm.overtimeHours} onChange={(e) => setAttendanceForm({ ...attendanceForm, overtimeHours: e.target.value })} />
+                  </div>
+                  <div className="md:col-span-2">
+                    <Label>Notes</Label>
+                    <Textarea rows={2} value={attendanceForm.notes} onChange={(e) => setAttendanceForm({ ...attendanceForm, notes: e.target.value })} />
+                  </div>
+                  <div className="flex items-end gap-2">
+                    <Button onClick={submitAttendance}>Save Attendance</Button>
+                    <Button variant="outline" onClick={() => setShowAttendanceForm(false)}>Cancel</Button>
+                  </div>
+                </div>
+              )}
             </CardHeader>
             <CardContent className="p-0">
               <div className="overflow-x-auto">
@@ -594,10 +766,84 @@ export default function WorkersPage() {
         {activeTab === 'salary' && (
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <DollarSign className="h-5 w-5 text-emerald-600" />
-                Salary Records
-              </CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <DollarSign className="h-5 w-5 text-emerald-600" />
+                  Salary Records
+                </CardTitle>
+                <Button variant="outline" onClick={() => setShowSalaryForm((s) => !s)}>
+                  {showSalaryForm ? 'Close Form' : 'Add Salary'}
+                </Button>
+              </div>
+              {showSalaryForm && (
+                <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div>
+                    <Label>Worker</Label>
+                    <select
+                      value={salaryForm.workerId}
+                      onChange={(e) => setSalaryForm({ ...salaryForm, workerId: e.target.value })}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+                    >
+                      <option value="">Select worker...</option>
+                      {workers.map((w) => (
+                        <option key={w.id} value={w.id}>{w.name} - {w.qid}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <Label>Month</Label>
+                    <Input type="month" value={salaryForm.month} onChange={(e) => setSalaryForm({ ...salaryForm, month: e.target.value })} />
+                  </div>
+                  <div>
+                    <Label>Basic Salary</Label>
+                    <Input type="number" value={salaryForm.basicSalary} onChange={(e) => setSalaryForm({ ...salaryForm, basicSalary: e.target.value })} />
+                  </div>
+                  <div>
+                    <Label>Overtime Hours</Label>
+                    <Input type="number" step="0.1" value={salaryForm.overtimeHours} onChange={(e) => setSalaryForm({ ...salaryForm, overtimeHours: e.target.value })} />
+                  </div>
+                  <div>
+                    <Label>Overtime Rate</Label>
+                    <Input type="number" step="0.01" value={salaryForm.overtimeRate} onChange={(e) => setSalaryForm({ ...salaryForm, overtimeRate: e.target.value })} />
+                  </div>
+                  <div>
+                    <Label>Allowances</Label>
+                    <Input type="number" step="0.01" value={salaryForm.allowances} onChange={(e) => setSalaryForm({ ...salaryForm, allowances: e.target.value })} />
+                  </div>
+                  <div>
+                    <Label>Deductions</Label>
+                    <Input type="number" step="0.01" value={salaryForm.deductions} onChange={(e) => setSalaryForm({ ...salaryForm, deductions: e.target.value })} />
+                  </div>
+                  <div>
+                    <Label>Payment Status</Label>
+                    <select
+                      value={salaryForm.paymentStatus}
+                      onChange={(e) => setSalaryForm({ ...salaryForm, paymentStatus: e.target.value })}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+                    >
+                      <option value="PENDING">Pending</option>
+                      <option value="PARTIAL">Partial</option>
+                      <option value="PAID">Paid</option>
+                    </select>
+                  </div>
+                  <div>
+                    <Label>Payment Method</Label>
+                    <Input value={salaryForm.paymentMethod} onChange={(e) => setSalaryForm({ ...salaryForm, paymentMethod: e.target.value })} />
+                  </div>
+                  <div>
+                    <Label>Paid Date</Label>
+                    <Input type="date" value={salaryForm.paidDate} onChange={(e) => setSalaryForm({ ...salaryForm, paidDate: e.target.value })} />
+                  </div>
+                  <div className="md:col-span-2">
+                    <Label>Notes</Label>
+                    <Textarea rows={2} value={salaryForm.notes} onChange={(e) => setSalaryForm({ ...salaryForm, notes: e.target.value })} />
+                  </div>
+                  <div className="flex items-end gap-2">
+                    <Button onClick={submitSalary}>Save Salary</Button>
+                    <Button variant="outline" onClick={() => setShowSalaryForm(false)}>Cancel</Button>
+                  </div>
+                </div>
+              )}
             </CardHeader>
             <CardContent className="p-0">
               <div className="overflow-x-auto">

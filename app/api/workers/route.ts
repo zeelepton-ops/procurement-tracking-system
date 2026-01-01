@@ -13,6 +13,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
     const search = searchParams.get('search') || ''
     const status = searchParams.get('status') || 'ALL'
+    const exportCsv = searchParams.get('export') === 'true'
 
     const whereClause: any = {}
     
@@ -51,6 +52,37 @@ export async function GET(request: Request) {
         return NextResponse.json([])
       }
       throw dbError
+    }
+
+    if (exportCsv) {
+      const headers = [
+        'Name', 'QID', 'QID Expiry', 'Passport', 'Passport Expiry', 'Profession', 'Visa', 'Phone', 'Email', 'Joining Date', 'Status', 'Shift'
+      ]
+
+      const rows = workers.map((w: any) => [
+        w.name,
+        w.qid,
+        w.qidExpiryDate ? new Date(w.qidExpiryDate).toISOString().split('T')[0] : '',
+        w.passportNo,
+        w.passportExpiryDate ? new Date(w.passportExpiryDate).toISOString().split('T')[0] : '',
+        w.profession,
+        w.visaCategory,
+        w.phone || '',
+        w.email || '',
+        w.joiningDate ? new Date(w.joiningDate).toISOString().split('T')[0] : '',
+        w.status,
+        w.allottedShift || ''
+      ])
+
+      const csv = [headers.join(','), ...rows.map(r => r.map(v => `"${(v ?? '').toString().replace(/"/g, '""')}"`).join(','))].join('\n')
+
+      return new Response(csv, {
+        status: 200,
+        headers: {
+          'Content-Type': 'text/csv',
+          'Content-Disposition': 'attachment; filename="workers.csv"'
+        }
+      })
     }
 
     return NextResponse.json(workers)
