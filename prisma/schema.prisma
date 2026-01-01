@@ -623,3 +623,114 @@ model DeliveryNoteItem {
   
   @@index([deliveryNoteId])
 }
+
+// Worker Management Models
+model Worker {
+  id                    String   @id @default(cuid())
+  name                  String
+  qid                   String   @unique
+  qidExpiryDate         DateTime?
+  passportNo            String   @unique
+  passportExpiryDate    DateTime?
+  profession            String
+  visaCategory          String   // Work Visa, Visit Visa, etc.
+  accommodationAddress  String?
+  permanentAddress      String?
+  phone                 String?
+  email                 String?
+  joiningDate           DateTime
+  exitDate              DateTime?
+  status                String   @default("ACTIVE") // ACTIVE, ON_LEAVE, TERMINATED, RESIGNED
+  
+  // Internal management
+  allottedShift         String?  // Day, Night, Rotating, etc.
+  internalCompanyShift  String?  // Which department/location
+  
+  // Audit fields
+  createdBy             String
+  createdAt             DateTime @default(now())
+  updatedBy             String?
+  updatedAt             DateTime @updatedAt
+  
+  // Relations
+  attendances           WorkerAttendance[]
+  salaries              WorkerSalary[]
+  auditLogs             WorkerAuditLog[]
+  
+  @@index([qid])
+  @@index([passportNo])
+  @@index([status])
+}
+
+model WorkerAttendance {
+  id              String   @id @default(cuid())
+  workerId        String
+  worker          Worker   @relation(fields: [workerId], references: [id], onDelete: Cascade)
+  
+  date            DateTime
+  checkIn         DateTime?
+  checkOut        DateTime?
+  status          String   @default("PRESENT") // PRESENT, ABSENT, HALF_DAY, LEAVE, HOLIDAY
+  workHours       Float?
+  overtimeHours   Float?
+  notes           String?
+  
+  // Audit fields
+  createdBy       String
+  createdAt       DateTime @default(now())
+  updatedBy       String?
+  updatedAt       DateTime @updatedAt
+  
+  @@unique([workerId, date])
+  @@index([workerId])
+  @@index([date])
+}
+
+model WorkerSalary {
+  id              String   @id @default(cuid())
+  workerId        String
+  worker          Worker   @relation(fields: [workerId], references: [id], onDelete: Cascade)
+  
+  month           String   // Format: YYYY-MM
+  basicSalary     Float
+  overtimeHours   Float    @default(0)
+  overtimeRate    Float    @default(0)
+  overtimePay     Float    @default(0)
+  allowances      Float    @default(0)
+  deductions      Float    @default(0)
+  totalSalary     Float
+  
+  paidDate        DateTime?
+  paymentStatus   String   @default("PENDING") // PENDING, PAID, CANCELLED
+  paymentMethod   String?  // Cash, Bank Transfer, etc.
+  notes           String?
+  
+  // Audit fields
+  createdBy       String
+  createdAt       DateTime @default(now())
+  updatedBy       String?
+  updatedAt       DateTime @updatedAt
+  
+  @@unique([workerId, month])
+  @@index([workerId])
+  @@index([month])
+  @@index([paymentStatus])
+}
+
+model WorkerAuditLog {
+  id              String   @id @default(cuid())
+  workerId        String
+  worker          Worker   @relation(fields: [workerId], references: [id], onDelete: Cascade)
+  
+  action          String   // CREATE, UPDATE, DELETE
+  field           String?  // Which field was changed
+  oldValue        String?
+  newValue        String?
+  description     String?
+  
+  createdBy       String
+  createdAt       DateTime @default(now())
+  
+  @@index([workerId])
+  @@index([createdAt])
+}
