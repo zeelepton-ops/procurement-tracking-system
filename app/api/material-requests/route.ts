@@ -107,7 +107,6 @@ export async function GET(request: Request) {
             select: {
               id: true,
               quantity: true,
-              receivedQuantity: true,
               purchaseOrder: {
                 select: {
                   id: true,
