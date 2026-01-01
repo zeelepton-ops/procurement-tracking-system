@@ -133,3 +133,31 @@ export async function POST(request: Request) {
     }, { status: 500 })
   }
 }
+
+// Health-check endpoint to verify tables exist
+export async function GET() {
+  try {
+    const rows: Array<{ table_name: string }> = await prisma.$queryRaw`
+      SELECT table_name
+      FROM information_schema.tables
+      WHERE table_schema = 'public'
+        AND table_name IN ('Worker', 'WorkerAttendance', 'WorkerSalary', 'WorkerAuditLog')
+    `
+
+    const found = rows.map((r) => r.table_name)
+    const missing = ['Worker', 'WorkerAttendance', 'WorkerSalary', 'WorkerAuditLog'].filter(t => !found.includes(t))
+
+    return NextResponse.json({
+      success: missing.length === 0,
+      found,
+      missing,
+    })
+  } catch (error: any) {
+    console.error('Failed to verify worker tables:', error)
+    return NextResponse.json({
+      success: false,
+      error: error.message,
+      code: error.code,
+    }, { status: 500 })
+  }
+}
