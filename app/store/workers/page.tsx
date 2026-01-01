@@ -68,6 +68,7 @@ export default function WorkersPage() {
   const [attendances, setAttendances] = useState<any[]>([])
   const [salaries, setSalaries] = useState<any[]>([])
   const [auditLogs, setAuditLogs] = useState<any[]>([])
+  const [showInitButton, setShowInitButton] = useState(false)
 
   useEffect(() => {
     fetchWorkers()
@@ -85,11 +86,38 @@ export default function WorkersPage() {
 
       const res = await fetch(`/api/workers?${params.toString()}`)
       const data = await res.json()
+      
+      // If empty array and no workers, might need initialization
+      if (data.length === 0 && workers.length === 0) {
+        setShowInitButton(true)
+      }
+      
       setWorkers(data)
       setLoading(false)
     } catch (error) {
       console.error('Failed to fetch workers:', error)
+      setShowInitButton(true)
       setLoading(false)
+    }
+  }
+
+  const initializeTables = async () => {
+    if (!confirm('Initialize Worker Management tables? This only needs to be done once.')) return
+    
+    try {
+      const res = await fetch('/api/workers/init', { method: 'POST' })
+      const data = await res.json()
+      
+      if (data.success) {
+        alert('Tables initialized successfully! You can now add workers.')
+        setShowInitButton(false)
+        await fetchWorkers()
+      } else {
+        alert('Initialization note: ' + (data.hint || data.error))
+      }
+    } catch (error) {
+      console.error('Failed to initialize:', error)
+      alert('Failed to initialize tables')
     }
   }
 
@@ -291,6 +319,12 @@ export default function WorkersPage() {
               </div>
             </div>
             <div className="flex gap-2">
+              {showInitButton && (
+                <Button onClick={initializeTables} className="bg-orange-600 hover:bg-orange-700">
+                  <AlertCircle className="mr-2 h-4 w-4" />
+                  Initialize Tables
+                </Button>
+              )}
               <input
                 type="file"
                 accept=".xlsx,.xls,.csv"
