@@ -85,12 +85,6 @@ export default function WorkersPage() {
     shift2NextDay: true,
     lunchStart: '12:00',
     lunchEnd: '13:00',
-    workdayStart: '08:00',
-    workdayEnd: '17:00',
-    workdayNextDay: false,
-    weekendStart: '09:00',
-    weekendEnd: '14:00',
-    weekendNextDay: false,
     workdaySelection: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
     weekendSelection: ['Sat', 'Sun']
   })
@@ -797,26 +791,6 @@ export default function WorkersPage() {
                       </label>
                     ))}
                   </div>
-                  <div className="grid grid-cols-2 gap-2 mt-2">
-                    <Input
-                      type="time"
-                      value={attendanceSettings.workdayStart}
-                      onChange={(e) => setAttendanceSettings({ ...attendanceSettings, workdayStart: e.target.value })}
-                    />
-                    <Input
-                      type="time"
-                      value={attendanceSettings.workdayEnd}
-                      onChange={(e) => setAttendanceSettings({ ...attendanceSettings, workdayEnd: e.target.value })}
-                    />
-                  </div>
-                  <label className="flex items-center gap-2 text-sm mt-1">
-                    <input
-                      type="checkbox"
-                      checked={attendanceSettings.workdayNextDay}
-                      onChange={(e) => setAttendanceSettings({ ...attendanceSettings, workdayNextDay: e.target.checked })}
-                    />
-                    End next day
-                  </label>
                 </div>
                 <div>
                   <Label>Weekends</Label>
@@ -837,26 +811,6 @@ export default function WorkersPage() {
                       </label>
                     ))}
                   </div>
-                  <div className="grid grid-cols-2 gap-2 mt-2">
-                    <Input
-                      type="time"
-                      value={attendanceSettings.weekendStart}
-                      onChange={(e) => setAttendanceSettings({ ...attendanceSettings, weekendStart: e.target.value })}
-                    />
-                    <Input
-                      type="time"
-                      value={attendanceSettings.weekendEnd}
-                      onChange={(e) => setAttendanceSettings({ ...attendanceSettings, weekendEnd: e.target.value })}
-                    />
-                  </div>
-                  <label className="flex items-center gap-2 text-sm mt-1">
-                    <input
-                      type="checkbox"
-                      checked={attendanceSettings.weekendNextDay}
-                      onChange={(e) => setAttendanceSettings({ ...attendanceSettings, weekendNextDay: e.target.checked })}
-                    />
-                    End next day
-                  </label>
                 </div>
                 <div>
                   <Label>Shift 1 Start</Label>
