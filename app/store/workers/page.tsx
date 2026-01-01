@@ -78,6 +78,15 @@ export default function WorkersPage() {
     filterWorkers()
   }, [workers, searchTerm, statusFilter])
 
+  useEffect(() => {
+    if (activeTab === 'attendance' && attendances.length === 0) {
+      fetchAttendances()
+    }
+    if (activeTab === 'salary' && salaries.length === 0) {
+      fetchSalaries()
+    }
+  }, [activeTab])
+
   const fetchWorkers = async () => {
     try {
       const params = new URLSearchParams()
@@ -123,6 +132,26 @@ export default function WorkersPage() {
     } catch (error) {
       console.error('Failed to initialize:', error)
       alert('Failed to initialize tables. Please check your connection and try again.')
+    }
+  }
+
+  const fetchAttendances = async () => {
+    try {
+      const res = await fetch('/api/workers/attendance')
+      const data = await res.json()
+      setAttendances(Array.isArray(data) ? data : [])
+    } catch (error) {
+      console.error('Failed to fetch attendance:', error)
+    }
+  }
+
+  const fetchSalaries = async () => {
+    try {
+      const res = await fetch('/api/workers/salary')
+      const data = await res.json()
+      setSalaries(Array.isArray(data) ? data : [])
+    } catch (error) {
+      console.error('Failed to fetch salaries:', error)
     }
   }
 
@@ -509,6 +538,116 @@ export default function WorkersPage() {
               </CardContent>
             </Card>
           </>
+        )}
+
+        {activeTab === 'attendance' && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <ClipboardList className="h-5 w-5 text-blue-600" />
+                Attendance Records
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-slate-50 border-b">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-slate-600 uppercase">Worker</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-slate-600 uppercase">Date</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-slate-600 uppercase">Status</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-slate-600 uppercase">Check In</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-slate-600 uppercase">Check Out</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-slate-600 uppercase">Hours</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-slate-600 uppercase">Overtime</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-slate-600 uppercase">Notes</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200">
+                    {attendances.length === 0 && (
+                      <tr>
+                        <td colSpan={8} className="px-4 py-6 text-center text-slate-500">No attendance records yet.</td>
+                      </tr>
+                    )}
+                    {attendances.map((att) => (
+                      <tr key={att.id} className="hover:bg-slate-50">
+                        <td className="px-4 py-3 text-sm">
+                          <div className="font-medium text-slate-900">{att.worker?.name || 'Unknown'}</div>
+                          <div className="text-xs text-slate-500">{att.worker?.qid}</div>
+                        </td>
+                        <td className="px-4 py-3 text-sm">{new Date(att.date).toLocaleDateString()}</td>
+                        <td className="px-4 py-3 text-sm">{att.status}</td>
+                        <td className="px-4 py-3 text-sm">{att.checkIn ? new Date(att.checkIn).toLocaleTimeString() : '-'}</td>
+                        <td className="px-4 py-3 text-sm">{att.checkOut ? new Date(att.checkOut).toLocaleTimeString() : '-'}</td>
+                        <td className="px-4 py-3 text-sm">{att.workHours ?? '-'}</td>
+                        <td className="px-4 py-3 text-sm">{att.overtimeHours ?? '-'}</td>
+                        <td className="px-4 py-3 text-sm text-slate-600">{att.notes || '-'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {activeTab === 'salary' && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <DollarSign className="h-5 w-5 text-emerald-600" />
+                Salary Records
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-slate-50 border-b">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-slate-600 uppercase">Worker</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-slate-600 uppercase">Month</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-slate-600 uppercase">Basic</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-slate-600 uppercase">Overtime</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-slate-600 uppercase">Allowances</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-slate-600 uppercase">Deductions</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-slate-600 uppercase">Total</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-slate-600 uppercase">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200">
+                    {salaries.length === 0 && (
+                      <tr>
+                        <td colSpan={8} className="px-4 py-6 text-center text-slate-500">No salary records yet.</td>
+                      </tr>
+                    )}
+                    {salaries.map((sal) => (
+                      <tr key={sal.id} className="hover:bg-slate-50">
+                        <td className="px-4 py-3 text-sm">
+                          <div className="font-medium text-slate-900">{sal.worker?.name || 'Unknown'}</div>
+                          <div className="text-xs text-slate-500">{sal.worker?.profession}</div>
+                        </td>
+                        <td className="px-4 py-3 text-sm">{sal.month}</td>
+                        <td className="px-4 py-3 text-sm">{sal.basicSalary}</td>
+                        <td className="px-4 py-3 text-sm">{sal.overtimePay} ({sal.overtimeHours}h @ {sal.overtimeRate})</td>
+                        <td className="px-4 py-3 text-sm">{sal.allowances}</td>
+                        <td className="px-4 py-3 text-sm">{sal.deductions}</td>
+                        <td className="px-4 py-3 text-sm font-semibold text-slate-900">{sal.totalSalary}</td>
+                        <td className="px-4 py-3 text-sm">
+                          <span className={`px-2 py-1 text-xs rounded-full ${
+                            sal.paymentStatus === 'PAID' ? 'bg-green-100 text-green-700' :
+                            sal.paymentStatus === 'PARTIAL' ? 'bg-orange-100 text-orange-700' :
+                            'bg-yellow-100 text-yellow-700'
+                          }`}>
+                            {sal.paymentStatus}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
         )}
 
         {/* Modal */}
