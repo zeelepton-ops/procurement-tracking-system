@@ -76,7 +76,7 @@ export default function StatusDashboardPage() {
 
   useEffect(() => {
     filterRequests()
-  }, [requests, filterStatus, searchTerm, showUrgentOnly])
+  }, [requests, filterStatus, searchTerm, showUrgentOnly, userRole])
 
   const fetchRequests = async () => {
     try {
@@ -93,6 +93,18 @@ export default function StatusDashboardPage() {
 
   const filterRequests = () => {
     let filtered = [...requests]
+    
+    // Role-based filtering
+    if (userRole === 'production') {
+      // Production sees pending and in-progress items
+      filtered = filtered.filter(r => ['PENDING', 'IN_PROCUREMENT', 'ORDERED', 'PARTIALLY_RECEIVED'].includes(r.status))
+    } else if (userRole === 'store') {
+      // Store sees items to receive and partially received
+      filtered = filtered.filter(r => ['ORDERED', 'PARTIALLY_RECEIVED', 'RECEIVED'].includes(r.status))
+    } else if (userRole === 'project') {
+      // Project team sees everything
+      filtered = filtered
+    }
     
     if (filterStatus !== 'ALL') {
       filtered = filtered.filter(r => r.status === filterStatus)
@@ -135,137 +147,136 @@ export default function StatusDashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-2">
-            <h1 className="text-4xl font-bold text-slate-900">Live Status Dashboard</h1>
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2 text-sm text-slate-600">
-                <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></div>
-                Live • Updated {lastUpdate.toLocaleTimeString()}
-              </div>
-              <Button onClick={fetchRequests} variant="outline" size="sm">
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Refresh
-              </Button>
-            </div>
-          </div>
-          <p className="text-slate-600">Real-time tracking for all material requests</p>
-        </div>
-
-        {/* Role Selector */}
-        <Card className="mb-6">
-          <CardContent className="p-4">
+        <div className="mb-4">
+          <div className="flex items-center justify-between mb-1">
             <div className="flex items-center gap-4">
-              <span className="text-sm font-medium text-slate-700">View as:</span>
-              <div className="flex gap-2">
+              <h1 className="text-3xl font-bold text-slate-900">Live Status Dashboard</h1>
+              <div className="flex items-center gap-2 border-l pl-4">
+                <span className="text-sm font-medium text-slate-600">View as:</span>
                 <Button
                   size="sm"
                   variant={userRole === 'production' ? 'default' : 'outline'}
                   onClick={() => setUserRole('production')}
+                  className="h-7 text-xs"
                 >
-                  Production Team
+                  Production
                 </Button>
                 <Button
                   size="sm"
                   variant={userRole === 'store' ? 'default' : 'outline'}
                   onClick={() => setUserRole('store')}
+                  className="h-7 text-xs"
                 >
-                  Store Person
+                  Store
                 </Button>
                 <Button
                   size="sm"
                   variant={userRole === 'project' ? 'default' : 'outline'}
                   onClick={() => setUserRole('project')}
+                  className="h-7 text-xs"
                 >
-                  Project Team
+                  Project
                 </Button>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-slate-600">Real-time tracking • {userRole === 'production' ? 'Showing pending & in-progress items' : userRole === 'store' ? 'Showing items to receive' : 'Showing all items'}</p>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 text-xs text-slate-600">
+                <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></div>
+                Updated {lastUpdate.toLocaleTimeString()}
+              </div>
+              <Button onClick={fetchRequests} variant="outline" size="sm" className="h-7">
+                <RefreshCw className="h-3 w-3 mr-1" />
+                Refresh
+              </Button>
+            </div>
+          </div>
+        </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-4">
           <Card className="border-l-4 border-l-blue-500">
-            <CardContent className="p-4">
+            <CardContent className="p-3">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs text-slate-600 uppercase">Total</p>
-                  <p className="text-3xl font-bold text-slate-900">{stats.total}</p>
+                  <p className="text-2xl font-bold text-slate-900">{stats.total}</p>
                 </div>
-                <Package className="h-8 w-8 text-blue-600" />
+                <Package className="h-6 w-6 text-blue-600" />
               </div>
             </CardContent>
           </Card>
           
           <Card className="border-l-4 border-l-yellow-500">
-            <CardContent className="p-4">
+            <CardContent className="p-3">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs text-slate-600 uppercase">Pending</p>
-                  <p className="text-3xl font-bold text-yellow-600">{stats.pending}</p>
+                  <p className="text-2xl font-bold text-yellow-600">{stats.pending}</p>
                 </div>
-                <Clock className="h-8 w-8 text-yellow-600" />
+                <Clock className="h-6 w-6 text-yellow-600" />
               </div>
             </CardContent>
           </Card>
           
           <Card className="border-l-4 border-l-indigo-500">
-            <CardContent className="p-4">
+            <CardContent className="p-3">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs text-slate-600 uppercase">In Progress</p>
-                  <p className="text-3xl font-bold text-indigo-600">{stats.inProgress}</p>
+                  <p className="text-2xl font-bold text-indigo-600">{stats.inProgress}</p>
                 </div>
-                <TrendingUp className="h-8 w-8 text-indigo-600" />
+                <TrendingUp className="h-6 w-6 text-indigo-600" />
               </div>
             </CardContent>
           </Card>
           
           <Card className="border-l-4 border-l-green-500">
-            <CardContent className="p-4">
+            <CardContent className="p-3">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs text-slate-600 uppercase">Received</p>
-                  <p className="text-3xl font-bold text-green-600">{stats.received}</p>
+                  <p className="text-2xl font-bold text-green-600">{stats.received}</p>
                 </div>
-                <CheckCircle className="h-8 w-8 text-green-600" />
+                <CheckCircle className="h-6 w-6 text-green-600" />
               </div>
             </CardContent>
           </Card>
           
           <Card className="border-l-4 border-l-orange-500">
-            <CardContent className="p-4">
+            <CardContent className="p-3">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs text-slate-600 uppercase">Urgent</p>
-                  <p className="text-3xl font-bold text-orange-600">{stats.urgent}</p>
+                  <p className="text-2xl font-bold text-orange-600">{stats.urgent}</p>
                 </div>
-                <Bell className="h-8 w-8 text-orange-600" />
+                <Bell className="h-6 w-6 text-orange-600" />
               </div>
             </CardContent>
           </Card>
           
           <Card className="border-l-4 border-l-red-500">
-            <CardContent className="p-4">
+            <CardContent className="p-3">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs text-slate-600 uppercase">Overdue</p>
-                  <p className="text-3xl font-bold text-red-600">{stats.overdue}</p>
+                  <p className="text-2xl font-bold text-red-600">{stats.overdue}</p>
                 </div>
-                <AlertTriangle className="h-8 w-8 text-red-600" />
+                <AlertTriangle className="h-6 w-6 text-red-600" />
               </div>
             </CardContent>
           </Card>
         </div>
 
         {/* Filters */}
-        <Card className="mb-6">
-          <CardContent className="p-4">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card className="mb-4">
+          <CardContent className="p-3">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
                 <Input
