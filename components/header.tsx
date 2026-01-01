@@ -1,17 +1,27 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useMemo } from 'react'
 import { useSession, signOut } from 'next-auth/react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { Package, FileText, BarChart3, LogOut, Briefcase, Users, Boxes } from 'lucide-react'
+import { Package, FileText, BarChart3, LogOut, Briefcase, Users, Boxes, User, ChevronDown } from 'lucide-react'
 
 export default function Header() {
   const { data: session } = useSession()
   const pathname = usePathname()
   const [openIndex, setOpenIndex] = useState<number | null>(null)
   const closeTimeoutRef = useRef<number | null>(null)
+  const [userMenuOpen, setUserMenuOpen] = useState(false)
+
+  const initials = useMemo(() => {
+    const name = session?.user?.name || session?.user?.email || 'User'
+    return name
+      .split(' ')
+      .map((part) => part.charAt(0).toUpperCase())
+      .slice(0, 2)
+      .join('')
+  }, [session?.user?.name, session?.user?.email])
 
   if (!session || pathname === '/login') {
     return null
@@ -39,8 +49,8 @@ export default function Header() {
   }
 
   return (
-    <header className="bg-white border-b border-slate-200 sticky top-0 z-50 no-print">
-      <div className="max-w-7xl mx-auto px-4 py-2">
+    <header className="bg-white/90 backdrop-blur border-b border-slate-200 sticky top-0 z-50 no-print shadow-sm">
+      <div className="max-w-7xl mx-auto px-4 py-2.5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link href="/dashboard" className="flex items-center gap-2 -ml-2">
@@ -50,7 +60,10 @@ export default function Header() {
                 alt="NBTC Logo"
                 style={{ width: '70px', height: 'auto', objectFit: 'contain' }}
               />
-              <span className="text-lg font-bold text-slate-900 whitespace-nowrap">Procurement System</span>
+              <div className="flex flex-col leading-tight">
+                <span className="text-lg font-bold text-slate-900 whitespace-nowrap">Procurement System</span>
+                <span className="text-xs text-slate-500">Materials & Delivery</span>
+              </div>
             </Link>
           </div>
 
@@ -143,21 +156,40 @@ export default function Header() {
             })}
           </nav>
 
-          <div className="flex items-center">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => signOut({ callbackUrl: '/login' })}
-              className="h-8 px-3"
+          <div className="relative flex items-center gap-2">
+            <div
+              className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-slate-100 cursor-pointer select-none"
+              onClick={() => setUserMenuOpen((v) => !v)}
             >
-              <LogOut className="h-4 w-4 mr-1.5" />
-              <span className="text-sm">Logout</span>
-            </Button>
+              <div className="h-9 w-9 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-semibold">
+                {initials}
+              </div>
+              <div className="hidden sm:flex flex-col leading-tight">
+                <span className="text-sm font-medium text-slate-900">{session.user?.name || 'User'}</span>
+                <span className="text-xs text-slate-500">{session.user?.email}</span>
+              </div>
+              <ChevronDown className="h-4 w-4 text-slate-500" />
+            </div>
+
+            {userMenuOpen && (
+              <div className="absolute right-0 top-full mt-2 w-52 rounded-lg border border-slate-200 bg-white shadow-lg py-2">
+                <div className="px-3 pb-2 border-b border-slate-100">
+                  <div className="text-sm font-semibold text-slate-900">{session.user?.name || 'User'}</div>
+                  <div className="text-xs text-slate-500 truncate">{session.user?.email}</div>
+                </div>
+                <button
+                  className="w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                  onClick={() => {
+                    setUserMenuOpen(false)
+                    signOut({ callbackUrl: '/login' })
+                  }}
+                >
+                  <LogOut className="h-4 w-4" />
+                  Logout
+                </button>
+              </div>
+            )}
           </div>
-        </div>
-        {/* Email on second line */}
-        <div className="flex justify-end mt-1">
-          <span className="text-xs text-slate-500">{session.user?.email}</span>
         </div>
       </div>
     </header>
