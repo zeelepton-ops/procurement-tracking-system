@@ -378,7 +378,7 @@ export default function WorkersPage() {
         w.name.toLowerCase().includes(term) ||
         w.qid.toLowerCase().includes(term) ||
         w.passportNo.toLowerCase().includes(term) ||
-        w.profession.toLowerCase().includes(term)
+        w.profession?.toLowerCase().includes(term)
       )
     }
     
