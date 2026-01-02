@@ -18,7 +18,8 @@ interface Worker {
   qidExpiryDate: string | null
   passportNo: string
   passportExpiryDate: string | null
-  profession: string
+  nationality: string | null
+  profession: string | null
   visaCategory: string
   accommodationAddress: string | null
   permanentAddress: string | null
@@ -53,8 +54,9 @@ export default function WorkersPage() {
     qidExpiryDate: '',
     passportNo: '',
     passportExpiryDate: '',
+    nationality: '',
     profession: '',
-    visaCategory: '',
+    visaCategory: 'Work Visa',
     accommodationAddress: '',
     permanentAddress: '',
     phone: '',
@@ -392,8 +394,9 @@ export default function WorkersPage() {
       qidExpiryDate: '',
       passportNo: '',
       passportExpiryDate: '',
+      nationality: '',
       profession: '',
-      visaCategory: '',
+      visaCategory: 'Work Visa',
       accommodationAddress: '',
       permanentAddress: '',
       phone: '',
@@ -416,7 +419,8 @@ export default function WorkersPage() {
       qidExpiryDate: worker.qidExpiryDate ? worker.qidExpiryDate.split('T')[0] : '',
       passportNo: worker.passportNo,
       passportExpiryDate: worker.passportExpiryDate ? worker.passportExpiryDate.split('T')[0] : '',
-      profession: worker.profession,
+      nationality: worker.nationality || '',
+      profession: worker.profession || '',
       visaCategory: worker.visaCategory,
       accommodationAddress: worker.accommodationAddress || '',
       permanentAddress: worker.permanentAddress || '',
@@ -1283,11 +1287,17 @@ export default function WorkersPage() {
                       />
                     </div>
                     <div>
-                      <Label>Profession *</Label>
+                      <Label>Nationality</Label>
+                      <Input
+                        value={workerForm.nationality}
+                        onChange={(e) => setWorkerForm({ ...workerForm, nationality: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <Label>Profession</Label>
                       <Input
                         value={workerForm.profession}
                         onChange={(e) => setWorkerForm({ ...workerForm, profession: e.target.value })}
-                        required
                       />
                     </div>
                     <div>
@@ -1298,7 +1308,6 @@ export default function WorkersPage() {
                         className="w-full px-3 py-2 border border-slate-300 rounded-lg"
                         required
                       >
-                        <option value="">Select...</option>
                         <option value="Work Visa">Work Visa</option>
                         <option value="Visit Visa">Visit Visa</option>
                         <option value="Business Visa">Business Visa</option>
