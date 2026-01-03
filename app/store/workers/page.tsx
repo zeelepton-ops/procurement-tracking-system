@@ -113,6 +113,9 @@ export default function WorkersPage() {
 
   const [attendanceScope, setAttendanceScope] = useState<'single' | 'filtered' | 'multi'>('single')
   const [selectedWorkerIds, setSelectedWorkerIds] = useState<string[]>([])
+  const [selectedForDelete, setSelectedForDelete] = useState<Set<string>>(new Set())
+  const [sortBy, setSortBy] = useState<'name' | 'qid' | 'status' | 'joinDate'>('name')
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
 
   const [salaryForm, setSalaryForm] = useState({
     workerId: '',
@@ -438,6 +441,27 @@ export default function WorkersPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
+    if (!workerForm.qid.trim() || !workerForm.passportNo.trim()) {
+      alert('QID and Passport are required')
+      return
+    }
+
+    const isDuplicateQID = workers.some(w => 
+      w.qid === workerForm.qid && (!selectedWorker || w.id !== selectedWorker.id)
+    )
+    const isDuplicatePassport = workers.some(w => 
+      w.passportNo === workerForm.passportNo && (!selectedWorker || w.id !== selectedWorker.id)
+    )
+
+    if (isDuplicateQID) {
+      alert('QID already exists. QID must be unique.')
+      return
+    }
+    if (isDuplicatePassport) {
+      alert('Passport already exists. Passport must be unique.')
+      return
+    }
+    
     try {
       const url = modalMode === 'add' ? '/api/workers' : '/api/workers'
       const method = modalMode === 'add' ? 'POST' : 'PUT'
@@ -456,7 +480,78 @@ export default function WorkersPage() {
         const error = await res.json()
         alert(error.error || 'Failed to save worker')
         return
+   
+
+  const handleBulkDelete = async () => {
+    if (selectedForDelete.size === 0) {
+      alert('Select workers to delete')
+      return
+    }
+    if (!confirm(`Delete ${selectedForDelete.size} worker(s)? This cannot be undone.`)) return
+    
+    try {
+      await Promise.all(
+        Array.from(selectedForDelete).map(id =>
+          fetch(`/api/workers?id=${id}`, { method: 'DELETE' })
+        )
+      )
+      setSelectedForDelete(new Set())
+      await fetchWorkers()
+    } catch (error) {
+      console.error('Failed to delete workers:', error)
+      alert('Failed to delete some workers')
+    }
+  }
+
+  const toggleSelectWorker = (id: string) => {
+    const newSet = new Set(selectedForDelete)
+    if (newSet.has(id)) {
+      newSet.delete(id)
+    } else {
+      newSet.add(id)
+    }
+    setSelectedForDelete(newSet)
+  }
+
+  const toggleSelectAll = () => {
+    if (selectedForDelete.size === getSortedWorkers().length) {
+      setSelectedForDelete(new Set())
+    } else {
+      setSelectedForDelete(new Set(getSortedWorkers().map(w => w.id)))
+    }
+  }
+
+  const getSortedWorkers = () => {
+    let sorted = [...filteredWorkers]
+    sorted.sort((a, b) => {
+      let aVal: any, bVal: any
+      switch(sortBy) {
+        case 'name':
+          aVal = a.name.toLowerCase()
+          bVal = b.name.toLowerCase()
+          break
+        case 'qid':
+          aVal = a.qid.toLowerCase()
+          bVal = b.qid.toLowerCase()
+          break
+        case 'status':
+          aVal = a.status
+          bVal = b.status
+          break
+        case 'joinDate':
+          aVal = new Date(a.joiningDate).getTime()
+          bVal = new Date(b.joiningDate).getTime()
+          break
+        default:
+          aVal = a.name.toLowerCase()
+          bVal = b.name.toLowerCase()
       }
+      if (aVal < bVal) return sortOrder === 'asc' ? -1 : 1
+      if (aVal > bVal) return sortOrder === 'asc' ? 1 : -1
+      return 0
+    })
+    return sorted
+  }   }
 
       await fetchWorkers()
       setShowModal(false)
@@ -643,7 +738,7 @@ export default function WorkersPage() {
             {/* Filters */}
             <Card className="mb-6">
               <CardContent className="p-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
                     <Input
@@ -664,9 +759,40 @@ export default function WorkersPage() {
                     <option value="TERMINATED">Terminated</option>
                     <option value="RESIGNED">Resigned</option>
                   </select>
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value as any)}
+                    className="px-3 py-2 border border-slate-300 rounded-lg"
+                  >
+                    <option value="name">Sort by Name</option>
+                    <option value="qid">Sort by QID</option>
+                    <option value="status">Sort by Status</option>
+                    <option value="joinDate">Sort by Join Date</option>
+                  </select>
+                  <button
+                    onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                    className="px-3 py-2 border border-slate-300 rounded-lg hover:bg-slate-50 text-sm font-medium"
+                  >
+                    {sortOrder === 'asc' ? '↑ Ascending' : '↓ Descending'}
+                  </button>
+                </div>
+                <div className="mt-3 flex items-center justify-between">
                   <div className="text-sm text-slate-600">
-                    Showing {filteredWorkers.length} of {workers.length} workers
+                    Showing {getSortedWorkers().length} of {workers.length} workers
                   </div>
+                  {selectedForDelete.size > 0 && (
+                    <div className="flex gap-2 items-center">
+                      <span className="text-sm font-medium text-red-600">{selectedForDelete.size} selected</span>
+                      <Button
+                        onClick={handleBulkDelete}
+                        variant="destructive"
+                        size="sm"
+                      >
+                        <Trash2 className="mr-1 h-4 w-4" />
+                        Delete Selected
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -678,6 +804,14 @@ export default function WorkersPage() {
                   <table className="w-full">
                     <thead className="bg-slate-50 border-b">
                       <tr>
+                        <th className="px-4 py-3 w-10">
+                          <input
+                            type="checkbox"
+                            checked={selectedForDelete.size === getSortedWorkers().length && getSortedWorkers().length > 0}
+                            onChange={toggleSelectAll}
+                            className="rounded"
+                          />
+                        </th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-slate-600 uppercase">Name</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-slate-600 uppercase">QID</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-slate-600 uppercase">Passport</th>
@@ -689,8 +823,16 @@ export default function WorkersPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-200">
-                      {filteredWorkers.map((worker) => (
-                        <tr key={worker.id} className="hover:bg-slate-50">
+                      {getSortedWorkers().map((worker) => (
+                        <tr key={worker.id} className={`hover:bg-slate-50 ${selectedForDelete.has(worker.id) ? 'bg-blue-50' : ''}`}>
+                          <td className="px-4 py-3">
+                            <input
+                              type="checkbox"
+                              checked={selectedForDelete.has(worker.id)}
+                              onChange={() => toggleSelectWorker(worker.id)}
+                              className="rounded"
+                            />
+                          </td>
                           <td className="px-4 py-3">
                             <div>
                               <div className="font-medium text-slate-900">{worker.name}</div>
