@@ -559,14 +559,6 @@ export default function WorkersPage() {
       return 0
     })
     return sorted
-  }   }
-
-      await fetchWorkers()
-      setShowModal(false)
-    } catch (error) {
-      console.error('Failed to save worker:', error)
-      alert('Failed to save worker')
-    }
   }
 
   const handleDelete = async (id: string) => {
