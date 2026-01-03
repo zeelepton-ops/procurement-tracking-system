@@ -1,9 +1,20 @@
 import nodemailer from 'nodemailer'
 import Twilio from 'twilio'
 import { prisma } from './prisma'
+import { decryptSecret } from './crypto'
 
 type EmailPayload = { to: string; subject: string; text?: string; html?: string; enquiryId?: string; supplierId?: string }
 type SmsPayload = { to: string; body: string; enquiryId?: string; supplierId?: string }
+
+type SmtpConfig = {
+  host: string
+  port: number
+  user: string
+  pass: string
+  from: string
+  secure: boolean
+  source: 'db' | 'env'
+}
 
 import type { Prisma } from '@prisma/client'
 
@@ -13,24 +24,61 @@ async function createNotificationRecord(data: NotificationRecordInput) {
   return prisma.notification.create({ data: data as Prisma.NotificationCreateInput })
 }
 
-export async function sendEmail(payload: EmailPayload): Promise<{ success: boolean; info?: unknown; error?: string }> {
-  const { to, subject, text, html, enquiryId, supplierId } = payload
-  const record = await createNotificationRecord({ enquiryId: enquiryId ?? undefined, supplierId: supplierId ?? undefined, channel: 'EMAIL', to })
+async function loadDbSmtpConfig(): Promise<SmtpConfig | null> {
+  const setting = await prisma.systemSetting.findUnique({ where: { key: 'smtp' } })
+  const value = (setting?.value ?? {}) as any
 
-  // Check SMTP config
+  const host = value.host as string | undefined
+  const port = value.port !== undefined ? Number(value.port) : undefined
+  const user = value.user as string | undefined
+  const from = (value.from as string | undefined) || user
+  const secure = typeof value.secure === 'boolean' ? value.secure : port === 465
+  const pass = value.passwordEncrypted ? decryptSecret(value.passwordEncrypted as string) : null
+
+  if (!host || !port || !user || !pass) return null
+
+  return { host, port, user, pass, from: from || user, secure, source: 'db' }
+}
+
+function loadEnvSmtpConfig(): SmtpConfig | null {
   const host = process.env.SMTP_HOST
   const port = process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT, 10) : undefined
   const user = process.env.SMTP_USER
   const pass = process.env.SMTP_PASS
+  const from = process.env.EMAIL_FROM || user
+  const secure = port === 465
 
-  if (!host || !port || !user || !pass) {
+  if (!host || !port || !user || !pass) return null
+
+  return { host, port, user, pass, from: from || user, secure, source: 'env' }
+}
+
+async function getSmtpConfig(): Promise<SmtpConfig | null> {
+  const dbConfig = await loadDbSmtpConfig()
+  if (dbConfig) return dbConfig
+  return loadEnvSmtpConfig()
+}
+
+export async function sendEmail(payload: EmailPayload): Promise<{ success: boolean; info?: unknown; error?: string }> {
+  const { to, subject, text, html, enquiryId, supplierId } = payload
+  const record = await createNotificationRecord({ enquiryId: enquiryId ?? undefined, supplierId: supplierId ?? undefined, channel: 'EMAIL', to })
+
+  const smtpConfig = await getSmtpConfig()
+
+  if (!smtpConfig) {
     await prisma.notification.update({ where: { id: record.id }, data: { status: 'FAILED', providerResult: { error: 'SMTP not configured' } } })
     return { success: false, error: 'SMTP not configured' }
   }
 
   try {
-    const transporter = nodemailer.createTransport({ host, port, auth: { user, pass }, secure: port === 465 })
-    const info = await transporter.sendMail({ from: process.env.EMAIL_FROM || user, to, subject, text, html })
+    const transporter = nodemailer.createTransport({
+      host: smtpConfig.host,
+      port: smtpConfig.port,
+      auth: { user: smtpConfig.user, pass: smtpConfig.pass },
+      secure: smtpConfig.secure,
+    })
+
+    const info = await transporter.sendMail({ from: smtpConfig.from || smtpConfig.user, to, subject, text, html })
 
     const serialized = JSON.parse(JSON.stringify(info))
     await prisma.notification.update({ where: { id: record.id }, data: { status: 'SENT', providerResult: serialized, sentAt: new Date() } })

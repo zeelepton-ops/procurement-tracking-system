@@ -33,6 +33,22 @@ export default function UsersManagementPage() {
   const [filter, setFilter] = useState('ALL')
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
   const [editingUser, setEditingUser] = useState<any | null>(null)
+  const [emailSettings, setEmailSettings] = useState({
+    host: '',
+    port: '',
+    user: '',
+    from: '',
+    secure: true,
+    password: '',
+    hasPassword: false,
+    source: 'env',
+    updatedBy: '' as string | null,
+    updatedAt: '' as string | null,
+  })
+  const [emailSettingsLoading, setEmailSettingsLoading] = useState(false)
+  const [emailSettingsSaving, setEmailSettingsSaving] = useState(false)
+  const [emailSettingsError, setEmailSettingsError] = useState('')
+  const [emailSettingsMessage, setEmailSettingsMessage] = useState('')
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -41,6 +57,7 @@ export default function UsersManagementPage() {
       router.push('/')
     } else if (status === 'authenticated') {
       fetchUsers()
+      loadEmailSettings()
     }
   }, [status, session, router])
 
@@ -53,6 +70,83 @@ export default function UsersManagementPage() {
       console.error('Failed to fetch users:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const loadEmailSettings = async () => {
+    setEmailSettingsLoading(true)
+    setEmailSettingsError('')
+    try {
+      const res = await fetch('/api/admin/email-settings')
+      const data = await res.json()
+
+      if (!res.ok) {
+        setEmailSettingsError(data.error || 'Failed to load SMTP settings')
+        return
+      }
+
+      const cfg = data.config || data.envDefaults || {}
+      setEmailSettings((prev) => ({
+        ...prev,
+        host: cfg.host || '',
+        port: cfg.port ? String(cfg.port) : '',
+        user: cfg.user || '',
+        from: cfg.from || '',
+        secure: typeof cfg.secure === 'boolean' ? cfg.secure : true,
+        password: '',
+        hasPassword: Boolean(cfg.hasPassword),
+        source: data.source || 'env',
+        updatedBy: cfg.updatedBy || null,
+        updatedAt: cfg.updatedAt || null,
+      }))
+    } catch (error) {
+      console.error('Failed to load SMTP settings:', error)
+      setEmailSettingsError('Failed to load SMTP settings')
+    } finally {
+      setEmailSettingsLoading(false)
+    }
+  }
+
+  const handleSaveEmailSettings = async (event: React.FormEvent) => {
+    event.preventDefault()
+    setEmailSettingsError('')
+    setEmailSettingsMessage('')
+    setEmailSettingsSaving(true)
+
+    try {
+      const payload: any = {
+        host: emailSettings.host || null,
+        port: emailSettings.port ? Number(emailSettings.port) : null,
+        user: emailSettings.user || null,
+        from: emailSettings.from || emailSettings.user || null,
+        secure: emailSettings.secure,
+      }
+
+      if (emailSettings.password) {
+        payload.password = emailSettings.password
+      }
+
+      const res = await fetch('/api/admin/email-settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        setEmailSettingsError(data.error || 'Failed to save SMTP settings')
+        return
+      }
+
+      setEmailSettingsMessage(data.message || 'SMTP settings saved')
+      setEmailSettings((prev) => ({ ...prev, password: '' }))
+      await loadEmailSettings()
+    } catch (error) {
+      console.error('Failed to save SMTP settings:', error)
+      setEmailSettingsError('Failed to save SMTP settings')
+    } finally {
+      setEmailSettingsSaving(false)
     }
   }
 
@@ -176,6 +270,134 @@ export default function UsersManagementPage() {
             </CardContent>
           </Card>
         </div>
+
+        {/* SMTP Settings */}
+        <Card className="mb-3 border-blue-100">
+          <CardHeader className="py-3 bg-blue-50">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <Shield className="h-4 w-4" />
+              SMTP Email Configuration (Admin Only)
+            </CardTitle>
+            <CardDescription className="text-xs">
+              Configure email settings for password resets and notifications. Database settings override environment variables.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-4">
+            {emailSettingsLoading ? (
+              <div className="flex items-center justify-center py-4">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              </div>
+            ) : (
+              <form onSubmit={handleSaveEmailSettings} className="space-y-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-xs">SMTP Host</Label>
+                    <input
+                      type="text"
+                      placeholder="smtp.gmail.com"
+                      value={emailSettings.host}
+                      onChange={(e) => setEmailSettings({ ...emailSettings, host: e.target.value })}
+                      className="mt-1 h-9 w-full rounded-md border px-3 text-sm"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs">SMTP Port</Label>
+                    <input
+                      type="number"
+                      placeholder="465 or 587"
+                      value={emailSettings.port}
+                      onChange={(e) => setEmailSettings({ ...emailSettings, port: e.target.value })}
+                      className="mt-1 h-9 w-full rounded-md border px-3 text-sm"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs">SMTP User (Email)</Label>
+                    <input
+                      type="email"
+                      placeholder="info@nbtcqatar.com"
+                      value={emailSettings.user}
+                      onChange={(e) => setEmailSettings({ ...emailSettings, user: e.target.value })}
+                      className="mt-1 h-9 w-full rounded-md border px-3 text-sm"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs">From Email</Label>
+                    <input
+                      type="email"
+                      placeholder="info@nbtcqatar.com"
+                      value={emailSettings.from}
+                      onChange={(e) => setEmailSettings({ ...emailSettings, from: e.target.value })}
+                      className="mt-1 h-9 w-full rounded-md border px-3 text-sm"
+                    />
+                    <p className="text-[10px] text-slate-500 mt-1">Defaults to SMTP User if empty</p>
+                  </div>
+                  <div>
+                    <Label className="text-xs">SMTP Password (App Password)</Label>
+                    <input
+                      type="password"
+                      placeholder={emailSettings.hasPassword ? '••••••••' : 'Enter new password'}
+                      value={emailSettings.password}
+                      onChange={(e) => setEmailSettings({ ...emailSettings, password: e.target.value })}
+                      className="mt-1 h-9 w-full rounded-md border px-3 text-sm"
+                    />
+                    <p className="text-[10px] text-slate-500 mt-1">
+                      {emailSettings.hasPassword ? 'Leave blank to keep current password' : 'Use Google App Password for Workspace'}
+                    </p>
+                  </div>
+                  <div>
+                    <Label className="text-xs">Security</Label>
+                    <select
+                      value={emailSettings.secure ? 'ssl' : 'tls'}
+                      onChange={(e) => setEmailSettings({ ...emailSettings, secure: e.target.value === 'ssl' })}
+                      className="mt-1 h-9 w-full rounded-md border px-3 text-sm"
+                    >
+                      <option value="ssl">SSL (port 465)</option>
+                      <option value="tls">STARTTLS (port 587)</option>
+                    </select>
+                  </div>
+                </div>
+
+                {emailSettingsError && (
+                  <div className="flex items-center gap-2 text-xs text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">
+                    <span>{emailSettingsError}</span>
+                  </div>
+                )}
+
+                {emailSettingsMessage && (
+                  <div className="flex items-center gap-2 text-xs text-green-700 bg-green-50 border border-green-200 rounded-md px-3 py-2">
+                    <span>{emailSettingsMessage}</span>
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between pt-2">
+                  <div className="text-xs text-slate-600">
+                    {emailSettings.source === 'db' ? (
+                      <span className="text-green-600 font-semibold">✓ Using database settings</span>
+                    ) : (
+                      <span className="text-yellow-600">Using environment variables</span>
+                    )}
+                    {emailSettings.updatedBy && (
+                      <span className="ml-2">
+                        • Updated by {emailSettings.updatedBy}
+                        {emailSettings.updatedAt && ` on ${new Date(emailSettings.updatedAt).toLocaleDateString()}`}
+                      </span>
+                    )}
+                  </div>
+                  <Button
+                    type="submit"
+                    disabled={emailSettingsSaving}
+                    className="bg-blue-600 hover:bg-blue-700 text-white text-xs h-8"
+                  >
+                    {emailSettingsSaving ? 'Saving...' : 'Save SMTP Settings'}
+                  </Button>
+                </div>
+              </form>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Filters */}
         <div className="mb-3 flex gap-2">

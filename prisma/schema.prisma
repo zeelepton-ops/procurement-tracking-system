@@ -30,6 +30,9 @@ model User {
   approvedAt DateTime?
 
   isActive  Boolean  @default(true)
+  resetTokenHash      String?  @unique
+  resetTokenExpiresAt DateTime?
+  resetRequestedAt    DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -528,6 +531,13 @@ model Notification {
   sentAt         DateTime?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
+}
+
+model SystemSetting {
+  key       String   @id
+  value     Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model InventoryItem {
