@@ -294,9 +294,7 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'Worker not found' }, { status: 404 })
     }
 
-    await prisma.worker.delete({ where: { id } })
-
-    // Create audit log
+    // Create audit log, then delete worker (SetNull will preserve the log)
     await prisma.workerAuditLog.create({
       data: {
         workerId: id,
@@ -305,6 +303,8 @@ export async function DELETE(request: Request) {
         createdBy: session.user?.email || 'system'
       }
     })
+
+    await prisma.worker.delete({ where: { id } })
 
     return NextResponse.json({ success: true })
   } catch (error) {

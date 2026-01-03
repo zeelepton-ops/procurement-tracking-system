@@ -720,8 +720,8 @@ model WorkerSalary {
 
 model WorkerAuditLog {
   id              String   @id @default(cuid())
-  workerId        String
-  worker          Worker   @relation(fields: [workerId], references: [id], onDelete: Cascade)
+  workerId        String?
+  worker          Worker?  @relation(fields: [workerId], references: [id], onDelete: SetNull)
   
   action          String   // CREATE, UPDATE, DELETE
   field           String?  // Which field was changed
