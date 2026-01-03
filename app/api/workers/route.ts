@@ -56,7 +56,25 @@ export async function GET(request: Request) {
 
     if (exportCsv) {
       const headers = [
-        'Name', 'QID', 'QID Expiry', 'Passport', 'Passport Expiry', 'Profession', 'Visa', 'Phone', 'Email', 'Joining Date', 'Status', 'Shift'
+        'Name',
+        'QID',
+        'QID Expiry',
+        'Passport',
+        'Passport Expiry',
+        'Nationality',
+        'Profession',
+        'Visa',
+        'Phone',
+        'Email',
+        'Joining Date',
+        'Exit Date',
+        'Status',
+        'Allotted Shift',
+        'Internal Company Shift',
+        'Accommodation Address',
+        'Permanent Address',
+        'Created At',
+        'Updated At'
       ]
 
       const rows = workers.map((w: any) => [
@@ -65,13 +83,20 @@ export async function GET(request: Request) {
         w.qidExpiryDate ? new Date(w.qidExpiryDate).toISOString().split('T')[0] : '',
         w.passportNo,
         w.passportExpiryDate ? new Date(w.passportExpiryDate).toISOString().split('T')[0] : '',
-        w.profession,
+        w.nationality || '',
+        w.profession || '',
         w.visaCategory,
         w.phone || '',
         w.email || '',
         w.joiningDate ? new Date(w.joiningDate).toISOString().split('T')[0] : '',
+        w.exitDate ? new Date(w.exitDate).toISOString().split('T')[0] : '',
         w.status,
-        w.allottedShift || ''
+        w.allottedShift || '',
+        w.internalCompanyShift || '',
+        w.accommodationAddress || '',
+        w.permanentAddress || '',
+        w.createdAt ? new Date(w.createdAt).toISOString() : '',
+        w.updatedAt ? new Date(w.updatedAt).toISOString() : ''
       ])
 
       const csv = [headers.join(','), ...rows.map(r => r.map(v => `"${(v ?? '').toString().replace(/"/g, '""')}"`).join(','))].join('\n')
