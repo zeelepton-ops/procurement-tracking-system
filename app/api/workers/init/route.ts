@@ -12,7 +12,8 @@ export async function POST(request: Request) {
         "qidExpiryDate" TIMESTAMP(3),
         "passportNo" TEXT NOT NULL UNIQUE,
         "passportExpiryDate" TIMESTAMP(3),
-        "profession" TEXT NOT NULL,
+        "nationality" TEXT,
+        "profession" TEXT,
         "visaCategory" TEXT NOT NULL,
         "accommodationAddress" TEXT,
         "permanentAddress" TEXT,
@@ -28,6 +29,9 @@ export async function POST(request: Request) {
         "updatedBy" TEXT,
         "updatedAt" TIMESTAMP(3) NOT NULL
       );`,
+      // Add columns if table already exists
+      `ALTER TABLE "Worker" ADD COLUMN IF NOT EXISTS "nationality" TEXT;`,
+      `ALTER TABLE "Worker" ALTER COLUMN "profession" DROP NOT NULL;`,
       `CREATE INDEX IF NOT EXISTS "Worker_qid_idx" ON "Worker"("qid");`,
       `CREATE INDEX IF NOT EXISTS "Worker_passportNo_idx" ON "Worker"("passportNo");`,
       `CREATE INDEX IF NOT EXISTS "Worker_status_idx" ON "Worker"("status");`,

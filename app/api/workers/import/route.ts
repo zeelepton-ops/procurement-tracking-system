@@ -80,7 +80,7 @@ export async function POST(request: Request) {
             passportNo: String(passportNo),
             passportExpiryDate: getField(row, 'Passport Expiry', 'passportExpiryDate') ? new Date(getField(row, 'Passport Expiry', 'passportExpiryDate')) : null,
             nationality: getField(row, 'Nationality', 'nationality') || null,
-            profession: getField(row, 'Profession', 'profession') || null,
+            profession: getField(row, 'Profession', 'profession') || 'Not Specified',
             visaCategory: String(visaCategory),
             accommodationAddress: getField(row, 'Accommodation Address', 'accommodationAddress') || null,
             permanentAddress: getField(row, 'Permanent Address', 'permanentAddress') || null,

@@ -162,7 +162,7 @@ export async function POST(request: Request) {
         passportNo: body.passportNo,
         passportExpiryDate: body.passportExpiryDate ? new Date(body.passportExpiryDate) : null,
         nationality: body.nationality || null,
-        profession: body.profession || null,
+        profession: body.profession || 'Not Specified',
         visaCategory: body.visaCategory,
         accommodationAddress: body.accommodationAddress || null,
         permanentAddress: body.permanentAddress || null,
