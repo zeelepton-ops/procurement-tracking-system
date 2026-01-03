@@ -480,7 +480,15 @@ export default function WorkersPage() {
         const error = await res.json()
         alert(error.error || 'Failed to save worker')
         return
-   
+      }
+
+      await fetchWorkers()
+      setShowModal(false)
+    } catch (error) {
+      console.error('Failed to save worker:', error)
+      alert('Failed to save worker')
+    }
+  }
 
   const handleBulkDelete = async () => {
     if (selectedForDelete.size === 0) {
