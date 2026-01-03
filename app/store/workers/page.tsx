@@ -492,13 +492,23 @@ export default function WorkersPage() {
         body: formData
       })
 
-      if (!res.ok) throw new Error('Failed to import')
+      const result = await res.json()
+
+      if (!res.ok) {
+        throw new Error(result.error || 'Failed to import')
+      }
       
-      alert('Import successful!')
+      const message = `Import successful! ${result.imported} workers imported${result.errors?.length > 0 ? `, ${result.errors.length} errors` : ''}`
+      alert(message)
+      if (result.errors?.length > 0) {
+        console.log('Import errors:', result.errors)
+      }
       await fetchWorkers()
     } catch (error) {
       console.error('Failed to import:', error)
-      alert('Failed to import workers from Excel')
+      alert(`Failed to import workers: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    } finally {
+      e.target.value = ''
     }
   }
 

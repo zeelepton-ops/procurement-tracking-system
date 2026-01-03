@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
+import * as XLSX from 'xlsx'
 
 export async function POST(request: Request) {
   try {
@@ -17,31 +18,42 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 })
     }
 
-    const text = await file.text()
-    const lines = text.split('\n').filter(line => line.trim())
-    
-    if (lines.length < 2) {
-      return NextResponse.json({ error: 'File is empty or invalid' }, { status: 400 })
+    // Read Excel file
+    const buffer = await file.arrayBuffer()
+    const workbook = XLSX.read(new Uint8Array(buffer), { type: 'array' })
+    const worksheet = workbook.Sheets[workbook.SheetNames[0]]
+    const data = XLSX.utils.sheet_to_json(worksheet) as any[]
+
+    if (!data || data.length === 0) {
+      return NextResponse.json({ error: 'No data found in Excel file' }, { status: 400 })
     }
 
-    // Parse CSV
-    const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''))
     const workers = []
     const errors = []
 
-    for (let i = 1; i < lines.length; i++) {
+    for (let i = 0; i < data.length; i++) {
       try {
-        const values = lines[i].split(',').map(v => v.trim().replace(/"/g, ''))
-        const workerData: any = {}
+        const row = data[i]
         
-        headers.forEach((header, index) => {
-          workerData[header] = values[index] || null
-        })
+        // Map Excel column names (flexible matching)
+        const getField = (row: any, ...possibleNames: string[]) => {
+          for (const name of possibleNames) {
+            if (row[name] !== undefined && row[name] !== null && row[name] !== '') {
+              return row[name]
+            }
+          }
+          return null
+        }
+
+        const name = getField(row, 'Name', 'name', 'NAME')
+        const qid = getField(row, 'QID', 'qid', 'QID')
+        const passportNo = getField(row, 'Passport', 'passportNo', 'PASSPORT', 'passport')
+        const visaCategory = getField(row, 'Visa', 'visaCategory', 'VISA') || 'Work Visa'
+        const joiningDate = getField(row, 'Joining Date', 'joiningDate', 'JOINING_DATE', 'JoiningDate')
 
         // Required fields validation
-        if (!workerData.name || !workerData.qid || !workerData.passportNo || 
-            !workerData.profession || !workerData.visaCategory || !workerData.joiningDate) {
-          errors.push(`Row ${i + 1}: Missing required fields`)
+        if (!name || !qid || !passportNo) {
+          errors.push(`Row ${i + 1}: Missing required fields (Name, QID, Passport)`)
           continue
         }
 
@@ -49,35 +61,36 @@ export async function POST(request: Request) {
         const existing = await prisma.worker.findFirst({
           where: {
             OR: [
-              { qid: workerData.qid },
-              { passportNo: workerData.passportNo }
+              { qid: String(qid) },
+              { passportNo: String(passportNo) }
             ]
           }
         })
 
         if (existing) {
-          errors.push(`Row ${i + 1}: Worker with QID ${workerData.qid} or Passport ${workerData.passportNo} already exists`)
+          errors.push(`Row ${i + 1}: Worker with QID/Passport already exists`)
           continue
         }
 
         const worker = await prisma.worker.create({
           data: {
-            name: workerData.name,
-            qid: workerData.qid,
-            qidExpiryDate: workerData.qidExpiryDate ? new Date(workerData.qidExpiryDate) : null,
-            passportNo: workerData.passportNo,
-            passportExpiryDate: workerData.passportExpiryDate ? new Date(workerData.passportExpiryDate) : null,
-            profession: workerData.profession,
-            visaCategory: workerData.visaCategory,
-            accommodationAddress: workerData.accommodationAddress || null,
-            permanentAddress: workerData.permanentAddress || null,
-            phone: workerData.phone || null,
-            email: workerData.email || null,
-            joiningDate: new Date(workerData.joiningDate),
-            exitDate: workerData.exitDate ? new Date(workerData.exitDate) : null,
-            status: workerData.status || 'ACTIVE',
-            allottedShift: workerData.allottedShift || null,
-            internalCompanyShift: workerData.internalCompanyShift || null,
+            name: String(name),
+            qid: String(qid),
+            qidExpiryDate: getField(row, 'QID Expiry', 'qidExpiryDate') ? new Date(getField(row, 'QID Expiry', 'qidExpiryDate')) : null,
+            passportNo: String(passportNo),
+            passportExpiryDate: getField(row, 'Passport Expiry', 'passportExpiryDate') ? new Date(getField(row, 'Passport Expiry', 'passportExpiryDate')) : null,
+            nationality: getField(row, 'Nationality', 'nationality') || null,
+            profession: getField(row, 'Profession', 'profession') || null,
+            visaCategory: String(visaCategory),
+            accommodationAddress: getField(row, 'Accommodation Address', 'accommodationAddress') || null,
+            permanentAddress: getField(row, 'Permanent Address', 'permanentAddress') || null,
+            phone: getField(row, 'Phone', 'phone') || null,
+            email: getField(row, 'Email', 'email') || null,
+            joiningDate: joiningDate ? new Date(joiningDate) : new Date(),
+            exitDate: getField(row, 'Exit Date', 'exitDate') ? new Date(getField(row, 'Exit Date', 'exitDate')) : null,
+            status: getField(row, 'Status', 'status') || 'ACTIVE',
+            allottedShift: getField(row, 'Allotted Shift', 'allottedShift') || null,
+            internalCompanyShift: getField(row, 'Internal Company Shift', 'internalCompanyShift') || null,
             createdBy: session.user?.email || 'system'
           }
         })
@@ -85,7 +98,7 @@ export async function POST(request: Request) {
         await prisma.workerAuditLog.create({
           data: {
             workerId: worker.id,
-            action: 'CREATE',
+            action: 'IMPORT',
             description: `Worker ${worker.name} imported from Excel`,
             createdBy: session.user?.email || 'system'
           }
