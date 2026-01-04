@@ -114,6 +114,14 @@ export default function WorkersPage() {
   const [attendanceScope, setAttendanceScope] = useState<'single' | 'filtered' | 'multi'>('single')
   const [selectedWorkerIds, setSelectedWorkerIds] = useState<string[]>([])
   const [selectedForDelete, setSelectedForDelete] = useState<Set<string>>(new Set())
+  const [showBulkEditModal, setShowBulkEditModal] = useState(false)
+  const [bulkEditForm, setBulkEditForm] = useState({
+    allottedShift: '',
+    internalCompanyShift: '',
+    nationality: '',
+    accommodationAddress: '',
+    status: ''
+  })
   const [sortBy, setSortBy] = useState<'name' | 'qid' | 'status' | 'joinDate'>('name')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
 
@@ -511,6 +519,54 @@ export default function WorkersPage() {
     }
   }
 
+  const handleBulkEdit = async () => {
+    if (selectedForDelete.size === 0) {
+      alert('Select workers to edit')
+      return
+    }
+    
+    // Build update payload with only filled fields
+    const updates: any = {}
+    if (bulkEditForm.allottedShift) updates.allottedShift = bulkEditForm.allottedShift
+    if (bulkEditForm.internalCompanyShift) updates.internalCompanyShift = bulkEditForm.internalCompanyShift
+    if (bulkEditForm.nationality) updates.nationality = bulkEditForm.nationality
+    if (bulkEditForm.accommodationAddress) updates.accommodationAddress = bulkEditForm.accommodationAddress
+    if (bulkEditForm.status) updates.status = bulkEditForm.status
+
+    if (Object.keys(updates).length === 0) {
+      alert('Select at least one field to update')
+      return
+    }
+
+    if (!confirm(`Update ${selectedForDelete.size} worker(s) with the selected changes?`)) return
+
+    try {
+      await Promise.all(
+        Array.from(selectedForDelete).map(id =>
+          fetch('/api/workers', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id, ...updates })
+          })
+        )
+      )
+      setSelectedForDelete(new Set())
+      setShowBulkEditModal(false)
+      setBulkEditForm({
+        allottedShift: '',
+        internalCompanyShift: '',
+        nationality: '',
+        accommodationAddress: '',
+        status: ''
+      })
+      await fetchWorkers()
+      alert('Workers updated successfully')
+    } catch (error) {
+      console.error('Failed to bulk edit workers:', error)
+      alert('Failed to update some workers')
+    }
+  }
+
   const toggleSelectWorker = (id: string) => {
     const newSet = new Set(selectedForDelete)
     if (newSet.has(id)) {
@@ -782,7 +838,15 @@ export default function WorkersPage() {
                   </div>
                   {selectedForDelete.size > 0 && (
                     <div className="flex gap-2 items-center">
-                      <span className="text-sm font-medium text-red-600">{selectedForDelete.size} selected</span>
+                      <span className="text-sm font-medium text-blue-600">{selectedForDelete.size} selected</span>
+                      <Button
+                        onClick={() => setShowBulkEditModal(true)}
+                        className="bg-blue-600 hover:bg-blue-700"
+                        size="sm"
+                      >
+                        <Edit className="mr-1 h-4 w-4" />
+                        Bulk Edit
+                      </Button>
                       <Button
                         onClick={handleBulkDelete}
                         variant="destructive"
@@ -1560,6 +1624,100 @@ export default function WorkersPage() {
                   </div>
                 </form>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* Bulk Edit Modal */}
+        {showBulkEditModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
+                <h2 className="text-xl font-bold">Bulk Edit Workers ({selectedForDelete.size} selected)</h2>
+                <button onClick={() => setShowBulkEditModal(false)} className="text-slate-500 hover:text-slate-700">
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+              
+              <div className="p-6">
+                <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800">
+                  <AlertCircle className="inline h-4 w-4 mr-2" />
+                  Only fill the fields you want to update. Empty fields will not be changed.
+                </div>
+
+                <form onSubmit={(e) => { e.preventDefault(); handleBulkEdit(); }} className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label>Allotted Shift</Label>
+                      <select
+                        value={bulkEditForm.allottedShift}
+                        onChange={(e) => setBulkEditForm({ ...bulkEditForm, allottedShift: e.target.value })}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-md"
+                      >
+                        <option value="">-- No Change --</option>
+                        <option value="Shift 1">Shift 1</option>
+                        <option value="Shift 2">Shift 2</option>
+                        <option value="Shift 3">Shift 3</option>
+                        <option value="Day Shift">Day Shift</option>
+                        <option value="Night Shift">Night Shift</option>
+                        <option value="Rotating">Rotating</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <Label>Internal Company Shift</Label>
+                      <Input
+                        value={bulkEditForm.internalCompanyShift}
+                        onChange={(e) => setBulkEditForm({ ...bulkEditForm, internalCompanyShift: e.target.value })}
+                        placeholder="Leave empty for no change"
+                      />
+                    </div>
+
+                    <div>
+                      <Label>Nationality</Label>
+                      <Input
+                        value={bulkEditForm.nationality}
+                        onChange={(e) => setBulkEditForm({ ...bulkEditForm, nationality: e.target.value })}
+                        placeholder="Leave empty for no change"
+                      />
+                    </div>
+
+                    <div>
+                      <Label>Status</Label>
+                      <select
+                        value={bulkEditForm.status}
+                        onChange={(e) => setBulkEditForm({ ...bulkEditForm, status: e.target.value })}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-md"
+                      >
+                        <option value="">-- No Change --</option>
+                        <option value="ACTIVE">ACTIVE</option>
+                        <option value="ON_LEAVE">ON_LEAVE</option>
+                        <option value="INACTIVE">INACTIVE</option>
+                        <option value="TERMINATED">TERMINATED</option>
+                      </select>
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <Label>Accommodation Address</Label>
+                      <Textarea
+                        value={bulkEditForm.accommodationAddress}
+                        onChange={(e) => setBulkEditForm({ ...bulkEditForm, accommodationAddress: e.target.value })}
+                        placeholder="Leave empty for no change"
+                        rows={2}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2 mt-6 pt-4 border-t">
+                    <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
+                      Update {selectedForDelete.size} Worker(s)
+                    </Button>
+                    <Button type="button" variant="outline" onClick={() => setShowBulkEditModal(false)}>
+                      Cancel
+                    </Button>
+                  </div>
+                </form>
+              </div>
             </div>
           </div>
         )}
