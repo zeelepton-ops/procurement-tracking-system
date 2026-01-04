@@ -20,14 +20,6 @@ export async function GET(request: Request) {
 
     const whereClause: any = {}
     
-    // Non-admins can only see non-deleted workers
-    // Admins can see all workers or filter by showDeleted
-    if (!isAdmin) {
-      whereClause.isDeleted = false
-    } else if (!showDeleted) {
-      whereClause.isDeleted = false
-    }
-    
     if (status !== 'ALL') {
       whereClause.status = status
     }
@@ -44,8 +36,16 @@ export async function GET(request: Request) {
     // Try to fetch workers, but handle table not existing
     let workers = []
     try {
+      // Try to filter by isDeleted if column exists
+      const deletedFilter: any = {}
+      if (!isAdmin) {
+        deletedFilter.isDeleted = false
+      } else if (!showDeleted) {
+        deletedFilter.isDeleted = false
+      }
+      
       workers = await prisma.worker.findMany({
-        where: whereClause,
+        where: { ...whereClause, ...deletedFilter },
         orderBy: { createdAt: 'desc' },
         include: {
           _count: {
@@ -57,8 +57,22 @@ export async function GET(request: Request) {
         }
       })
     } catch (dbError: any) {
-      // If table doesn't exist (P2021), return empty array
-      if (dbError.code === 'P2021') {
+      // If isDeleted column doesn't exist (P2010), try without it
+      if (dbError.code === 'P2010' || dbError.message?.includes('isDeleted')) {
+        console.log('isDeleted column not found, fetching without soft delete filter')
+        workers = await prisma.worker.findMany({
+          where: whereClause,
+          orderBy: { createdAt: 'desc' },
+          include: {
+            _count: {
+              select: {
+                attendances: true,
+                salaries: true
+              }
+            }
+          }
+        })
+      } else if (dbError.code === 'P2021') {
         console.log('Worker table does not exist yet - initialization needed')
         return NextResponse.json([])
       }
