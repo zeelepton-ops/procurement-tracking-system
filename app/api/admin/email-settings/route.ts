@@ -76,10 +76,16 @@ export async function GET() {
         source: 'env',
         config: null,
         envDefaults: getEnvDefaults(),
-        warning: 'SystemSetting table not yet migrated. Run migrations on your database.'
+        warning: 'SystemSetting table not yet migrated. Run: npx prisma migrate deploy'
       })
     }
-    throw error
+    console.error('Failed to load SMTP settings', error)
+    return NextResponse.json({
+      source: 'env',
+      config: null,
+      envDefaults: getEnvDefaults(),
+      error: 'Failed to load database settings'
+    })
   }
 }
 
@@ -104,6 +110,13 @@ export async function PUT(request: Request) {
 
     if (!Number.isFinite(port) || port <= 0) {
       return NextResponse.json({ error: 'Port must be a positive number.' }, { status: 400 })
+    }
+
+    if (!process.env.ENCRYPTION_KEY) {
+      return NextResponse.json({ 
+        error: 'ENCRYPTION_KEY environment variable is not set. Configure it in your hosting platform.',
+        warning: 'Using environment variables for SMTP until database is configured.'
+      }, { status: 500 })
     }
 
     const existing = await prisma.systemSetting.findUnique({ where: { key: SMTP_KEY } }).catch(() => null)
@@ -136,7 +149,7 @@ export async function PUT(request: Request) {
       update: { value },
     }).catch((error: any) => {
       if (error?.code === 'P2021') {
-        throw new Error('SystemSetting table not yet migrated. Run migrations: npx prisma migrate deploy')
+        throw new Error('SystemSetting table not yet migrated. Run: npx prisma migrate deploy')
       }
       throw error
     })
@@ -147,8 +160,8 @@ export async function PUT(request: Request) {
     })
   } catch (error: any) {
     console.error('Failed to save SMTP settings', error)
-    if (error?.message?.includes('SystemSetting table')) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
+    if (error?.message?.includes('migrat')) {
+      return NextResponse.json({ error: error.message }, { status: 503 })
     }
     return NextResponse.json({ error: 'Failed to save SMTP settings.' }, { status: 500 })
   }
