@@ -23,9 +23,40 @@ export const authOptions: NextAuthOptions = {
         console.log('🔍 Attempting login for:', credentials.email)
         console.log('🔍 DATABASE_URL set:', !!process.env.DATABASE_URL)
 
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email.toLowerCase() },
-        })
+        let user
+        try {
+          user = await prisma.user.findUnique({
+            where: { email: credentials.email.toLowerCase() },
+          })
+        } catch (error: any) {
+          // Handle missing resetTokenHash column gracefully
+          if (error.message?.includes('resetTokenHash')) {
+            console.log('⚠️ resetTokenHash column missing, trying without it')
+            user = await prisma.user.findUnique({
+              where: { email: credentials.email.toLowerCase() },
+              select: {
+                id: true,
+                email: true,
+                name: true,
+                hashedPassword: true,
+                role: true,
+                status: true,
+                isActive: true,
+                qid: true,
+                joiningDate: true,
+                department: true,
+                position: true,
+                phone: true,
+                approvedBy: true,
+                approvedAt: true,
+                createdAt: true,
+                updatedAt: true
+              }
+            }) as any
+          } else {
+            throw error
+          }
+        }
 
         console.log('🔍 User found:', !!user)
         if (!user) {
