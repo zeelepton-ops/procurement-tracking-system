@@ -258,7 +258,44 @@ export async function PUT(request: Request) {
     }
 
     // Get old worker data for audit
-    const oldWorker = await prisma.worker.findUnique({ where: { id } })
+    let oldWorker = null
+    try {
+      oldWorker = await prisma.worker.findUnique({ where: { id } })
+    } catch (dbError: any) {
+      // If isDeleted column doesn't exist, fetch without it
+      if (dbError.code === 'P2022' || dbError.message?.includes('isDeleted')) {
+        oldWorker = await prisma.worker.findUnique({
+          where: { id },
+          select: {
+            id: true,
+            name: true,
+            qid: true,
+            qidExpiryDate: true,
+            passportNo: true,
+            passportExpiryDate: true,
+            nationality: true,
+            profession: true,
+            visaCategory: true,
+            accommodationAddress: true,
+            permanentAddress: true,
+            phone: true,
+            email: true,
+            joiningDate: true,
+            exitDate: true,
+            status: true,
+            allottedShift: true,
+            internalCompanyShift: true,
+            createdBy: true,
+            createdAt: true,
+            updatedBy: true,
+            updatedAt: true
+          }
+        })
+      } else {
+        throw dbError
+      }
+    }
+    
     if (!oldWorker) {
       return NextResponse.json({ error: 'Worker not found' }, { status: 404 })
     }
