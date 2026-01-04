@@ -657,6 +657,11 @@ model Worker {
   allottedShift         String?  // Day, Night, Rotating, etc.
   internalCompanyShift  String?  // Which department/location
   
+  // Soft delete
+  isDeleted             Boolean  @default(false)
+  deletedAt             DateTime?
+  deletedBy             String?
+  
   // Audit fields
   createdBy             String
   createdAt             DateTime @default(now())
@@ -671,6 +676,7 @@ model Worker {
   @@index([qid])
   @@index([passportNo])
   @@index([status])
+  @@index([isDeleted])
 }
 
 model WorkerAttendance {

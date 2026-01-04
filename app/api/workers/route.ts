@@ -14,8 +14,19 @@ export async function GET(request: Request) {
     const search = searchParams.get('search') || ''
     const status = searchParams.get('status') || 'ALL'
     const exportCsv = searchParams.get('export') === 'true'
+    const showDeleted = searchParams.get('showDeleted') === 'true'
+
+    const isAdmin = session.user?.role === 'ADMIN'
 
     const whereClause: any = {}
+    
+    // Non-admins can only see non-deleted workers
+    // Admins can see all workers or filter by showDeleted
+    if (!isAdmin) {
+      whereClause.isDeleted = false
+    } else if (!showDeleted) {
+      whereClause.isDeleted = false
+    }
     
     if (status !== 'ALL') {
       whereClause.status = status
@@ -284,6 +295,7 @@ export async function DELETE(request: Request) {
 
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
+    const permanent = searchParams.get('permanent') === 'true'
 
     if (!id) {
       return NextResponse.json({ error: 'Worker ID is required' }, { status: 400 })
@@ -294,19 +306,35 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'Worker not found' }, { status: 404 })
     }
 
-    // Create audit log, then delete worker (SetNull will preserve the log)
+    const isAdmin = session.user?.role === 'ADMIN'
+
+    // Create audit log
     await prisma.workerAuditLog.create({
       data: {
         workerId: id,
-        action: 'DELETE',
-        description: `Worker ${worker.name} deleted`,
+        action: permanent && isAdmin ? 'PERMANENT_DELETE' : 'SOFT_DELETE',
+        description: permanent && isAdmin 
+          ? `Worker ${worker.name} permanently deleted`
+          : `Worker ${worker.name} soft deleted`,
         createdBy: session.user?.email || 'system'
       }
     })
 
-    await prisma.worker.delete({ where: { id } })
+    // Admin can permanently delete, others can only soft delete
+    if (permanent && isAdmin) {
+      await prisma.worker.delete({ where: { id } })
+    } else {
+      await prisma.worker.update({
+        where: { id },
+        data: {
+          isDeleted: true,
+          deletedAt: new Date(),
+          deletedBy: session.user?.email || 'system'
+        }
+      })
+    }
 
-    return NextResponse.json({ success: true })
+    return NextResponse.json({ success: true, permanent: permanent && isAdmin })
   } catch (error) {
     console.error('Failed to delete worker:', error)
     return NextResponse.json({ error: 'Failed to delete worker' }, { status: 500 })

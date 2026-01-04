@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useSession } from 'next-auth/react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -38,6 +39,9 @@ interface Worker {
 }
 
 export default function WorkersPage() {
+  const { data: session } = useSession()
+  const isAdmin = session?.user?.role === 'ADMIN'
+  
   const [workers, setWorkers] = useState<Worker[]>([])
   const [filteredWorkers, setFilteredWorkers] = useState<Worker[]>([])
   const [loading, setLoading] = useState(true)
@@ -504,12 +508,17 @@ export default function WorkersPage() {
       alert('Select workers to delete')
       return
     }
-    if (!confirm(`Delete ${selectedForDelete.size} worker(s)? This cannot be undone.`)) return
+    
+    const deleteMessage = isAdmin 
+      ? `Permanently delete ${selectedForDelete.size} worker(s)? This cannot be undone.`
+      : `Soft delete ${selectedForDelete.size} worker(s)? They will be hidden from the list but can be restored by an admin.`
+    
+    if (!confirm(deleteMessage)) return
     
     try {
       await Promise.all(
         Array.from(selectedForDelete).map(id =>
-          fetch(`/api/workers?id=${id}`, { method: 'DELETE' })
+          fetch(`/api/workers?id=${id}&permanent=${isAdmin}`, { method: 'DELETE' })
         )
       )
       setSelectedForDelete(new Set())
@@ -621,10 +630,14 @@ export default function WorkersPage() {
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this worker?')) return
+    const deleteMessage = isAdmin 
+      ? 'Permanently delete this worker? This cannot be undone.'
+      : 'Soft delete this worker? They will be hidden but can be restored by an admin.'
+    
+    if (!confirm(deleteMessage)) return
     
     try {
-      const res = await fetch(`/api/workers?id=${id}`, { method: 'DELETE' })
+      const res = await fetch(`/api/workers?id=${id}&permanent=${isAdmin}`, { method: 'DELETE' })
       if (!res.ok) throw new Error('Failed to delete')
       await fetchWorkers()
     } catch (error) {
