@@ -57,8 +57,8 @@ export async function GET(request: Request) {
         }
       })
     } catch (dbError: any) {
-      // If isDeleted column doesn't exist (P2010), try without it
-      if (dbError.code === 'P2010' || dbError.message?.includes('isDeleted')) {
+      // If isDeleted column doesn't exist (P2022), try without it
+      if (dbError.code === 'P2022' || dbError.message?.includes('isDeleted')) {
         console.log('isDeleted column not found, fetching without soft delete filter')
         workers = await prisma.worker.findMany({
           where: whereClause,
