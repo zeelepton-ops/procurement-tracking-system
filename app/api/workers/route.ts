@@ -323,17 +323,61 @@ export async function PUT(request: Request) {
       }
     }
 
-    const worker = await prisma.worker.update({
-      where: { id },
-      data: {
-        ...updateData,
-        qidExpiryDate: updateData.qidExpiryDate ? new Date(updateData.qidExpiryDate) : undefined,
-        passportExpiryDate: updateData.passportExpiryDate ? new Date(updateData.passportExpiryDate) : undefined,
-        joiningDate: updateData.joiningDate ? new Date(updateData.joiningDate) : undefined,
-        exitDate: updateData.exitDate ? new Date(updateData.exitDate) : undefined,
-        updatedBy: session.user?.email || 'system'
+    let worker = null
+    try {
+      worker = await prisma.worker.update({
+        where: { id },
+        data: {
+          ...updateData,
+          qidExpiryDate: updateData.qidExpiryDate ? new Date(updateData.qidExpiryDate) : undefined,
+          passportExpiryDate: updateData.passportExpiryDate ? new Date(updateData.passportExpiryDate) : undefined,
+          joiningDate: updateData.joiningDate ? new Date(updateData.joiningDate) : undefined,
+          exitDate: updateData.exitDate ? new Date(updateData.exitDate) : undefined,
+          updatedBy: session.user?.email || 'system'
+        }
+      })
+    } catch (dbError: any) {
+      // If isDeleted column doesn't exist, update with explicit select
+      if (dbError.code === 'P2022' || dbError.message?.includes('isDeleted')) {
+        worker = await prisma.worker.update({
+          where: { id },
+          data: {
+            ...updateData,
+            qidExpiryDate: updateData.qidExpiryDate ? new Date(updateData.qidExpiryDate) : undefined,
+            passportExpiryDate: updateData.passportExpiryDate ? new Date(updateData.passportExpiryDate) : undefined,
+            joiningDate: updateData.joiningDate ? new Date(updateData.joiningDate) : undefined,
+            exitDate: updateData.exitDate ? new Date(updateData.exitDate) : undefined,
+            updatedBy: session.user?.email || 'system'
+          },
+          select: {
+            id: true,
+            name: true,
+            qid: true,
+            qidExpiryDate: true,
+            passportNo: true,
+            passportExpiryDate: true,
+            nationality: true,
+            profession: true,
+            visaCategory: true,
+            accommodationAddress: true,
+            permanentAddress: true,
+            phone: true,
+            email: true,
+            joiningDate: true,
+            exitDate: true,
+            status: true,
+            allottedShift: true,
+            internalCompanyShift: true,
+            createdBy: true,
+            createdAt: true,
+            updatedBy: true,
+            updatedAt: true
+          }
+        })
+      } else {
+        throw dbError
       }
-    })
+    }
 
     // Create audit logs for changed fields
     const changedFields = Object.keys(updateData).filter(
