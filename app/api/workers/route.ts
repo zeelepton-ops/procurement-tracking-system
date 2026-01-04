@@ -188,13 +188,24 @@ export async function POST(request: Request) {
         }
       })
     } catch (dbError: any) {
-      // If table doesn't exist, return helpful error
-      if (dbError.code === 'P2021') {
+      // If isDeleted column doesn't exist, try with explicit select
+      if (dbError.code === 'P2022' || dbError.message?.includes('isDeleted')) {
+        existingWorker = await prisma.worker.findFirst({
+          where: {
+            OR: [
+              { qid: body.qid },
+              { passportNo: body.passportNo }
+            ]
+          },
+          select: { id: true, qid: true, passportNo: true }
+        })
+      } else if (dbError.code === 'P2021') {
         return NextResponse.json({ 
           error: 'Worker tables not initialized. Please click the "Initialize Tables" button first.' 
         }, { status: 400 })
+      } else {
+        throw dbError
       }
-      throw dbError
     }
 
     if (existingWorker) {
@@ -302,19 +313,41 @@ export async function PUT(request: Request) {
 
     // Check for duplicate QID or Passport (excluding current worker)
     if (updateData.qid || updateData.passportNo) {
-      const existingWorker = await prisma.worker.findFirst({
-        where: {
-          AND: [
-            { id: { not: id } },
-            {
-              OR: [
-                { qid: updateData.qid || oldWorker.qid },
-                { passportNo: updateData.passportNo || oldWorker.passportNo }
+      let existingWorker = null
+      try {
+        existingWorker = await prisma.worker.findFirst({
+          where: {
+            AND: [
+              { id: { not: id } },
+              {
+                OR: [
+                  { qid: updateData.qid || oldWorker.qid },
+                  { passportNo: updateData.passportNo || oldWorker.passportNo }
+                ]
+              }
+            ]
+          }
+        })
+      } catch (dbError: any) {
+        if (dbError.code === 'P2022' || dbError.message?.includes('isDeleted')) {
+          existingWorker = await prisma.worker.findFirst({
+            where: {
+              AND: [
+                { id: { not: id } },
+                {
+                  OR: [
+                    { qid: updateData.qid || oldWorker.qid },
+                    { passportNo: updateData.passportNo || oldWorker.passportNo }
+                  ]
+                }
               ]
-            }
-          ]
+            },
+            select: { id: true, qid: true, passportNo: true }
+          })
+        } else {
+          throw dbError
         }
-      })
+      }
 
       if (existingWorker) {
         return NextResponse.json({ 
@@ -420,7 +453,20 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'Worker ID is required' }, { status: 400 })
     }
 
-    const worker = await prisma.worker.findUnique({ where: { id } })
+    let worker = null
+    try {
+      worker = await prisma.worker.findUnique({ where: { id } })
+    } catch (dbError: any) {
+      if (dbError.code === 'P2022' || dbError.message?.includes('isDeleted')) {
+        worker = await prisma.worker.findUnique({
+          where: { id },
+          select: { id: true, name: true }
+        })
+      } else {
+        throw dbError
+      }
+    }
+
     if (!worker) {
       return NextResponse.json({ error: 'Worker not found' }, { status: 404 })
     }
@@ -443,14 +489,25 @@ export async function DELETE(request: Request) {
     if (permanent && isAdmin) {
       await prisma.worker.delete({ where: { id } })
     } else {
-      await prisma.worker.update({
-        where: { id },
-        data: {
-          isDeleted: true,
-          deletedAt: new Date(),
-          deletedBy: session.user?.email || 'system'
+      // For soft delete, check if isDeleted column exists
+      try {
+        await prisma.worker.update({
+          where: { id },
+          data: {
+            isDeleted: true,
+            deletedAt: new Date(),
+            deletedBy: session.user?.email || 'system'
+          }
+        })
+      } catch (dbError: any) {
+        // If isDeleted column doesn't exist, do permanent delete as fallback
+        if (dbError.code === 'P2022' || dbError.message?.includes('isDeleted')) {
+          console.log('Soft delete not available, performing permanent delete')
+          await prisma.worker.delete({ where: { id } })
+        } else {
+          throw dbError
         }
-      })
+      }
     }
 
     return NextResponse.json({ success: true, permanent: permanent && isAdmin })
