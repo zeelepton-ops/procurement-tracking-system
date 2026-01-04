@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import bcrypt from 'bcryptjs'
 
 export const dynamic = 'force-dynamic'
 
@@ -51,7 +52,7 @@ export async function PUT(request: Request) {
     }
 
     const body = await request.json()
-    const { id, action, role, status, isActive, name, qid, joiningDate, department, position, phone } = body
+    const { id, action, role, status, isActive, name, qid, joiningDate, department, position, phone, newPassword } = body
 
     if (!id) {
       return NextResponse.json({ error: 'User ID is required' }, { status: 400 })
@@ -59,8 +60,17 @@ export async function PUT(request: Request) {
 
     const updateData: any = {}
 
-    // Handle approval/rejection
-    if (action === 'approve') {
+    // Handle password reset
+    if (action === 'resetPassword') {
+      if (!newPassword || typeof newPassword !== 'string') {
+        return NextResponse.json({ error: 'Password is required' }, { status: 400 })
+      }
+      if (newPassword.length < 8) {
+        return NextResponse.json({ error: 'Password must be at least 8 characters' }, { status: 400 })
+      }
+      const hashedPassword = await bcrypt.hash(newPassword, 10)
+      updateData.hashedPassword = hashedPassword
+    } else if (action === 'approve') {
       updateData.status = 'APPROVED'
       updateData.approvedBy = session.user.email
       updateData.approvedAt = new Date()

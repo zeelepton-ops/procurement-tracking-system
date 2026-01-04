@@ -33,6 +33,7 @@ export default function UsersManagementPage() {
   const [filter, setFilter] = useState('ALL')
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
   const [editingUser, setEditingUser] = useState<any | null>(null)
+  const [resetPasswordModal, setResetPasswordModal] = useState<{ userId: string; newPassword: string; confirmPassword: string; loading: boolean; error: string; message: string } | null>(null)
   const [emailSettings, setEmailSettings] = useState({
     host: '',
     port: '',
@@ -161,6 +162,10 @@ export default function UsersManagementPage() {
       if (res.ok) {
         await fetchUsers()
         setSelectedUser(null)
+        setResetPasswordModal(null)
+      } else {
+        const data = await res.json()
+        alert(data.error || 'Failed to update user')
       }
     } catch (error) {
       console.error('Failed to update user:', error)
@@ -632,6 +637,14 @@ export default function UsersManagementPage() {
                         >
                           {selectedUser.isActive ? 'Deactivate Account' : 'Activate Account'}
                         </Button>
+
+                        <Button
+                          size="sm"
+                          className="w-full bg-orange-600 hover:bg-orange-700 text-white text-xs h-8"
+                          onClick={() => setResetPasswordModal({ userId: selectedUser.id, newPassword: '', confirmPassword: '', loading: false, error: '', message: '' })}
+                        >
+                          Reset User Password
+                        </Button>
                       </>
                     )}
                   </div>
@@ -648,6 +661,104 @@ export default function UsersManagementPage() {
             )}
           </div>
         </div>
+
+        {/* Reset Password Modal */}
+        {resetPasswordModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <Card className="w-full max-w-sm">
+              <CardHeader>
+                <CardTitle className="text-lg">Reset User Password</CardTitle>
+                <CardDescription>Set a new password for {selectedUser?.name}</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {resetPasswordModal.error && (
+                  <div className="text-xs text-red-700 bg-red-50 border border-red-200 rounded px-2 py-1">
+                    {resetPasswordModal.error}
+                  </div>
+                )}
+                {resetPasswordModal.message && (
+                  <div className="text-xs text-green-700 bg-green-50 border border-green-200 rounded px-2 py-1">
+                    {resetPasswordModal.message}
+                  </div>
+                )}
+                <div>
+                  <Label className="text-xs">New Password (minimum 8 characters)</Label>
+                  <input
+                    type="password"
+                    placeholder="Enter new password"
+                    value={resetPasswordModal.newPassword}
+                    onChange={(e) => setResetPasswordModal({ ...resetPasswordModal, newPassword: e.target.value })}
+                    disabled={resetPasswordModal.loading}
+                    className="mt-1 w-full h-9 px-3 rounded-md border text-sm"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs">Confirm Password</Label>
+                  <input
+                    type="password"
+                    placeholder="Confirm new password"
+                    value={resetPasswordModal.confirmPassword}
+                    onChange={(e) => setResetPasswordModal({ ...resetPasswordModal, confirmPassword: e.target.value })}
+                    disabled={resetPasswordModal.loading}
+                    className="mt-1 w-full h-9 px-3 rounded-md border text-sm"
+                  />
+                </div>
+                <div className="flex gap-2 pt-2">
+                  <Button
+                    size="sm"
+                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-xs h-8"
+                    disabled={resetPasswordModal.loading || !resetPasswordModal.newPassword || !resetPasswordModal.confirmPassword}
+                    onClick={async () => {
+                      if (resetPasswordModal.newPassword !== resetPasswordModal.confirmPassword) {
+                        setResetPasswordModal({ ...resetPasswordModal, error: 'Passwords do not match' })
+                        return
+                      }
+                      if (resetPasswordModal.newPassword.length < 8) {
+                        setResetPasswordModal({ ...resetPasswordModal, error: 'Password must be at least 8 characters' })
+                        return
+                      }
+                      setResetPasswordModal({ ...resetPasswordModal, loading: true, error: '' })
+                      try {
+                        const res = await fetch('/api/users', {
+                          method: 'PUT',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            id: resetPasswordModal.userId,
+                            action: 'resetPassword',
+                            newPassword: resetPasswordModal.newPassword
+                          })
+                        })
+                        if (res.ok) {
+                          setResetPasswordModal({ ...resetPasswordModal, loading: false, message: 'Password reset successfully', newPassword: '', confirmPassword: '' })
+                          setTimeout(() => {
+                            setResetPasswordModal(null)
+                            fetchUsers()
+                          }, 1500)
+                        } else {
+                          const data = await res.json()
+                          setResetPasswordModal({ ...resetPasswordModal, loading: false, error: data.error || 'Failed to reset password' })
+                        }
+                      } catch (error) {
+                        setResetPasswordModal({ ...resetPasswordModal, loading: false, error: 'Failed to reset password' })
+                      }
+                    }}
+                  >
+                    {resetPasswordModal.loading ? 'Resetting...' : 'Reset Password'}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="flex-1 text-xs h-8"
+                    onClick={() => setResetPasswordModal(null)}
+                    disabled={resetPasswordModal.loading}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </div>
     </div>
   )

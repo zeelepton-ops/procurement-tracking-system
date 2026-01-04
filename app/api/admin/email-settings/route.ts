@@ -60,14 +60,27 @@ export async function GET() {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const setting = await prisma.systemSetting.findUnique({ where: { key: SMTP_KEY } })
-  const value = (setting?.value ?? null) as any
+  try {
+    const setting = await prisma.systemSetting.findUnique({ where: { key: SMTP_KEY } })
+    const value = (setting?.value ?? null) as any
 
-  return NextResponse.json({
-    source: value ? 'db' : 'env',
-    config: value ? sanitize(value, setting?.updatedAt ?? null) : null,
-    envDefaults: getEnvDefaults(),
-  })
+    return NextResponse.json({
+      source: value ? 'db' : 'env',
+      config: value ? sanitize(value, setting?.updatedAt ?? null) : null,
+      envDefaults: getEnvDefaults(),
+    })
+  } catch (error: any) {
+    // If table doesn't exist, return env defaults
+    if (error?.code === 'P2021') {
+      return NextResponse.json({
+        source: 'env',
+        config: null,
+        envDefaults: getEnvDefaults(),
+        warning: 'SystemSetting table not yet migrated. Run migrations on your database.'
+      })
+    }
+    throw error
+  }
 }
 
 export async function PUT(request: Request) {
@@ -93,7 +106,7 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: 'Port must be a positive number.' }, { status: 400 })
     }
 
-    const existing = await prisma.systemSetting.findUnique({ where: { key: SMTP_KEY } })
+    const existing = await prisma.systemSetting.findUnique({ where: { key: SMTP_KEY } }).catch(() => null)
     const existingValue = (existing?.value ?? {}) as any
 
     let passwordEncrypted = existingValue.passwordEncrypted as string | undefined
@@ -121,14 +134,22 @@ export async function PUT(request: Request) {
       where: { key: SMTP_KEY },
       create: { key: SMTP_KEY, value },
       update: { value },
+    }).catch((error: any) => {
+      if (error?.code === 'P2021') {
+        throw new Error('SystemSetting table not yet migrated. Run migrations: npx prisma migrate deploy')
+      }
+      throw error
     })
 
     return NextResponse.json({
       message: 'SMTP settings saved.',
       config: sanitize(value, new Date()),
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Failed to save SMTP settings', error)
+    if (error?.message?.includes('SystemSetting table')) {
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
     return NextResponse.json({ error: 'Failed to save SMTP settings.' }, { status: 500 })
   }
 }
