@@ -119,6 +119,7 @@ export default function WorkersPage() {
     allottedShift: '',
     internalCompanyShift: '',
     nationality: '',
+    profession: '',
     accommodationAddress: '',
     status: ''
   })
@@ -530,6 +531,7 @@ export default function WorkersPage() {
     if (bulkEditForm.allottedShift) updates.allottedShift = bulkEditForm.allottedShift
     if (bulkEditForm.internalCompanyShift) updates.internalCompanyShift = bulkEditForm.internalCompanyShift
     if (bulkEditForm.nationality) updates.nationality = bulkEditForm.nationality
+    if (bulkEditForm.profession) updates.profession = bulkEditForm.profession
     if (bulkEditForm.accommodationAddress) updates.accommodationAddress = bulkEditForm.accommodationAddress
     if (bulkEditForm.status) updates.status = bulkEditForm.status
 
@@ -556,6 +558,7 @@ export default function WorkersPage() {
         allottedShift: '',
         internalCompanyShift: '',
         nationality: '',
+        profession: '',
         accommodationAddress: '',
         status: ''
       })
@@ -1678,6 +1681,15 @@ export default function WorkersPage() {
                       <Input
                         value={bulkEditForm.nationality}
                         onChange={(e) => setBulkEditForm({ ...bulkEditForm, nationality: e.target.value })}
+                        placeholder="Leave empty for no change"
+                      />
+                    </div>
+
+                    <div>
+                      <Label>Profession</Label>
+                      <Input
+                        value={bulkEditForm.profession}
+                        onChange={(e) => setBulkEditForm({ ...bulkEditForm, profession: e.target.value })}
                         placeholder="Leave empty for no change"
                       />
                     </div>
