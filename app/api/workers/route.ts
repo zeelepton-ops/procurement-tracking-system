@@ -63,7 +63,29 @@ export async function GET(request: Request) {
         workers = await prisma.worker.findMany({
           where: whereClause,
           orderBy: { createdAt: 'desc' },
-          include: {
+          select: {
+            id: true,
+            name: true,
+            qid: true,
+            qidExpiryDate: true,
+            passportNo: true,
+            passportExpiryDate: true,
+            nationality: true,
+            profession: true,
+            visaCategory: true,
+            accommodationAddress: true,
+            permanentAddress: true,
+            phone: true,
+            email: true,
+            joiningDate: true,
+            exitDate: true,
+            status: true,
+            allottedShift: true,
+            internalCompanyShift: true,
+            createdBy: true,
+            createdAt: true,
+            updatedBy: true,
+            updatedAt: true,
             _count: {
               select: {
                 attendances: true,
