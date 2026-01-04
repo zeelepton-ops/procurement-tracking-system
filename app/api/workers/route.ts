@@ -75,8 +75,10 @@ export async function GET(request: Request) {
       } else if (dbError.code === 'P2021') {
         console.log('Worker table does not exist yet - initialization needed')
         return NextResponse.json([])
+      } else {
+        // Re-throw only if we couldn't handle the error
+        throw dbError
       }
-      throw dbError
     }
 
     if (exportCsv) {
