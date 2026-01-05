@@ -5,7 +5,7 @@ import { useSession, signOut } from 'next-auth/react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { Package, FileText, BarChart3, LogOut, Briefcase, Users, Boxes, User, ChevronDown, Settings } from 'lucide-react'
+import { Package, FileText, BarChart3, LogOut, Briefcase, Users, Boxes, User, ChevronDown, Settings, Building2, Receipt } from 'lucide-react'
 
 export default function Header() {
   const { data: session } = useSession()
@@ -41,6 +41,8 @@ export default function Header() {
       ]
     },
     { href: '/store', label: 'Store', icon: Boxes },
+    { href: '/clients', label: 'Clients', icon: Building2 },
+    { href: '/invoices', label: 'Invoicing', icon: Receipt },
   ]
 
   return (
