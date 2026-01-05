@@ -134,7 +134,8 @@ export default function CreateInvoicePage() {
     try {
       const res = await fetch('/api/job-orders')
       const data = await res.json()
-      setJobOrders(Array.isArray(data) ? data : [])
+      // API returns { jobs: [...], totalCount: ... }
+      setJobOrders(Array.isArray(data.jobs) ? data.jobs : Array.isArray(data) ? data : [])
     } catch (error) {
       console.error('Failed to fetch job orders:', error)
       setJobOrders([])
