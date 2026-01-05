@@ -795,6 +795,7 @@ model Invoice {
   // Invoice details
   invoiceDate       DateTime
   dueDate           DateTime?
+  clientReference   String?   // e.g., "Your Ref no. QF-PO-29344-QEE Dtd 25/08/2024"
   subtotal          Float
   taxRate           Float     @default(0)
   taxAmount         Float     @default(0)
@@ -809,6 +810,7 @@ model Invoice {
   // Additional details
   notes             String?
   terms             String?
+  bankDetails       String?   // Bank account information for payment
   
   // Status
   status            String    @default("DRAFT") // DRAFT, SENT, PAID, CANCELLED, OVERDUE

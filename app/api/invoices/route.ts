@@ -11,10 +11,36 @@ export async function GET(request: Request) {
     }
 
     const { searchParams } = new URL(request.url)
+    const id = searchParams.get('id')
     const search = searchParams.get('search') || ''
     const status = searchParams.get('status') || 'ALL'
     const paymentStatus = searchParams.get('paymentStatus') || 'ALL'
     const clientId = searchParams.get('clientId')
+
+    // If ID is provided, return single invoice
+    if (id) {
+      const invoice = await prisma.invoice.findUnique({
+        where: { id },
+        include: {
+          client: true,
+          jobOrder: true,
+          items: true,
+          payments: true,
+          _count: {
+            select: {
+              items: true,
+              payments: true
+            }
+          }
+        }
+      })
+      
+      if (!invoice) {
+        return NextResponse.json({ error: 'Invoice not found' }, { status: 404 })
+      }
+      
+      return NextResponse.json(invoice)
+    }
 
     const whereClause: any = {}
     
@@ -149,6 +175,7 @@ export async function POST(request: Request) {
         clientId: body.clientId,
         invoiceDate: new Date(body.invoiceDate),
         dueDate: body.dueDate ? new Date(body.dueDate) : null,
+        clientReference: body.clientReference || null,
         subtotal,
         taxRate: body.taxRate || 0,
         taxAmount,
@@ -159,6 +186,7 @@ export async function POST(request: Request) {
         paymentStatus: body.paymentStatus || 'UNPAID',
         notes: body.notes || null,
         terms: body.terms || null,
+        bankDetails: body.bankDetails || null,
         status: body.status || 'DRAFT',
         createdBy: session.user?.email || 'system',
         items: {
