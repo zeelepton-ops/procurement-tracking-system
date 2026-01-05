@@ -23,6 +23,7 @@ model User {
   department  String?
   position    String?
   phone       String?
+  bankDetails String?  @db.Text // Bank details for invoicing
 
   // Registration approval
   status     String    @default("PENDING") // "PENDING", "APPROVED", "REJECTED"

@@ -9,10 +9,14 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { searchParams } = new URL(request.url)
+    const jobOrderId = searchParams.get('jobOrderId')
+
     // Check if table exists by attempting a query
     let deliveryNotes = []
     try {
       deliveryNotes = await prisma.deliveryNote.findMany({
+        where: jobOrderId ? { jobOrderId } : undefined,
         include: {
           jobOrder: {
             select: {

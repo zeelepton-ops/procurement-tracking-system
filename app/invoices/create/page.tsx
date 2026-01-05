@@ -14,11 +14,14 @@ interface Client {
   id: string
   name: string
   address: string | null
+  paymentTerms: string | null
 }
 
 interface JobOrder {
   id: string
   jobNumber: string
+  clientId: string | null
+  poReference: string | null
   items: JobOrderItem[]
 }
 
@@ -49,6 +52,7 @@ export default function CreateInvoicePage() {
   const [clients, setClients] = useState<Client[]>([])
   const [jobOrders, setJobOrders] = useState<JobOrder[]>([])
   const [loading, setLoading] = useState(false)
+  const [invoiceSuggestions, setInvoiceSuggestions] = useState<any>(null)
 
   const [invoiceForm, setInvoiceForm] = useState({
     invoiceNumber: '',
@@ -61,10 +65,7 @@ export default function CreateInvoicePage() {
     discount: 0,
     notes: '',
     terms: '',
-    bankDetails: `DUKHAN BANK QATAR
-A/C no: 10000 1771 788
-IBAN no: QA25BKWA000000010001771788
-DOHA BRANCH`
+    bankDetails: ''
   })
 
   const [items, setItems] = useState<InvoiceItem[]>([{
@@ -82,13 +83,41 @@ DOHA BRANCH`
   useEffect(() => {
     fetchClients()
     fetchJobOrders()
+    fetchInvoiceSuggestions()
+    fetchUserBankDetails()
   }, [])
 
   useEffect(() => {
     if (invoiceForm.jobOrderId) {
-      loadJobOrderItems()
+      loadJobOrderDetails()
     }
   }, [invoiceForm.jobOrderId])
+
+  const fetchInvoiceSuggestions = async () => {
+    try {
+      const res = await fetch('/api/invoices/suggestions')
+      const data = await res.json()
+      setInvoiceSuggestions(data)
+      // Auto-select first suggested number
+      if (data.suggestedNumbers && data.suggestedNumbers.length > 0) {
+        setInvoiceForm(prev => ({ ...prev, invoiceNumber: data.suggestedNumbers[0] }))
+      }
+    } catch (error) {
+      console.error('Failed to fetch invoice suggestions:', error)
+    }
+  }
+
+  const fetchUserBankDetails = async () => {
+    try {
+      const res = await fetch('/api/users/me')
+      const data = await res.json()
+      if (data.bankDetails) {
+        setInvoiceForm(prev => ({ ...prev, bankDetails: data.bankDetails }))
+      }
+    } catch (error) {
+      console.error('Failed to fetch bank details:', error)
+    }
+  }
 
   const fetchClients = async () => {
     try {
@@ -112,20 +141,86 @@ DOHA BRANCH`
     }
   }
 
-  const loadJobOrderItems = () => {
+  const loadJobOrderDetails = async () => {
     const jobOrder = jobOrders.find(jo => jo.id === invoiceForm.jobOrderId)
-    if (jobOrder && Array.isArray(jobOrder.items) && jobOrder.items.length > 0) {
-      setItems(jobOrder.items.map(item => ({
-        jobOrderItemId: item.id,
-        mainDescription: 'Job Order',
-        lineItemDescription: item.workDescription,
-        unit: item.unit,
-        quantity: item.quantity || 0,
-        unitPrice: item.unitPrice || 0,
-        totalPrice: (item.quantity || 0) * (item.unitPrice || 0),
-        deliveryNoteNo: '',
-        paymentTerm: '45 DAYS'
-      })))
+    if (!jobOrder) return
+
+    // Auto-fill client details
+    if (jobOrder.clientId) {
+      const client = clients.find(c => c.id === jobOrder.clientId)
+      if (client) {
+        setInvoiceForm(prev => ({
+          ...prev,
+          clientId: client.id,
+          clientReference: jobOrder.poReference || '',
+          terms: client.paymentTerms || 'Net 30'
+        }))
+      }
+    }
+
+    // Fetch delivery notes for this job order
+    try {
+      const res = await fetch(`/api/delivery-notes?jobOrderId=${jobOrder.id}`)
+      const deliveryNotes = await res.json()
+      
+      if (!Array.isArray(deliveryNotes) || deliveryNotes.length === 0) {
+        alert('No delivery notes found for this job order. Please create delivery notes before invoicing.')
+        setItems([{
+          jobOrderItemId: '',
+          mainDescription: '',
+          lineItemDescription: '',
+          unit: 'Nos',
+          quantity: 0,
+          unitPrice: 0,
+          totalPrice: 0,
+          deliveryNoteNo: '',
+          paymentTerm: '45 DAYS'
+        }])
+        return
+      }
+
+      // Group delivery note items by job order item
+      const itemsMap = new Map()
+      
+      deliveryNotes.forEach((dn: any) => {
+        dn.items?.forEach((item: any) => {
+          if (item.jobOrderItemId) {
+            if (!itemsMap.has(item.jobOrderItemId)) {
+              const jobOrderItem = jobOrder.items?.find((joi: any) => joi.id === item.jobOrderItemId)
+              itemsMap.set(item.jobOrderItemId, {
+                jobOrderItemId: item.jobOrderItemId,
+                mainDescription: 'Job Order',
+                lineItemDescription: item.itemDescription,
+                unit: item.unit,
+                quantity: 0,
+                unitPrice: jobOrderItem?.unitPrice || 0,
+                totalPrice: 0,
+                deliveryNoteNo: dn.deliveryNoteNumber,
+                paymentTerm: '45 DAYS'
+              })
+            }
+            // Accumulate delivered quantities
+            const existing = itemsMap.get(item.jobOrderItemId)
+            existing.quantity += item.deliveredQuantity || 0
+            existing.deliveryNoteNo = existing.deliveryNoteNo + (existing.deliveryNoteNo.includes(dn.deliveryNoteNumber) ? '' : `, ${dn.deliveryNoteNumber}`)
+          }
+        })
+      })
+
+      // Convert to array and calculate totals
+      const loadedItems = Array.from(itemsMap.values()).map(item => ({
+        ...item,
+        totalPrice: item.quantity * item.unitPrice
+      }))
+
+      if (loadedItems.length > 0) {
+        setItems(loadedItems)
+      } else {
+        alert('No delivered items found in delivery notes.')
+      }
+    } catch (error) {
+      console.error('Failed to load delivery notes:', error)
+      alert('Failed to load delivery notes for this job order.')
     }
   }
 
@@ -257,12 +352,30 @@ DOHA BRANCH`
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label>Invoice Number *</Label>
-                    <Input
+                    <select
                       required
-                      placeholder="IN-NBTC-XXXX/24"
                       value={invoiceForm.invoiceNumber}
                       onChange={(e) => setInvoiceForm({...invoiceForm, invoiceNumber: e.target.value})}
-                    />
+                      className="w-full p-2 border rounded"
+                    >
+                      <option value="">Select Invoice Number</option>
+                      {invoiceSuggestions?.suggestedNumbers && (
+                        <optgroup label="Suggested Numbers">
+                          {invoiceSuggestions.suggestedNumbers.map((num: string) => (
+                            <option key={num} value={num}>{num}</option>
+                          ))}
+                        </optgroup>
+                      )}
+                      {invoiceSuggestions?.lastInvoices && invoiceSuggestions.lastInvoices.length > 0 && (
+                        <optgroup label="Recent Invoices (Reference)">
+                          {invoiceSuggestions.lastInvoices.map((inv: any) => (
+                            <option key={inv.invoiceNumber} value={inv.invoiceNumber} disabled>
+                              {inv.invoiceNumber} - {inv.clientName} - QAR {inv.amount.toFixed(2)}
+                            </option>
+                          ))}
+                        </optgroup>
+                      )}
+                    </select>
                   </div>
                   <div>
                     <Label>Invoice Date *</Label>
