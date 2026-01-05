@@ -21,7 +21,7 @@ interface JobOrder {
   id: string
   jobNumber: string
   clientId: string | null
-  poReference: string | null
+  lpoContractNo: string | null
   items: JobOrderItem[]
 }
 
@@ -152,7 +152,7 @@ export default function CreateInvoicePage() {
         setInvoiceForm(prev => ({
           ...prev,
           clientId: client.id,
-          clientReference: jobOrder.poReference || '',
+          clientReference: jobOrder.lpoContractNo || '',
           terms: client.paymentTerms || 'Net 30'
         }))
       }

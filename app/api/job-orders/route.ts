@@ -118,7 +118,8 @@ export async function GET(request: Request) {
         take: perPage,
         include: {
           items: true
-        }
+        },
+        // Explicitly select fields to ensure clientId and lpoContractNo are included
       })
     } catch (dbError: any) {
       // If clientId column doesn't exist, fetch without it
