@@ -70,9 +70,31 @@ export async function GET(request: Request) {
     if (searchParams.get('export') === 'csv') {
       const idsParam = searchParams.get('ids')
       const ids = idsParam ? idsParam.split(',').filter(Boolean) : null
-      const jobsToExport = ids && ids.length > 0
-        ? await prisma.jobOrder.findMany({ where: { id: { in: ids } }, include: { items: true } })
-        : await prisma.jobOrder.findMany({ where: whereClause, include: { items: true }, orderBy: { createdAt: 'desc' } })
+      let jobsToExport = []
+      
+      try {
+        jobsToExport = ids && ids.length > 0
+          ? await prisma.jobOrder.findMany({ where: { id: { in: ids } }, include: { items: true } })
+          : await prisma.jobOrder.findMany({ where: whereClause, include: { items: true }, orderBy: { createdAt: 'desc' } })
+      } catch (dbError: any) {
+        if (dbError.code === 'P2022' || dbError.message?.includes('clientId')) {
+          console.log('clientId column not found, exporting without client relation')
+          const selectFields = {
+            id: true, jobNumber: true, productName: true, drawingRef: true,
+            clientName: true, contactPerson: true, phone: true, clientContactPerson: true,
+            clientContactPhone: true, lpoContractNo: true, priority: true, foreman: true,
+            workScope: true, scopeOfWorks: true, qaQcInCharge: true, discount: true,
+            roundOff: true, finalTotal: true, isDeleted: true, deletedAt: true,
+            deletedBy: true, createdBy: true, lastEditedBy: true, lastEditedAt: true,
+            createdAt: true, updatedAt: true, items: true
+          }
+          jobsToExport = ids && ids.length > 0
+            ? await prisma.jobOrder.findMany({ where: { id: { in: ids } }, select: selectFields })
+            : await prisma.jobOrder.findMany({ where: whereClause, select: selectFields, orderBy: { createdAt: 'desc' } })
+        } else {
+          throw dbError
+        }
+      }
 
       const { jobOrdersToCSV } = await import('@/lib/csv')
       const csv = jobOrdersToCSV(jobsToExport)
@@ -87,15 +109,60 @@ export async function GET(request: Request) {
 
     const totalCount = await prisma.jobOrder.count({ where: whereClause })
 
-    const jobOrders = await prisma.jobOrder.findMany({
-      where: whereClause,
-      orderBy: { createdAt: 'desc' },
-      skip: (page - 1) * perPage,
-      take: perPage,
-      include: {
-        items: true
+    let jobOrders = []
+    try {
+      jobOrders = await prisma.jobOrder.findMany({
+        where: whereClause,
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * perPage,
+        take: perPage,
+        include: {
+          items: true
+        }
+      })
+    } catch (dbError: any) {
+      // If clientId column doesn't exist, fetch without it
+      if (dbError.code === 'P2022' || dbError.message?.includes('clientId')) {
+        console.log('clientId column not found in JobOrder, fetching without client relation')
+        jobOrders = await prisma.jobOrder.findMany({
+          where: whereClause,
+          orderBy: { createdAt: 'desc' },
+          skip: (page - 1) * perPage,
+          take: perPage,
+          select: {
+            id: true,
+            jobNumber: true,
+            productName: true,
+            drawingRef: true,
+            clientName: true,
+            contactPerson: true,
+            phone: true,
+            clientContactPerson: true,
+            clientContactPhone: true,
+            lpoContractNo: true,
+            priority: true,
+            foreman: true,
+            workScope: true,
+            scopeOfWorks: true,
+            qaQcInCharge: true,
+            discount: true,
+            roundOff: true,
+            finalTotal: true,
+            isDeleted: true,
+            deletedAt: true,
+            deletedBy: true,
+            createdBy: true,
+            lastEditedBy: true,
+            lastEditedAt: true,
+            createdAt: true,
+            updatedAt: true,
+            items: true
+          }
+        })
+      } else {
+        throw dbError
       }
-    })
+    }
 
     // Compute item-level counts of non-deleted material request *items* referencing these jobs.
     // Some material request items store the job as free-text in `reasonForRequest` (e.g. "7549 - CLIC Qatar ...").
