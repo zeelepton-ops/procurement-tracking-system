@@ -183,7 +183,7 @@ export default function InvoiceViewPage() {
             </tr>
           </thead>
           <tbody>
-            {invoice.items.map((item, index) => (
+            {Array.isArray(invoice.items) && invoice.items.map((item, index) => (
               <tr key={item.id}>
                 <td className="border border-black px-2 py-2 text-center align-top">{index + 1}</td>
                 <td className="border border-black px-2 py-2">

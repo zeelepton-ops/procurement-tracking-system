@@ -94,9 +94,10 @@ DOHA BRANCH`
     try {
       const res = await fetch('/api/clients?status=ACTIVE')
       const data = await res.json()
-      setClients(data)
+      setClients(Array.isArray(data) ? data : [])
     } catch (error) {
       console.error('Failed to fetch clients:', error)
+      setClients([])
     }
   }
 
@@ -104,15 +105,16 @@ DOHA BRANCH`
     try {
       const res = await fetch('/api/job-orders')
       const data = await res.json()
-      setJobOrders(data)
+      setJobOrders(Array.isArray(data) ? data : [])
     } catch (error) {
       console.error('Failed to fetch job orders:', error)
+      setJobOrders([])
     }
   }
 
   const loadJobOrderItems = () => {
     const jobOrder = jobOrders.find(jo => jo.id === invoiceForm.jobOrderId)
-    if (jobOrder && jobOrder.items.length > 0) {
+    if (jobOrder && Array.isArray(jobOrder.items) && jobOrder.items.length > 0) {
       setItems(jobOrder.items.map(item => ({
         jobOrderItemId: item.id,
         mainDescription: 'Job Order',

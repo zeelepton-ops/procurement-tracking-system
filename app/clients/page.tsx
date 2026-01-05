@@ -68,10 +68,11 @@ export default function ClientsPage() {
 
       const res = await fetch(`/api/clients?${params.toString()}`)
       const data = await res.json()
-      setClients(data)
+      setClients(Array.isArray(data) ? data : [])
       setLoading(false)
     } catch (error) {
       console.error('Failed to fetch clients:', error)
+      setClients([])
       setLoading(false)
     }
   }
