@@ -177,7 +177,7 @@ export default function InvoiceViewPage() {
               <th className="border border-black px-2 py-2 text-sm">Sl.No</th>
               <th className="border border-black px-2 py-2 text-sm">DETAILS</th>
               <th className="border border-black px-2 py-2 text-sm">UNIT</th>
-              <th className="border border-black px-2 py-2 text-sm">QTY</th>
+              <th className="border border-black px-2 py-2 text-sm">DELIVERY QTY</th>
               <th className="border border-black px-2 py-2 text-sm">UNIT PRICE<br/>QAR</th>
               <th className="border border-black px-2 py-2 text-sm">TOTAL PRICE<br/>QAR</th>
             </tr>
