@@ -88,10 +88,10 @@ export default function CreateInvoicePage() {
   }, [])
 
   useEffect(() => {
-    if (invoiceForm.jobOrderId) {
+    if (invoiceForm.jobOrderId && jobOrders.length > 0 && clients.length > 0) {
       loadJobOrderDetails()
     }
-  }, [invoiceForm.jobOrderId])
+  }, [invoiceForm.jobOrderId, jobOrders, clients])
 
   const fetchInvoiceSuggestions = async () => {
     try {
@@ -113,9 +113,26 @@ export default function CreateInvoicePage() {
       const data = await res.json()
       if (data.bankDetails) {
         setInvoiceForm(prev => ({ ...prev, bankDetails: data.bankDetails }))
+      } else {
+        // Set default bank details if user hasn't configured them
+        setInvoiceForm(prev => ({ 
+          ...prev, 
+          bankDetails: `DUKHAN BANK QATAR
+A/C no: 10000 1771 788
+IBAN no: QA25BKWA000000010001771788
+DOHA BRANCH`
+        }))
       }
     } catch (error) {
       console.error('Failed to fetch bank details:', error)
+      // Set default bank details on error
+      setInvoiceForm(prev => ({ 
+        ...prev, 
+        bankDetails: `DUKHAN BANK QATAR
+A/C no: 10000 1771 788
+IBAN no: QA25BKWA000000010001771788
+DOHA BRANCH`
+      }))
     }
   }
 
@@ -144,11 +161,13 @@ export default function CreateInvoicePage() {
 
   const loadJobOrderDetails = async () => {
     const jobOrder = jobOrders.find(jo => jo.id === invoiceForm.jobOrderId)
+    console.log('Selected job order:', jobOrder)
     if (!jobOrder) return
 
     // Auto-fill client details
     if (jobOrder.clientId) {
       const client = clients.find(c => c.id === jobOrder.clientId)
+      console.log('Found client:', client)
       if (client) {
         setInvoiceForm(prev => ({
           ...prev,
@@ -156,7 +175,10 @@ export default function CreateInvoicePage() {
           clientReference: jobOrder.lpoContractNo || '',
           terms: client.paymentTerms || 'Net 30'
         }))
+        console.log('Auto-filled client:', client.name, 'Reference:', jobOrder.lpoContractNo)
       }
+    } else {
+      console.log('Job order has no clientId')
     }
 
     // Fetch delivery notes for this job order
