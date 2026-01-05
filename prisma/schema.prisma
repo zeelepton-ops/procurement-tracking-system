@@ -42,6 +42,8 @@ model JobOrder {
   jobNumber           String
   productName         String // Main description
   drawingRef          String?
+  clientId            String?
+  client              Client?   @relation("ClientToJobOrder", fields: [clientId], references: [id])
   clientName          String?
   contactPerson       String?
   phone               String?
@@ -70,6 +72,7 @@ model JobOrder {
   editHistory          JobOrderEditHistory[]
   items                JobOrderItem[]
   deliveryNotes        DeliveryNote[] @relation("DeliveryNoteToJobOrder")
+  invoices             Invoice[] @relation("InvoiceToJobOrder")
 
   @@unique([jobNumber, isDeleted])
 }
@@ -750,4 +753,120 @@ model WorkerAuditLog {
   
   @@index([workerId])
   @@index([createdAt])
+}
+
+model Client {
+  id                String    @id @default(cuid())
+  name              String
+  email             String?
+  phone             String?
+  contactPerson     String?
+  contactPhone      String?
+  address           String?
+  taxId             String?   @unique
+  paymentTerms      String?   @default("Net 30") // Net 30, Net 60, etc.
+  creditLimit       Float?
+  
+  // Status
+  status            String    @default("ACTIVE") // ACTIVE, INACTIVE
+  
+  // Audit fields
+  createdBy         String
+  createdAt         DateTime  @default(now())
+  updatedBy         String?
+  updatedAt         DateTime  @updatedAt
+  
+  // Relations
+  jobOrders         JobOrder[] @relation("ClientToJobOrder")
+  invoices          Invoice[]
+  
+  @@index([name])
+  @@index([status])
+}
+
+model Invoice {
+  id                String    @id @default(cuid())
+  invoiceNumber     String    @unique
+  jobOrderId        String?
+  jobOrder          JobOrder? @relation("InvoiceToJobOrder", fields: [jobOrderId], references: [id])
+  clientId          String
+  client            Client    @relation(fields: [clientId], references: [id])
+  
+  // Invoice details
+  invoiceDate       DateTime
+  dueDate           DateTime?
+  subtotal          Float
+  taxRate           Float     @default(0)
+  taxAmount         Float     @default(0)
+  discount          Float     @default(0)
+  totalAmount       Float
+  
+  // Payment tracking
+  paidAmount        Float     @default(0)
+  balanceAmount     Float
+  paymentStatus     String    @default("UNPAID") // UNPAID, PARTIAL, PAID, OVERDUE
+  
+  // Additional details
+  notes             String?
+  terms             String?
+  
+  // Status
+  status            String    @default("DRAFT") // DRAFT, SENT, PAID, CANCELLED, OVERDUE
+  
+  // Audit fields
+  createdBy         String
+  createdAt         DateTime  @default(now())
+  updatedBy         String?
+  updatedAt         DateTime  @updatedAt
+  
+  // Relations
+  items             InvoiceItem[]
+  payments          InvoicePayment[]
+  
+  @@index([invoiceNumber])
+  @@index([clientId])
+  @@index([jobOrderId])
+  @@index([status])
+  @@index([paymentStatus])
+}
+
+model InvoiceItem {
+  id                String   @id @default(cuid())
+  invoiceId         String
+  invoice           Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  jobOrderItemId    String?
+  
+  description       String
+  quantity          Float
+  unit              String
+  unitPrice         Float
+  totalPrice        Float
+  
+  // Track how much of job order item qty has been invoiced
+  invoicedQty       Float    @default(0) // Cumulative invoiced quantity for this job order item
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  @@index([invoiceId])
+  @@index([jobOrderItemId])
+}
+
+model InvoicePayment {
+  id                String   @id @default(cuid())
+  invoiceId         String
+  invoice           Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  
+  paymentDate       DateTime
+  amount            Float
+  paymentMethod     String   // Cash, Bank Transfer, Check, etc.
+  referenceNumber   String?
+  notes             String?
+  
+  // Audit fields
+  createdBy         String
+  createdAt         DateTime @default(now())
+  
+  @@index([invoiceId])
+  @@index([paymentDate])
 }
