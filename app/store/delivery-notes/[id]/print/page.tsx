@@ -174,7 +174,7 @@ export default function DeliveryNotePrintPage() {
               <th style={{ border: '1px solid #000', padding: '3px', fontWeight: 'bold', width: '40px', fontSize: `${settings.tableFontSize}px` }}>No.</th>
               <th style={{ border: '1px solid #000', padding: '3px', fontWeight: 'bold', fontSize: `${settings.tableFontSize}px` }}>Item Description</th>
               <th style={{ border: '1px solid #000', padding: '3px', fontWeight: 'bold', width: '60px', fontSize: `${settings.tableFontSize}px` }}>Unit</th>
-              <th style={{ border: '1px solid #000', padding: '3px', fontWeight: 'bold', width: '60px', fontSize: `${settings.tableFontSize}px` }}>Quantity</th>
+              <th style={{ border: '1px solid #000', padding: '3px', fontWeight: 'bold', width: '80px', fontSize: `${settings.tableFontSize}px` }}>Delivery Qty</th>
               <th style={{ border: '1px solid #000', padding: '3px', fontWeight: 'bold', width: '70px', fontSize: `${settings.tableFontSize}px` }}>Weight(KG)</th>
               <th style={{ border: '1px solid #000', padding: '3px', fontWeight: 'bold', width: '100px', fontSize: `${settings.tableFontSize}px` }}>Remarks</th>
             </tr>
