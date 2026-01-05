@@ -19,27 +19,34 @@ export async function GET(request: Request) {
 
     // If ID is provided, return single invoice
     if (id) {
-      const invoice = await prisma.invoice.findUnique({
-        where: { id },
-        include: {
-          client: true,
-          jobOrder: true,
-          items: true,
-          payments: true,
-          _count: {
-            select: {
-              items: true,
-              payments: true
+      try {
+        const invoice = await prisma.invoice.findUnique({
+          where: { id },
+          include: {
+            client: true,
+            jobOrder: true,
+            items: true,
+            payments: true,
+            _count: {
+              select: {
+                items: true,
+                payments: true
+              }
             }
           }
+        })
+        
+        if (!invoice) {
+          return NextResponse.json({ error: 'Invoice not found' }, { status: 404 })
         }
-      })
-      
-      if (!invoice) {
-        return NextResponse.json({ error: 'Invoice not found' }, { status: 404 })
+        
+        return NextResponse.json(invoice)
+      } catch (dbError: any) {
+        if (dbError.code === 'P2021') {
+          return NextResponse.json({ error: 'Invoice table not initialized yet. Please run migrations.' }, { status: 503 })
+        }
+        throw dbError
       }
-      
-      return NextResponse.json(invoice)
     }
 
     const whereClause: any = {}
@@ -64,24 +71,32 @@ export async function GET(request: Request) {
       ]
     }
 
-    const invoices = await prisma.invoice.findMany({
-      where: whereClause,
-      orderBy: { createdAt: 'desc' },
-      include: {
-        client: true,
-        jobOrder: true,
-        items: true,
-        payments: true,
-        _count: {
-          select: {
-            items: true,
-            payments: true
+    try {
+      const invoices = await prisma.invoice.findMany({
+        where: whereClause,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          client: true,
+          jobOrder: true,
+          items: true,
+          payments: true,
+          _count: {
+            select: {
+              items: true,
+              payments: true
+            }
           }
         }
-      }
-    })
+      })
 
-    return NextResponse.json(invoices)
+      return NextResponse.json(invoices)
+    } catch (dbError: any) {
+      if (dbError.code === 'P2021') {
+        console.log('Invoice table does not exist yet - returning empty array')
+        return NextResponse.json([])
+      }
+      throw dbError
+    }
   } catch (error) {
     console.error('Failed to fetch invoices:', error)
     return NextResponse.json({ error: 'Failed to fetch invoices' }, { status: 500 })

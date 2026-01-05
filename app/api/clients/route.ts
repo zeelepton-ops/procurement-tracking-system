@@ -29,20 +29,28 @@ export async function GET(request: Request) {
       ]
     }
 
-    const clients = await prisma.client.findMany({
-      where: whereClause,
-      orderBy: { createdAt: 'desc' },
-      include: {
-        _count: {
-          select: {
-            jobOrders: true,
-            invoices: true
+    try {
+      const clients = await prisma.client.findMany({
+        where: whereClause,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          _count: {
+            select: {
+              jobOrders: true,
+              invoices: true
+            }
           }
         }
-      }
-    })
+      })
 
-    return NextResponse.json(clients)
+      return NextResponse.json(clients)
+    } catch (dbError: any) {
+      if (dbError.code === 'P2021') {
+        console.log('Client table does not exist yet - returning empty array')
+        return NextResponse.json([])
+      }
+      throw dbError
+    }
   } catch (error) {
     console.error('Failed to fetch clients:', error)
     return NextResponse.json({ error: 'Failed to fetch clients' }, { status: 500 })
