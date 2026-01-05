@@ -33,6 +33,7 @@ interface DeliveryNote {
     itemDescription: string
     unit: string
     quantity: number
+    deliveredQuantity: number
     weight: number | null
     remarks: string | null
   }[]
@@ -186,7 +187,7 @@ export default function DeliveryNotePrintPage() {
                   <td style={{ borderLeft: '1px solid #000', borderRight: '1px solid #000', padding: '2px', textAlign: 'center', fontSize: `${settings.tableFontSize}px`, height: `${settings.rowHeight}px` }}>{idx + 1}</td>
                   <td style={{ borderRight: '1px solid #000', padding: '2px', fontSize: `${settings.tableFontSize}px`, height: `${settings.rowHeight}px` }}>{item.itemDescription}</td>
                   <td style={{ borderRight: '1px solid #000', padding: '2px', textAlign: 'center', fontSize: `${settings.tableFontSize}px`, height: `${settings.rowHeight}px` }}>{item.unit}</td>
-                  <td style={{ borderRight: '1px solid #000', padding: '2px', textAlign: 'center', fontSize: `${settings.tableFontSize}px`, height: `${settings.rowHeight}px` }}>{item.quantity}</td>
+                  <td style={{ borderRight: '1px solid #000', padding: '2px', textAlign: 'center', fontSize: `${settings.tableFontSize}px`, height: `${settings.rowHeight}px` }}>{item.deliveredQuantity}</td>
                   <td style={{ borderRight: '1px solid #000', padding: '2px', textAlign: 'center', fontSize: `${settings.tableFontSize}px`, height: `${settings.rowHeight}px` }}>{item.weight || ''}</td>
                   <td style={{ borderRight: '1px solid #000', padding: '2px', fontSize: `${settings.tableFontSize}px`, height: `${settings.rowHeight}px` }}>{item.remarks || ''}</td>
                 </tr>
