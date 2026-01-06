@@ -115,6 +115,8 @@ export default function JobOrdersPage() {
   const [showNewClientInput, setShowNewClientInput] = useState(false)
   const [newClientName, setNewClientName] = useState('')
   const [creatingClient, setCreatingClient] = useState(false)
+  const [clientSearchQuery, setClientSearchQuery] = useState('')
+  const [showClientSuggestions, setShowClientSuggestions] = useState(false)
   const [finalTotalOverride, setFinalTotalOverride] = useState<number | null>(null)
   const [editFinalTotalOverride, setEditFinalTotalOverride] = useState<number | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
@@ -345,7 +347,8 @@ export default function JobOrdersPage() {
   }
 
   const createNewClient = async () => {
-    if (!newClientName.trim()) {
+    const clientNameToCreate = newClientName || clientSearchQuery
+    if (!clientNameToCreate.trim()) {
       alert('Please enter a client name')
       return
     }
@@ -356,7 +359,7 @@ export default function JobOrdersPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: newClientName.trim(),
+          name: clientNameToCreate.trim(),
           email: '', // Draft client - to be filled later
           phone: '',
           address: '',
@@ -378,9 +381,9 @@ export default function JobOrdersPage() {
         clientName: newClient.name
       })
       
-      // Reset new client input
-      setShowNewClientInput(false)
+      // Reset inputs
       setNewClientName('')
+      setClientSearchQuery(newClient.name)
       
       alert(`Client "${newClient.name}" created successfully! You can complete the details in the Clients panel.`)
     } catch (error: any) {
@@ -764,75 +767,72 @@ export default function JobOrdersPage() {
                     />
                   </div>
                   <div className="md:col-span-4" data-edit-key="client">
-                    <Label htmlFor="clientId" className="text-sm font-semibold">Client *</Label>
-                    {!showNewClientInput ? (
-                      <>
-                        <select
-                          id="clientId"
-                          value={formData.clientId}
-                          onChange={(e) => {
-                            if (e.target.value === 'NEW') {
-                              setShowNewClientInput(true)
-                              setFormData({ ...formData, clientId: '', clientName: '' })
-                            } else {
-                              const client = clients.find(c => c.id === e.target.value)
-                              if (client) {
-                                setFormData({ 
-                                  ...formData, 
-                                  clientId: client.id,
-                                  clientName: client.name,
-                                  clientContactPerson: client.contactPerson || '',
-                                  clientContactPhone: client.phone || '+974 '
-                                })
-                              }
-                            }
-                          }}
-                          required
-                          className="mt-1 h-9 px-2 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full text-sm"
-                        >
-                          <option value="">Select Client</option>
-                          {clients.map(client => (
-                            <option key={client.id} value={client.id}>{client.name}</option>
-                          ))}
-                          <option value="NEW" className="font-semibold text-blue-600" style={{backgroundColor: '#EFF6FF'}}>➕ Create New Client...</option>
-                        </select>
-                        <p className="text-xs text-gray-500 mt-1">Tip: Select "Create New Client" at bottom to add a new client</p>
-                      </>
-                    ) : (
-                      <div className="flex gap-2 mt-1">
-                        <Input
-                          value={newClientName}
-                          onChange={(e) => setNewClientName(e.target.value)}
-                          placeholder="Enter new client name"
-                          className="h-9 flex-1"
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              e.preventDefault()
-                              createNewClient()
-                            }
-                          }}
-                        />
-                        <Button
-                          type="button"
-                          onClick={createNewClient}
-                          disabled={creatingClient || !newClientName.trim()}
-                          className="h-9 px-3"
-                        >
-                          {creatingClient ? '...' : 'Create'}
-                        </Button>
-                        <Button
-                          type="button"
-                          onClick={() => {
-                            setShowNewClientInput(false)
-                            setNewClientName('')
-                          }}
-                          variant="outline"
-                          className="h-9 px-3"
-                        >
-                          Cancel
-                        </Button>
-                      </div>
-                    )}
+                    <Label htmlFor="clientSearch" className="text-sm font-semibold">Client *</Label>
+                    <div className="relative mt-1">
+                      <Input
+                        id="clientSearch"
+                        value={clientSearchQuery}
+                        onChange={(e) => {
+                          setClientSearchQuery(e.target.value)
+                          setShowClientSuggestions(true)
+                          // Clear selection if user is typing
+                          if (formData.clientId && e.target.value !== formData.clientName) {
+                            setFormData({ ...formData, clientId: '', clientName: '' })
+                          }
+                        }}
+                        onFocus={() => setShowClientSuggestions(true)}
+                        placeholder="Type to search or create new client..."
+                        required={!formData.clientId}
+                        className="h-9 w-full"
+                      />
+                      
+                      {/* Dropdown suggestions */}
+                      {showClientSuggestions && (
+                        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                          {clients
+                            .filter(client => 
+                              client.name.toLowerCase().includes(clientSearchQuery.toLowerCase())
+                            )
+                            .map(client => (
+                              <div
+                                key={client.id}
+                                className="px-3 py-2 hover:bg-blue-50 cursor-pointer text-sm"
+                                onClick={() => {
+                                  setFormData({
+                                    ...formData,
+                                    clientId: client.id,
+                                    clientName: client.name,
+                                    clientContactPerson: client.contactPerson || '',
+                                    clientContactPhone: client.phone || '+974 '
+                                  })
+                                  setClientSearchQuery(client.name)
+                                  setShowClientSuggestions(false)
+                                }}
+                              >
+                                {client.name}
+                              </div>
+                            ))}
+                          
+                          {/* Create new client option */}
+                          {clientSearchQuery.trim() && (
+                            <div
+                              className="px-3 py-2 hover:bg-green-50 cursor-pointer text-sm font-semibold text-green-700 border-t"
+                              onClick={() => {
+                                setNewClientName(clientSearchQuery)
+                                setShowClientSuggestions(false)
+                                createNewClient()
+                              }}
+                            >
+                              ➕ Create "{clientSearchQuery}" as new client
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      
+                      {formData.clientId && (
+                        <p className="text-xs text-green-600 mt-1">✓ Selected: {formData.clientName}</p>
+                      )}
+                    </div>
                   </div>
                   <div className="md:col-span-2" data-edit-key="lpo">
                     <Label htmlFor="lpoContractNo" className="text-sm font-semibold">LPO / Contract No</Label>
