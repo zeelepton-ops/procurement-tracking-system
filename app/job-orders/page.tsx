@@ -117,6 +117,8 @@ export default function JobOrdersPage() {
   const [creatingClient, setCreatingClient] = useState(false)
   const [clientSearchQuery, setClientSearchQuery] = useState('')
   const [showClientSuggestions, setShowClientSuggestions] = useState(false)
+  const [editClientSearchQuery, setEditClientSearchQuery] = useState('')
+  const [showEditClientSuggestions, setShowEditClientSuggestions] = useState(false)
   const [finalTotalOverride, setFinalTotalOverride] = useState<number | null>(null)
   const [editFinalTotalOverride, setEditFinalTotalOverride] = useState<number | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
@@ -514,6 +516,8 @@ export default function JobOrdersPage() {
       discount: (job as any).discount || 0,
       roundOff: (job as any).roundOff || 0
     })
+    setEditClientSearchQuery(job.clientName || '')
+    setShowEditClientSuggestions(false)
     setEditFinalTotalOverride((job as any).finalTotal !== undefined ? (job as any).finalTotal : null)
     setEditWorkItems(job.items && job.items.length > 0 
       ? job.items 
@@ -1588,15 +1592,93 @@ export default function JobOrdersPage() {
                           className="mt-1 h-9 w-full text-sm"
                         />
                       </div>
-                      <div className="md:col-span-4">
+                      <div className="md:col-span-4 relative">
                         <Label htmlFor="edit-clientName" className="text-sm font-semibold">Client Name *</Label>
                         <Input
                           id="edit-clientName"
-                          value={editFormData.clientName}
-                          onChange={(e) => setEditFormData({ ...editFormData, clientName: e.target.value })}
+                          value={editClientSearchQuery}
+                          onChange={(e) => {
+                            setEditClientSearchQuery(e.target.value)
+                            setShowEditClientSuggestions(true)
+                          }}
+                          onFocus={() => setShowEditClientSuggestions(true)}
+                          placeholder="Type to search clients..."
                           required
                           className="mt-1 h-9 w-full text-sm"
                         />
+                        
+                        {/* Client Suggestions Dropdown */}
+                        {showEditClientSuggestions && editClientSearchQuery && (
+                          <div className="absolute z-50 w-full bg-white border border-gray-300 rounded-md shadow-lg mt-1 max-h-60 overflow-y-auto">
+                            {clients
+                              .filter(client => 
+                                client.name.toLowerCase().includes(editClientSearchQuery.toLowerCase())
+                              )
+                              .map(client => (
+                                <div
+                                  key={client.id}
+                                  onClick={() => {
+                                    setEditFormData({
+                                      ...editFormData,
+                                      clientId: client.id,
+                                      clientName: client.name
+                                    })
+                                    setEditClientSearchQuery(client.name)
+                                    setShowEditClientSuggestions(false)
+                                  }}
+                                  className="px-3 py-2 hover:bg-blue-50 cursor-pointer border-b last:border-b-0"
+                                >
+                                  <div className="font-medium">{client.name}</div>
+                                  {client.email && <div className="text-xs text-gray-500">{client.email}</div>}
+                                </div>
+                              ))}
+                            
+                            {/* Create New Client Option */}
+                            <div
+                              onClick={() => {
+                                const clientNameToCreate = editClientSearchQuery.trim()
+                                if (clientNameToCreate) {
+                                  // Create new client inline
+                                  fetch('/api/clients', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({
+                                      name: clientNameToCreate,
+                                      email: '',
+                                      phone: '',
+                                      address: '',
+                                      isDraft: true
+                                    })
+                                  })
+                                  .then(res => res.json())
+                                  .then(newClient => {
+                                    setClients([...clients, newClient])
+                                    setEditFormData({
+                                      ...editFormData,
+                                      clientId: newClient.id,
+                                      clientName: newClient.name
+                                    })
+                                    setEditClientSearchQuery(newClient.name)
+                                    setShowEditClientSuggestions(false)
+                                    alert(`Client "${newClient.name}" created successfully!`)
+                                  })
+                                  .catch(err => {
+                                    alert('Failed to create client')
+                                  })
+                                }
+                              }}
+                              className="px-3 py-2 bg-green-50 hover:bg-green-100 cursor-pointer text-green-700 font-medium border-t-2 border-green-200"
+                            >
+                              + Create new client "{editClientSearchQuery}"
+                            </div>
+                          </div>
+                        )}
+                        
+                        {editFormData.clientId && !showEditClientSuggestions && (
+                          <div className="text-xs text-green-600 mt-1">
+                            ✓ Selected: {editFormData.clientName}
+                          </div>
+                        )}
                       </div>
                       <div className="md:col-span-2">
                         <Label htmlFor="edit-lpoContractNo" className="text-sm font-semibold">LPO / Contract No</Label>
