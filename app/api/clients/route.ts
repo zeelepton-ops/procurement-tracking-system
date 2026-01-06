@@ -66,32 +66,6 @@ export async function POST(request: Request) {
 
     const body = await request.json()
 
-    // Check for duplicate CR No.
-    if (body.crNo) {
-      const existingClient = await prisma.client.findUnique({
-        where: { crNo: body.crNo }
-      })
-
-      if (existingClient) {
-        return NextResponse.json({ 
-          error: 'Client with this CR No. already exists' 
-        }, { status: 400 })
-      }
-    }
-
-    // Check for duplicate tax ID
-    if (body.taxId) {
-      const existingClient = await prisma.client.findUnique({
-        where: { taxId: body.taxId }
-      })
-
-      if (existingClient) {
-        return NextResponse.json({ 
-          error: 'Client with this Tax ID already exists' 
-        }, { status: 400 })
-      }
-    }
-
     const client = await prisma.client.create({
       data: {
         name: body.name,
@@ -132,42 +106,6 @@ export async function PUT(request: Request) {
 
     if (!id) {
       return NextResponse.json({ error: 'Client ID is required' }, { status: 400 })
-    }
-
-    // Check for duplicate CR No. (excluding current client)
-    if (updateData.crNo) {
-      const existingClient = await prisma.client.findFirst({
-        where: {
-          AND: [
-            { id: { not: id } },
-            { crNo: updateData.crNo }
-          ]
-        }
-      })
-
-      if (existingClient) {
-        return NextResponse.json({ 
-          error: 'Client with this CR No. already exists' 
-        }, { status: 400 })
-      }
-    }
-
-    // Check for duplicate tax ID (excluding current client)
-    if (updateData.taxId) {
-      const existingClient = await prisma.client.findFirst({
-        where: {
-          AND: [
-            { id: { not: id } },
-            { taxId: updateData.taxId }
-          ]
-        }
-      })
-
-      if (existingClient) {
-        return NextResponse.json({ 
-          error: 'Client with this Tax ID already exists' 
-        }, { status: 400 })
-      }
     }
 
     const client = await prisma.client.update({
