@@ -72,6 +72,7 @@ const SCOPE_OF_WORKS_OPTIONS = [
 export default function JobOrdersPage() {
   const [jobOrders, setJobOrders] = useState<JobOrder[]>([])
   const [deletedJobOrders, setDeletedJobOrders] = useState<JobOrder[]>([])
+  const [clients, setClients] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [filters, setFilters] = useState({
@@ -90,6 +91,7 @@ export default function JobOrdersPage() {
     jobNumber: '',
     productName: '',
     drawingRef: '',
+    clientId: '',
     clientName: '',
     contactPerson: '',
     phone: '+974 ',
@@ -118,6 +120,7 @@ export default function JobOrdersPage() {
     jobNumber: '',
     productName: '',
     drawingRef: '',
+    clientId: '',
     clientName: '',
     contactPerson: '',
     phone: '+974 ',
@@ -139,6 +142,7 @@ export default function JobOrdersPage() {
   useEffect(() => {
     fetchJobOrders()
     fetchDeletedJobOrders()
+    fetchClients()
     // restore draft if exists
     try {
       const raw = localStorage.getItem('jobOrderDraft')
@@ -319,6 +323,18 @@ export default function JobOrdersPage() {
       const deleted = allJobs.filter((job: JobOrder) => job.isDeleted)
       setDeletedJobOrders(deleted)
     } catch (error) {
+
+  const fetchClients = async () => {
+    try {
+      const res = await fetch('/api/clients')
+      if (res.ok) {
+        const data = await res.json()
+        setClients(data.clients || [])
+      }
+    } catch (error) {
+      console.error('Failed to fetch clients:', error)
+    }
+  }
       console.error('Failed to fetch deleted job orders:', error)
       setDeletedJobOrders([])
     }
@@ -351,6 +367,7 @@ export default function JobOrdersPage() {
         jobNumber: '', 
         productName: '', 
         drawingRef: '',
+        clientId: '',
         clientName: '',
         contactPerson: '',
         phone: '+974 ',
@@ -694,15 +711,30 @@ export default function JobOrdersPage() {
                     />
                   </div>
                   <div className="md:col-span-4" data-edit-key="client">
-                    <Label htmlFor="clientName" className="text-sm font-semibold">Client Name *</Label>
-                    <Input
-                      id="clientName"
-                      value={formData.clientName}
-                      onChange={(e) => setFormData({ ...formData, clientName: e.target.value })}
-                      placeholder="e.g., QATAR ENGINEERING & CONSTRUCTION CO. WLL"
+                    <Label htmlFor="clientId" className="text-sm font-semibold">Client *</Label>
+                    <select
+                      id="clientId"
+                      value={formData.clientId}
+                      onChange={(e) => {
+                        const client = clients.find(c => c.id === e.target.value)
+                        if (client) {
+                          setFormData({ 
+                            ...formData, 
+                            clientId: client.id,
+                            clientName: client.name,
+                            clientContactPerson: client.contactPerson || '',
+                            clientContactPhone: client.phone || '+974 '
+                          })
+                        }
+                      }}
                       required
-                      className="mt-1 h-9 w-full"
-                    />
+                      className="mt-1 h-9 px-2 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full text-sm"
+                    >
+                      <option value="">Select Client</option>
+                      {clients.map(client => (
+                        <option key={client.id} value={client.id}>{client.name}</option>
+                      ))}
+                    </select>
                   </div>
                   <div className="md:col-span-2" data-edit-key="lpo">
                     <Label htmlFor="lpoContractNo" className="text-sm font-semibold">LPO / Contract No</Label>

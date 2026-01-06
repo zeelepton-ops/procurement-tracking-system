@@ -321,6 +321,7 @@ export async function POST(request: Request) {
           data: {
             productName,
             drawingRef: body.drawingRef || null,
+            clientId: body.clientId || null,
             clientName: body.clientName || null,
             contactPerson: body.contactPerson || null,
             phone: body.phone || null,
@@ -357,6 +358,7 @@ export async function POST(request: Request) {
           jobNumber: body.jobNumber,
           productName,
           drawingRef: body.drawingRef || null,
+          clientId: body.clientId || null,
           clientName: body.clientName || null,
           contactPerson: body.contactPerson || null,
           phone: body.phone || null,          clientContactPerson: body.clientContactPerson || null,
