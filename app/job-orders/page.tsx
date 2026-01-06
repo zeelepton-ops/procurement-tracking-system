@@ -326,6 +326,10 @@ export default function JobOrdersPage() {
       const deleted = allJobs.filter((job: JobOrder) => job.isDeleted)
       setDeletedJobOrders(deleted)
     } catch (error) {
+      console.error('Failed to fetch deleted job orders:', error)
+      setDeletedJobOrders([])
+    }
+  }
 
   const fetchClients = async () => {
     try {
