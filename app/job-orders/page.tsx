@@ -1099,6 +1099,7 @@ export default function JobOrdersPage() {
                         jobNumber: '', 
                         productName: '', 
                         drawingRef: '',
+                        clientId: '',
                         clientName: '',
                         contactPerson: '',
                         phone: '+974 ',
