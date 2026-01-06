@@ -14,6 +14,7 @@ interface JobOrder {
   jobNumber: string
   productName: string
   drawingRef: string | null
+  clientId?: string | null
   clientName: string | null
   contactPerson: string | null
   phone: string | null
