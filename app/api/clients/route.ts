@@ -66,17 +66,43 @@ export async function POST(request: Request) {
 
     const body = await request.json()
 
+    // Check for duplicate CR No. (only if provided)
+    if (body.crNo && body.crNo.trim()) {
+      const existingClient = await prisma.client.findUnique({
+        where: { crNo: body.crNo.trim() }
+      })
+
+      if (existingClient) {
+        return NextResponse.json({ 
+          error: 'Client with this CR No. already exists' 
+        }, { status: 400 })
+      }
+    }
+
+    // Check for duplicate tax ID (only if provided)
+    if (body.taxId && body.taxId.trim()) {
+      const existingClient = await prisma.client.findUnique({
+        where: { taxId: body.taxId.trim() }
+      })
+
+      if (existingClient) {
+        return NextResponse.json({ 
+          error: 'Client with this Tax ID already exists' 
+        }, { status: 400 })
+      }
+    }
+
     const client = await prisma.client.create({
       data: {
         name: body.name,
-        crNo: body.crNo || null,
+        crNo: body.crNo && body.crNo.trim() ? body.crNo.trim() : null,
         crExpiryDate: body.crExpiryDate ? new Date(body.crExpiryDate) : null,
         email: body.email || null,
         phone: body.phone || null,
         contactPerson: body.contactPerson || null,
         contactPhone: body.contactPhone || null,
         address: body.address || null,
-        taxId: body.taxId || null,
+        taxId: body.taxId && body.taxId.trim() ? body.taxId.trim() : null,
         taxIdExpiryDate: body.taxIdExpiryDate ? new Date(body.taxIdExpiryDate) : null,
         establishmentCardNo: body.establishmentCardNo || null,
         establishmentCardExpiryDate: body.establishmentCardExpiryDate ? new Date(body.establishmentCardExpiryDate) : null,
@@ -108,10 +134,48 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: 'Client ID is required' }, { status: 400 })
     }
 
+    // Check for duplicate CR No. (only if provided and not empty)
+    if (updateData.crNo && updateData.crNo.trim()) {
+      const existingClient = await prisma.client.findFirst({
+        where: {
+          AND: [
+            { id: { not: id } },
+            { crNo: updateData.crNo.trim() }
+          ]
+        }
+      })
+
+      if (existingClient) {
+        return NextResponse.json({ 
+          error: 'Client with this CR No. already exists' 
+        }, { status: 400 })
+      }
+    }
+
+    // Check for duplicate tax ID (only if provided and not empty)
+    if (updateData.taxId && updateData.taxId.trim()) {
+      const existingClient = await prisma.client.findFirst({
+        where: {
+          AND: [
+            { id: { not: id } },
+            { taxId: updateData.taxId.trim() }
+          ]
+        }
+      })
+
+      if (existingClient) {
+        return NextResponse.json({ 
+          error: 'Client with this Tax ID already exists' 
+        }, { status: 400 })
+      }
+    }
+
     const client = await prisma.client.update({
       where: { id },
       data: {
         ...updateData,
+        crNo: updateData.crNo && updateData.crNo.trim() ? updateData.crNo.trim() : null,
+        taxId: updateData.taxId && updateData.taxId.trim() ? updateData.taxId.trim() : null,
         crExpiryDate: updateData.crExpiryDate ? new Date(updateData.crExpiryDate) : null,
         taxIdExpiryDate: updateData.taxIdExpiryDate ? new Date(updateData.taxIdExpiryDate) : null,
         establishmentCardExpiryDate: updateData.establishmentCardExpiryDate ? new Date(updateData.establishmentCardExpiryDate) : null,

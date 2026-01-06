@@ -759,14 +759,14 @@ model WorkerAuditLog {
 model Client {
   id                          String    @id @default(cuid())
   name                        String
-  crNo                        String? // Commercial Registration Number
+  crNo                        String?   @unique // Commercial Registration Number
   crExpiryDate                DateTime?
   email                       String?
   phone                       String?
   contactPerson               String?
   contactPhone                String?
   address                     String?
-  taxId                       String?
+  taxId                       String?   @unique
   taxIdExpiryDate             DateTime?
   establishmentCardNo         String?
   establishmentCardExpiryDate DateTime?
