@@ -167,8 +167,18 @@ DOHA BRANCH`
 
   const loadJobOrderDetails = async () => {
     const jobOrder = jobOrders.find(jo => jo.id === invoiceForm.jobOrderId)
+    console.log('=== Job Order Selection Debug ===')
+    console.log('Selected job order ID:', invoiceForm.jobOrderId)
+    console.log('All job orders:', jobOrders)
     console.log('Selected job order:', jobOrder)
-    if (!jobOrder) return
+    console.log('Job order clientId:', jobOrder?.clientId)
+    console.log('Job order lpoContractNo:', jobOrder?.lpoContractNo)
+    console.log('All clients:', clients)
+    
+    if (!jobOrder) {
+      console.log('ERROR: Job order not found!')
+      return
+    }
 
     // Auto-fill client details
     if (jobOrder.clientId) {
@@ -181,10 +191,12 @@ DOHA BRANCH`
           clientReference: jobOrder.lpoContractNo || '',
           terms: client.paymentTerms || 'Net 30'
         }))
-        console.log('Auto-filled client:', client.name, 'Reference:', jobOrder.lpoContractNo)
+        console.log('✓ Auto-filled client:', client.name, 'Reference:', jobOrder.lpoContractNo)
+      } else {
+        console.log('ERROR: Client not found with ID:', jobOrder.clientId)
       }
     } else {
-      console.log('Job order has no clientId')
+      console.log('WARNING: Job order has no clientId')
     }
   }
 

@@ -116,10 +116,36 @@ export async function GET(request: Request) {
         orderBy: { createdAt: 'desc' },
         skip: (page - 1) * perPage,
         take: perPage,
-        include: {
+        select: {
+          id: true,
+          jobNumber: true,
+          productName: true,
+          drawingRef: true,
+          clientId: true,  // Explicitly include clientId
+          clientName: true,
+          contactPerson: true,
+          phone: true,
+          clientContactPerson: true,
+          clientContactPhone: true,
+          lpoContractNo: true,  // Explicitly include lpoContractNo
+          priority: true,
+          foreman: true,
+          workScope: true,
+          scopeOfWorks: true,
+          qaQcInCharge: true,
+          discount: true,
+          roundOff: true,
+          finalTotal: true,
+          isDeleted: true,
+          deletedAt: true,
+          deletedBy: true,
+          createdBy: true,
+          lastEditedBy: true,
+          lastEditedAt: true,
+          createdAt: true,
+          updatedAt: true,
           items: true
-        },
-        // Explicitly select fields to ensure clientId and lpoContractNo are included
+        }
       })
     } catch (dbError: any) {
       // If clientId column doesn't exist, fetch without it
