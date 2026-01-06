@@ -51,6 +51,8 @@ export default function CreateInvoicePage() {
   const { data: session } = useSession()
   const [clients, setClients] = useState<Client[]>([])
   const [jobOrders, setJobOrders] = useState<JobOrder[]>([])
+  const [deliveryNotes, setDeliveryNotes] = useState<any[]>([])
+  const [selectedDeliveryNotes, setSelectedDeliveryNotes] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
   const [invoiceSuggestions, setInvoiceSuggestions] = useState<any>(null)
 
@@ -90,6 +92,10 @@ export default function CreateInvoicePage() {
   useEffect(() => {
     if (invoiceForm.jobOrderId && jobOrders.length > 0 && clients.length > 0) {
       loadJobOrderDetails()
+      fetchDeliveryNotes()
+    } else {
+      setDeliveryNotes([])
+      setSelectedDeliveryNotes([])
     }
   }, [invoiceForm.jobOrderId, jobOrders, clients])
 
@@ -180,70 +186,80 @@ DOHA BRANCH`
     } else {
       console.log('Job order has no clientId')
     }
+  }
 
-    // Fetch delivery notes for this job order
+  const fetchDeliveryNotes = async () => {
+    const jobOrder = jobOrders.find(jo => jo.id === invoiceForm.jobOrderId)
+    if (!jobOrder) return
+
     try {
       const res = await fetch(`/api/delivery-notes?jobOrderId=${jobOrder.id}`)
-      const deliveryNotes = await res.json()
+      const data = await res.json()
       
-      if (!Array.isArray(deliveryNotes) || deliveryNotes.length === 0) {
-        alert('No delivery notes found for this job order. Please create delivery notes before invoicing.')
-        setItems([{
-          jobOrderItemId: '',
-          mainDescription: '',
-          lineItemDescription: '',
-          unit: 'Nos',
-          quantity: 0,
-          unitPrice: 0,
-          totalPrice: 0,
-          deliveryNoteNo: '',
-          paymentTerm: '45 DAYS'
-        }])
+      if (!Array.isArray(data) || data.length === 0) {
+        console.log('No delivery notes found for this job order')
+        setDeliveryNotes([])
         return
       }
 
-      // Group delivery note items by job order item
-      const itemsMap = new Map()
-      
-      deliveryNotes.forEach((dn: any) => {
-        dn.items?.forEach((item: any) => {
-          if (item.jobOrderItemId) {
-            if (!itemsMap.has(item.jobOrderItemId)) {
-              const jobOrderItem = jobOrder.items?.find((joi: any) => joi.id === item.jobOrderItemId)
-              itemsMap.set(item.jobOrderItemId, {
-                jobOrderItemId: item.jobOrderItemId,
-                mainDescription: 'Job Order',
-                lineItemDescription: item.itemDescription,
-                unit: item.unit,
-                quantity: 0,
-                unitPrice: jobOrderItem?.unitPrice || 0,
-                totalPrice: 0,
-                deliveryNoteNo: dn.deliveryNoteNumber,
-                paymentTerm: '45 DAYS'
-              })
-            }
-            // Accumulate delivered quantities
-            const existing = itemsMap.get(item.jobOrderItemId)
-            existing.quantity += item.deliveredQuantity || 0
-            existing.deliveryNoteNo = existing.deliveryNoteNo + (existing.deliveryNoteNo.includes(dn.deliveryNoteNumber) ? '' : `, ${dn.deliveryNoteNumber}`)
-          }
-        })
-      })
-
-      // Convert to array and calculate totals
-      const loadedItems = Array.from(itemsMap.values()).map(item => ({
-        ...item,
-        totalPrice: item.quantity * item.unitPrice
-      }))
-
-      if (loadedItems.length > 0) {
-        setItems(loadedItems)
-      } else {
-        alert('No delivered items found in delivery notes.')
-      }
+      console.log('Loaded delivery notes:', data)
+      setDeliveryNotes(data)
     } catch (error) {
-      console.error('Failed to load delivery notes:', error)
-      alert('Failed to load delivery notes for this job order.')
+      console.error('Failed to fetch delivery notes:', error)
+      setDeliveryNotes([])
+    }
+  }
+
+  const loadItemsFromDeliveryNotes = () => {
+    const jobOrder = jobOrders.find(jo => jo.id === invoiceForm.jobOrderId)
+    if (!jobOrder || selectedDeliveryNotes.length === 0) return
+
+    const selectedDNs = deliveryNotes.filter(dn => selectedDeliveryNotes.includes(dn.id))
+    
+    if (selectedDNs.length === 0) {
+      alert('Please select at least one delivery note.')
+      return
+    }
+
+    // Group delivery note items by job order item
+    const itemsMap = new Map()
+    
+    selectedDNs.forEach((dn: any) => {
+      dn.items?.forEach((item: any) => {
+        if (item.jobOrderItemId) {
+          if (!itemsMap.has(item.jobOrderItemId)) {
+            const jobOrderItem = jobOrder.items?.find((joi: any) => joi.id === item.jobOrderItemId)
+            itemsMap.set(item.jobOrderItemId, {
+              jobOrderItemId: item.jobOrderItemId,
+              mainDescription: 'Job Order',
+              lineItemDescription: item.itemDescription,
+              unit: item.unit,
+              quantity: 0,
+              unitPrice: jobOrderItem?.unitPrice || 0,
+              totalPrice: 0,
+              deliveryNoteNo: dn.deliveryNoteNumber,
+              paymentTerm: '45 DAYS'
+            })
+          }
+          // Accumulate delivered quantities
+          const existing = itemsMap.get(item.jobOrderItemId)
+          existing.quantity += item.deliveredQuantity || 0
+          existing.deliveryNoteNo = existing.deliveryNoteNo + (existing.deliveryNoteNo.includes(dn.deliveryNoteNumber) ? '' : `, ${dn.deliveryNoteNumber}`)
+        }
+      })
+    })
+
+    // Convert to array and calculate totals
+    const loadedItems = Array.from(itemsMap.values()).map(item => ({
+      ...item,
+      totalPrice: item.quantity * item.unitPrice
+    }))
+
+    if (loadedItems.length > 0) {
+      setItems(loadedItems)
+      console.log('Loaded items from delivery notes:', loadedItems)
+    } else {
+      alert('No delivered items found in selected delivery notes.')
     }
   }
 
@@ -447,6 +463,53 @@ DOHA BRANCH`
                 </div>
               </CardContent>
             </Card>
+
+            {/* Delivery Notes Selection */}
+            {invoiceForm.jobOrderId && deliveryNotes.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Select Delivery Notes</CardTitle>
+                  <p className="text-sm text-gray-600">
+                    Choose the delivery notes to include in this invoice
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {deliveryNotes.map((dn: any) => (
+                      <label key={dn.id} className="flex items-center gap-2 p-2 border rounded hover:bg-gray-50 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={selectedDeliveryNotes.includes(dn.id)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedDeliveryNotes([...selectedDeliveryNotes, dn.id])
+                            } else {
+                              setSelectedDeliveryNotes(selectedDeliveryNotes.filter(id => id !== dn.id))
+                            }
+                          }}
+                          className="w-4 h-4"
+                        />
+                        <div className="flex-1">
+                          <div className="font-medium">{dn.deliveryNoteNumber}</div>
+                          <div className="text-sm text-gray-600">
+                            Date: {new Date(dn.date).toLocaleDateString()} | Items: {dn.items?.length || 0}
+                          </div>
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+                  {selectedDeliveryNotes.length > 0 && (
+                    <Button 
+                      type="button" 
+                      onClick={loadItemsFromDeliveryNotes}
+                      className="mt-4"
+                    >
+                      Load Items from Selected Delivery Notes
+                    </Button>
+                  )}
+                </CardContent>
+              </Card>
+            )}
 
             {/* Line Items */}
             <Card>
