@@ -111,6 +111,9 @@ export default function JobOrdersPage() {
   ])
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
+  const [showNewClientInput, setShowNewClientInput] = useState(false)
+  const [newClientName, setNewClientName] = useState('')
+  const [creatingClient, setCreatingClient] = useState(false)
   const [finalTotalOverride, setFinalTotalOverride] = useState<number | null>(null)
   const [editFinalTotalOverride, setEditFinalTotalOverride] = useState<number | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
@@ -335,6 +338,52 @@ export default function JobOrdersPage() {
       console.error('Failed to fetch clients:', error)
     }
   }
+
+  const createNewClient = async () => {
+    if (!newClientName.trim()) {
+      alert('Please enter a client name')
+      return
+    }
+
+    setCreatingClient(true)
+    try {
+      const res = await fetch('/api/clients', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: newClientName.trim(),
+          email: '', // Draft client - to be filled later
+          phone: '',
+          address: '',
+          isDraft: true // Mark as draft so user knows to complete it later
+        })
+      })
+
+      if (!res.ok) {
+        throw new Error('Failed to create client')
+      }
+
+      const newClient = await res.json()
+      
+      // Add to clients list and select it
+      setClients([...clients, newClient])
+      setFormData({
+        ...formData,
+        clientId: newClient.id,
+        clientName: newClient.name
+      })
+      
+      // Reset new client input
+      setShowNewClientInput(false)
+      setNewClientName('')
+      
+      alert(`Client "${newClient.name}" created successfully! You can complete the details in the Clients panel.`)
+    } catch (error: any) {
+      alert(error.message || 'Failed to create client')
+    } finally {
+      setCreatingClient(false)
+    }
+  }
       console.error('Failed to fetch deleted job orders:', error)
       setDeletedJobOrders([])
     }
@@ -384,6 +433,8 @@ export default function JobOrdersPage() {
       })
       setWorkItems([{ workDescription: '', quantity: 0, unit: 'PCS', unitPrice: 0, totalPrice: 0 }])
       setShowForm(false)
+      setShowNewClientInput(false)
+      setNewClientName('')
       localStorage.removeItem('jobOrderDraft')
       fetchJobOrders()
     } catch (err: any) {
@@ -712,29 +763,71 @@ export default function JobOrdersPage() {
                   </div>
                   <div className="md:col-span-4" data-edit-key="client">
                     <Label htmlFor="clientId" className="text-sm font-semibold">Client *</Label>
-                    <select
-                      id="clientId"
-                      value={formData.clientId}
-                      onChange={(e) => {
-                        const client = clients.find(c => c.id === e.target.value)
-                        if (client) {
-                          setFormData({ 
-                            ...formData, 
-                            clientId: client.id,
-                            clientName: client.name,
-                            clientContactPerson: client.contactPerson || '',
-                            clientContactPhone: client.phone || '+974 '
-                          })
-                        }
-                      }}
-                      required
-                      className="mt-1 h-9 px-2 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full text-sm"
-                    >
-                      <option value="">Select Client</option>
-                      {clients.map(client => (
-                        <option key={client.id} value={client.id}>{client.name}</option>
-                      ))}
-                    </select>
+                    {!showNewClientInput ? (
+                      <select
+                        id="clientId"
+                        value={formData.clientId}
+                        onChange={(e) => {
+                          if (e.target.value === 'NEW') {
+                            setShowNewClientInput(true)
+                            setFormData({ ...formData, clientId: '', clientName: '' })
+                          } else {
+                            const client = clients.find(c => c.id === e.target.value)
+                            if (client) {
+                              setFormData({ 
+                                ...formData, 
+                                clientId: client.id,
+                                clientName: client.name,
+                                clientContactPerson: client.contactPerson || '',
+                                clientContactPhone: client.phone || '+974 '
+                              })
+                            }
+                          }
+                        }}
+                        required
+                        className="mt-1 h-9 px-2 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full text-sm"
+                      >
+                        <option value="">Select Client</option>
+                        {clients.map(client => (
+                          <option key={client.id} value={client.id}>{client.name}</option>
+                        ))}
+                        <option value="NEW" className="font-semibold text-blue-600">➕ Create New Client...</option>
+                      </select>
+                    ) : (
+                      <div className="flex gap-2 mt-1">
+                        <Input
+                          value={newClientName}
+                          onChange={(e) => setNewClientName(e.target.value)}
+                          placeholder="Enter new client name"
+                          className="h-9 flex-1"
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault()
+                              createNewClient()
+                            }
+                          }}
+                        />
+                        <Button
+                          type="button"
+                          onClick={createNewClient}
+                          disabled={creatingClient || !newClientName.trim()}
+                          className="h-9 px-3"
+                        >
+                          {creatingClient ? '...' : 'Create'}
+                        </Button>
+                        <Button
+                          type="button"
+                          onClick={() => {
+                            setShowNewClientInput(false)
+                            setNewClientName('')
+                          }}
+                          variant="outline"
+                          className="h-9 px-3"
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    )}
                   </div>
                   <div className="md:col-span-2" data-edit-key="lpo">
                     <Label htmlFor="lpoContractNo" className="text-sm font-semibold">LPO / Contract No</Label>
