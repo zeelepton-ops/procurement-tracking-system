@@ -388,10 +388,6 @@ export default function JobOrdersPage() {
       setCreatingClient(false)
     }
   }
-      console.error('Failed to fetch deleted job orders:', error)
-      setDeletedJobOrders([])
-    }
-  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
