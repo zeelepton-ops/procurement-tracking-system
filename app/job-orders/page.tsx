@@ -495,6 +495,7 @@ export default function JobOrdersPage() {
       jobNumber: job.jobNumber,
       productName: job.productName,
       drawingRef: job.drawingRef || '',
+      clientId: (job as any).clientId || '',
       clientName: job.clientName || '',
       contactPerson: job.contactPerson || '',
       phone: job.phone || '+974 ',
