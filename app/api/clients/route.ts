@@ -96,12 +96,16 @@ export async function POST(request: Request) {
       data: {
         name: body.name,
         crNo: body.crNo || null,
+        crExpiryDate: body.crExpiryDate ? new Date(body.crExpiryDate) : null,
         email: body.email || null,
         phone: body.phone || null,
         contactPerson: body.contactPerson || null,
         contactPhone: body.contactPhone || null,
         address: body.address || null,
         taxId: body.taxId || null,
+        taxIdExpiryDate: body.taxIdExpiryDate ? new Date(body.taxIdExpiryDate) : null,
+        establishmentCardNo: body.establishmentCardNo || null,
+        establishmentCardExpiryDate: body.establishmentCardExpiryDate ? new Date(body.establishmentCardExpiryDate) : null,
         paymentTerms: body.paymentTerms || 'Net 30',
         creditLimit: body.creditLimit ? parseFloat(body.creditLimit) : null,
         status: body.status || 'ACTIVE',
@@ -170,6 +174,9 @@ export async function PUT(request: Request) {
       where: { id },
       data: {
         ...updateData,
+        crExpiryDate: updateData.crExpiryDate ? new Date(updateData.crExpiryDate) : null,
+        taxIdExpiryDate: updateData.taxIdExpiryDate ? new Date(updateData.taxIdExpiryDate) : null,
+        establishmentCardExpiryDate: updateData.establishmentCardExpiryDate ? new Date(updateData.establishmentCardExpiryDate) : null,
         creditLimit: updateData.creditLimit ? parseFloat(updateData.creditLimit) : undefined,
         updatedBy: session.user?.email || 'system'
       }
