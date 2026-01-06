@@ -766,35 +766,38 @@ export default function JobOrdersPage() {
                   <div className="md:col-span-4" data-edit-key="client">
                     <Label htmlFor="clientId" className="text-sm font-semibold">Client *</Label>
                     {!showNewClientInput ? (
-                      <select
-                        id="clientId"
-                        value={formData.clientId}
-                        onChange={(e) => {
-                          if (e.target.value === 'NEW') {
-                            setShowNewClientInput(true)
-                            setFormData({ ...formData, clientId: '', clientName: '' })
-                          } else {
-                            const client = clients.find(c => c.id === e.target.value)
-                            if (client) {
-                              setFormData({ 
-                                ...formData, 
-                                clientId: client.id,
-                                clientName: client.name,
-                                clientContactPerson: client.contactPerson || '',
-                                clientContactPhone: client.phone || '+974 '
-                              })
+                      <>
+                        <select
+                          id="clientId"
+                          value={formData.clientId}
+                          onChange={(e) => {
+                            if (e.target.value === 'NEW') {
+                              setShowNewClientInput(true)
+                              setFormData({ ...formData, clientId: '', clientName: '' })
+                            } else {
+                              const client = clients.find(c => c.id === e.target.value)
+                              if (client) {
+                                setFormData({ 
+                                  ...formData, 
+                                  clientId: client.id,
+                                  clientName: client.name,
+                                  clientContactPerson: client.contactPerson || '',
+                                  clientContactPhone: client.phone || '+974 '
+                                })
+                              }
                             }
-                          }
-                        }}
-                        required
-                        className="mt-1 h-9 px-2 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full text-sm"
-                      >
-                        <option value="">Select Client</option>
-                        {clients.map(client => (
-                          <option key={client.id} value={client.id}>{client.name}</option>
-                        ))}
-                        <option value="NEW" className="font-semibold text-blue-600">➕ Create New Client...</option>
-                      </select>
+                          }}
+                          required
+                          className="mt-1 h-9 px-2 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full text-sm"
+                        >
+                          <option value="">Select Client</option>
+                          {clients.map(client => (
+                            <option key={client.id} value={client.id}>{client.name}</option>
+                          ))}
+                          <option value="NEW" className="font-semibold text-blue-600" style={{backgroundColor: '#EFF6FF'}}>➕ Create New Client...</option>
+                        </select>
+                        <p className="text-xs text-gray-500 mt-1">Tip: Select "Create New Client" at bottom to add a new client</p>
+                      </>
                     ) : (
                       <div className="flex gap-2 mt-1">
                         <Input

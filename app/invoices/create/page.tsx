@@ -443,13 +443,17 @@ DOHA BRANCH`
                       required
                       value={invoiceForm.clientId}
                       onChange={(e) => setInvoiceForm({...invoiceForm, clientId: e.target.value})}
-                      className="w-full p-2 border rounded"
+                      disabled={!!invoiceForm.jobOrderId}
+                      className="w-full p-2 border rounded disabled:bg-gray-100 disabled:cursor-not-allowed"
                     >
                       <option value="">Select Client</option>
                       {clients.map(client => (
                         <option key={client.id} value={client.id}>{client.name}</option>
                       ))}
                     </select>
+                    {invoiceForm.jobOrderId && (
+                      <p className="text-xs text-gray-500 mt-1">Auto-filled from Job Order</p>
+                    )}
                   </div>
                   <div>
                     <Label>Job Order (Optional)</Label>
