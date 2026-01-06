@@ -66,6 +66,19 @@ export async function POST(request: Request) {
 
     const body = await request.json()
 
+    // Check for duplicate CR No.
+    if (body.crNo) {
+      const existingClient = await prisma.client.findUnique({
+        where: { crNo: body.crNo }
+      })
+
+      if (existingClient) {
+        return NextResponse.json({ 
+          error: 'Client with this CR No. already exists' 
+        }, { status: 400 })
+      }
+    }
+
     // Check for duplicate tax ID
     if (body.taxId) {
       const existingClient = await prisma.client.findUnique({
@@ -82,6 +95,7 @@ export async function POST(request: Request) {
     const client = await prisma.client.create({
       data: {
         name: body.name,
+        crNo: body.crNo || null,
         email: body.email || null,
         phone: body.phone || null,
         contactPerson: body.contactPerson || null,
@@ -114,6 +128,24 @@ export async function PUT(request: Request) {
 
     if (!id) {
       return NextResponse.json({ error: 'Client ID is required' }, { status: 400 })
+    }
+
+    // Check for duplicate CR No. (excluding current client)
+    if (updateData.crNo) {
+      const existingClient = await prisma.client.findFirst({
+        where: {
+          AND: [
+            { id: { not: id } },
+            { crNo: updateData.crNo }
+          ]
+        }
+      })
+
+      if (existingClient) {
+        return NextResponse.json({ 
+          error: 'Client with this CR No. already exists' 
+        }, { status: 400 })
+      }
     }
 
     // Check for duplicate tax ID (excluding current client)

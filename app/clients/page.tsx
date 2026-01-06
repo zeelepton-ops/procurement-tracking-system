@@ -12,12 +12,17 @@ import { Users, Plus, Search, Edit, Trash2, X, Building2, Mail, Phone, FileText 
 interface Client {
   id: string
   name: string
+  crNo: string | null
+  crExpiryDate: string | null
   email: string | null
   phone: string | null
   contactPerson: string | null
   contactPhone: string | null
   address: string | null
   taxId: string | null
+  taxIdExpiryDate: string | null
+  establishmentCardNo: string | null
+  establishmentCardExpiryDate: string | null
   paymentTerms: string | null
   creditLimit: number | null
   status: string
@@ -41,12 +46,17 @@ export default function ClientsPage() {
 
   const [clientForm, setClientForm] = useState({
     name: '',
+    crNo: '',
+    crExpiryDate: '',
     email: '',
     phone: '',
     contactPerson: '',
     contactPhone: '',
     address: '',
     taxId: '',
+    taxIdExpiryDate: '',
+    establishmentCardNo: '',
+    establishmentCardExpiryDate: '',
     paymentTerms: 'Net 30',
     creditLimit: '',
     status: 'ACTIVE'
@@ -100,12 +110,17 @@ export default function ClientsPage() {
   const resetForm = () => {
     setClientForm({
       name: '',
+      crNo: '',
+      crExpiryDate: '',
       email: '',
       phone: '',
       contactPerson: '',
       contactPhone: '',
       address: '',
       taxId: '',
+      taxIdExpiryDate: '',
+      establishmentCardNo: '',
+      establishmentCardExpiryDate: '',
       paymentTerms: 'Net 30',
       creditLimit: '',
       status: 'ACTIVE'
@@ -122,12 +137,17 @@ export default function ClientsPage() {
     setSelectedClient(client)
     setClientForm({
       name: client.name,
+      crNo: client.crNo || '',
+      crExpiryDate: (client as any).crExpiryDate ? new Date((client as any).crExpiryDate).toISOString().split('T')[0] : '',
       email: client.email || '',
       phone: client.phone || '',
       contactPerson: client.contactPerson || '',
       contactPhone: client.contactPhone || '',
       address: client.address || '',
       taxId: client.taxId || '',
+      taxIdExpiryDate: (client as any).taxIdExpiryDate ? new Date((client as any).taxIdExpiryDate).toISOString().split('T')[0] : '',
+      establishmentCardNo: (client as any).establishmentCardNo || '',
+      establishmentCardExpiryDate: (client as any).establishmentCardExpiryDate ? new Date((client as any).establishmentCardExpiryDate).toISOString().split('T')[0] : '',
       paymentTerms: client.paymentTerms || 'Net 30',
       creditLimit: client.creditLimit?.toString() || '',
       status: client.status
@@ -312,7 +332,7 @@ export default function ClientsPage() {
       {/* Add/Edit Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+          <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle>{modalMode === 'add' ? 'Add Client' : 'Edit Client'}</CardTitle>
@@ -330,6 +350,38 @@ export default function ClientsPage() {
                       required
                       value={clientForm.name}
                       onChange={(e) => setClientForm({...clientForm, name: e.target.value})}
+                    />
+                  </div>
+                  <div className="col-span-2">
+                    <Label>CR No. (Commercial Registration Number)</Label>
+                    <Input
+                      placeholder="Unique registration number"
+                      value={clientForm.crNo}
+                      onChange={(e) => setClientForm({...clientForm, crNo: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <Label>CR Expiry Date</Label>
+                    <Input
+                      type="date"
+                      value={clientForm.crExpiryDate}
+                      onChange={(e) => setClientForm({...clientForm, crExpiryDate: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <Label>Establishment Card No.</Label>
+                    <Input
+                      placeholder="Establishment card number"
+                      value={clientForm.establishmentCardNo}
+                      onChange={(e) => setClientForm({...clientForm, establishmentCardNo: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <Label>Establishment Card Expiry Date</Label>
+                    <Input
+                      type="date"
+                      value={clientForm.establishmentCardExpiryDate}
+                      onChange={(e) => setClientForm({...clientForm, establishmentCardExpiryDate: e.target.value})}
                     />
                   </div>
                   <div>
@@ -374,6 +426,14 @@ export default function ClientsPage() {
                     <Input
                       value={clientForm.taxId}
                       onChange={(e) => setClientForm({...clientForm, taxId: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <Label>Tax ID Expiry Date</Label>
+                    <Input
+                      type="date"
+                      value={clientForm.taxIdExpiryDate}
+                      onChange={(e) => setClientForm({...clientForm, taxIdExpiryDate: e.target.value})}
                     />
                   </div>
                   <div>

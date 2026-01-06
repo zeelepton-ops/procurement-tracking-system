@@ -757,16 +757,21 @@ model WorkerAuditLog {
 }
 
 model Client {
-  id                String    @id @default(cuid())
-  name              String
-  email             String?
-  phone             String?
-  contactPerson     String?
-  contactPhone      String?
-  address           String?
-  taxId             String?   @unique
-  paymentTerms      String?   @default("Net 30") // Net 30, Net 60, etc.
-  creditLimit       Float?
+  id                          String    @id @default(cuid())
+  name                        String
+  crNo                        String?   @unique // Commercial Registration Number
+  crExpiryDate                DateTime?
+  email                       String?
+  phone                       String?
+  contactPerson               String?
+  contactPhone                String?
+  address                     String?
+  taxId                       String?   @unique
+  taxIdExpiryDate             DateTime?
+  establishmentCardNo         String?
+  establishmentCardExpiryDate DateTime?
+  paymentTerms                String?   @default("Net 30") // Net 30, Net 60, etc.
+  creditLimit                 Float?
   
   // Status
   status            String    @default("ACTIVE") // ACTIVE, INACTIVE
