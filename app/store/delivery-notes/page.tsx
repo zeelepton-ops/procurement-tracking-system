@@ -286,6 +286,32 @@ export default function DeliveryNotesPage() {
   }
 
   const handleEdit = (note: DeliveryNote) => {
+    // Group items by jobOrderItemId to reconstruct the structure
+    const itemsMap = new Map<string, typeof note.items>()
+    note.items?.forEach(item => {
+      const key = item.jobOrderItemId || 'no-job-item'
+      if (!itemsMap.has(key)) {
+        itemsMap.set(key, [])
+      }
+      itemsMap.get(key)!.push(item)
+    })
+
+    // Reconstruct lineItems with proper structure
+    const lineItems = Array.from(itemsMap.entries()).map(([jobOrderItemId, items]) => ({
+      id: items[0]?.id || `temp-${Math.random()}`,
+      jobOrderItemId: jobOrderItemId !== 'no-job-item' ? jobOrderItemId : undefined,
+      description: items[0]?.itemDescription || '',
+      balanceQty: items.reduce((sum, item) => sum + (item.quantity || 0), 0),
+      totalQty: items.reduce((sum, item) => sum + (item.quantity || 0), 0),
+      subItems: items.map(item => ({
+        id: item.id,
+        subDescription: item.itemDescription,
+        unit: item.unit,
+        deliveredQuantity: item.deliveredQuantity,
+        remarks: item.remarks
+      }))
+    }))
+
     setFormData({
       deliveryNoteNumber: note.deliveryNoteNumber,
       jobOrderId: note.jobOrderId || '',
@@ -303,14 +329,7 @@ export default function DeliveryNotesPage() {
       qidNumber: '',
       vehicleNumber: '',
       vehicleType: 'NBTC',
-      lineItems: note.items?.map(item => ({
-        itemDescription: item.itemDescription,
-        unit: item.unit,
-        quantity: item.quantity,
-        deliveredQuantity: item.deliveredQuantity,
-        remarks: item.remarks || '',
-        jobOrderItemId: item.jobOrderItemId || ''
-      })) || []
+      lineItems: lineItems
     })
     setEditingId(note.id)
     setShowForm(true)
