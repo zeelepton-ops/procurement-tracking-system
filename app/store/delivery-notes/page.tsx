@@ -143,9 +143,12 @@ export default function DeliveryNotesPage() {
         const res = await fetch(`/api/delivery-notes?jobOrderId=${jobOrderId}`)
         if (res.ok) {
           const deliveries = await res.json()
-          // Sum up delivered quantities by jobOrderItemId
+          // Sum up delivered quantities by jobOrderItemId (exclude current editing note)
           deliveries.forEach((dn: any) => {
-            if (dn.status !== 'DRAFT' && dn.items) {
+            // Skip the delivery note being edited
+            if (editingId && dn.id === editingId) return
+            
+            if (dn.items) {
               dn.items.forEach((item: any) => {
                 if (item.jobOrderItemId) {
                   if (!previousDeliveries[item.jobOrderItemId]) {
