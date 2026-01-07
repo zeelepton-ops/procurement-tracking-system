@@ -299,12 +299,16 @@ export default function DeliveryNotesPage() {
     // Reconstruct lineItems with proper structure
     const lineItems = Array.from(itemsMap.entries()).map(([jobOrderItemId, items]) => {
       const firstItem = items && items.length > 0 ? items[0] : null
+      // For balance qty, we need the original job order item quantity, not the sum of delivered items
+      // The sum represents total delivered, not the balance remaining
+      const totalDelivered = items ? items.reduce((sum, item) => sum + (item.deliveredQuantity || 0), 0) : 0
+      
       return {
         id: firstItem?.id || `temp-${Math.random()}`,
         jobOrderItemId: jobOrderItemId !== 'no-job-item' ? jobOrderItemId : undefined,
         description: firstItem?.itemDescription || '',
-        balanceQty: items ? items.reduce((sum, item) => sum + (item.quantity || 0), 0) : 0,
-        totalQty: items ? items.reduce((sum, item) => sum + (item.quantity || 0), 0) : 0,
+        balanceQty: firstItem?.quantity || 0,  // Use the first item's quantity as the line item total
+        totalQty: firstItem?.quantity || 0,
         subItems: items ? items.map(item => ({
           id: item.id,
           subDescription: item.itemDescription,
