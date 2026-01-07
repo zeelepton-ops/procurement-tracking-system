@@ -629,7 +629,7 @@ export default function DeliveryNotesPage() {
                                 {/* Sub Items Rows */}
                                 {item.subItems.map((subItem, subIndex) => (
                                   <tr key={subItem.id} className="border-b border-slate-100 hover:bg-slate-50">
-                                    <td className="px-2 py-1" colSpan={3}>
+                                    <td className="px-2 py-1" colSpan={4}>
                                       <div className="flex gap-2 items-end pl-6">
                                         <div className="flex-1">
                                           <label className="text-[10px] text-slate-500 block mb-0.5">Sub Item Description</label>
