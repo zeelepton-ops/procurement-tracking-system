@@ -341,7 +341,7 @@ export default function JobOrdersPage() {
       const res = await fetch('/api/clients')
       if (res.ok) {
         const data = await res.json()
-        setClients(data.clients || [])
+        setClients(Array.isArray(data) ? data : [])
       }
     } catch (error) {
       console.error('Failed to fetch clients:', error)
