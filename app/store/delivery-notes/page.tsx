@@ -297,20 +297,23 @@ export default function DeliveryNotesPage() {
     })
 
     // Reconstruct lineItems with proper structure
-    const lineItems = Array.from(itemsMap.entries()).map(([jobOrderItemId, items]) => ({
-      id: items[0]?.id || `temp-${Math.random()}`,
-      jobOrderItemId: jobOrderItemId !== 'no-job-item' ? jobOrderItemId : undefined,
-      description: items[0]?.itemDescription || '',
-      balanceQty: items.reduce((sum, item) => sum + (item.quantity || 0), 0),
-      totalQty: items.reduce((sum, item) => sum + (item.quantity || 0), 0),
-      subItems: items.map(item => ({
-        id: item.id,
-        subDescription: item.itemDescription,
-        unit: item.unit,
-        deliveredQuantity: item.deliveredQuantity,
-        remarks: item.remarks
-      }))
-    }))
+    const lineItems = Array.from(itemsMap.entries()).map(([jobOrderItemId, items]) => {
+      const firstItem = items && items.length > 0 ? items[0] : null
+      return {
+        id: firstItem?.id || `temp-${Math.random()}`,
+        jobOrderItemId: jobOrderItemId !== 'no-job-item' ? jobOrderItemId : undefined,
+        description: firstItem?.itemDescription || '',
+        balanceQty: items ? items.reduce((sum, item) => sum + (item.quantity || 0), 0) : 0,
+        totalQty: items ? items.reduce((sum, item) => sum + (item.quantity || 0), 0) : 0,
+        subItems: items ? items.map(item => ({
+          id: item.id,
+          subDescription: item.itemDescription,
+          unit: item.unit,
+          deliveredQuantity: item.deliveredQuantity,
+          remarks: item.remarks
+        })) : []
+      }
+    })
 
     setFormData({
       deliveryNoteNumber: note.deliveryNoteNumber,
