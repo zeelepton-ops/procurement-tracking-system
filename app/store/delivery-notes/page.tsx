@@ -856,7 +856,7 @@ export default function DeliveryNotesPage() {
                               </span>
                             </td>
                             <td className="px-4 py-3 text-sm text-slate-600">
-                              {new Date(note.createdAt).toLocaleDateString()}
+                              {new Date(note.createdAt).toLocaleDateString()} {new Date(note.createdAt).toLocaleTimeString()}
                             </td>
                             <td className="px-4 py-3">
                               <div className="flex gap-2">
@@ -924,18 +924,37 @@ export default function DeliveryNotesPage() {
                                       </tr>
                                     </thead>
                                     <tbody className="bg-white divide-y divide-slate-200">
-                                      {note.items.map(item => (
-                                        <tr key={item.id}>
-                                          <td className="px-3 py-2 text-sm text-slate-900">{item.itemDescription}</td>
-                                          <td className="px-3 py-2 text-sm text-slate-600">{item.unit}</td>
-                                          <td className="px-3 py-2 text-sm text-slate-900">{item.quantity}</td>
-                                          <td className="px-3 py-2 text-sm text-slate-900 font-medium">{item.deliveredQuantity}</td>
-                                          <td className="px-3 py-2 text-sm text-blue-600 font-medium">
-                                            {item.quantity - item.deliveredQuantity}
-                                          </td>
-                                          <td className="px-3 py-2 text-sm text-slate-600">{item.remarks || '-'}</td>
-                                        </tr>
-                                      ))}
+                                      {(() => {
+                                        // Group items by jobOrderItemId to show aggregated data
+                                        const groupedItems = note.items.reduce((acc: any, item: any) => {
+                                          const key = item.jobOrderItemId || item.itemDescription
+                                          if (!acc[key]) {
+                                            acc[key] = {
+                                              description: item.itemDescription,
+                                              unit: item.unit,
+                                              totalQty: item.quantity,
+                                              deliveredQty: 0,
+                                              remarks: []
+                                            }
+                                          }
+                                          acc[key].deliveredQty += item.deliveredQuantity || 0
+                                          if (item.remarks) acc[key].remarks.push(item.remarks)
+                                          return acc
+                                        }, {})
+
+                                        return Object.values(groupedItems).map((item: any, idx: number) => (
+                                          <tr key={idx}>
+                                            <td className="px-3 py-2 text-sm text-slate-900">{item.description}</td>
+                                            <td className="px-3 py-2 text-sm text-slate-600">{item.unit}</td>
+                                            <td className="px-3 py-2 text-sm text-slate-900">{item.totalQty}</td>
+                                            <td className="px-3 py-2 text-sm text-slate-900 font-medium">{item.deliveredQty}</td>
+                                            <td className="px-3 py-2 text-sm text-blue-600 font-medium">
+                                              {item.totalQty - item.deliveredQty}
+                                            </td>
+                                            <td className="px-3 py-2 text-sm text-slate-600">{item.remarks.join(', ') || '-'}</td>
+                                          </tr>
+                                        ))
+                                      })()}
                                     </tbody>
                                   </table>
                                 </div>
