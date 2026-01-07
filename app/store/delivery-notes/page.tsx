@@ -628,37 +628,39 @@ export default function DeliveryNotesPage() {
 
                                 {/* Sub Items Rows */}
                                 {item.subItems.map((subItem, subIndex) => (
-                                  <tr key={subItem.id} className="border-b border-slate-100 hover:bg-slate-100">
-                                    <td className="px-2 py-1 pl-8">
-                                      <Input
-                                        value={subItem.subDescription}
-                                        onChange={(e) => handleSubItemChange(lineIndex, subIndex, 'subDescription', e.target.value)}
-                                        placeholder="Sub Item Description"
-                                        className="text-xs h-7"
-                                      />
-                                    </td>
-                                    <td className="px-2 py-1">
-                                      <Input
-                                        value={subItem.unit}
-                                        onChange={(e) => handleSubItemChange(lineIndex, subIndex, 'unit', e.target.value)}
-                                        placeholder="Unit"
-                                        className="text-xs h-7 w-full"
-                                      />
-                                    </td>
-                                    <td className="px-2 py-1">
-                                      <div className="grid grid-cols-12 gap-1">
+                                  <tr key={subItem.id} className="border-b border-slate-100 hover:bg-slate-50">
+                                    <td className="px-2 py-1" colSpan={3}>
+                                      <div className="grid grid-cols-12 gap-2 items-end pl-6">
                                         <div className="col-span-3">
-                                          <label className="text-xs text-slate-500">Del.Qty</label>
+                                          <label className="text-[10px] text-slate-500 block mb-0.5">Sub Item Description</label>
+                                          <Input
+                                            value={subItem.subDescription}
+                                            onChange={(e) => handleSubItemChange(lineIndex, subIndex, 'subDescription', e.target.value)}
+                                            placeholder="Sub Item Description"
+                                            className="text-xs h-7"
+                                          />
+                                        </div>
+                                        <div className="col-span-2">
+                                          <label className="text-[10px] text-slate-500 block mb-0.5">Unit</label>
+                                          <Input
+                                            value={subItem.unit}
+                                            onChange={(e) => handleSubItemChange(lineIndex, subIndex, 'unit', e.target.value)}
+                                            placeholder="Unit"
+                                            className="text-xs h-7"
+                                          />
+                                        </div>
+                                        <div className="col-span-2">
+                                          <label className="text-[10px] text-slate-500 block mb-0.5">Del.Qty</label>
                                           <Input
                                             type="number"
                                             value={subItem.deliveredQuantity}
                                             onChange={(e) => handleSubItemChange(lineIndex, subIndex, 'deliveredQuantity', parseFloat(e.target.value) || 0)}
                                             placeholder="0"
-                                            className="text-xs h-7 w-full"
+                                            className="text-xs h-7"
                                           />
                                         </div>
-                                        <div className="col-span-7">
-                                          <label className="text-xs text-slate-500">Remarks</label>
+                                        <div className="col-span-4">
+                                          <label className="text-[10px] text-slate-500 block mb-0.5">Remarks</label>
                                           <Input
                                             value={subItem.remarks || ''}
                                             onChange={(e) => handleSubItemChange(lineIndex, subIndex, 'remarks', e.target.value)}
@@ -666,11 +668,11 @@ export default function DeliveryNotesPage() {
                                             className="text-xs h-7"
                                           />
                                         </div>
-                                        <div className="col-span-2 flex items-end">
+                                        <div className="col-span-1">
                                           <Button
                                             type="button"
                                             onClick={() => removeSubItem(lineIndex, subIndex)}
-                                            className="bg-red-600 hover:bg-red-700 h-7 w-7 p-0"
+                                            className="bg-red-600 hover:bg-red-700 h-7 w-full p-0"
                                           >
                                             <Trash2 className="h-3 w-3" />
                                           </Button>
