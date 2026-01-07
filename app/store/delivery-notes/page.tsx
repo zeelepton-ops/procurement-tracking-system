@@ -630,8 +630,8 @@ export default function DeliveryNotesPage() {
                                 {item.subItems.map((subItem, subIndex) => (
                                   <tr key={subItem.id} className="border-b border-slate-100 hover:bg-slate-50">
                                     <td className="px-2 py-1" colSpan={3}>
-                                      <div className="grid grid-cols-12 gap-2 items-end pl-6">
-                                        <div className="col-span-6">
+                                      <div className="flex gap-2 items-end pl-6">
+                                        <div className="flex-1">
                                           <label className="text-[10px] text-slate-500 block mb-0.5">Sub Item Description</label>
                                           <Input
                                             value={subItem.subDescription}
@@ -640,7 +640,7 @@ export default function DeliveryNotesPage() {
                                             className="text-xs h-7"
                                           />
                                         </div>
-                                        <div className="col-span-2">
+                                        <div className="w-24">
                                           <label className="text-[10px] text-slate-500 block mb-0.5">Unit</label>
                                           <Input
                                             value={subItem.unit}
@@ -649,7 +649,7 @@ export default function DeliveryNotesPage() {
                                             className="text-xs h-7"
                                           />
                                         </div>
-                                        <div className="col-span-1">
+                                        <div className="w-24">
                                           <label className="text-[10px] text-slate-500 block mb-0.5">Del.Qty</label>
                                           <Input
                                             type="number"
@@ -659,7 +659,7 @@ export default function DeliveryNotesPage() {
                                             className="text-xs h-7"
                                           />
                                         </div>
-                                        <div className="col-span-2">
+                                        <div className="w-40">
                                           <label className="text-[10px] text-slate-500 block mb-0.5">Remarks</label>
                                           <Input
                                             value={subItem.remarks || ''}
@@ -668,7 +668,7 @@ export default function DeliveryNotesPage() {
                                             className="text-xs h-7"
                                           />
                                         </div>
-                                        <div className="col-span-1">
+                                        <div className="w-8">
                                           <Button
                                             type="button"
                                             onClick={() => removeSubItem(lineIndex, subIndex)}
