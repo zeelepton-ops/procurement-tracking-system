@@ -772,7 +772,7 @@ export default function JobOrdersPage() {
                   </div>
                   <div className="md:col-span-4" data-edit-key="client">
                     <Label htmlFor="clientSearch" className="text-sm font-semibold">Client *</Label>
-                    <div className="relative mt-1" onMouseLeave={() => setShowClientSuggestions(false)}>
+                    <div className="relative mt-1">
                       <Input
                         id="clientSearch"
                         value={clientSearchQuery}
@@ -793,7 +793,10 @@ export default function JobOrdersPage() {
                       
                       {/* Dropdown suggestions */}
                       {showClientSuggestions && (
-                        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                        <div 
+                          className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto"
+                          onMouseLeave={() => setShowClientSuggestions(false)}
+                        >
                           {clients
                             .filter(client => 
                               client.name.toLowerCase().includes(clientSearchQuery.toLowerCase())
@@ -1593,7 +1596,7 @@ export default function JobOrdersPage() {
                           className="mt-1 h-9 w-full text-sm"
                         />
                       </div>
-                      <div className="md:col-span-4 relative" onMouseLeave={() => setShowEditClientSuggestions(false)}>
+                      <div className="md:col-span-4 relative">
                         <Label htmlFor="edit-clientName" className="text-sm font-semibold">Client Name *</Label>
                         <Input
                           id="edit-clientName"
@@ -1611,7 +1614,10 @@ export default function JobOrdersPage() {
                         
                         {/* Client Suggestions Dropdown */}
                         {showEditClientSuggestions && editClientSearchQuery && (
-                          <div className="absolute z-50 w-full bg-white border border-gray-300 rounded-md shadow-lg mt-1 max-h-60 overflow-y-auto">
+                          <div 
+                            className="absolute z-50 w-full bg-white border border-gray-300 rounded-md shadow-lg mt-1 max-h-60 overflow-y-auto"
+                            onMouseLeave={() => setShowEditClientSuggestions(false)}
+                          >
                             {clients
                               .filter(client => 
                                 client.name.toLowerCase().includes(editClientSearchQuery.toLowerCase())
