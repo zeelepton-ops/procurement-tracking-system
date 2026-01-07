@@ -63,6 +63,7 @@ export default function DeliveryNotesPage() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [showSuggestions, setShowSuggestions] = useState<{ [key: string]: boolean }>({})
   const [expandedNotes, setExpandedNotes] = useState<Set<string>>(new Set())
+  const [dnSuggestions, setDnSuggestions] = useState<string[]>([])
 
   const [formData, setFormData] = useState({
     deliveryNoteNumber: '',
@@ -101,6 +102,41 @@ export default function DeliveryNotesPage() {
     fetchDeliveryNotes()
     fetchJobOrders()
   }, [])
+
+  const generateDnSuggestions = () => {
+    // Parse existing DN numbers to find the highest number for current year
+    const currentYear = new Date().getFullYear().toString().slice(-2) // Get last 2 digits
+    const dnPattern = /^DN-(\d+)\/(\d{2})$/
+    
+    let maxNumber = 0
+    deliveryNotes.forEach(note => {
+      const match = note.deliveryNoteNumber.match(dnPattern)
+      if (match) {
+        const [, numStr, yearStr] = match
+        const num = parseInt(numStr, 10)
+        const year = yearStr
+        // Consider numbers from current year and previous year
+        if (year === currentYear || parseInt(year, 10) === parseInt(currentYear, 10) - 1) {
+          if (num > maxNumber) maxNumber = num
+        }
+      }
+    })
+
+    // Generate 5 previous and 5 next numbers
+    const suggestions: string[] = []
+    const startNum = Math.max(1, maxNumber - 4)
+    for (let i = startNum; i <= maxNumber + 5; i++) {
+      suggestions.push(`DN-${i.toString().padStart(4, '0')}/${currentYear}`)
+    }
+    
+    setDnSuggestions(suggestions)
+  }
+
+  useEffect(() => {
+    if (deliveryNotes.length > 0 && showForm) {
+      generateDnSuggestions()
+    }
+  }, [deliveryNotes, showForm])
 
   const fetchDeliveryNotes = async () => {
     try {
@@ -508,14 +544,48 @@ export default function DeliveryNotesPage() {
                 {/* Line 1: Delivery Note Number, Country, Division, Department */}
                 <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-                    <div>
+                    <div className="relative">
                       <Label className="font-semibold text-xs">Delivery Note Number *</Label>
                       <Input
                         value={formData.deliveryNoteNumber}
-                        onChange={(e) => handleInputChange('deliveryNoteNumber', e.target.value)}
-                        placeholder="e.g., 15767/25"
+                        onChange={(e) => {
+                          handleInputChange('deliveryNoteNumber', e.target.value)
+                          setShowSuggestions(prev => ({ ...prev, dnNumber: true }))
+                        }}
+                        onFocus={() => {
+                          setShowSuggestions(prev => ({ ...prev, dnNumber: true }))
+                          if (dnSuggestions.length === 0) generateDnSuggestions()
+                        }}
+                        onBlur={() => setTimeout(() => setShowSuggestions(prev => ({ ...prev, dnNumber: false })), 200)}
+                        placeholder="e.g., DN-0001/26"
                         className="mt-1 h-9 text-sm"
+                        autoComplete="off"
                       />
+                      {showSuggestions.dnNumber && dnSuggestions.length > 0 && (
+                        <div className="absolute top-full left-0 right-0 bg-white border border-slate-300 rounded-lg mt-1 shadow-lg z-50 max-h-60 overflow-y-auto">
+                          {dnSuggestions
+                            .filter(dn => dn.toLowerCase().includes(formData.deliveryNoteNumber.toLowerCase()) || !formData.deliveryNoteNumber)
+                            .map((dn, idx) => {
+                              const exists = deliveryNotes.some(note => note.deliveryNoteNumber === dn)
+                              return (
+                                <button
+                                  key={idx}
+                                  onClick={() => {
+                                    handleInputChange('deliveryNoteNumber', dn)
+                                    setShowSuggestions(prev => ({ ...prev, dnNumber: false }))
+                                  }}
+                                  className={`w-full text-left px-3 py-2 hover:bg-blue-50 text-sm flex justify-between items-center ${
+                                    exists ? 'bg-red-50 text-red-600' : ''
+                                  }`}
+                                  disabled={exists}
+                                >
+                                  <span>{dn}</span>
+                                  {exists && <span className="text-xs">(Used)</span>}
+                                </button>
+                              )
+                            })}
+                        </div>
+                      )}
                     </div>
                     <div>
                       <Label className="font-semibold text-xs">Country</Label>
