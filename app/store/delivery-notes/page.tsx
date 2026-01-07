@@ -179,10 +179,14 @@ export default function DeliveryNotesPage() {
         const res = await fetch(`/api/delivery-notes?jobOrderId=${jobOrderId}`)
         if (res.ok) {
           const deliveries = await res.json()
+          console.log('All deliveries for job order:', deliveries)
           // Sum up delivered quantities by jobOrderItemId (exclude current editing note)
           deliveries.forEach((dn: any) => {
             // Skip the delivery note being edited
-            if (editingId && dn.id === editingId) return
+            if (editingId && dn.id === editingId) {
+              console.log('Skipping current editing delivery note:', dn.id)
+              return
+            }
             
             if (dn.items) {
               dn.items.forEach((item: any) => {
@@ -190,11 +194,13 @@ export default function DeliveryNotesPage() {
                   if (!previousDeliveries[item.jobOrderItemId]) {
                     previousDeliveries[item.jobOrderItemId] = 0
                   }
+                  console.log(`Adding to ${item.jobOrderItemId}: ${item.deliveredQuantity}`)
                   previousDeliveries[item.jobOrderItemId] += item.deliveredQuantity || 0
                 }
               })
             }
           })
+          console.log('Previous deliveries summary:', previousDeliveries)
         }
       } catch (error) {
         console.error('Failed to fetch previous deliveries:', error)
@@ -205,6 +211,8 @@ export default function DeliveryNotesPage() {
         const totalQty = item.quantity || 0
         const deliveredQty = previousDeliveries[item.id] || 0
         const balanceQty = totalQty - deliveredQty
+        
+        console.log(`Job Order Item ${item.id}: Total=${totalQty}, Delivered=${deliveredQty}, Balance=${balanceQty}`)
 
         return {
           id: item.id || `temp-${Math.random()}`,
