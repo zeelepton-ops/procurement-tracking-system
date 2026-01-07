@@ -131,27 +131,57 @@ export default function DeliveryNotesPage() {
     }
   }
 
-  const handleJobOrderChange = (jobOrderId: string) => {
+  const handleJobOrderChange = async (jobOrderId: string) => {
     setFormData(prev => ({ ...prev, jobOrderId }))
     
     // Auto-fill from selected job order
     const selectedJobOrder = jobOrders.find(jo => jo.id === jobOrderId)
     if (selectedJobOrder) {
+      // Fetch previous deliveries for this job order to calculate balance
+      let previousDeliveries: any = {}
+      try {
+        const res = await fetch(`/api/delivery-notes?jobOrderId=${jobOrderId}`)
+        if (res.ok) {
+          const deliveries = await res.json()
+          // Sum up delivered quantities by jobOrderItemId
+          deliveries.forEach((dn: any) => {
+            if (dn.status !== 'DRAFT' && dn.items) {
+              dn.items.forEach((item: any) => {
+                if (item.jobOrderItemId) {
+                  if (!previousDeliveries[item.jobOrderItemId]) {
+                    previousDeliveries[item.jobOrderItemId] = 0
+                  }
+                  previousDeliveries[item.jobOrderItemId] += item.deliveredQuantity || 0
+                }
+              })
+            }
+          })
+        }
+      } catch (error) {
+        console.error('Failed to fetch previous deliveries:', error)
+      }
+
       // Extract line items from job order with balance qty and sub-items structure
-      const lineItems = (selectedJobOrder.items || []).map((item: any) => ({
-        id: item.id || `temp-${Math.random()}`,
-        jobOrderItemId: item.id,
-        description: item.workDescription || '',
-        balanceQty: item.quantity || 0,  // Initially balance = total (no previous deliveries)
-        totalQty: item.quantity || 0,
-        subItems: [{
-          id: `sub-${Math.random()}`,
-          subDescription: '',
-          unit: item.unit || '',
-          deliveredQuantity: 0,
-          remarks: ''
-        }]
-      }))
+      const lineItems = (selectedJobOrder.items || []).map((item: any) => {
+        const totalQty = item.quantity || 0
+        const deliveredQty = previousDeliveries[item.id] || 0
+        const balanceQty = totalQty - deliveredQty
+
+        return {
+          id: item.id || `temp-${Math.random()}`,
+          jobOrderItemId: item.id,
+          description: item.workDescription || '',
+          balanceQty: balanceQty,  // Balance = total - previously delivered
+          totalQty: totalQty,
+          subItems: [{
+            id: `sub-${Math.random()}`,
+            subDescription: '',
+            unit: item.unit || '',
+            deliveredQuantity: 0,
+            remarks: ''
+          }]
+        }
+      })
 
       setFormData(prev => ({
         ...prev,
@@ -285,7 +315,7 @@ export default function DeliveryNotesPage() {
     setShowSuggestions({})
   }
 
-  const handleEdit = (note: DeliveryNote) => {
+  const handleEdit = async (note: DeliveryNote) => {
     // Group items by jobOrderItemId to reconstruct the structure
     const itemsMap = new Map<string, typeof note.items>()
     note.items?.forEach(item => {
@@ -296,19 +326,42 @@ export default function DeliveryNotesPage() {
       itemsMap.get(key)!.push(item)
     })
 
+    // Fetch job order to get original descriptions
+    let jobOrderItems: any = {}
+    if (note.jobOrderId) {
+      try {
+        const res = await fetch(`/api/job-orders?id=${note.jobOrderId}`)
+        if (res.ok) {
+          const data = await res.json()
+          const jobOrder = data.jobs?.[0] || data
+          if (jobOrder.items) {
+            jobOrder.items.forEach((item: any) => {
+              jobOrderItems[item.id] = {
+                description: item.workDescription,
+                totalQty: item.quantity
+              }
+            })
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch job order:', error)
+      }
+    }
+
     // Reconstruct lineItems with proper structure
     const lineItems = Array.from(itemsMap.entries()).map(([jobOrderItemId, items]) => {
       const firstItem = items && items.length > 0 ? items[0] : null
-      // For balance qty, we need the original job order item quantity, not the sum of delivered items
-      // The sum represents total delivered, not the balance remaining
-      const totalDelivered = items ? items.reduce((sum, item) => sum + (item.deliveredQuantity || 0), 0) : 0
+      // Get description from job order if available, otherwise fall back to delivery note item
+      const jobOrderItem = jobOrderItems[jobOrderItemId]
+      const description = jobOrderItem?.description || firstItem?.itemDescription || ''
+      const totalQty = jobOrderItem?.totalQty || firstItem?.quantity || 0
       
       return {
         id: firstItem?.id || `temp-${Math.random()}`,
         jobOrderItemId: jobOrderItemId !== 'no-job-item' ? jobOrderItemId : undefined,
-        description: firstItem?.itemDescription || '',
-        balanceQty: firstItem?.quantity || 0,  // Use the first item's quantity as the line item total
-        totalQty: firstItem?.quantity || 0,
+        description: description,
+        balanceQty: totalQty,  // Show total qty from job order
+        totalQty: totalQty,
         subItems: items ? items.map(item => ({
           id: item.id,
           subDescription: item.itemDescription,
@@ -541,9 +594,10 @@ export default function DeliveryNotesPage() {
                         <table className="w-full text-xs">
                           <thead>
                             <tr className="border-b border-slate-300 bg-slate-100">
-                              <th className="text-left px-2 py-1 font-semibold w-[30%]">Line Item Description</th>
-                              <th className="text-left px-2 py-1 font-semibold w-[10%]">Balance Qty</th>
-                              <th className="text-left px-2 py-1 font-semibold w-[60%]">Sub Items (Description, Unit, Delivered Qty, Remarks)</th>
+                              <th className="text-left px-2 py-1 font-semibold w-[25%]">Line Item Description</th>
+                              <th className="text-left px-2 py-1 font-semibold w-[8%]">Total Qty</th>
+                              <th className="text-left px-2 py-1 font-semibold w-[8%]">Balance Qty</th>
+                              <th className="text-left px-2 py-1 font-semibold w-[59%]">Sub Items (Description, Unit, Delivered Qty, Remarks)</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -553,6 +607,9 @@ export default function DeliveryNotesPage() {
                                 <tr className="border-b border-slate-200 bg-slate-50 font-semibold">
                                   <td className="px-2 py-1">
                                     <div className="text-xs font-semibold">{item.description}</div>
+                                  </td>
+                                  <td className="px-2 py-1">
+                                    <div className="text-xs font-semibold text-slate-600">{item.totalQty}</div>
                                   </td>
                                   <td className="px-2 py-1">
                                     <div className="text-xs font-semibold text-blue-600">{item.balanceQty}</div>
