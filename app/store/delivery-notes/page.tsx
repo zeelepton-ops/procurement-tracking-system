@@ -303,7 +303,14 @@ export default function DeliveryNotesPage() {
       qidNumber: '',
       vehicleNumber: '',
       vehicleType: 'NBTC',
-      lineItems: []
+      lineItems: note.items?.map(item => ({
+        itemDescription: item.itemDescription,
+        unit: item.unit,
+        quantity: item.quantity,
+        deliveredQuantity: item.deliveredQuantity,
+        remarks: item.remarks || '',
+        jobOrderItemId: item.jobOrderItemId || ''
+      })) || []
     })
     setEditingId(note.id)
     setShowForm(true)
