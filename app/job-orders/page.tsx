@@ -772,7 +772,7 @@ export default function JobOrdersPage() {
                   </div>
                   <div className="md:col-span-4" data-edit-key="client">
                     <Label htmlFor="clientSearch" className="text-sm font-semibold">Client *</Label>
-                    <div className="relative mt-1">
+                    <div className="relative mt-1" onMouseLeave={() => setShowClientSuggestions(false)}>
                       <Input
                         id="clientSearch"
                         value={clientSearchQuery}
@@ -785,6 +785,7 @@ export default function JobOrdersPage() {
                           }
                         }}
                         onFocus={() => setShowClientSuggestions(true)}
+                        onBlur={() => setTimeout(() => setShowClientSuggestions(false), 200)}
                         placeholder="Type to search or create new client..."
                         required={!formData.clientId}
                         className="h-9 w-full"
@@ -1592,7 +1593,7 @@ export default function JobOrdersPage() {
                           className="mt-1 h-9 w-full text-sm"
                         />
                       </div>
-                      <div className="md:col-span-4 relative">
+                      <div className="md:col-span-4 relative" onMouseLeave={() => setShowEditClientSuggestions(false)}>
                         <Label htmlFor="edit-clientName" className="text-sm font-semibold">Client Name *</Label>
                         <Input
                           id="edit-clientName"
@@ -1602,6 +1603,7 @@ export default function JobOrdersPage() {
                             setShowEditClientSuggestions(true)
                           }}
                           onFocus={() => setShowEditClientSuggestions(true)}
+                          onBlur={() => setTimeout(() => setShowEditClientSuggestions(false), 200)}
                           placeholder="Type to search clients..."
                           required
                           className="mt-1 h-9 w-full text-sm"
