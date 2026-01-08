@@ -401,15 +401,20 @@ DOHA BRANCH`
     setLoading(true)
 
     try {
-      const payload = {
-        ...invoiceForm,
-        items: items.map(item => ({
+      // Flatten sub-items into individual invoice items
+      const flattenedItems = items.flatMap(item => 
+        item.subItems.map(subItem => ({
           jobOrderItemId: item.jobOrderItemId || null,
-          description: `Main Description: ${item.mainDescription}\n${item.lineItemDescription}\nTowards Delivery Note no: ${item.deliveryNoteNo}\nPayment Term: ${item.paymentTerm}`,
-          quantity: item.quantity,
-          unit: item.unit,
+          description: `${item.lineItemDescription}\n${subItem.description}\nTowards Delivery Note no: ${subItem.deliveryNoteNo}\nPayment Term: ${item.paymentTerm}`,
+          quantity: subItem.quantity,
+          unit: subItem.unit,
           unitPrice: item.unitPrice
         }))
+      )
+
+      const payload = {
+        ...invoiceForm,
+        items: flattenedItems
       }
 
       const res = await fetch('/api/invoices', {
