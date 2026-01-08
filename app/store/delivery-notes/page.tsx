@@ -1000,6 +1000,7 @@ export default function DeliveryNotesPage() {
                                           const key = item.jobOrderItemId || item.itemDescription
                                           if (!acc[key]) {
                                             acc[key] = {
+                                              jobOrderItemId: item.jobOrderItemId,
                                               description: item.itemDescription,
                                               unit: item.unit,
                                               totalQty: item.quantity,
@@ -1012,18 +1013,43 @@ export default function DeliveryNotesPage() {
                                           return acc
                                         }, {})
 
-                                        return Object.values(groupedItems).map((item: any, idx: number) => (
-                                          <tr key={idx}>
-                                            <td className="px-3 py-2 text-sm text-slate-900">{item.description}</td>
-                                            <td className="px-3 py-2 text-sm text-slate-600">{item.unit}</td>
-                                            <td className="px-3 py-2 text-sm text-slate-900">{item.totalQty}</td>
-                                            <td className="px-3 py-2 text-sm text-slate-900 font-medium">{item.deliveredQty}</td>
-                                            <td className="px-3 py-2 text-sm text-blue-600 font-medium">
-                                              {item.totalQty - item.deliveredQty}
-                                            </td>
-                                            <td className="px-3 py-2 text-sm text-slate-600">{item.remarks.join(', ') || '-'}</td>
-                                          </tr>
-                                        ))
+                                        // Calculate cumulative delivered quantities for balance
+                                        const cumulativeDelivered: Record<string, number> = {}
+                                        
+                                        // Get all delivery notes for this job order up to current note
+                                        const currentNoteIndex = deliveryNotes.findIndex(dn => dn.id === note.id)
+                                        const previousNotes = deliveryNotes.slice(currentNoteIndex)
+                                        
+                                        previousNotes.forEach((dn: any) => {
+                                          if (dn.jobOrderId === note.jobOrderId && dn.items) {
+                                            dn.items.forEach((item: any) => {
+                                              if (item.jobOrderItemId) {
+                                                if (!cumulativeDelivered[item.jobOrderItemId]) {
+                                                  cumulativeDelivered[item.jobOrderItemId] = 0
+                                                }
+                                                cumulativeDelivered[item.jobOrderItemId] += item.deliveredQuantity || 0
+                                              }
+                                            })
+                                          }
+                                        })
+
+                                        return Object.values(groupedItems).map((item: any, idx: number) => {
+                                          const totalDelivered = cumulativeDelivered[item.jobOrderItemId] || item.deliveredQty
+                                          const balance = item.totalQty - totalDelivered
+                                          
+                                          return (
+                                            <tr key={idx}>
+                                              <td className="px-3 py-2 text-sm text-slate-900">{item.description}</td>
+                                              <td className="px-3 py-2 text-sm text-slate-600">{item.unit}</td>
+                                              <td className="px-3 py-2 text-sm text-slate-900">{item.totalQty}</td>
+                                              <td className="px-3 py-2 text-sm text-slate-900 font-medium">{item.deliveredQty}</td>
+                                              <td className="px-3 py-2 text-sm text-blue-600 font-medium">
+                                                {balance}
+                                              </td>
+                                              <td className="px-3 py-2 text-sm text-slate-600">{item.remarks.join(', ') || '-'}</td>
+                                            </tr>
+                                          )
+                                        })
                                       })()}
                                     </tbody>
                                   </table>
