@@ -166,8 +166,10 @@ export default function DeliveryNotesPage() {
     notes.forEach(note => {
       if (!note.jobOrderId || !note.items) return
       
-      if (!jobOrderDeliveries[note.jobOrderId]) {
-        jobOrderDeliveries[note.jobOrderId] = {
+      const jobOrderId = note.jobOrderId // Create a non-null variable
+      
+      if (!jobOrderDeliveries[jobOrderId]) {
+        jobOrderDeliveries[jobOrderId] = {
           jobNumber: note.jobOrder?.jobNumber,
           items: {}
         }
@@ -176,15 +178,17 @@ export default function DeliveryNotesPage() {
       note.items.forEach(item => {
         if (!item.jobOrderItemId) return
         
-        if (!jobOrderDeliveries[note.jobOrderId].items[item.jobOrderItemId]) {
-          jobOrderDeliveries[note.jobOrderId].items[item.jobOrderItemId] = {
+        const itemId = item.jobOrderItemId // Create a non-null variable
+        
+        if (!jobOrderDeliveries[jobOrderId].items[itemId]) {
+          jobOrderDeliveries[jobOrderId].items[itemId] = {
             description: item.itemDescription,
             totalQty: item.quantity,
             deliveredQty: 0
           }
         }
         
-        jobOrderDeliveries[note.jobOrderId].items[item.jobOrderItemId].deliveredQty += item.deliveredQuantity || 0
+        jobOrderDeliveries[jobOrderId].items[itemId].deliveredQty += item.deliveredQuantity || 0
       })
     })
     
