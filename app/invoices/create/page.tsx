@@ -38,11 +38,16 @@ interface InvoiceItem {
   jobOrderItemId: string
   mainDescription: string
   lineItemDescription: string
-  unit: string
-  quantity: number
+  totalQuantity: number
   unitPrice: number
-  totalPrice: number
-  deliveryNoteNo: string
+  subItems: Array<{
+    id: string
+    description: string
+    unit: string
+    quantity: number
+    deliveryNoteNo: string
+    totalPrice: number
+  }>
   paymentTerm: string
 }
 
@@ -74,11 +79,16 @@ export default function CreateInvoicePage() {
     jobOrderItemId: '',
     mainDescription: '',
     lineItemDescription: '',
-    unit: 'Nos',
-    quantity: 0,
+    totalQuantity: 0,
     unitPrice: 0,
-    totalPrice: 0,
-    deliveryNoteNo: '',
+    subItems: [{
+      id: `sub-${Date.now()}`,
+      description: '',
+      unit: 'Nos',
+      quantity: 0,
+      deliveryNoteNo: '',
+      totalPrice: 0
+    }],
     paymentTerm: '45 DAYS'
   }])
 
@@ -185,10 +195,16 @@ DOHA BRANCH`
       const client = clients.find(c => c.id === jobOrder.clientId)
       console.log('Found client:', client)
       if (client) {
+        // Format client reference with date
+        const poName = jobOrder.lpoContractNo || ''
+        const today = new Date()
+        const formattedDate = `${today.getDate().toString().padStart(2, '0')}/${(today.getMonth() + 1).toString().padStart(2, '0')}/${today.getFullYear()}`
+        const clientRef = poName ? `${poName} Dated: ${formattedDate}` : ''
+        
         setInvoiceForm(prev => ({
           ...prev,
           clientId: client.id,
-          clientReference: jobOrder.lpoContractNo || '',
+          clientReference: clientRef,
           terms: client.paymentTerms || 'Net 30'
         }))
         console.log('✓ Auto-filled client:', client.name, 'Reference:', jobOrder.lpoContractNo)
@@ -233,39 +249,42 @@ DOHA BRANCH`
       return
     }
 
-    // Group delivery note items by job order item
+    // Group delivery note items by job order item with sub-items
     const itemsMap = new Map()
     
     selectedDNs.forEach((dn: any) => {
       dn.items?.forEach((item: any) => {
         if (item.jobOrderItemId) {
+          const jobOrderItem = jobOrder.items?.find((joi: any) => joi.id === item.jobOrderItemId)
+          
           if (!itemsMap.has(item.jobOrderItemId)) {
-            const jobOrderItem = jobOrder.items?.find((joi: any) => joi.id === item.jobOrderItemId)
             itemsMap.set(item.jobOrderItemId, {
               jobOrderItemId: item.jobOrderItemId,
               mainDescription: 'Job Order',
               lineItemDescription: item.itemDescription,
-              unit: item.unit,
-              quantity: 0,
+              totalQuantity: jobOrderItem?.quantity || 0,
               unitPrice: jobOrderItem?.unitPrice || 0,
-              totalPrice: 0,
-              deliveryNoteNo: dn.deliveryNoteNumber,
+              subItems: [],
               paymentTerm: '45 DAYS'
             })
           }
-          // Accumulate delivered quantities
+          
+          // Add sub-item for each delivery note item
           const existing = itemsMap.get(item.jobOrderItemId)
-          existing.quantity += item.deliveredQuantity || 0
-          existing.deliveryNoteNo = existing.deliveryNoteNo + (existing.deliveryNoteNo.includes(dn.deliveryNoteNumber) ? '' : `, ${dn.deliveryNoteNumber}`)
+          existing.subItems.push({
+            id: `sub-${Date.now()}-${Math.random()}`,
+            description: item.itemDescription,
+            unit: item.unit,
+            quantity: item.deliveredQuantity || 0,
+            deliveryNoteNo: dn.deliveryNoteNumber,
+            totalPrice: (item.deliveredQuantity || 0) * (jobOrderItem?.unitPrice || 0)
+          })
         }
       })
     })
 
-    // Convert to array and calculate totals
-    const loadedItems = Array.from(itemsMap.values()).map(item => ({
-      ...item,
-      totalPrice: item.quantity * item.unitPrice
-    }))
+    // Convert to array
+    const loadedItems = Array.from(itemsMap.values())
 
     if (loadedItems.length > 0) {
       setItems(loadedItems)
@@ -278,13 +297,18 @@ DOHA BRANCH`
   const addItem = () => {
     setItems([...items, {
       jobOrderItemId: '',
-      mainDescription: 'Job Order',
+      mainDescription: '',
       lineItemDescription: '',
-      unit: 'Nos',
-      quantity: 0,
+      totalQuantity: 0,
       unitPrice: 0,
-      totalPrice: 0,
-      deliveryNoteNo: '',
+      subItems: [{
+        id: `sub-${Date.now()}`,
+        description: '',
+        unit: 'Nos',
+        quantity: 0,
+        deliveryNoteNo: '',
+        totalPrice: 0
+      }],
       paymentTerm: '45 DAYS'
     }])
   }
@@ -293,19 +317,52 @@ DOHA BRANCH`
     setItems(items.filter((_, i) => i !== index))
   }
 
-  const updateItem = (index: number, field: keyof InvoiceItem, value: any) => {
+  const addSubItem = (itemIndex: number) => {
+    const newItems = [...items]
+    newItems[itemIndex].subItems.push({
+      id: `sub-${Date.now()}-${Math.random()}`,
+      description: '',
+      unit: 'Nos',
+      quantity: 0,
+      deliveryNoteNo: '',
+      totalPrice: 0
+    })
+    setItems(newItems)
+  }
+
+  const removeSubItem = (itemIndex: number, subIndex: number) => {
+    const newItems = [...items]
+    newItems[itemIndex].subItems = newItems[itemIndex].subItems.filter((_, i) => i !== subIndex)
+    setItems(newItems)
+  }
+
+  const updateItem = (index: number, field: string, value: any) => {
     const newItems = [...items]
     newItems[index] = { ...newItems[index], [field]: value }
+    setItems(newItems)
+  }
+
+  const updateSubItem = (itemIndex: number, subIndex: number, field: string, value: any) => {
+    const newItems = [...items]
+    newItems[itemIndex].subItems[subIndex] = { 
+      ...newItems[itemIndex].subItems[subIndex], 
+      [field]: value 
+    }
     
-    if (field === 'quantity' || field === 'unitPrice') {
-      newItems[index].totalPrice = newItems[index].quantity * newItems[index].unitPrice
+    // Recalculate total price for sub-item
+    if (field === 'quantity') {
+      const unitPrice = newItems[itemIndex].unitPrice || 0
+      newItems[itemIndex].subItems[subIndex].totalPrice = value * unitPrice
     }
     
     setItems(newItems)
   }
 
   const calculateSubtotal = () => {
-    return items.reduce((sum, item) => sum + item.totalPrice, 0)
+    return items.reduce((sum, item) => {
+      const itemTotal = item.subItems.reduce((subSum, subItem) => subSum + (subItem.totalPrice || 0), 0)
+      return sum + itemTotal
+    }, 0)
   }
 
   const calculateTaxAmount = () => {
@@ -539,78 +596,150 @@ DOHA BRANCH`
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {items.map((item, index) => (
-                    <div key={index} className="border rounded-lg p-4 space-y-3">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-semibold">Item {index + 1}</span>
-                        {items.length > 1 && (
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => removeItem(index)}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        )}
-                      </div>
-                      
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="col-span-2">
-                          <Label>Main Description</Label>
-                          <Input
-                            value={item.mainDescription}
-                            onChange={(e) => updateItem(index, 'mainDescription', e.target.value)}
-                            placeholder="Job Order"
-                          />
-                        </div>
-                        <div className="col-span-2">
-                          <Label>Line Item Description *</Label>
-                          <Textarea
-                            required
-                            value={item.lineItemDescription}
-                            onChange={(e) => updateItem(index, 'lineItemDescription', e.target.value)}
-                            placeholder="Detailed description"
-                            rows={2}
-                          />
-                        </div>
-                        <div className="col-span-2">
-                          <Label>Towards Delivery Note no</Label>
-                          <Input
-                            value={item.deliveryNoteNo}
-                            onChange={(e) => updateItem(index, 'deliveryNoteNo', e.target.value)}
-                            placeholder="DN-NBTC-14016/24 DTD 17/10/2024"
-                          />
-                        </div>
-                        <div>
-                          <Label>Unit *</Label>
-                          <Input
-                            required
-                            value={item.unit}
-                            onChange={(e) => updateItem(index, 'unit', e.target.value)}
-                          />
-                        </div>
-                        <div>
-                          <Label>Quantity *</Label>
-                          <Input
-                            type="number"
-                            required
-                            step="0.01"
-                            value={item.quantity}
-                            onChange={(e) => updateItem(index, 'quantity', parseFloat(e.target.value) || 0)}
-                          />
-                        </div>
-                        <div>
-                          <Label>Unit Price (QAR) *</Label>
-                          <Input
-                            type="number"
-                            required
-                            step="0.01"
-                            value={item.unitPrice}
-                            onChange={(e) => updateItem(index, 'unitPrice', parseFloat(e.target.value) || 0)}
-                          />
-                        </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs border-collapse">
+                    <thead>
+                      <tr className="border-b border-slate-300 bg-slate-100">
+                        <th className="text-left px-2 py-2 font-semibold w-[30%]">Line Item Description</th>
+                        <th className="text-left px-2 py-2 font-semibold w-[8%]">Total Qty</th>
+                        <th className="text-left px-2 py-2 font-semibold w-[8%]">Unit Price</th>
+                        <th className="text-left px-2 py-2 font-semibold w-[49%]">Sub Items (Desc, Unit, Qty, DN No, Amount)</th>
+                        <th className="text-left px-2 py-2 font-semibold w-[5%]">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {items.map((item, itemIndex) => (
+                        <React.Fragment key={itemIndex}>
+                          {/* Parent Line Item Row */}
+                          <tr className="border-b border-slate-200 bg-slate-50">
+                            <td className="px-2 py-2">
+                              <Input
+                                value={item.lineItemDescription}
+                                onChange={(e) => updateItem(itemIndex, 'lineItemDescription', e.target.value)}
+                                placeholder="Line item description"
+                                className="text-xs h-7"
+                              />
+                            </td>
+                            <td className="px-2 py-2">
+                              <Input
+                                type="number"
+                                value={item.totalQuantity}
+                                onChange={(e) => updateItem(itemIndex, 'totalQuantity', parseFloat(e.target.value) || 0)}
+                                placeholder="0"
+                                className="text-xs h-7"
+                              />
+                            </td>
+                            <td className="px-2 py-2">
+                              <Input
+                                type="number"
+                                step="0.01"
+                                value={item.unitPrice}
+                                onChange={(e) => updateItem(itemIndex, 'unitPrice', parseFloat(e.target.value) || 0)}
+                                placeholder="0.00"
+                                className="text-xs h-7"
+                              />
+                            </td>
+                            <td className="px-2 py-2 text-right">
+                              <Button
+                                type="button"
+                                onClick={() => addSubItem(itemIndex)}
+                                className="bg-blue-500 hover:bg-blue-600 h-6 px-2 text-xs"
+                                size="sm"
+                              >
+                                <Plus className="h-3 w-3 mr-1" />
+                                Add Sub Item
+                              </Button>
+                            </td>
+                            <td className="px-2 py-2">
+                              {items.length > 1 && (
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => removeItem(itemIndex)}
+                                  className="h-6 w-6 p-0"
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                </Button>
+                              )}
+                            </td>
+                          </tr>
+
+                          {/* Sub Items Rows */}
+                          {item.subItems.map((subItem, subIndex) => (
+                            <tr key={subItem.id} className="border-b border-slate-100 hover:bg-slate-50">
+                              <td className="px-2 py-1" colSpan={4}>
+                                <div className="flex gap-2 items-end pl-6">
+                                  <div className="flex-1">
+                                    <label className="text-[10px] text-slate-500 block mb-0.5">Sub Item Description</label>
+                                    <Input
+                                      value={subItem.description}
+                                      onChange={(e) => updateSubItem(itemIndex, subIndex, 'description', e.target.value)}
+                                      placeholder="Sub Item Description"
+                                      className="text-xs h-7"
+                                    />
+                                  </div>
+                                  <div className="w-24">
+                                    <label className="text-[10px] text-slate-500 block mb-0.5">Unit</label>
+                                    <Input
+                                      value={subItem.unit}
+                                      onChange={(e) => updateSubItem(itemIndex, subIndex, 'unit', e.target.value)}
+                                      placeholder="Unit"
+                                      className="text-xs h-7"
+                                    />
+                                  </div>
+                                  <div className="w-24">
+                                    <label className="text-[10px] text-slate-500 block mb-0.5">Quantity</label>
+                                    <Input
+                                      type="number"
+                                      value={subItem.quantity}
+                                      onChange={(e) => updateSubItem(itemIndex, subIndex, 'quantity', parseFloat(e.target.value) || 0)}
+                                      placeholder="0"
+                                      className="text-xs h-7"
+                                    />
+                                  </div>
+                                  <div className="w-40">
+                                    <label className="text-[10px] text-slate-500 block mb-0.5">DN Number</label>
+                                    <Input
+                                      value={subItem.deliveryNoteNo}
+                                      onChange={(e) => updateSubItem(itemIndex, subIndex, 'deliveryNoteNo', e.target.value)}
+                                      placeholder="DN-0001/26"
+                                      className="text-xs h-7"
+                                    />
+                                  </div>
+                                  <div className="w-28">
+                                    <label className="text-[10px] text-slate-500 block mb-0.5">Amount</label>
+                                    <Input
+                                      type="number"
+                                      step="0.01"
+                                      value={subItem.totalPrice}
+                                      readOnly
+                                      className="text-xs h-7 bg-slate-50"
+                                    />
+                                  </div>
+                                  <div className="w-8">
+                                    <Button
+                                      type="button"
+                                      onClick={() => removeSubItem(itemIndex, subIndex)}
+                                      className="bg-red-600 hover:bg-red-700 h-7 w-full p-0"
+                                      size="sm"
+                                    >
+                                      <Trash2 className="h-3 w-3" />
+                                    </Button>
+                                  </div>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </React.Fragment>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Totals Section */}
                         <div>
                           <Label>Total Price (QAR)</Label>
                           <Input
