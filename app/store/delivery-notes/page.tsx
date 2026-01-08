@@ -1049,10 +1049,14 @@ export default function DeliveryNotesPage() {
                                                 <div className="flex items-center gap-2">
                                                   <span>{item.deliveredQty}</span>
                                                   {isOverDelivered && (
-                                                    <Bell className="h-4 w-4 text-red-600 animate-pulse" title="Over-delivered! Exceeds job order quantity" />
+                                                    <span title="Over-delivered! Exceeds job order quantity">
+                                                      <Bell className="h-4 w-4 text-red-600 animate-pulse" />
+                                                    </span>
                                                   )}
                                                   {isAbove80 && (
-                                                    <Bell className="h-4 w-4 text-orange-500" title={`Warning: ${deliveryPercentage.toFixed(0)}% delivered`} />
+                                                    <span title={`Warning: ${deliveryPercentage.toFixed(0)}% delivered`}>
+                                                      <Bell className="h-4 w-4 text-orange-500" />
+                                                    </span>
                                                   )}
                                                 </div>
                                               </td>
