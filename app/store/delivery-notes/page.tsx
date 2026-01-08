@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Plus, FileText, Printer, Trash2, Eye, Settings } from 'lucide-react'
+import { Plus, FileText, Printer, Trash2, Eye, Settings, Bell } from 'lucide-react'
 
 interface DeliveryNote {
   id: string
@@ -1036,15 +1036,30 @@ export default function DeliveryNotesPage() {
                                         return Object.values(groupedItems).map((item: any, idx: number) => {
                                           const totalDelivered = cumulativeDelivered[item.jobOrderItemId] || item.deliveredQty
                                           const balance = item.totalQty - totalDelivered
+                                          const deliveryPercentage = (totalDelivered / item.totalQty) * 100
+                                          const isOverDelivered = totalDelivered > item.totalQty
+                                          const isAbove80 = deliveryPercentage > 80 && !isOverDelivered
                                           
                                           return (
-                                            <tr key={idx}>
+                                            <tr key={idx} className={isOverDelivered ? 'bg-red-50' : isAbove80 ? 'bg-yellow-50' : ''}>
                                               <td className="px-3 py-2 text-sm text-slate-900">{item.description}</td>
                                               <td className="px-3 py-2 text-sm text-slate-600">{item.unit}</td>
                                               <td className="px-3 py-2 text-sm text-slate-900">{item.totalQty}</td>
-                                              <td className="px-3 py-2 text-sm text-slate-900 font-medium">{item.deliveredQty}</td>
-                                              <td className="px-3 py-2 text-sm text-blue-600 font-medium">
-                                                {balance}
+                                              <td className="px-3 py-2 text-sm text-slate-900 font-medium">
+                                                <div className="flex items-center gap-2">
+                                                  <span>{item.deliveredQty}</span>
+                                                  {isOverDelivered && (
+                                                    <Bell className="h-4 w-4 text-red-600 animate-pulse" title="Over-delivered! Exceeds job order quantity" />
+                                                  )}
+                                                  {isAbove80 && (
+                                                    <Bell className="h-4 w-4 text-orange-500" title={`Warning: ${deliveryPercentage.toFixed(0)}% delivered`} />
+                                                  )}
+                                                </div>
+                                              </td>
+                                              <td className="px-3 py-2 text-sm font-medium">
+                                                <span className={isOverDelivered ? 'text-red-600' : 'text-blue-600'}>
+                                                  {balance}
+                                                </span>
                                               </td>
                                               <td className="px-3 py-2 text-sm text-slate-600">{item.remarks.join(', ') || '-'}</td>
                                             </tr>
