@@ -283,8 +283,7 @@ DOHA BRANCH`
       quantity: 0,
       unitPrice: 0,
       totalPrice: 0,
-      deliveryNoteNo: '',
-      paymentTerm: '45 DAYS'
+      deliveryNoteNo: ''
     }])
   }
 
