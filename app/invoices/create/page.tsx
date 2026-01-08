@@ -436,11 +436,11 @@ DOHA BRANCH`
     } catch (error) {
       console.error('Failed to create invoice:', error)
       alert('Failed to create invoice')
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
-  const selectedClient = clients.find(c => c.id === invoiceForm.clientId)
+  const selectedClient = clients.find((c) => c.id === invoiceForm.clientId);
 
   return (
     <div className="p-8 max-w-7xl mx-auto">
