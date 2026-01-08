@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Plus, FileText, Printer, Trash2, Eye, Settings, Bell } from 'lucide-react'
+import { Plus, FileText, Printer, Trash2, Eye, Settings, Bell, AlertTriangle } from 'lucide-react'
 
 interface DeliveryNote {
   id: string
@@ -64,6 +64,8 @@ export default function DeliveryNotesPage() {
   const [showSuggestions, setShowSuggestions] = useState<{ [key: string]: boolean }>({})
   const [expandedNotes, setExpandedNotes] = useState<Set<string>>(new Set())
   const [dnSuggestions, setDnSuggestions] = useState<string[]>([])
+  const [showNotifications, setShowNotifications] = useState(false)
+  const [notifications, setNotifications] = useState<Array<{type: string, message: string}>>([])
 
   const [formData, setFormData] = useState({
     deliveryNoteNumber: '',
@@ -146,12 +148,66 @@ export default function DeliveryNotesPage() {
       }
       const data = await res.json()
       setDeliveryNotes(Array.isArray(data) ? data : [])
+      checkDeliveryIssues(Array.isArray(data) ? data : [])
       setLoading(false)
     } catch (error) {
       console.error('Failed to fetch delivery notes:', error)
       setDeliveryNotes([])
       setLoading(false)
     }
+  }
+
+  const checkDeliveryIssues = (notes: DeliveryNote[]) => {
+    const issues: Array<{type: string, message: string}> = []
+    
+    // Group deliveries by job order
+    const jobOrderDeliveries: Record<string, any> = {}
+    
+    notes.forEach(note => {
+      if (!note.jobOrderId || !note.items) return
+      
+      if (!jobOrderDeliveries[note.jobOrderId]) {
+        jobOrderDeliveries[note.jobOrderId] = {
+          jobNumber: note.jobOrder?.jobNumber,
+          items: {}
+        }
+      }
+      
+      note.items.forEach(item => {
+        if (!item.jobOrderItemId) return
+        
+        if (!jobOrderDeliveries[note.jobOrderId].items[item.jobOrderItemId]) {
+          jobOrderDeliveries[note.jobOrderId].items[item.jobOrderItemId] = {
+            description: item.itemDescription,
+            totalQty: item.quantity,
+            deliveredQty: 0
+          }
+        }
+        
+        jobOrderDeliveries[note.jobOrderId].items[item.jobOrderItemId].deliveredQty += item.deliveredQuantity || 0
+      })
+    })
+    
+    // Check for issues
+    Object.entries(jobOrderDeliveries).forEach(([jobOrderId, jobData]: [string, any]) => {
+      Object.entries(jobData.items).forEach(([itemId, itemData]: [string, any]) => {
+        const deliveryPercent = (itemData.deliveredQty / itemData.totalQty) * 100
+        
+        if (itemData.deliveredQty > itemData.totalQty) {
+          issues.push({
+            type: 'over-delivery',
+            message: `Job ${jobData.jobNumber}: "${itemData.description}" - Over-delivered by ${itemData.deliveredQty - itemData.totalQty} units (${itemData.deliveredQty}/${itemData.totalQty})`
+          })
+        } else if (deliveryPercent >= 80 && deliveryPercent < 100) {
+          issues.push({
+            type: 'high-delivery',
+            message: `Job ${jobData.jobNumber}: "${itemData.description}" - ${deliveryPercent.toFixed(0)}% delivered (${itemData.deliveredQty}/${itemData.totalQty})`
+          })
+        }
+      })
+    })
+    
+    setNotifications(issues)
   }
 
   const fetchJobOrders = async () => {
@@ -511,6 +567,48 @@ export default function DeliveryNotesPage() {
             <p className="text-slate-600 mt-1 text-sm">Manage delivery of materials for job orders</p>
           </div>
           <div className="flex gap-2">
+            <div className="relative">
+              <Button
+                onClick={() => setShowNotifications(!showNotifications)}
+                variant="outline"
+                className={`bg-white relative ${notifications.length > 0 ? 'border-orange-500' : ''}`}
+              >
+                <span title={`${notifications.length} notification${notifications.length !== 1 ? 's' : ''}`}>
+                  <Bell className={`h-4 w-4 ${notifications.length > 0 ? 'text-orange-500' : ''}`} />
+                </span>
+                {notifications.length > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                    {notifications.length}
+                  </span>
+                )}
+              </Button>
+              {showNotifications && notifications.length > 0 && (
+                <div className="absolute top-full right-0 mt-2 w-96 bg-white border border-slate-300 rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto">
+                  <div className="p-3 border-b border-slate-200 bg-slate-50">
+                    <h3 className="font-semibold text-sm text-slate-900">Delivery Notifications</h3>
+                  </div>
+                  {notifications.map((notif, idx) => (
+                    <div
+                      key={idx}
+                      className={`p-3 border-b border-slate-100 text-sm ${
+                        notif.type === 'over-delivery' ? 'bg-red-50' : 'bg-orange-50'
+                      }`}
+                    >
+                      <div className="flex items-start gap-2">
+                        {notif.type === 'over-delivery' ? (
+                          <AlertTriangle className="h-4 w-4 text-red-600 mt-0.5 flex-shrink-0" />
+                        ) : (
+                          <Bell className="h-4 w-4 text-orange-600 mt-0.5 flex-shrink-0" />
+                        )}
+                        <span className={notif.type === 'over-delivery' ? 'text-red-800' : 'text-orange-800'}>
+                          {notif.message}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
             <Button
               onClick={() => router.push('/store/delivery-notes/print-settings')}
               variant="outline"
@@ -1036,34 +1134,28 @@ export default function DeliveryNotesPage() {
                                         return Object.values(groupedItems).map((item: any, idx: number) => {
                                           const totalDelivered = cumulativeDelivered[item.jobOrderItemId] || item.deliveredQty
                                           const balance = item.totalQty - totalDelivered
-                                          const deliveryPercentage = (totalDelivered / item.totalQty) * 100
-                                          const isOverDelivered = totalDelivered > item.totalQty
-                                          const isAbove80 = deliveryPercentage > 80 && !isOverDelivered
+                                          const deliveryPercent = (totalDelivered / item.totalQty) * 100
+                                          const isOverDelivered = balance < 0
+                                          const isHighDelivery = deliveryPercent >= 80 && !isOverDelivered
                                           
                                           return (
-                                            <tr key={idx} className={isOverDelivered ? 'bg-red-50' : isAbove80 ? 'bg-yellow-50' : ''}>
+                                            <tr key={idx} className={isOverDelivered ? 'bg-red-50' : isHighDelivery ? 'bg-orange-50' : ''}>
                                               <td className="px-3 py-2 text-sm text-slate-900">{item.description}</td>
                                               <td className="px-3 py-2 text-sm text-slate-600">{item.unit}</td>
                                               <td className="px-3 py-2 text-sm text-slate-900">{item.totalQty}</td>
-                                              <td className="px-3 py-2 text-sm text-slate-900 font-medium">
-                                                <div className="flex items-center gap-2">
-                                                  <span>{item.deliveredQty}</span>
-                                                  {isOverDelivered && (
-                                                    <span title="Over-delivered! Exceeds job order quantity">
-                                                      <Bell className="h-4 w-4 text-red-600 animate-pulse" />
-                                                    </span>
-                                                  )}
-                                                  {isAbove80 && (
-                                                    <span title={`Warning: ${deliveryPercentage.toFixed(0)}% delivered`}>
-                                                      <Bell className="h-4 w-4 text-orange-500" />
-                                                    </span>
-                                                  )}
-                                                </div>
-                                              </td>
-                                              <td className="px-3 py-2 text-sm font-medium">
-                                                <span className={isOverDelivered ? 'text-red-600' : 'text-blue-600'}>
-                                                  {balance}
-                                                </span>
+                                              <td className="px-3 py-2 text-sm text-slate-900 font-medium">{item.deliveredQty}</td>
+                                              <td className={`px-3 py-2 text-sm font-medium ${
+                                                isOverDelivered ? 'text-red-600' : isHighDelivery ? 'text-orange-600' : 'text-blue-600'
+                                              }`}>
+                                                {balance}
+                                                {isOverDelivered && (
+                                                  <span className="ml-2 inline-flex items-center">
+                                                    <AlertTriangle className="h-3 w-3 text-red-600" />
+                                                  </span>
+                                                )}
+                                                {isHighDelivery && (
+                                                  <span className="ml-1 text-xs">({deliveryPercent.toFixed(0)}%)</span>
+                                                )}
                                               </td>
                                               <td className="px-3 py-2 text-sm text-slate-600">{item.remarks.join(', ') || '-'}</td>
                                             </tr>
