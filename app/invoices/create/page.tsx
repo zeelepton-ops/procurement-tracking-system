@@ -43,7 +43,6 @@ interface InvoiceItem {
   unitPrice: number
   totalPrice: number
   deliveryNoteNo: string
-  paymentTerm: string
 }
 
 export default function CreateInvoicePage() {
@@ -67,7 +66,8 @@ export default function CreateInvoicePage() {
     discount: 0,
     notes: '',
     terms: '',
-    bankDetails: ''
+    bankDetails: '',
+    paymentTerms: '45 DAYS'
   })
 
   const [items, setItems] = useState<InvoiceItem[]>([{
@@ -78,8 +78,7 @@ export default function CreateInvoicePage() {
     quantity: 0,
     unitPrice: 0,
     totalPrice: 0,
-    deliveryNoteNo: '',
-    paymentTerm: '45 DAYS'
+    deliveryNoteNo: ''
   }])
 
   useEffect(() => {
@@ -551,7 +550,6 @@ DOHA BRANCH`
                         <th className="text-left px-3 py-2 font-semibold text-xs text-slate-700">Qty</th>
                         <th className="text-left px-3 py-2 font-semibold text-xs text-slate-700">Unit Price</th>
                         <th className="text-left px-3 py-2 font-semibold text-xs text-slate-700">Total</th>
-                        <th className="text-left px-3 py-2 font-semibold text-xs text-slate-700">Payment Term</th>
                         <th className="text-center px-3 py-2 font-semibold text-xs text-slate-700">Action</th>
                       </tr>
                     </thead>
@@ -623,13 +621,6 @@ DOHA BRANCH`
                               className="bg-slate-50 text-xs h-8 w-28 font-semibold"
                             />
                           </td>
-                          <td className="px-3 py-2">
-                            <Input
-                              value={item.paymentTerm}
-                              onChange={(e) => updateItem(index, 'paymentTerm', e.target.value)}
-                              className="text-xs h-8 w-24"
-                            />
-                          </td>
                           <td className="px-3 py-2 text-center">
                             {items.length > 1 && (
                               <Button
@@ -695,7 +686,17 @@ DOHA BRANCH`
                 )}
                 
                 <div className="space-y-2">
-                  <div className="flex justify-between">
+                  <div>
+                    <Label className="text-xs">Payment Terms</Label>
+                    <Input
+                      value={invoiceForm.paymentTerms}
+                      onChange={(e) => setInvoiceForm({...invoiceForm, paymentTerms: e.target.value})}
+                      placeholder="45 DAYS"
+                      className="text-sm h-9"
+                    />
+                  </div>
+                  
+                  <div className="flex justify-between pt-2">
                     <span>Subtotal:</span>
                     <span className="font-semibold">{calculateSubtotal().toFixed(2)} QAR</span>
                   </div>
