@@ -440,8 +440,6 @@ DOHA BRANCH`
     }
   };
 
-  const selectedClient = clients.find((c) => c.id === invoiceForm.clientId);
-
   return (
     <div className="p-8 max-w-7xl mx-auto">
       <div className="flex items-center gap-4 mb-6">
@@ -801,15 +799,18 @@ DOHA BRANCH`
                 <CardTitle>Summary</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {selectedClient && (
-                  <div className="pb-4 border-b">
-                    <Label className="text-xs text-gray-500">DUE FROM M/s:</Label>
-                    <p className="font-semibold">{selectedClient.name}</p>
-                    {selectedClient.address && (
-                      <p className="text-sm text-gray-600">{selectedClient.address}</p>
-                    )}
-                  </div>
-                )}
+                {(() => {
+                  const selectedClient = clients.find((c) => c.id === invoiceForm.clientId);
+                  return selectedClient && (
+                    <div className="pb-4 border-b">
+                      <Label className="text-xs text-gray-500">DUE FROM M/s:</Label>
+                      <p className="font-semibold">{selectedClient.name}</p>
+                      {selectedClient.address && (
+                        <p className="text-sm text-gray-600">{selectedClient.address}</p>
+                      )}
+                    </div>
+                  );
+                })()}
                 
                 <div className="space-y-2">
                   <div className="flex justify-between">
