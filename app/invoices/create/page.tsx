@@ -36,7 +36,6 @@ interface JobOrderItem {
 
 interface InvoiceItem {
   jobOrderItemId: string
-  mainDescription: string
   lineItemDescription: string
   unit: string
   quantity: number
@@ -67,12 +66,12 @@ export default function CreateInvoicePage() {
     notes: '',
     terms: '',
     bankDetails: '',
-    paymentTerms: '45 DAYS'
+    paymentTerms: '45 DAYS',
+    mainDescription: 'Job Order'
   })
 
   const [items, setItems] = useState<InvoiceItem[]>([{
     jobOrderItemId: '',
-    mainDescription: '',
     lineItemDescription: '',
     unit: 'Nos',
     quantity: 0,
@@ -277,7 +276,6 @@ DOHA BRANCH`
   const addItem = () => {
     setItems([...items, {
       jobOrderItemId: '',
-      mainDescription: 'Job Order',
       lineItemDescription: '',
       unit: 'Nos',
       quantity: 0,
@@ -346,7 +344,7 @@ DOHA BRANCH`
         ...invoiceForm,
         items: items.map(item => ({
           jobOrderItemId: item.jobOrderItemId || null,
-          description: `Main Description: ${item.mainDescription}\n${item.lineItemDescription}\nTowards Delivery Note no: ${item.deliveryNoteNo}`,
+          description: `Main Description: ${invoiceForm.mainDescription}\n${item.lineItemDescription}\nTowards Delivery Note no: ${item.deliveryNoteNo}`,
           quantity: item.quantity,
           unit: item.unit,
           unitPrice: item.unitPrice
@@ -537,12 +535,20 @@ DOHA BRANCH`
                 </div>
               </CardHeader>
               <CardContent>
+                <div className="mb-4">
+                  <Label className="text-sm font-semibold">Main Description</Label>
+                  <Input
+                    value={invoiceForm.mainDescription}
+                    onChange={(e) => setInvoiceForm({...invoiceForm, mainDescription: e.target.value})}
+                    placeholder="Job Order"
+                    className="text-sm h-9 mt-1"
+                  />
+                </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm border-collapse">
                     <thead>
                       <tr className="border-b-2 border-slate-300 bg-slate-100">
                         <th className="text-left px-2 py-1.5 font-semibold text-xs text-slate-700">Item</th>
-                        <th className="text-left px-2 py-1.5 font-semibold text-xs text-slate-700">Main Description</th>
                         <th className="text-left px-2 py-1.5 font-semibold text-xs text-slate-700">Line Item Description</th>
                         <th className="text-left px-2 py-1.5 font-semibold text-xs text-slate-700">Unit</th>
                         <th className="text-left px-2 py-1.5 font-semibold text-xs text-slate-700">Qty</th>
@@ -556,14 +562,6 @@ DOHA BRANCH`
                         <tr key={index} className="border-b border-slate-200 hover:bg-slate-50">
                           <td className="px-2 py-1.5">
                             <span className="font-semibold text-xs text-slate-600">#{index + 1}</span>
-                          </td>
-                          <td className="px-2 py-1.5">
-                            <Input
-                              value={item.mainDescription}
-                              onChange={(e) => updateItem(index, 'mainDescription', e.target.value)}
-                              placeholder="Job Order"
-                              className="text-xs h-7"
-                            />
                           </td>
                           <td className="px-2 py-1.5">
                             <Textarea
