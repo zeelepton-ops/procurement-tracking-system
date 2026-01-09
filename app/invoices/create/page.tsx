@@ -394,10 +394,10 @@ DOHA BRANCH`
           <div className="space-y-6">
             {/* Basic Info */}
             <Card>
-              <CardHeader>
-                <CardTitle>Invoice Details</CardTitle>
+              <CardHeader className="py-3">
+                <CardTitle className="text-lg">Invoice Details</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-2 py-3">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label>Invoice Number *</Label>
@@ -481,13 +481,13 @@ DOHA BRANCH`
             {/* Delivery Notes Selection */}
             {invoiceForm.jobOrderId && deliveryNotes.length > 0 && (
               <Card>
-                <CardHeader>
-                  <CardTitle>Select Delivery Notes</CardTitle>
-                  <p className="text-sm text-gray-600">
+                <CardHeader className="py-3">
+                  <CardTitle className="text-lg">Select Delivery Notes</CardTitle>
+                  <p className="text-xs text-gray-600">
                     Choose the delivery notes to include in this invoice
                   </p>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="py-3">
                   <div className="space-y-2">
                     {deliveryNotes.map((dn: any) => (
                       <label key={dn.id} className="flex items-center gap-2 p-2 border rounded hover:bg-gray-50 cursor-pointer">
@@ -541,32 +541,31 @@ DOHA BRANCH`
                   <table className="w-full text-sm border-collapse">
                     <thead>
                       <tr className="border-b-2 border-slate-300 bg-slate-100">
-                        <th className="text-left px-3 py-2 font-semibold text-xs text-slate-700">Item</th>
-                        <th className="text-left px-3 py-2 font-semibold text-xs text-slate-700">Main Description</th>
-                        <th className="text-left px-3 py-2 font-semibold text-xs text-slate-700">Line Item Description</th>
-                        <th className="text-left px-3 py-2 font-semibold text-xs text-slate-700">DN No.</th>
-                        <th className="text-left px-3 py-2 font-semibold text-xs text-slate-700">Unit</th>
-                        <th className="text-left px-3 py-2 font-semibold text-xs text-slate-700">Qty</th>
-                        <th className="text-left px-3 py-2 font-semibold text-xs text-slate-700">Unit Price</th>
-                        <th className="text-left px-3 py-2 font-semibold text-xs text-slate-700">Total</th>
-                        <th className="text-center px-3 py-2 font-semibold text-xs text-slate-700">Action</th>
+                        <th className="text-left px-2 py-1.5 font-semibold text-xs text-slate-700">Item</th>
+                        <th className="text-left px-2 py-1.5 font-semibold text-xs text-slate-700">Main Description</th>
+                        <th className="text-left px-2 py-1.5 font-semibold text-xs text-slate-700">Line Item Description</th>
+                        <th className="text-left px-2 py-1.5 font-semibold text-xs text-slate-700">Unit</th>
+                        <th className="text-left px-2 py-1.5 font-semibold text-xs text-slate-700">Qty</th>
+                        <th className="text-left px-2 py-1.5 font-semibold text-xs text-slate-700">Unit Price</th>
+                        <th className="text-left px-2 py-1.5 font-semibold text-xs text-slate-700">Total</th>
+                        <th className="text-center px-2 py-1.5 font-semibold text-xs text-slate-700">Action</th>
                       </tr>
                     </thead>
                     <tbody>
                       {items.map((item, index) => (
                         <tr key={index} className="border-b border-slate-200 hover:bg-slate-50">
-                          <td className="px-3 py-2">
+                          <td className="px-2 py-1.5">
                             <span className="font-semibold text-xs text-slate-600">#{index + 1}</span>
                           </td>
-                          <td className="px-3 py-2">
+                          <td className="px-2 py-1.5">
                             <Input
                               value={item.mainDescription}
                               onChange={(e) => updateItem(index, 'mainDescription', e.target.value)}
                               placeholder="Job Order"
-                              className="text-xs h-8"
+                              className="text-xs h-7"
                             />
                           </td>
-                          <td className="px-3 py-2">
+                          <td className="px-2 py-1.5">
                             <Textarea
                               required
                               value={item.lineItemDescription}
@@ -576,58 +575,50 @@ DOHA BRANCH`
                               className="text-xs"
                             />
                           </td>
-                          <td className="px-3 py-2">
-                            <Input
-                              value={item.deliveryNoteNo}
-                              onChange={(e) => updateItem(index, 'deliveryNoteNo', e.target.value)}
-                              placeholder="DN-XXXX/YY"
-                              className="text-xs h-8"
-                            />
-                          </td>
-                          <td className="px-3 py-2">
+                          <td className="px-2 py-1.5">
                             <Input
                               required
                               value={item.unit}
                               onChange={(e) => updateItem(index, 'unit', e.target.value)}
-                              className="text-xs h-8 w-20"
+                              className="text-xs h-7 w-20"
                             />
                           </td>
-                          <td className="px-3 py-2">
+                          <td className="px-2 py-1.5">
                             <Input
                               type="number"
                               required
                               step="0.01"
                               value={item.quantity}
                               onChange={(e) => updateItem(index, 'quantity', parseFloat(e.target.value) || 0)}
-                              className="text-xs h-8 w-24"
+                              className="text-xs h-7 w-24"
                             />
                           </td>
-                          <td className="px-3 py-2">
+                          <td className="px-2 py-1.5">
                             <Input
                               type="number"
                               required
                               step="0.01"
                               value={item.unitPrice}
                               onChange={(e) => updateItem(index, 'unitPrice', parseFloat(e.target.value) || 0)}
-                              className="text-xs h-8 w-28"
+                              className="text-xs h-7 w-28"
                             />
                           </td>
-                          <td className="px-3 py-2">
+                          <td className="px-2 py-1.5">
                             <Input
                               type="number"
                               value={item.totalPrice.toFixed(2)}
                               disabled
-                              className="bg-slate-50 text-xs h-8 w-28 font-semibold"
+                              className="bg-slate-50 text-xs h-7 w-28 font-semibold"
                             />
                           </td>
-                          <td className="px-3 py-2 text-center">
+                          <td className="px-2 py-1.5 text-center">
                             {items.length > 1 && (
                               <Button
                                 type="button"
                                 variant="outline"
                                 size="sm"
                                 onClick={() => removeItem(index)}
-                                className="h-7 w-7 p-0"
+                                className="h-6 w-6 p-0"
                               >
                                 <Trash2 className="w-3 h-3 text-red-600" />
                               </Button>
@@ -638,29 +629,53 @@ DOHA BRANCH`
                     </tbody>
                   </table>
                 </div>
+                
+                {/* DN Numbers below table */}
+                {items.some(item => item.deliveryNoteNo) && (
+                  <div className="mt-3 pt-3 border-t">
+                    <p className="text-xs font-semibold text-slate-700 mb-2">Delivery Note Numbers:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {items.map((item, index) => (
+                        item.deliveryNoteNo && (
+                          <div key={index} className="flex items-center gap-2 text-xs">
+                            <span className="text-slate-600">Item #{index + 1}:</span>
+                            <Input
+                              value={item.deliveryNoteNo}
+                              onChange={(e) => updateItem(index, 'deliveryNoteNo', e.target.value)}
+                              placeholder="DN-XXXX/YY"
+                              className="text-xs h-7 w-32"
+                            />
+                          </div>
+                        )
+                      ))}
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
             {/* Bank Details & Terms */}
             <Card>
-              <CardHeader>
-                <CardTitle>Bank Details & Terms</CardTitle>
+              <CardHeader className="py-3">
+                <CardTitle className="text-lg">Bank Details & Terms</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-3 py-3">
                 <div>
-                  <Label>Bank Details</Label>
+                  <Label className="text-sm">Bank Details</Label>
                   <Textarea
                     value={invoiceForm.bankDetails}
                     onChange={(e) => setInvoiceForm({...invoiceForm, bankDetails: e.target.value})}
-                    rows={4}
+                    rows={3}
+                    className="text-xs"
                   />
                 </div>
                 <div>
-                  <Label>Additional Notes</Label>
+                  <Label className="text-sm">Additional Notes</Label>
                   <Textarea
                     value={invoiceForm.notes}
                     onChange={(e) => setInvoiceForm({...invoiceForm, notes: e.target.value})}
-                    rows={3}
+                    rows={2}
+                    className="text-xs"
                   />
                 </div>
               </CardContent>
@@ -670,10 +685,10 @@ DOHA BRANCH`
           {/* Summary Block */}
           <div>
             <Card>
-              <CardHeader>
-                <CardTitle>Summary</CardTitle>
+              <CardHeader className="py-3">
+                <CardTitle className="text-lg">Summary</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-3 py-3">
                 {selectedClient && (
                   <div className="pb-4 border-b">
                     <Label className="text-xs text-gray-500">DUE FROM M/s:</Label>
