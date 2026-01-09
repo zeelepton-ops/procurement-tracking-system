@@ -406,8 +406,10 @@ DOHA BRANCH`
 
       <form onSubmit={handleSubmit}>
         <div className="space-y-6">
-          {/* Main Form */}
-          <div className="space-y-6">
+          {/* Main Form - Invoice Details and Summary Side by Side */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Left Column - Invoice Details */}
+            <div className="space-y-6">
             {/* Basic Info */}
             <Card>
               <CardHeader className="py-3">
@@ -687,32 +689,34 @@ DOHA BRANCH`
               <CardHeader className="py-3">
                 <CardTitle className="text-lg">Bank Details & Terms</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3 py-3">
-                <div>
-                  <Label className="text-sm">Bank Details</Label>
-                  <Textarea
-                    value={invoiceForm.bankDetails}
-                    onChange={(e) => setInvoiceForm({...invoiceForm, bankDetails: e.target.value})}
-                    rows={3}
-                    className="text-xs"
-                  />
-                </div>
-                <div>
-                  <Label className="text-sm">Additional Notes</Label>
-                  <Textarea
-                    value={invoiceForm.notes}
-                    onChange={(e) => setInvoiceForm({...invoiceForm, notes: e.target.value})}
-                    rows={2}
-                    className="text-xs"
-                  />
+              <CardContent className="py-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-sm">Bank Details</Label>
+                    <Textarea
+                      value={invoiceForm.bankDetails}
+                      onChange={(e) => setInvoiceForm({...invoiceForm, bankDetails: e.target.value})}
+                      rows={3}
+                      className="text-xs"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-sm">Additional Notes</Label>
+                    <Textarea
+                      value={invoiceForm.notes}
+                      onChange={(e) => setInvoiceForm({...invoiceForm, notes: e.target.value})}
+                      rows={3}
+                      className="text-xs"
+                    />
+                  </div>
                 </div>
               </CardContent>
             </Card>
-          </div>
+            </div>
 
-          {/* Summary Block */}
+          {/* Right Column - Summary Block */}
           <div>
-            <Card>
+            <Card className="lg:sticky lg:top-4">
               <CardHeader className="py-3">
                 <CardTitle className="text-lg">Summary</CardTitle>
               </CardHeader>
