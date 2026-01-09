@@ -188,7 +188,7 @@ DOHA BRANCH`
           clientId: client.id,
           clientReference: jobOrder.lpoContractNo || '',
           terms: client.paymentTerms || 'Net 30',
-          mainDescription: jobOrder.jobNumber || 'Job Order'
+          mainDescription: (jobOrder as any).description || (jobOrder as any).mainDescription || 'Job Order'
         }))
         console.log('✓ Auto-filled client:', client.name, 'Reference:', jobOrder.lpoContractNo)
       } else {
