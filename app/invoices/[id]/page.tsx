@@ -34,15 +34,59 @@ interface InvoiceItem {
   totalPrice: number
 }
 
+interface PrintSettings {
+  marginTop: string
+  marginRight: string
+  marginBottom: string
+  marginLeft: string
+  fontSize: string
+  headerFontSize: string
+  tableFontSize: string
+  headerImage: string | null
+  footerImage: string | null
+  showHeaderSpace: boolean
+  showFooterSpace: boolean
+}
+
+const defaultSettings: PrintSettings = {
+  marginTop: '1.0',
+  marginRight: '0.5',
+  marginBottom: '1.5',
+  marginLeft: '0.5',
+  fontSize: '10',
+  headerFontSize: '18',
+  tableFontSize: '9',
+  headerImage: null,
+  footerImage: null,
+  showHeaderSpace: true,
+  showFooterSpace: true,
+}
+
 export default function InvoiceViewPage() {
   const params = useParams()
   const router = useRouter()
   const [invoice, setInvoice] = useState<Invoice | null>(null)
   const [loading, setLoading] = useState(true)
+  const [settings, setSettings] = useState<PrintSettings>(defaultSettings)
+
+  useEffect(() => {
+    // Load print settings from localStorage
+    const saved = localStorage.getItem('invoicePrintSettings')
+    if (saved) {
+      setSettings(JSON.parse(saved))
+    }
+  }, [])
 
   useEffect(() => {
     fetchInvoice()
   }, [params.id])
+
+  // Set document title for print filename
+  useEffect(() => {
+    if (invoice) {
+      document.title = `Invoice - ${invoice.invoiceNumber} - ${invoice.client.name}`
+    }
+  }, [invoice])
 
   const fetchInvoice = async () => {
     try {
@@ -84,7 +128,63 @@ export default function InvoiceViewPage() {
   }
 
   const handlePrint = () => {
+    // Save settings before printing
+    localStorage.setItem('invoicePrintSettings', JSON.stringify(settings))
     window.print()
+  }
+
+  const updateSetting = (key: keyof PrintSettings, value: string | boolean | null) => {
+    setSettings(prev => ({ ...prev, [key]: value }))
+  }
+
+  const handleImageUpload = (type: 'header' | 'footer', file: File | null) => {
+    if (!file) {
+      updateSetting(type === 'header' ? 'headerImage' : 'footerImage', null)
+      return
+    }
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      updateSetting(type === 'header' ? 'headerImage' : 'footerImage', reader.result as string)
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const exportToExcel = () => {
+    if (!invoice) return
+    
+    // Create CSV content
+    const csvRows = []
+    csvRows.push(['INVOICE'])
+    csvRows.push(['Invoice Number:', invoice.invoiceNumber])
+    csvRows.push(['Date:', new Date(invoice.invoiceDate).toLocaleDateString('en-GB')])
+    csvRows.push(['Client:', invoice.client.name])
+    if (invoice.clientReference) csvRows.push(['Client Reference:', invoice.clientReference])
+    csvRows.push([])
+    csvRows.push(['Sl.No', 'DETAILS', 'UNIT', 'DELIVERY QTY', 'UNIT PRICE (QAR)', 'TOTAL PRICE (QAR)'])
+    
+    invoice.items.forEach((item, index) => {
+      csvRows.push([
+        index + 1,
+        item.description.replace(/\n/g, ' '),
+        item.unit,
+        item.quantity,
+        item.unitPrice.toFixed(2),
+        item.totalPrice.toFixed(2)
+      ])
+    })
+    
+    csvRows.push([])
+    csvRows.push(['', '', '', '', 'Subtotal:', invoice.subtotal.toFixed(2)])
+    csvRows.push(['', '', '', '', 'Tax:', invoice.taxAmount.toFixed(2)])
+    csvRows.push(['', '', '', '', 'Discount:', invoice.discount.toFixed(2)])
+    csvRows.push(['', '', '', '', 'TOTAL:', invoice.totalAmount.toFixed(2)])
+    
+    const csvContent = csvRows.map(row => row.map(cell => `"${cell}"`).join(',')).join('\n')
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const link = document.createElement('a')
+    link.href = URL.createObjectURL(blob)
+    link.download = `Invoice-${invoice.invoiceNumber}.csv`
+    link.click()
   }
 
   if (loading) {
@@ -97,6 +197,143 @@ export default function InvoiceViewPage() {
 
   return (
     <div>
+      {/* Print Settings Panel */}
+      <div className="no-print p-4 bg-gray-100 border-b">
+        <details className="mb-4">
+          <summary className="cursor-pointer font-semibold text-sm mb-2">Print Settings</summary>
+          <div className="space-y-4 mt-2">
+            <div className="grid grid-cols-4 gap-4 text-xs">
+              <div>
+                <label className="block mb-1">Margin Top (in) - Header</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={settings.marginTop}
+                  onChange={(e) => updateSetting('marginTop', e.target.value)}
+                  className="w-full p-1 border rounded"
+                />
+              </div>
+              <div>
+                <label className="block mb-1">Margin Right (in)</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={settings.marginRight}
+                  onChange={(e) => updateSetting('marginRight', e.target.value)}
+                  className="w-full p-1 border rounded"
+                />
+              </div>
+              <div>
+                <label className="block mb-1">Margin Bottom (in) - Footer</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={settings.marginBottom}
+                  onChange={(e) => updateSetting('marginBottom', e.target.value)}
+                  className="w-full p-1 border rounded"
+                />
+              </div>
+              <div>
+                <label className="block mb-1">Margin Left (in)</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={settings.marginLeft}
+                  onChange={(e) => updateSetting('marginLeft', e.target.value)}
+                  className="w-full p-1 border rounded"
+                />
+              </div>
+              <div>
+                <label className="block mb-1">Font Size (px)</label>
+                <input
+                  type="number"
+                  step="1"
+                  value={settings.fontSize}
+                  onChange={(e) => updateSetting('fontSize', e.target.value)}
+                  className="w-full p-1 border rounded"
+                />
+              </div>
+              <div>
+                <label className="block mb-1">Header Font Size (px)</label>
+                <input
+                  type="number"
+                  step="1"
+                  value={settings.headerFontSize}
+                  onChange={(e) => updateSetting('headerFontSize', e.target.value)}
+                  className="w-full p-1 border rounded"
+                />
+              </div>
+              <div>
+                <label className="block mb-1">Table Font Size (px)</label>
+                <input
+                  type="number"
+                  step="1"
+                  value={settings.tableFontSize}
+                  onChange={(e) => updateSetting('tableFontSize', e.target.value)}
+                  className="w-full p-1 border rounded"
+                />
+              </div>
+            </div>
+            
+            <div className="border-t pt-3">
+              <p className="text-xs font-semibold mb-2">Header & Footer Images (Optional)</p>
+              <div className="grid grid-cols-2 gap-4 text-xs">
+                <div>
+                  <label className="flex items-center gap-2 mb-2">
+                    <input
+                      type="checkbox"
+                      checked={settings.showHeaderSpace}
+                      onChange={(e) => updateSetting('showHeaderSpace', e.target.checked)}
+                    />
+                    Show Header Space (1 inch)
+                  </label>
+                  <label className="block mb-1">Upload Header Image</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleImageUpload('header', e.target.files?.[0] || null)}
+                    className="w-full p-1 border rounded text-xs"
+                  />
+                  {settings.headerImage && (
+                    <button
+                      onClick={() => updateSetting('headerImage', null)}
+                      className="mt-1 text-xs text-red-600 underline"
+                    >
+                      Remove Header Image
+                    </button>
+                  )}
+                </div>
+                <div>
+                  <label className="flex items-center gap-2 mb-2">
+                    <input
+                      type="checkbox"
+                      checked={settings.showFooterSpace}
+                      onChange={(e) => updateSetting('showFooterSpace', e.target.checked)}
+                    />
+                    Show Footer Space (1.5 inch)
+                  </label>
+                  <label className="block mb-1">Upload Footer Image</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleImageUpload('footer', e.target.files?.[0] || null)}
+                    className="w-full p-1 border rounded text-xs"
+                  />
+                  {settings.footerImage && (
+                    <button
+                      onClick={() => updateSetting('footerImage', null)}
+                      className="mt-1 text-xs text-red-600 underline"
+                    >
+                      Remove Footer Image
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </details>
+      </div>
+
       {/* Print Button Bar */}
       <div className="no-print p-4 bg-gray-50 border-b flex items-center justify-between">
         <Button variant="outline" onClick={() => router.back()}>
@@ -104,6 +341,10 @@ export default function InvoiceViewPage() {
           Back
         </Button>
         <div className="flex gap-2">
+          <Button variant="outline" onClick={exportToExcel}>
+            <Download className="w-4 h-4 mr-2" />
+            Export to Excel
+          </Button>
           <Button onClick={handlePrint}>
             <Printer className="w-4 h-4 mr-2" />
             Print
@@ -112,138 +353,134 @@ export default function InvoiceViewPage() {
       </div>
 
       {/* Invoice Template */}
-      <div className="invoice-template p-8 max-w-[210mm] mx-auto bg-white">
-        {/* Header */}
-        <div className="border-b-2 border-black pb-4 mb-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="text-blue-900 font-bold text-4xl">NBTC</div>
-              <div>
-                <div className="text-sm" style={{ direction: 'rtl', unicodeBidi: 'bidi-override' }}>
-                  الشونل بيلتك تريديينج اند كونتر اكتينج ش . م . ح
-                </div>
-                <div className="font-bold text-blue-900">National Builtech Trading & Contracting Co. W.L.L</div>
+      <div className="invoice-template max-w-[210mm] mx-auto bg-white" style={{ fontSize: `${settings.fontSize}px` }}>
+        {/* Header Space or Image */}
+        {settings.showHeaderSpace && (
+          <div className="header-space" style={{ height: '1in', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            {settings.headerImage ? (
+              <img src={settings.headerImage} alt="Header" className="max-w-full max-h-full object-contain" />
+            ) : (
+              <div className="no-print text-gray-400 text-xs border-2 border-dashed border-gray-300 w-full h-full flex items-center justify-center">
+                Header Space (1 inch) - Pre-printed on paper
               </div>
-            </div>
-            <div className="flex gap-2">
-              <div className="w-12 h-12 border rounded flex items-center justify-center text-xs">
-                LOGO
-              </div>
-              <div className="w-12 h-12 border rounded flex items-center justify-center text-xs">
-                CERT
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Invoice Info Box */}
-        <div className="flex justify-between items-start mb-6">
-          <div>
-            {invoice.clientReference && (
-              <p className="text-sm mb-2">
-                <strong>Your Ref no.</strong> {invoice.clientReference}
-              </p>
             )}
-            <p className="text-sm">
-              <strong>Due From M/s :</strong> <span className="font-bold">{invoice.client.name}</span>
-            </p>
-            {invoice.client.address && (
-              <p className="text-sm">{invoice.client.address}</p>
-            )}
-          </div>
-          <div className="text-right">
-            <h1 className="text-3xl font-bold mb-4">INVOICE</h1>
-            <table className="border border-black">
-              <tbody>
-                <tr>
-                  <td className="border border-black px-4 py-2 font-semibold">Invoice No :</td>
-                  <td className="border border-black px-4 py-2">{invoice.invoiceNumber}</td>
-                </tr>
-                <tr>
-                  <td className="border border-black px-4 py-2 font-semibold">Date :</td>
-                  <td className="border border-black px-4 py-2">
-                    {new Date(invoice.invoiceDate).toLocaleDateString('en-GB')}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* Items Table */}
-        <table className="w-full border border-black mb-6">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="border border-black px-2 py-2 text-sm">Sl.No</th>
-              <th className="border border-black px-2 py-2 text-sm">DETAILS</th>
-              <th className="border border-black px-2 py-2 text-sm">UNIT</th>
-              <th className="border border-black px-2 py-2 text-sm">DELIVERY QTY</th>
-              <th className="border border-black px-2 py-2 text-sm">UNIT PRICE<br/>QAR</th>
-              <th className="border border-black px-2 py-2 text-sm">TOTAL PRICE<br/>QAR</th>
-            </tr>
-          </thead>
-          <tbody>
-            {Array.isArray(invoice.items) && invoice.items.map((item, index) => (
-              <tr key={item.id}>
-                <td className="border border-black px-2 py-2 text-center align-top">{index + 1}</td>
-                <td className="border border-black px-2 py-2">
-                  <div className="whitespace-pre-line text-sm">{item.description}</div>
-                </td>
-                <td className="border border-black px-2 py-2 text-center align-top">{item.unit}</td>
-                <td className="border border-black px-2 py-2 text-center align-top">{item.quantity}</td>
-                <td className="border border-black px-2 py-2 text-right align-top">{item.unitPrice.toFixed(2)}</td>
-                <td className="border border-black px-2 py-2 text-right align-top">{item.totalPrice.toFixed(2)}</td>
-              </tr>
-            ))}
-            <tr>
-              <td colSpan={5} className="border border-black px-2 py-2 text-center font-bold">
-                TOTAL QAR : {numberToWords(invoice.totalAmount)}
-              </td>
-              <td className="border border-black px-2 py-2 text-right font-bold">
-                {invoice.totalAmount.toFixed(2)}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-
-        {/* Bank Details */}
-        {invoice.bankDetails && (
-          <div className="border border-black p-3 mb-6 text-sm">
-            <div className="whitespace-pre-line">{invoice.bankDetails}</div>
           </div>
         )}
 
-        {/* Signature Section */}
-        <table className="w-full border border-black">
-          <tbody>
-            <tr>
-              <td className="border border-black px-4 py-12 w-1/2 text-center">
-                Receiver Name & Signature
-              </td>
-              <td className="border border-black px-4 py-12 w-1/2 text-center">
-                For National Builtech Trad & Cont Co.
-              </td>
-            </tr>
-          </tbody>
-        </table>
-
-        {/* Footer */}
-        <div className="mt-8 text-xs text-gray-600 border-t pt-4">
-          <div className="flex justify-between">
+        {/* Invoice Content */}
+        <div className="invoice-content px-4">
+          {/* Invoice Info Box */}
+          <div className="flex justify-between items-start mb-4">
             <div>
-              <p><strong>C.R. 22469</strong></p>
-              <p>P.O Box : 23599</p>
-              <p>New Industrial Area, Doha, State of Qatar</p>
-              <p>Tel: +974 44110779 · +974 44110778</p>
-              <p>Fax: +974 44110449</p>
-              <p>Email: info@nbtcqatar.com</p>
-              <p>Web: www.nbtcqatar.com</p>
+              {invoice.clientReference && (
+                <p className="mb-2">
+                  <strong>Your Ref no.</strong> {invoice.clientReference}
+                </p>
+              )}
+              <p>
+                <strong>Due From M/s :</strong> <span className="font-bold">{invoice.client.name}</span>
+              </p>
+              {invoice.client.address && (
+                <p>{invoice.client.address}</p>
+              )}
+            </div>
+            <div className="text-right">
+              <h1 className="font-bold mb-3" style={{ fontSize: `${parseInt(settings.fontSize) + 12}px` }}>INVOICE</h1>
+              <table className="border border-black" style={{ fontSize: `${settings.tableFontSize}px` }}>
+                <tbody>
+                  <tr>
+                    <td className="border border-black px-3 py-1 font-semibold whitespace-nowrap">Invoice No :</td>
+                    <td className="border border-black px-3 py-1 whitespace-nowrap">{invoice.invoiceNumber}</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-black px-3 py-1 font-semibold whitespace-nowrap">Date :</td>
+                    <td className="border border-black px-3 py-1 whitespace-nowrap">
+                      {new Date(invoice.invoiceDate).toLocaleDateString('en-GB')}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
+
+          {/* Items Table */}
+          <table className="w-full border border-black mb-4" style={{ fontSize: `${settings.tableFontSize}px` }}>
+            <thead>
+              <tr className="bg-gray-100">
+                <th className="border border-black px-2 py-2">Sl.No</th>
+                <th className="border border-black px-2 py-2">DETAILS</th>
+                <th className="border border-black px-2 py-2">UNIT</th>
+                <th className="border border-black px-2 py-2">QTY</th>
+                <th className="border border-black px-2 py-2">UNIT PRICE<br/>QAR</th>
+                <th className="border border-black px-2 py-2">TOTAL<br/>QAR</th>
+              </tr>
+            </thead>
+            <tbody>
+              {Array.isArray(invoice.items) && invoice.items.map((item, index) => (
+                <tr key={item.id} className="page-break-inside-avoid">
+                  <td className="border border-black px-2 py-2 text-center align-top">{index + 1}</td>
+                  <td className="border border-black px-2 py-2">
+                    <div className="whitespace-pre-line">{item.description}</div>
+                  </td>
+                  <td className="border border-black px-2 py-2 text-center align-top">{item.unit}</td>
+                  <td className="border border-black px-2 py-2 text-center align-top">{item.quantity}</td>
+                  <td className="border border-black px-2 py-2 text-right align-top">{item.unitPrice.toFixed(2)}</td>
+                  <td className="border border-black px-2 py-2 text-right align-top">{item.totalPrice.toFixed(2)}</td>
+                </tr>
+              ))}
+              <tr className="page-break-inside-avoid">
+                <td colSpan={5} className="border border-black px-2 py-2 text-center font-bold">
+                  TOTAL QAR : {numberToWords(invoice.totalAmount)}
+                </td>
+                <td className="border border-black px-2 py-2 text-right font-bold">
+                  {invoice.totalAmount.toFixed(2)}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          {/* Bank Details */}
+          {invoice.bankDetails && (
+            <div className="border border-black p-3 mb-4 page-break-inside-avoid">
+              <div className="whitespace-pre-line">{invoice.bankDetails}</div>
+            </div>
+          )}
+
+          {/* Signature Section */}
+          <table className="w-full border border-black mb-4 page-break-inside-avoid">
+            <tbody>
+              <tr>
+                <td className="border border-black px-4 py-12 w-1/2 text-center">
+                  Receiver Name & Signature
+                </td>
+                <td className="border border-black px-4 py-12 w-1/2 text-center">
+                  For National Builtech Trad & Cont Co.
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
+
+        {/* Footer Space or Image */}
+        {settings.showFooterSpace && (
+          <div className="footer-space" style={{ height: '1.5in', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            {settings.footerImage ? (
+              <img src={settings.footerImage} alt="Footer" className="max-w-full max-h-full object-contain" />
+            ) : (
+              <div className="no-print text-gray-400 text-xs border-2 border-dashed border-gray-300 w-full h-full flex items-center justify-center">
+                Footer Space (1.5 inch) - Pre-printed on paper
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <style jsx global>{`
+        @page {
+          size: A4;
+          margin: ${settings.marginTop}in ${settings.marginRight}in ${settings.marginBottom}in ${settings.marginLeft}in;
+        }
+        
         @media print {
           .no-print {
             display: none !important;
@@ -252,17 +489,32 @@ export default function InvoiceViewPage() {
           .invoice-template {
             max-width: 100%;
             margin: 0;
-            padding: 20mm;
+            padding: 0;
           }
           
-          @page {
-            size: A4;
-            margin: 10mm;
+          .header-space,
+          .footer-space {
+            page-break-inside: avoid;
+          }
+          
+          .page-break-inside-avoid {
+            page-break-inside: avoid;
           }
           
           body {
             print-color-adjust: exact;
             -webkit-print-color-adjust: exact;
+            margin: 0;
+            padding: 0;
+          }
+          
+          table {
+            page-break-inside: auto;
+          }
+          
+          tr {
+            page-break-inside: avoid;
+            page-break-after: auto;
           }
         }
       `}</style>
