@@ -346,7 +346,7 @@ DOHA BRANCH`
         ...invoiceForm,
         items: items.map(item => ({
           jobOrderItemId: item.jobOrderItemId || null,
-          description: `Main Description: ${item.mainDescription}\n${item.lineItemDescription}\nTowards Delivery Note no: ${item.deliveryNoteNo}\nPayment Term: ${item.paymentTerm}`,
+          description: `Main Description: ${item.mainDescription}\n${item.lineItemDescription}\nTowards Delivery Note no: ${item.deliveryNoteNo}`,
           quantity: item.quantity,
           unit: item.unit,
           unitPrice: item.unitPrice
