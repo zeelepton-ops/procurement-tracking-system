@@ -187,7 +187,8 @@ DOHA BRANCH`
           ...prev,
           clientId: client.id,
           clientReference: jobOrder.lpoContractNo || '',
-          terms: client.paymentTerms || 'Net 30'
+          terms: client.paymentTerms || 'Net 30',
+          mainDescription: jobOrder.jobNumber || 'Job Order'
         }))
         console.log('✓ Auto-filled client:', client.name, 'Reference:', jobOrder.lpoContractNo)
       } else {
@@ -241,30 +242,46 @@ DOHA BRANCH`
             const jobOrderItem = jobOrder.items?.find((joi: any) => joi.id === item.jobOrderItemId)
             itemsMap.set(item.jobOrderItemId, {
               jobOrderItemId: item.jobOrderItemId,
-              mainDescription: 'Job Order',
-              lineItemDescription: item.itemDescription,
+              lineItemDescription: jobOrderItem?.workDescription || '',
+              dnDetails: [],
               unit: item.unit,
               quantity: 0,
               unitPrice: jobOrderItem?.unitPrice || 0,
               totalPrice: 0,
-              deliveryNoteNo: dn.deliveryNoteNumber,
-              paymentTerm: '45 DAYS'
+              deliveryNoteNo: dn.deliveryNoteNumber
             })
           }
-          // Accumulate delivered quantities
+          // Add DN details with quantity
           const existing = itemsMap.get(item.jobOrderItemId)
+          existing.dnDetails.push({
+            description: item.itemDescription,
+            quantity: item.deliveredQuantity || 0,
+            dnNumber: dn.deliveryNoteNumber
+          })
           existing.quantity += item.deliveredQuantity || 0
-          existing.deliveryNoteNo = existing.deliveryNoteNo + (existing.deliveryNoteNo.includes(dn.deliveryNoteNumber) ? '' : `, ${dn.deliveryNoteNumber}`)
+          if (!existing.deliveryNoteNo.includes(dn.deliveryNoteNumber)) {
+            existing.deliveryNoteNo = existing.deliveryNoteNo + ', ' + dn.deliveryNoteNumber
+          }
         }
       })
     })
 
-    // Convert to array and calculate totals
-    const loadedItems = Array.from(itemsMap.values()).map(item => ({
-      ...item,
-      totalPrice: item.quantity * item.unitPrice
-    }))
-
+    // Convert to array and format descriptions
+    const loadedItems = Array.from(itemsMap.values()).map(item => {
+      // Format: Job Order Description\nDN1 Description - Qty\nDN2 Description - Qty
+      const dnLines = item.dnDetails.map((dn: any) => `${dn.description} - ${dn.quantity}`).join('\n')
+      const fullDescription = item.lineItemDescription + (dnLines ? '\n' + dnLines : '')
+      
+      return {
+        jobOrderItemId: item.jobOrderItemId,
+        lineItemDescription: fullDescription,
+        unit: item.unit,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        totalPrice: item.quantity * item.unitPrice,
+        deliveryNoteNo: item.deliveryNoteNo
+      }
+    })
     if (loadedItems.length > 0) {
       setItems(loadedItems)
       console.log('Loaded items from delivery notes:', loadedItems)
