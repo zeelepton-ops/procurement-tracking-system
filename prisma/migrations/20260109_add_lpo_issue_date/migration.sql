@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "JobOrder" ADD COLUMN IF NOT EXISTS "lpoIssueDate" TIMESTAMP(3);

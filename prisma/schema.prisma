@@ -51,6 +51,7 @@ model JobOrder {
   clientContactPerson String?
   clientContactPhone  String?
   lpoContractNo       String?
+  lpoIssueDate        DateTime?
   priority            String?   @default("MEDIUM") // HIGH, MEDIUM, LOW
   foreman             String?
   workScope           String? // Legacy field - kept for backwards compatibility

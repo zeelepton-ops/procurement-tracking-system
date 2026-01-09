@@ -21,6 +21,7 @@ interface JobOrder {
   clientContactPerson: string | null
   clientContactPhone: string | null
   lpoContractNo: string | null
+  lpoIssueDate: string | null
   priority: string | null
   foreman: string | null
   workScope: string | null
@@ -99,6 +100,7 @@ export default function JobOrdersPage() {
     clientContactPerson: '',
     clientContactPhone: '+974 ',
     lpoContractNo: '',
+    lpoIssueDate: '',
     priority: 'MEDIUM',
     foreman: '',
     workScope: '',
@@ -508,6 +510,7 @@ export default function JobOrdersPage() {
       clientContactPerson: job.clientContactPerson || '',
       clientContactPhone: job.clientContactPhone || '+974 ',
       lpoContractNo: job.lpoContractNo || '',
+      lpoIssueDate: job.lpoIssueDate || '',
       priority: job.priority || 'MEDIUM',
       foreman: job.foreman || '',
       workScope: job.workScope || '',
@@ -842,13 +845,23 @@ export default function JobOrdersPage() {
                       )}
                     </div>
                   </div>
-                  <div className="md:col-span-2" data-edit-key="lpo">
+                  <div data-edit-key="lpo">
                     <Label htmlFor="lpoContractNo" className="text-sm font-semibold">LPO / Contract No</Label>
                     <Input
                       id="lpoContractNo"
                       value={formData.lpoContractNo}
                       onChange={(e) => setFormData({ ...formData, lpoContractNo: e.target.value })}
                       placeholder="LPO-2025-13135"
+                      className="mt-1 h-9 w-full"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="lpoIssueDate" className="text-sm font-semibold">LPO Issue Date</Label>
+                    <Input
+                      type="date"
+                      id="lpoIssueDate"
+                      value={formData.lpoIssueDate}
+                      onChange={(e) => setFormData({ ...formData, lpoIssueDate: e.target.value })}
                       className="mt-1 h-9 w-full"
                     />
                   </div>
@@ -1688,12 +1701,22 @@ export default function JobOrdersPage() {
                           </div>
                         )}
                       </div>
-                      <div className="md:col-span-2">
+                      <div>
                         <Label htmlFor="edit-lpoContractNo" className="text-sm font-semibold">LPO / Contract No</Label>
                         <Input
                           id="edit-lpoContractNo"
                           value={editFormData.lpoContractNo}
                           onChange={(e) => setEditFormData({ ...editFormData, lpoContractNo: e.target.value })}
+                          className="mt-1 h-9 w-full text-sm"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="edit-lpoIssueDate" className="text-sm font-semibold">LPO Issue Date</Label>
+                        <Input
+                          type="date"
+                          id="edit-lpoIssueDate"
+                          value={editFormData.lpoIssueDate}
+                          onChange={(e) => setEditFormData({ ...editFormData, lpoIssueDate: e.target.value })}
                           className="mt-1 h-9 w-full text-sm"
                         />
                       </div>
