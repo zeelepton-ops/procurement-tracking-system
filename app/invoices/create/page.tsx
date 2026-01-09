@@ -389,9 +389,9 @@ DOHA BRANCH`
       </div>
 
       <form onSubmit={handleSubmit}>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="space-y-6">
           {/* Main Form */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="space-y-6">
             {/* Basic Info */}
             <Card>
               <CardHeader>
@@ -667,9 +667,9 @@ DOHA BRANCH`
             </Card>
           </div>
 
-          {/* Summary Sidebar */}
-          <div className="lg:col-span-1">
-            <Card className="sticky top-4">
+          {/* Summary Block */}
+          <div>
+            <Card>
               <CardHeader>
                 <CardTitle>Summary</CardTitle>
               </CardHeader>
@@ -700,29 +700,31 @@ DOHA BRANCH`
                     <span className="font-semibold">{calculateSubtotal().toFixed(2)} QAR</span>
                   </div>
                   
-                  <div>
-                    <Label className="text-xs">Tax Rate (%)</Label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      value={invoiceForm.taxRate}
-                      onChange={(e) => setInvoiceForm({...invoiceForm, taxRate: parseFloat(e.target.value) || 0})}
-                    />
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-xs">Tax Rate (%)</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={invoiceForm.taxRate}
+                        onChange={(e) => setInvoiceForm({...invoiceForm, taxRate: parseFloat(e.target.value) || 0})}
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label className="text-xs">Discount (QAR)</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={invoiceForm.discount}
+                        onChange={(e) => setInvoiceForm({...invoiceForm, discount: parseFloat(e.target.value) || 0})}
+                      />
+                    </div>
                   </div>
                   
                   <div className="flex justify-between text-sm">
                     <span>Tax Amount:</span>
                     <span>{calculateTaxAmount().toFixed(2)} QAR</span>
-                  </div>
-                  
-                  <div>
-                    <Label className="text-xs">Discount (QAR)</Label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      value={invoiceForm.discount}
-                      onChange={(e) => setInvoiceForm({...invoiceForm, discount: parseFloat(e.target.value) || 0})}
-                    />
                   </div>
                   
                   <div className="flex justify-between font-bold text-lg pt-2 border-t">
