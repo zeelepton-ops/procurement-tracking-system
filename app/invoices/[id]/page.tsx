@@ -15,6 +15,8 @@ interface Invoice {
   discount: number
   totalAmount: number
   bankDetails: string | null
+  currency: string | null
+  mainDescription: string | null
   client: {
     name: string
     address: string | null
@@ -404,6 +406,11 @@ export default function InvoiceViewPage() {
           </div>
 
           {/* Items Table */}
+          {invoice.mainDescription && (
+            <div className="mb-2 font-semibold" style={{ fontSize: `${settings.fontSize}px` }}>
+              Main Description: {invoice.mainDescription}
+            </div>
+          )}
           <table className="w-full border border-black mb-4" style={{ fontSize: `${settings.tableFontSize}px` }}>
             <thead>
               <tr className="bg-gray-100">
@@ -411,28 +418,28 @@ export default function InvoiceViewPage() {
                 <th className="border border-black px-2 py-2">DETAILS</th>
                 <th className="border border-black px-2 py-2">UNIT</th>
                 <th className="border border-black px-2 py-2">QTY</th>
-                <th className="border border-black px-2 py-2">UNIT PRICE<br/>QAR</th>
-                <th className="border border-black px-2 py-2">TOTAL<br/>QAR</th>
+                <th className="border border-black px-2 py-2">UNIT PRICE<br/>{invoice.currency || 'QAR'}</th>
+                <th className="border border-black px-2 py-2">TOTAL PRICE<br/>{invoice.currency || 'QAR'}</th>
               </tr>
             </thead>
             <tbody>
               {Array.isArray(invoice.items) && invoice.items.map((item, index) => (
                 <tr key={item.id} className="page-break-inside-avoid">
-                  <td className="border border-black px-2 py-2 text-center align-top">{index + 1}</td>
-                  <td className="border border-black px-2 py-2">
+                  <td className="border-l border-r border-black px-2 py-2 text-center align-top">{index + 1}</td>
+                  <td className="border-r border-black px-2 py-2">
                     <div className="whitespace-pre-line">{item.description}</div>
                   </td>
-                  <td className="border border-black px-2 py-2 text-center align-top">{item.unit}</td>
-                  <td className="border border-black px-2 py-2 text-center align-top">{item.quantity}</td>
-                  <td className="border border-black px-2 py-2 text-right align-top">{item.unitPrice.toFixed(2)}</td>
-                  <td className="border border-black px-2 py-2 text-right align-top">{item.totalPrice.toFixed(2)}</td>
+                  <td className="border-r border-black px-2 py-2 text-center align-top">{item.unit}</td>
+                  <td className="border-r border-black px-2 py-2 text-center align-top">{item.quantity}</td>
+                  <td className="border-r border-black px-2 py-2 text-right align-top">{item.unitPrice.toFixed(2)}</td>
+                  <td className="border-r border-black px-2 py-2 text-right align-top">{item.totalPrice.toFixed(2)}</td>
                 </tr>
               ))}
-              <tr className="page-break-inside-avoid">
-                <td colSpan={5} className="border border-black px-2 py-2 text-center font-bold">
-                  TOTAL QAR : {numberToWords(invoice.totalAmount)}
+              <tr className="page-break-inside-avoid border-t border-black">
+                <td colSpan={5} className="border-l border-r border-black px-2 py-2 text-center font-bold">
+                  TOTAL {invoice.currency || 'QAR'} : {numberToWords(invoice.totalAmount)}
                 </td>
-                <td className="border border-black px-2 py-2 text-right font-bold">
+                <td className="border-r border-black px-2 py-2 text-right font-bold">
                   {invoice.totalAmount.toFixed(2)}
                 </td>
               </tr>
@@ -450,10 +457,10 @@ export default function InvoiceViewPage() {
           <table className="w-full border border-black mb-4 page-break-inside-avoid">
             <tbody>
               <tr>
-                <td className="border border-black px-4 py-12 w-1/2 text-center">
+                <td className="border border-black px-4 py-12 w-1/2 align-top text-left">
                   Receiver Name & Signature
                 </td>
-                <td className="border border-black px-4 py-12 w-1/2 text-center">
+                <td className="border border-black px-4 py-12 w-1/2 align-top text-right">
                   For National Builtech Trad & Cont Co.
                 </td>
               </tr>

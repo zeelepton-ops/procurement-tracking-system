@@ -191,6 +191,8 @@ export async function POST(request: Request) {
         invoiceDate: new Date(body.invoiceDate),
         dueDate: body.dueDate ? new Date(body.dueDate) : null,
         clientReference: body.clientReference || null,
+        currency: body.currency || 'QAR',
+        mainDescription: body.mainDescription || null,
         subtotal,
         taxRate: body.taxRate || 0,
         taxAmount,

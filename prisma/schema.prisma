@@ -802,6 +802,8 @@ model Invoice {
   invoiceDate       DateTime
   dueDate           DateTime?
   clientReference   String?   // e.g., "Your Ref no. QF-PO-29344-QEE Dtd 25/08/2024"
+  currency          String    @default("QAR") // QAR, USD, etc.
+  mainDescription   String?   // Main description shown once at top of invoice
   subtotal          Float
   taxRate           Float     @default(0)
   taxAmount         Float     @default(0)

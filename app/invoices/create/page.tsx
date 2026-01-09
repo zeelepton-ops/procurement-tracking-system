@@ -67,7 +67,8 @@ export default function CreateInvoicePage() {
     terms: '',
     bankDetails: '',
     paymentTerms: '45 DAYS',
-    mainDescription: 'Job Order'
+    mainDescription: 'Job Order',
+    currency: 'QAR'
   })
 
   const [items, setItems] = useState<InvoiceItem[]>([{
@@ -361,7 +362,7 @@ DOHA BRANCH`
         ...invoiceForm,
         items: items.map(item => ({
           jobOrderItemId: item.jobOrderItemId || null,
-          description: `Main Description: ${invoiceForm.mainDescription}\n${item.lineItemDescription}\nTowards Delivery Note no: ${item.deliveryNoteNo}`,
+          description: `${item.lineItemDescription}\nTowards Delivery Note no: ${item.deliveryNoteNo}`,
           quantity: item.quantity,
           unit: item.unit,
           unitPrice: item.unitPrice
@@ -488,6 +489,18 @@ DOHA BRANCH`
                       value={invoiceForm.clientReference}
                       onChange={(e) => setInvoiceForm({...invoiceForm, clientReference: e.target.value})}
                     />
+                  </div>
+                  <div>
+                    <Label>Currency *</Label>
+                    <select
+                      required
+                      value={invoiceForm.currency}
+                      onChange={(e) => setInvoiceForm({...invoiceForm, currency: e.target.value})}
+                      className="w-full p-2 border rounded"
+                    >
+                      <option value="QAR">QAR (Qatari Riyal)</option>
+                      <option value="USD">USD (US Dollar)</option>
+                    </select>
                   </div>
                 </div>
               </CardContent>
