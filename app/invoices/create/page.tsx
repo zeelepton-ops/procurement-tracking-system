@@ -407,9 +407,9 @@ DOHA BRANCH`
       <form onSubmit={handleSubmit}>
         <div className="space-y-6">
           {/* Main Form - Invoice Details and Summary Side by Side */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Left Column - Invoice Details */}
-            <div className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Left Column - Invoice Details (2/3 width) */}
+            <div className="space-y-6 lg:col-span-2">
             {/* Basic Info */}
             <Card>
               <CardHeader className="py-3">
@@ -776,7 +776,7 @@ DOHA BRANCH`
                   <Textarea
                     value={invoiceForm.bankDetails}
                     onChange={(e) => setInvoiceForm({...invoiceForm, bankDetails: e.target.value})}
-                    rows={3}
+                    rows={5}
                     className="text-xs"
                   />
                 </div>
@@ -785,7 +785,7 @@ DOHA BRANCH`
                   <Textarea
                     value={invoiceForm.notes}
                     onChange={(e) => setInvoiceForm({...invoiceForm, notes: e.target.value})}
-                    rows={3}
+                    rows={5}
                     className="text-xs"
                   />
                 </div>
