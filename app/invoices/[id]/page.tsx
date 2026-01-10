@@ -23,6 +23,8 @@ interface Invoice {
   }
   jobOrder?: {
     jobNumber: string
+    lpoContractNo: string | null
+    lpoIssueDate: string | null
   } | null
   items: InvoiceItem[]
 }
@@ -393,13 +395,25 @@ export default function InvoiceViewPage() {
                   <tr>
                     <td className="border border-black px-3 py-1 font-semibold whitespace-nowrap">Invoice No :</td>
                     <td className="border border-black px-3 py-1 whitespace-nowrap">{invoice.invoiceNumber}</td>
-                  </tr>
-                  <tr>
                     <td className="border border-black px-3 py-1 font-semibold whitespace-nowrap">Date :</td>
                     <td className="border border-black px-3 py-1 whitespace-nowrap">
                       {new Date(invoice.invoiceDate).toLocaleDateString('en-GB')}
                     </td>
+                    {invoice.jobOrder && (
+                      <>
+                        <td className="border border-black px-3 py-1 font-semibold whitespace-nowrap">Job :</td>
+                        <td className="border border-black px-3 py-1 whitespace-nowrap">{invoice.jobOrder.jobNumber}</td>
+                      </>
+                    )}
                   </tr>
+                  {invoice.jobOrder?.lpoIssueDate && (
+                    <tr>
+                      <td className="border border-black px-3 py-1 font-semibold whitespace-nowrap">PO Date :</td>
+                      <td colSpan={5} className="border border-black px-3 py-1 whitespace-nowrap">
+                        {new Date(invoice.jobOrder.lpoIssueDate).toLocaleDateString('en-GB')}
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
