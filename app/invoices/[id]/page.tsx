@@ -23,6 +23,7 @@ interface Invoice {
   }
   jobOrder?: {
     jobNumber: string
+    productName: string
     lpoContractNo: string | null
     lpoIssueDate: string | null
   } | null
@@ -72,6 +73,7 @@ export default function InvoiceViewPage() {
   const [invoice, setInvoice] = useState<Invoice | null>(null)
   const [loading, setLoading] = useState(true)
   const [settings, setSettings] = useState<PrintSettings>(defaultSettings)
+  const [displayCurrency, setDisplayCurrency] = useState<'QAR' | 'USD'>('QAR')
 
   useEffect(() => {
     // Load print settings from localStorage
@@ -379,6 +381,9 @@ export default function InvoiceViewPage() {
               {invoice.clientReference && (
                 <p className="mb-2">
                   <strong>Your Ref no.</strong> {invoice.clientReference}
+                  {invoice.jobOrder?.lpoIssueDate && (
+                    <> Dated {new Date(invoice.jobOrder.lpoIssueDate).toLocaleDateString('en-GB')}</>
+                  )}
                 </p>
               )}
               <p>
@@ -389,7 +394,20 @@ export default function InvoiceViewPage() {
               )}
             </div>
             <div className="text-right">
-              <h1 className="font-bold mb-3" style={{ fontSize: `${parseInt(settings.fontSize) + 12}px` }}>INVOICE</h1>
+              <div className="flex items-center justify-end gap-4 mb-3">
+                <h1 className="font-bold" style={{ fontSize: `${parseInt(settings.fontSize) + 12}px` }}>INVOICE</h1>
+                <div className="no-print flex items-center gap-2" style={{ fontSize: `${settings.fontSize}px` }}>
+                  <label className="font-semibold">Currency:</label>
+                  <select
+                    value={displayCurrency}
+                    onChange={(e) => setDisplayCurrency(e.target.value as 'QAR' | 'USD')}
+                    className="border border-gray-300 rounded px-2 py-1"
+                  >
+                    <option value="QAR">QAR</option>
+                    <option value="USD">USD</option>
+                  </select>
+                </div>
+              </div>
               <table className="border border-black" style={{ fontSize: `${settings.tableFontSize}px` }}>
                 <tbody>
                   <tr>
@@ -420,9 +438,9 @@ export default function InvoiceViewPage() {
           </div>
 
           {/* Items Table */}
-          {invoice.mainDescription && (
+          {invoice.jobOrder?.productName && (
             <div className="mb-2 font-semibold" style={{ fontSize: `${settings.fontSize}px` }}>
-              Main Description: {invoice.mainDescription}
+              Main Description: {invoice.jobOrder.productName}
             </div>
           )}
           <table className="w-full border border-black mb-4" style={{ fontSize: `${settings.tableFontSize}px` }}>
@@ -432,8 +450,8 @@ export default function InvoiceViewPage() {
                 <th className="border border-black px-2 py-2">DETAILS</th>
                 <th className="border border-black px-2 py-2">UNIT</th>
                 <th className="border border-black px-2 py-2">QTY</th>
-                <th className="border border-black px-2 py-2">UNIT PRICE<br/>{invoice.currency || 'QAR'}</th>
-                <th className="border border-black px-2 py-2">TOTAL PRICE<br/>{invoice.currency || 'QAR'}</th>
+                <th className="border border-black px-2 py-2">UNIT PRICE<br/>{displayCurrency}</th>
+                <th className="border border-black px-2 py-2">TOTAL PRICE<br/>{displayCurrency}</th>
               </tr>
             </thead>
             <tbody>
@@ -445,16 +463,16 @@ export default function InvoiceViewPage() {
                   </td>
                   <td className="border-r border-black px-2 py-2 text-center align-top">{item.unit}</td>
                   <td className="border-r border-black px-2 py-2 text-center align-top">{item.quantity}</td>
-                  <td className="border-r border-black px-2 py-2 text-right align-top">{item.unitPrice.toFixed(2)}</td>
-                  <td className="border-r border-black px-2 py-2 text-right align-top">{item.totalPrice.toFixed(2)}</td>
+                  <td className="border-r border-black px-2 py-2 text-right align-top">{displayCurrency === 'USD' ? (item.unitPrice / 3.64).toFixed(2) : item.unitPrice.toFixed(2)}</td>
+                  <td className="border-r border-black px-2 py-2 text-right align-top">{displayCurrency === 'USD' ? (item.totalPrice / 3.64).toFixed(2) : item.totalPrice.toFixed(2)}</td>
                 </tr>
               ))}
               <tr className="page-break-inside-avoid border-t border-black">
                 <td colSpan={5} className="border-l border-r border-black px-2 py-2 text-center font-bold">
-                  TOTAL {invoice.currency || 'QAR'} : {numberToWords(invoice.totalAmount)}
+                  TOTAL {displayCurrency} : {numberToWords(displayCurrency === 'USD' ? invoice.totalAmount / 3.64 : invoice.totalAmount)}
                 </td>
                 <td className="border-r border-black px-2 py-2 text-right font-bold">
-                  {invoice.totalAmount.toFixed(2)}
+                  {displayCurrency === 'USD' ? (invoice.totalAmount / 3.64).toFixed(2) : invoice.totalAmount.toFixed(2)}
                 </td>
               </tr>
             </tbody>
