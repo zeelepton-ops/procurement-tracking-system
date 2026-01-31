@@ -92,6 +92,59 @@ model JobOrderItem {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  
+    // Quality Inspection
+    qualityInspections QualityInspection[]
+// ITP Template (Inspection Test Plan)
+model ITPTemplate {
+  id        String   @id @default(cuid())
+  name      String
+  isDefault Boolean  @default(false)
+  steps     String[] // e.g., ["Material Verify", "Cutting", ...]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  qualityInspections QualityInspection[]
+}
+
+// Quality Inspection record for a JobOrderItem
+model QualityInspection {
+  id             String   @id @default(cuid())
+  jobOrderItemId String
+  jobOrderItem   JobOrderItem @relation(fields: [jobOrderItemId], references: [id], onDelete: Cascade)
+  itpTemplateId  String
+  itpTemplate    ITPTemplate  @relation(fields: [itpTemplateId], references: [id])
+  isCritical     Boolean  @default(false)
+  status         String   @default("PENDING") // PENDING, IN_PROGRESS, APPROVED, REJECTED, HOLD
+  createdBy      String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  steps          QualityStep[]
+}
+
+// Each step in the ITP for a QualityInspection
+model QualityStep {
+  id                  String   @id @default(cuid())
+  qualityInspectionId String
+  qualityInspection   QualityInspection @relation(fields: [qualityInspectionId], references: [id], onDelete: Cascade)
+  stepName            String
+  status              String   @default("PENDING") // PENDING, APPROVED, FAILED, HOLD
+  remarks             String?
+  inspectedBy         String?
+  inspectedAt         DateTime?
+  photos              QualityPhoto[]
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+// Photos/evidence for each step
+model QualityPhoto {
+  id            String   @id @default(cuid())
+  qualityStepId String
+  qualityStep   QualityStep @relation(fields: [qualityStepId], references: [id], onDelete: Cascade)
+  url           String
+  uploadedBy    String
+  uploadedAt    DateTime @default(now())
+}
 }
 
 model JobOrderEditHistory {
