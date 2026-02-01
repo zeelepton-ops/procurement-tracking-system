@@ -93,8 +93,10 @@ model JobOrderItem {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   
-    // Quality Inspection
-    qualityInspections QualityInspection[]
+  // Quality Inspection
+  qualityInspections QualityInspection[]
+}
+
 // ITP Template (Inspection Test Plan)
 model ITPTemplate {
   id        String   @id @default(cuid())
@@ -144,7 +146,6 @@ model QualityPhoto {
   url           String
   uploadedBy    String
   uploadedAt    DateTime @default(now())
-}
 }
 
 model JobOrderEditHistory {
