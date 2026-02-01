@@ -1,34 +1,53 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { getServerSession } from 'next-auth';
 
-// GET: Fetch inspections for a job order item
+// GET: Fetch all inspections or by job order item
 export async function GET(req: NextRequest) {
   const jobOrderItemId = req.nextUrl.searchParams.get('jobOrderItemId');
-  if (!jobOrderItemId) return NextResponse.json({ error: 'Missing jobOrderItemId' }, { status: 400 });
+  
   const inspections = await prisma.qualityInspection.findMany({
-    where: { jobOrderItemId },
+    where: jobOrderItemId ? { jobOrderItemId } : undefined,
     include: {
       itpTemplate: true,
       steps: { include: { photos: true } },
+      jobOrderItem: {
+        include: {
+          jobOrder: {
+            select: {
+              jobNumber: true,
+              clientName: true,
+            }
+          }
+        }
+      }
     },
+    orderBy: { createdAt: 'desc' }
   });
   return NextResponse.json(inspections);
 }
 
 // POST: Create a new inspection for a job order item
 export async function POST(req: NextRequest) {
+  const session = await getServerSession();
   const body = await req.json();
-  const { jobOrderItemId, itpTemplateId, isCritical, createdBy } = body;
-  if (!jobOrderItemId || !itpTemplateId || !createdBy) return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+  const { jobOrderItemId, itpTemplateId, isCritical } = body;
+  const createdBy = session?.user?.email || 'system';
+  
+  if (!jobOrderItemId || !itpTemplateId) {
+    return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+  }
+  
   // Get ITP steps
   const itp = await prisma.iTPTemplate.findUnique({ where: { id: itpTemplateId } });
   if (!itp) return NextResponse.json({ error: 'ITP Template not found' }, { status: 404 });
+  
   // Create inspection and steps
   const inspection = await prisma.qualityInspection.create({
     data: {
       jobOrderItemId,
       itpTemplateId,
-      isCritical,
+      isCritical: isCritical || false,
       createdBy,
       steps: {
         create: itp.steps.map((stepName: string) => ({ stepName }))
@@ -37,27 +56,47 @@ export async function POST(req: NextRequest) {
     include: {
       steps: true,
       itpTemplate: true,
+      jobOrderItem: {
+        include: {
+          jobOrder: {
+            select: {
+              jobNumber: true,
+              clientName: true,
+            }
+          }
+        }
+      }
     }
   });
   return NextResponse.json(inspection);
 }
 
-// PATCH: Update step status, remarks, or add photo
+// PATCH: Update inspection status
 export async function PATCH(req: NextRequest) {
   const body = await req.json();
-  const { stepId, status, remarks, inspectedBy, photoUrl } = body;
-  if (!stepId) return NextResponse.json({ error: 'Missing stepId' }, { status: 400 });
-  // Update step
-  const step = await prisma.qualityStep.update({
-    where: { id: stepId },
-    data: {
-      status,
-      remarks,
-      inspectedBy,
-      inspectedAt: inspectedBy ? new Date() : undefined,
-      photos: photoUrl ? { create: { url: photoUrl, uploadedBy: inspectedBy || 'unknown' } } : undefined,
+  const { inspectionId, status } = body;
+  
+  if (!inspectionId) {
+    return NextResponse.json({ error: 'Missing inspectionId' }, { status: 400 });
+  }
+  
+  const inspection = await prisma.qualityInspection.update({
+    where: { id: inspectionId },
+    data: { status },
+    include: {
+      steps: { include: { photos: true } },
+      itpTemplate: true,
+      jobOrderItem: {
+        include: {
+          jobOrder: {
+            select: {
+              jobNumber: true,
+              clientName: true,
+            }
+          }
+        }
+      }
     },
-    include: { photos: true },
   });
-  return NextResponse.json(step);
+  return NextResponse.json(inspection);
 }
