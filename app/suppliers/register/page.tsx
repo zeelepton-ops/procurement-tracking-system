@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Select } from '@/components/ui/select'
+import { SimpleSelect } from '@/components/ui/simple-select'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
 import { Upload, CheckCircle, AlertCircle, Save, Trash2 } from 'lucide-react'
@@ -517,12 +517,12 @@ export default function SupplierRegistrationPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
                 <div className="p-3 rounded-lg border border-slate-200 bg-white">
                   <Label className="font-semibold">Country *</Label>
-                  <Select value={formData.country} onChange={(e) => handleInputChange('country', e.target.value)}>
+                  <SimpleSelect value={formData.country} onChange={(e) => handleInputChange('country', e.target.value)}>
                     <option value="Qatar">Qatar</option>
                     <option value="UAE">UAE</option>
                     <option value="Saudi Arabia">Saudi Arabia</option>
                     <option value="Other">Other</option>
-                  </Select>
+                  </SimpleSelect>
                 </div>
                 <div className="p-3 rounded-lg border border-slate-200 bg-white">
                   <Label className="font-semibold">Website</Label>
@@ -540,23 +540,23 @@ export default function SupplierRegistrationPage() {
                   <Label className={`font-semibold ${getErrorMessage('category') ? 'text-red-700' : ''}`}>
                     Product/Service Category * {getErrorMessage('category') && <span className="text-red-600 text-xs ml-1">({getErrorMessage('category')})</span>}
                   </Label>
-                  <Select value={formData.category} onChange={(e) => handleInputChange('category', e.target.value)} className={getErrorMessage('category') ? 'border-red-600 border-2' : ''}>
+                  <SimpleSelect value={formData.category} onChange={(e) => handleInputChange('category', e.target.value)} className={getErrorMessage('category') ? 'border-red-600 border-2' : ''}>
                     <option value="">-- Select Category --</option>
                     {SUPPLIER_CATEGORIES.map(cat => (
                       <option key={cat} value={cat}>{cat}</option>
                     ))}
-                  </Select>
+                  </SimpleSelect>
                 </div>
                 <div className={`p-3 rounded-lg ${getErrorMessage('businessType') ? 'border-2 border-red-500 bg-red-50' : 'border border-slate-200 bg-white'}`}>
                   <Label className={`font-semibold ${getErrorMessage('businessType') ? 'text-red-700' : ''}`}>
                     Business Type * {getErrorMessage('businessType') && <span className="text-red-600 text-xs ml-1">({getErrorMessage('businessType')})</span>}
                   </Label>
-                  <Select value={formData.businessType} onChange={(e) => handleInputChange('businessType', e.target.value)} className={getErrorMessage('businessType') ? 'border-red-600 border-2' : ''}>
+                  <SimpleSelect value={formData.businessType} onChange={(e) => handleInputChange('businessType', e.target.value)} className={getErrorMessage('businessType') ? 'border-red-600 border-2' : ''}>
                     <option value="">-- Select Type --</option>
                     {BUSINESS_TYPES.map(type => (
                       <option key={type} value={type}>{type}</option>
                     ))}
-                  </Select>
+                  </SimpleSelect>
                 </div>
               </div>
 
@@ -841,14 +841,14 @@ export default function SupplierRegistrationPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                   <div>
                     <Label className="font-semibold">Payment Terms</Label>
-                    <Select value={formData.paymentTerms} onChange={(e) => handleInputChange('paymentTerms', e.target.value)}>
+                    <SimpleSelect value={formData.paymentTerms} onChange={(e) => handleInputChange('paymentTerms', e.target.value)}>
                       <option value="Cash on Delivery">Cash on Delivery</option>
                       <option value="Net 7">Net 7 Days</option>
                       <option value="Net 14">Net 14 Days</option>
                       <option value="Net 30">Net 30 Days</option>
                       <option value="Net 60">Net 60 Days</option>
                       <option value="Other">Other</option>
-                    </Select>
+                    </SimpleSelect>
                   </div>
                   <div>
                     <Label className="font-semibold">Lead Time (Days)</Label>
@@ -875,12 +875,12 @@ export default function SupplierRegistrationPage() {
                   </div>
                   <div>
                     <Label className="font-semibold">Currency</Label>
-                    <Select value={formData.currency} onChange={(e) => handleInputChange('currency', e.target.value)}>
+                    <SimpleSelect value={formData.currency} onChange={(e) => handleInputChange('currency', e.target.value)}>
                       <option value="QAR">QAR (Qatari Riyal)</option>
                       <option value="AED">AED (Emirates Dirham)</option>
                       <option value="USD">USD (US Dollar)</option>
                       <option value="EUR">EUR (Euro)</option>
-                    </Select>
+                    </SimpleSelect>
                   </div>
                 </div>
               </div>
@@ -1161,3 +1161,4 @@ export default function SupplierRegistrationPage() {
     </div>
   )
 }
+

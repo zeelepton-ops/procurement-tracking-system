@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Select } from '@/components/ui/select'
+import { SimpleSelect } from '@/components/ui/simple-select'
 import { 
   Package, 
   Clock, 
@@ -285,14 +285,14 @@ export default function StatusDashboardPage() {
                 />
               </div>
               
-              <Select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
+              <SimpleSelect value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
                 <option value="ALL">All Statuses</option>
                 <option value="PENDING">Pending</option>
                 <option value="IN_PROCUREMENT">In Procurement</option>
                 <option value="ORDERED">Ordered</option>
                 <option value="PARTIALLY_RECEIVED">Partially Received</option>
                 <option value="RECEIVED">Received</option>
-              </Select>
+              </SimpleSelect>
               
               <Button
                 variant={showUrgentOnly ? 'default' : 'outline'}

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Select } from '@/components/ui/select'
+import { SimpleSelect } from '@/components/ui/simple-select'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Building2, MapPin, Phone, Mail, Award, Plus, Search, Filter, FileText, Trash2, Edit } from 'lucide-react'
 
@@ -156,12 +156,12 @@ export default function SuppliersPage() {
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">Category</label>
-                <Select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
+                <SimpleSelect value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
                   <option value="ALL">All Categories</option>
                   {SUPPLIER_CATEGORIES.map(cat => (
                     <option key={cat} value={cat}>{cat}</option>
                   ))}
-                </Select>
+                </SimpleSelect>
               </div>
 
               <div>
@@ -175,7 +175,7 @@ export default function SuppliersPage() {
                   <option value="APPROVED">Approved</option>
                   <option value="REJECTED">Rejected</option>
                   <option value="SUSPENDED">Suspended</option>
-                </Select>
+                </SimpleSelect>
               </div>
 
               <div>
