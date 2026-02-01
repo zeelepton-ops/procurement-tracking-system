@@ -189,7 +189,7 @@ export default function PreparePO() {
 
             <div>
               <Label className="text-sm font-medium">Supplier *</Label>
-              <Select
+              <SimpleSelect
                 value={selectedSupplier?.id || ''}
                 onChange={(e) => handleSupplierChange(e.target.value)}
                 disabled={loading}
@@ -267,7 +267,7 @@ export default function PreparePO() {
                 </div>
                 <div className="w-20">
                   <Label className="text-xs text-slate-600">Unit</Label>
-                  <Select
+                  <SimpleSelect
                     value={item.unit}
                     onChange={(e) => updateItemField(idx, 'unit', e.target.value)}
                     disabled={loading}
