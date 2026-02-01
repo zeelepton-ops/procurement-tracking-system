@@ -166,7 +166,7 @@ export default function SuppliersPage() {
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">Status</label>
-                <Select
+                <SimpleSelect
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value as any)}
                 >
