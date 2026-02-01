@@ -48,24 +48,24 @@ export default function Header() {
 
   return (
     <header className="bg-white/90 backdrop-blur border-b border-slate-200 sticky top-0 z-50 no-print shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 py-2.5">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link href="/dashboard" className="flex items-center gap-2 -ml-2">
+      <div className="w-full px-3 py-2">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <Link href="/dashboard" className="flex items-center gap-2">
               {/* NBTC Logo */}
               <img 
                 src="https://i.ibb.co/nMjzX2GS/Logo-NBTC-Transparent.png" 
                 alt="NBTC Logo"
-                className="h-10 w-auto object-contain"
+                className="h-9 w-auto object-contain"
               />
-              <div className="flex flex-col leading-tight">
-                <span className="text-lg font-bold text-slate-900 whitespace-nowrap">Project ERP System</span>
+              <div className="hidden xl:flex flex-col leading-tight">
+                <span className="text-base font-bold text-slate-900 whitespace-nowrap">Project ERP System</span>
                 <span className="text-xs text-slate-500">Operations, Procurement & Delivery</span>
               </div>
             </Link>
           </div>
 
-          <nav className="flex gap-1">
+          <nav className="flex gap-0.5 flex-1 justify-center items-center overflow-x-auto scrollbar-hide">
             {navItems.map((item, idx) => {
               const Icon = item.icon
               const isActive = pathname === item.href || (item.children && item.children.some((c: any) => pathname === c.href))
@@ -92,7 +92,7 @@ export default function Header() {
                         // Allow navigation to parent page
                         setOpenIndex(null)
                       }}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap ${
+                      className={`flex items-center gap-1 px-2 py-1.5 rounded-lg transition-colors whitespace-nowrap text-sm ${
                         isActive ? 'bg-blue-100 text-blue-700 font-medium' : 'text-slate-600 hover:bg-slate-100'
                       }`}
                       onMouseEnter={() => {
@@ -103,8 +103,8 @@ export default function Header() {
                         setOpenIndex(idx)
                       }}
                     >
-                      <Icon className="h-4 w-4 flex-shrink-0" />
-                      <span className="text-sm">{item.label}</span>
+                      <Icon className="h-3.5 w-3.5 flex-shrink-0" />
+                      <span>{item.label}</span>
                     </Link>
 
                     {openIndex === idx && (
@@ -141,14 +141,14 @@ export default function Header() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap ${
+                  className={`flex items-center gap-1 px-2 py-1.5 rounded-lg transition-colors whitespace-nowrap text-sm ${
                     isActive
                       ? 'bg-blue-100 text-blue-700 font-medium'
                       : 'text-slate-600 hover:bg-slate-100'
                   }`}
                 >
-                  <Icon className="h-4 w-4 flex-shrink-0" />
-                  <span className="text-sm">{item.label}</span>
+                  <Icon className="h-3.5 w-3.5 flex-shrink-0" />
+                  <span>{item.label}</span>
                 </Link>
               )
             })}
