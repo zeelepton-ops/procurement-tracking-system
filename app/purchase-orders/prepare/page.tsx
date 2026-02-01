@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Select } from '@/components/ui/select'
+import { SimpleSelect } from '@/components/ui/simple-select'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { AlertCircle, Plus, Trash2 } from 'lucide-react'
@@ -200,7 +200,7 @@ export default function PreparePO() {
                     {supplier.name}
                   </option>
                 ))}
-              </Select>
+              </SimpleSelect>
             </div>
 
             <div>
@@ -277,7 +277,7 @@ export default function PreparePO() {
                     <option value="M">M</option>
                     <option value="L">L</option>
                     <option value="BOX">BOX</option>
-                  </Select>
+                  </SimpleSelect>
                 </div>
                 <Button
                   onClick={() => removeItemRow(idx)}
