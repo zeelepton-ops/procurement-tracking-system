@@ -710,7 +710,7 @@ export default function JobOrdersPage() {
         <div className="mb-4 flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-slate-900 mb-0.5">Job Orders</h1>
-            <p className="text-slate-600 text-sm">Manage workshop job orders</p>
+            <p className="text-slate-600 text-xs">Manage workshop job orders</p>
           </div>
           <Button 
             onClick={() => setShowForm(!showForm)}
@@ -739,7 +739,7 @@ export default function JobOrdersPage() {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Job #, description, client, foreman"
-              className="h-9 text-sm"
+              className="h-9 text-xs"
             />
           </div>
           <div className="max-w-xs">
@@ -747,7 +747,7 @@ export default function JobOrdersPage() {
             <select
               value={filters.priority}
               onChange={(e) => setFilters({ ...filters, priority: e.target.value })}
-              className="mt-1 h-9 w-full px-3 rounded-md border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="mt-1 h-9 w-full px-3 rounded-md border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="ALL">All</option>
               <option value="HIGH">High</option>
@@ -772,7 +772,7 @@ export default function JobOrdersPage() {
             <CardContent className="pt-4">
               <form onSubmit={handleSubmit} className="space-y-4">
                 {draft && (
-                  <div className="bg-yellow-50 border border-yellow-200 p-3 rounded text-sm flex items-center justify-between">
+                  <div className="bg-yellow-50 border border-yellow-200 p-3 rounded text-xs flex items-center justify-between">
                     <div>Draft job saved locally. You can restore it or continue a new form.</div>
                     <div className="flex gap-2">
                       <button
@@ -796,11 +796,11 @@ export default function JobOrdersPage() {
                   </div>
                 )}
 
-                <h3 className="text-sm font-bold text-slate-700 mb-3">Client & NBTC Contact Information</h3>
+                <h3 className="text-xs font-bold text-slate-700 mb-3">Client & NBTC Contact Information</h3>
                 {/* Contact block - line 1 (LPO Date, Client, LPO Contract, Client Contact, Client Phone, Foreman) */}
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
                   <div className="md:col-span-1">
-                    <Label htmlFor="lpoIssueDate" className="text-sm font-semibold">LPO Date</Label>
+                    <Label htmlFor="lpoIssueDate" className="text-xs font-semibold">LPO Date</Label>
                     <Input
                       type="date"
                       id="lpoIssueDate"
@@ -810,7 +810,7 @@ export default function JobOrdersPage() {
                     />
                   </div>
                   <div className="md:col-span-3" data-edit-key="client">
-                    <Label htmlFor="clientSearch" className="text-sm font-semibold">Client *</Label>
+                    <Label htmlFor="clientSearch" className="text-xs font-semibold">Client *</Label>
                     <div className="relative mt-1">
                       <Input
                         id="clientSearch"
@@ -843,7 +843,7 @@ export default function JobOrdersPage() {
                             .map(client => (
                               <div
                                 key={client.id}
-                                className="px-3 py-2 hover:bg-blue-50 cursor-pointer text-sm"
+                                className="px-3 py-2 hover:bg-blue-50 cursor-pointer text-xs"
                                 onClick={() => {
                                   setFormData({
                                     ...formData,
@@ -863,7 +863,7 @@ export default function JobOrdersPage() {
                           {/* Create new client option */}
                           {clientSearchQuery.trim() && (
                             <div
-                              className="px-3 py-2 hover:bg-green-50 cursor-pointer text-sm font-semibold text-green-700 border-t"
+                              className="px-3 py-2 hover:bg-green-50 cursor-pointer text-xs font-semibold text-green-700 border-t"
                               onClick={() => {
                                 setNewClientName(clientSearchQuery)
                                 setShowClientSuggestions(false)
@@ -882,7 +882,7 @@ export default function JobOrdersPage() {
                     </div>
                   </div>
                   <div className="md:col-span-2" data-edit-key="lpo">
-                    <Label htmlFor="lpoContractNo" className="text-sm font-semibold">LPO / Contract No</Label>
+                    <Label htmlFor="lpoContractNo" className="text-xs font-semibold">LPO / Contract No</Label>
                     <Input
                       id="lpoContractNo"
                       value={formData.lpoContractNo}
@@ -892,7 +892,7 @@ export default function JobOrdersPage() {
                     />
                   </div>
                   <div className="md:col-span-2">
-                    <Label htmlFor="clientContactPerson" className="text-sm font-semibold">Client's Contact Person</Label>
+                    <Label htmlFor="clientContactPerson" className="text-xs font-semibold">Client's Contact Person</Label>
                     <Input
                       id="clientContactPerson"
                       value={formData.clientContactPerson}
@@ -902,7 +902,7 @@ export default function JobOrdersPage() {
                     />
                   </div>
                   <div className="md:col-span-2">
-                    <Label htmlFor="clientContactPhone" className="text-sm font-semibold">Client's Phone No.</Label>
+                    <Label htmlFor="clientContactPhone" className="text-xs font-semibold">Client's Phone No.</Label>
                     <Input
                       id="clientContactPhone"
                       value={formData.clientContactPhone}
@@ -912,12 +912,12 @@ export default function JobOrdersPage() {
                     />
                   </div>
                   <div className="md:col-span-2" data-edit-key="foreman">
-                    <Label htmlFor="foreman" className="text-sm font-semibold">Foreman</Label>
+                    <Label htmlFor="foreman" className="text-xs font-semibold">Foreman</Label>
                     <select
                       id="foreman"
                       value={formData.foreman}
                       onChange={(e) => setFormData({ ...formData, foreman: e.target.value })}
-                      className="mt-1 h-9 px-2 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full text-sm"
+                      className="mt-1 h-9 px-2 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full text-xs"
                     >
                       <option value="">Select</option>
                       {foremanOptions.map((name) => (
@@ -930,18 +930,18 @@ export default function JobOrdersPage() {
                 {/* Job & Client quick row (line 2) */}
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
                   <div className="md:col-span-2" data-edit-key="jobNumber">
-                    <Label htmlFor="jobNumber" className="text-sm font-semibold">Job Number *</Label>
+                    <Label htmlFor="jobNumber" className="text-xs font-semibold">Job Number *</Label>
                     <Input
                       id="jobNumber"
                       value={formData.jobNumber}
                       onChange={(e) => setFormData({ ...formData, jobNumber: e.target.value })}
                       placeholder="e.g., 07439"
                       required
-                      className="mt-1 h-9 w-full text-sm"
+                      className="mt-1 h-9 w-full text-xs"
                     />
                   </div>
                   <div className="md:col-span-3" data-edit-key="contactPerson">
-                    <Label htmlFor="contactPerson" className="text-sm font-semibold">NBTC's Contact Person</Label>
+                    <Label htmlFor="contactPerson" className="text-xs font-semibold">NBTC's Contact Person</Label>
                     <select
                       id="contactPerson"
                       value={formData.contactPerson}
@@ -954,7 +954,7 @@ export default function JobOrdersPage() {
                           phone: match?.phone || prev.phone
                         }))
                       }}
-                      className="mt-1 h-9 px-2 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full text-sm"
+                      className="mt-1 h-9 px-2 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full text-xs"
                     >
                       <option value="">Select</option>
                       {contactOptions.map((c) => (
@@ -963,7 +963,7 @@ export default function JobOrdersPage() {
                     </select>
                   </div>
                   <div className="md:col-span-2" data-edit-key="phone">
-                    <Label htmlFor="phone" className="text-sm font-semibold">NBTC's Contact Phone No.</Label>
+                    <Label htmlFor="phone" className="text-xs font-semibold">NBTC's Contact Phone No.</Label>
                     <Input
                       id="phone"
                       value={formData.phone}
@@ -973,13 +973,13 @@ export default function JobOrdersPage() {
                     />
                   </div>
                   <div className="md:col-span-1 relative" data-edit-key="priority">
-                    <Label htmlFor="priority" className="text-sm font-semibold">Priority *</Label>
+                    <Label htmlFor="priority" className="text-xs font-semibold">Priority *</Label>
                     <select
                       id="priority"
                       value={formData.priority}
                       onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
                       required
-                      className="mt-1 h-9 px-2 pr-8 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full text-sm z-20"
+                      className="mt-1 h-9 px-2 pr-8 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full text-xs z-20"
                     >
                       <option value="HIGH">HIGH</option>
                       <option value="MEDIUM">MEDIUM</option>
@@ -987,12 +987,12 @@ export default function JobOrdersPage() {
                     </select>
                   </div>
                   <div className="md:col-span-2" data-edit-key="qaQc">
-                    <Label htmlFor="qaQcInCharge" className="text-sm font-semibold">QA/QC In Charge</Label>
+                    <Label htmlFor="qaQcInCharge" className="text-xs font-semibold">QA/QC In Charge</Label>
                     <select
                       id="qaQcInCharge"
                       value={formData.qaQcInCharge}
                       onChange={(e) => setFormData({ ...formData, qaQcInCharge: e.target.value })}
-                      className="mt-1 h-9 px-2 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full text-sm"
+                      className="mt-1 h-9 px-2 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full text-xs"
                     >
                       <option value="">Select</option>
                       {qaQcOptions.map((name) => (
@@ -1001,7 +1001,7 @@ export default function JobOrdersPage() {
                     </select>
                   </div>
                   <div className="md:col-span-2" data-edit-key="drawing">
-                    <Label htmlFor="drawingRef" className="text-sm font-semibold">Drawing / Enquiry Ref</Label>
+                    <Label htmlFor="drawingRef" className="text-xs font-semibold">Drawing / Enquiry Ref</Label>
                     <Input
                       id="drawingRef"
                       value={formData.drawingRef}
@@ -1016,10 +1016,10 @@ export default function JobOrdersPage() {
 
                 {/* Work Scope only */}
                 <div className="border-t pt-4">
-                  <h3 className="text-sm font-bold text-slate-700 mb-3">Work Details</h3>
+                  <h3 className="text-xs font-bold text-slate-700 mb-3">Work Details</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                     <div>
-                      <Label htmlFor="productName" className="text-sm font-semibold">Main Description *</Label>
+                      <Label htmlFor="productName" className="text-xs font-semibold">Main Description *</Label>
                       <Input
                         id="productName"
                         value={formData.productName}
@@ -1030,7 +1030,7 @@ export default function JobOrdersPage() {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="workScope" className="text-sm font-semibold">Additional Notes</Label>
+                      <Label htmlFor="workScope" className="text-xs font-semibold">Additional Notes</Label>
                       <Input
                         id="workScope"
                         value={formData.workScope}
@@ -1042,7 +1042,7 @@ export default function JobOrdersPage() {
                   </div>
 
                   <div className="mb-4">
-                    <Label className="text-sm font-semibold block mb-3">Scope of Works</Label>
+                    <Label className="text-xs font-semibold block mb-3">Scope of Works</Label>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 bg-slate-50 p-3 rounded border border-slate-200">
                       {SCOPE_OF_WORKS_OPTIONS.map((option) => (
                         <div key={option} className="flex items-center gap-2">
@@ -1065,7 +1065,7 @@ export default function JobOrdersPage() {
                             }}
                             className="rounded"
                           />
-                          <label htmlFor={`scope-${option}`} className="text-sm cursor-pointer text-slate-700">
+                          <label htmlFor={`scope-${option}`} className="text-xs cursor-pointer text-slate-700">
                             {option}
                           </label>
                         </div>
@@ -1079,7 +1079,7 @@ export default function JobOrdersPage() {
                 {/* Work Items */}
                 <div className="border-t pt-4">
                   <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-sm font-bold text-slate-700">Work Items</h3>
+                    <h3 className="text-xs font-bold text-slate-700">Work Items</h3>
                     <Button
                       type="button"
                       variant="outline"
@@ -1121,7 +1121,7 @@ export default function JobOrdersPage() {
                             onChange={(e) => updateWorkItem(index, 'workDescription', e.target.value)}
                             placeholder="e.g., Fabrication of MS Bollard"
                             required
-                            className="h-8 text-sm"
+                            className="h-8 text-xs"
                           />
                         </div>
                         <div className="col-span-2">
@@ -1129,7 +1129,7 @@ export default function JobOrdersPage() {
                             type="number"
                             value={item.quantity == null ? '' : String(item.quantity)}
                             onChange={(e) => updateWorkItem(index, 'quantity', e.target.value === '' ? null : parseFloat(e.target.value))}
-                            className="h-8 text-sm"
+                            className="h-8 text-xs"
                           />
                         </div>
                         <div className="col-span-2">
@@ -1138,7 +1138,7 @@ export default function JobOrdersPage() {
                             onChange={(e) => updateWorkItem(index, 'unit', e.target.value)}
                             placeholder="Nos"
                             required
-                            className="h-8 text-sm"
+                            className="h-8 text-xs"
                           />
                         </div>
                         <div className="col-span-1">
@@ -1147,7 +1147,7 @@ export default function JobOrdersPage() {
                             step="0.01"
                             value={item.unitPrice == null ? '' : String(item.unitPrice)}
                             onChange={(e) => updateWorkItem(index, 'unitPrice', e.target.value === '' ? null : parseFloat(e.target.value))}
-                            className="h-8 text-sm"
+                            className="h-8 text-xs"
                           />
                         </div>
                         <div className="col-span-1">
@@ -1156,7 +1156,7 @@ export default function JobOrdersPage() {
                             step="0.01"
                             value={item.totalPrice == null ? '' : String(item.totalPrice)}
                             onChange={(e) => updateWorkItem(index, 'totalPrice', e.target.value === '' ? null : parseFloat(e.target.value))}
-                            className="h-8 text-sm"
+                            className="h-8 text-xs"
                           />
                         </div>
                         <div className="col-span-1 flex items-center justify-center">
@@ -1179,7 +1179,7 @@ export default function JobOrdersPage() {
 
                 {/* Totals & Adjustment */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end mb-2 mt-3">
-                  <div className="md:col-span-1 text-sm text-slate-600">
+                  <div className="md:col-span-1 text-xs text-slate-600">
                     Subtotal
                     <div className="font-semibold text-slate-800">
                       {workItems.reduce((s, it) => s + (it.totalPrice || 0), 0).toFixed(2)} QAR
@@ -1192,7 +1192,7 @@ export default function JobOrdersPage() {
                       step="0.01"
                       value={(formData as any).discount || ''}
                       onChange={(e) => setFormData({ ...formData, discount: parseFloat(e.target.value) || 0 })}
-                      className="h-8 text-sm"
+                      className="h-8 text-xs"
                     />
                   </div>
                   <div className="md:col-span-1">
@@ -1202,10 +1202,10 @@ export default function JobOrdersPage() {
                       step="0.01"
                       value={(formData as any).roundOff || ''}
                       onChange={(e) => setFormData({ ...formData, roundOff: parseFloat(e.target.value) || 0 })}
-                      className="h-8 text-sm"
+                      className="h-8 text-xs"
                     />
                   </div>
-                  <div className="md:col-span-1 text-sm text-slate-600">
+                  <div className="md:col-span-1 text-xs text-slate-600">
                     Final Total
                     {workItems.some(it => !it.quantity || it.quantity <= 0) ? (
                       <Input
@@ -1213,7 +1213,7 @@ export default function JobOrdersPage() {
                         step="0.01"
                         value={finalTotalOverride !== null ? String(finalTotalOverride) : (workItems.reduce((s, it) => s + (it.totalPrice || 0), 0) - ((formData as any).discount || 0) + ((formData as any).roundOff || 0)).toFixed(2)}
                         onChange={(e) => setFinalTotalOverride(e.target.value === '' ? null : parseFloat(e.target.value))}
-                        className="mt-1 h-8 text-sm"
+                        className="mt-1 h-8 text-xs"
                       />
                     ) : (
                       <div className="font-bold text-blue-600">
@@ -1224,7 +1224,7 @@ export default function JobOrdersPage() {
                 </div>
 
                 {error && (
-                  <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded text-sm">
+                  <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded text-xs">
                     {error}
                   </div>
                 )}
@@ -1290,7 +1290,7 @@ export default function JobOrdersPage() {
               <CardHeader className="py-2">
                 {selectedIds.length > 0 ? (
                   <div className="flex items-center justify-between">
-                    <div className="text-sm font-medium">{selectedIds.length} selected</div>
+                    <div className="text-xs font-medium">{selectedIds.length} selected</div>
                     <div className="flex items-center gap-2">
                       <button
                         className="text-xs bg-blue-600 text-white px-3 py-1 rounded"
@@ -1460,7 +1460,7 @@ export default function JobOrdersPage() {
                 </Button>
               </div>
             </CardHeader>
-            <CardContent className="pt-3 text-sm text-slate-800 space-y-3">
+            <CardContent className="pt-3 text-xs text-slate-800 space-y-3">
               {/* Contact block - line 1 (Details view) */}
               <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-start">
                 <div className="md:col-span-2" data-edit-key="foreman">
@@ -1469,7 +1469,7 @@ export default function JobOrdersPage() {
                 </div>
                 <div className="md:col-span-2" data-edit-key="priority">
                   <div className="text-slate-500 text-xs">Priority</div>
-                  <div className="text-sm font-medium">{selectedJob.priority || 'MEDIUM'}</div>
+                  <div className="text-xs font-medium">{selectedJob.priority || 'MEDIUM'}</div>
                 </div>
                 <div className="md:col-span-2" data-edit-key="contactPerson">
                   <div className="text-slate-500 text-xs">NBTC's Contact Person</div>
@@ -1527,7 +1527,7 @@ export default function JobOrdersPage() {
               {/* Work Items Table */}
               {Array.isArray(selectedJob.items) && selectedJob.items.length > 0 ? (
                 <div className="border-t pt-3">
-                  <div className="text-sm font-semibold text-slate-700 mb-2">Work Items</div>
+                  <div className="text-xs font-semibold text-slate-700 mb-2">Work Items</div>
                   <div className="border rounded-lg overflow-hidden">
                     <table className="w-full text-xs">
                       <thead className="bg-slate-100">
@@ -1578,7 +1578,7 @@ export default function JobOrdersPage() {
                 </div>
               ) : (
                 <div className="border-t pt-3">
-                  <div className="bg-amber-50 border border-amber-100 text-amber-900 px-3 py-2 rounded text-sm">
+                  <div className="bg-amber-50 border border-amber-100 text-amber-900 px-3 py-2 rounded text-xs">
                     No work items recorded.
                   </div>
                 </div>
@@ -1668,21 +1668,21 @@ export default function JobOrdersPage() {
                 </CardHeader>
                 <CardContent className="pt-4 overflow-y-auto bg-white flex-1">
                 <form onSubmit={handleEditSubmit} className="space-y-4">
-                  <h3 className="text-sm font-bold text-slate-700 mb-3">Client & NBTC Contact Information</h3>
+                  <h3 className="text-xs font-bold text-slate-700 mb-3">Client & NBTC Contact Information</h3>
                   {/* Contact block - line 1 (edit modal) */}
                   <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
                     <div className="md:col-span-1">
-                      <Label htmlFor="edit-lpoIssueDate" className="text-sm font-semibold">LPO Date</Label>
+                      <Label htmlFor="edit-lpoIssueDate" className="text-xs font-semibold">LPO Date</Label>
                       <Input
                         type="date"
                         id="edit-lpoIssueDate"
                         value={editFormData.lpoIssueDate}
                         onChange={(e) => setEditFormData({ ...editFormData, lpoIssueDate: e.target.value })}
-                        className="mt-1 h-9 w-full text-sm"
+                        className="mt-1 h-9 w-full text-xs"
                       />
                     </div>
                     <div className="md:col-span-3">
-                      <Label htmlFor="edit-clientName" className="text-sm font-semibold">Client Name *</Label>
+                      <Label htmlFor="edit-clientName" className="text-xs font-semibold">Client Name *</Label>
                       <Input
                         id="edit-clientName"
                         value={editClientSearchQuery}
@@ -1694,7 +1694,7 @@ export default function JobOrdersPage() {
                         onBlur={() => setTimeout(() => setShowEditClientSuggestions(false), 200)}
                         placeholder="Type to search clients..."
                         required
-                        className="mt-1 h-9 w-full text-sm"
+                        className="mt-1 h-9 w-full text-xs"
                       />
                       
                       {/* Client Suggestions Dropdown for Edit */}
@@ -1721,7 +1721,7 @@ export default function JobOrdersPage() {
                                   setEditClientSearchQuery(client.name)
                                   setShowEditClientSuggestions(false)
                                 }}
-                                className="px-3 py-2 hover:bg-blue-50 cursor-pointer text-sm"
+                                className="px-3 py-2 hover:bg-blue-50 cursor-pointer text-xs"
                               >
                                 {client.name}
                               </div>
@@ -1730,39 +1730,39 @@ export default function JobOrdersPage() {
                       )}
                     </div>
                     <div className="md:col-span-2">
-                      <Label htmlFor="edit-lpoContractNo" className="text-sm font-semibold">LPO / Contract No</Label>
+                      <Label htmlFor="edit-lpoContractNo" className="text-xs font-semibold">LPO / Contract No</Label>
                       <Input
                         id="edit-lpoContractNo"
                         value={editFormData.lpoContractNo}
                         onChange={(e) => setEditFormData({ ...editFormData, lpoContractNo: e.target.value })}
-                        className="mt-1 h-9 w-full text-sm"
+                        className="mt-1 h-9 w-full text-xs"
                       />
                     </div>
                     <div className="md:col-span-2">
-                      <Label htmlFor="edit-clientContactPerson" className="text-sm font-semibold">Client's Contact Person</Label>
+                      <Label htmlFor="edit-clientContactPerson" className="text-xs font-semibold">Client's Contact Person</Label>
                       <Input
                         id="edit-clientContactPerson"
                         value={editFormData.clientContactPerson}
                         onChange={(e) => setEditFormData({ ...editFormData, clientContactPerson: e.target.value })}
-                        className="mt-1 h-9 w-full text-sm"
+                        className="mt-1 h-9 w-full text-xs"
                       />
                     </div>
                     <div className="md:col-span-2">
-                      <Label htmlFor="edit-clientContactPhone" className="text-sm font-semibold">Client's Phone No.</Label>
+                      <Label htmlFor="edit-clientContactPhone" className="text-xs font-semibold">Client's Phone No.</Label>
                       <Input
                         id="edit-clientContactPhone"
                         value={editFormData.clientContactPhone}
                         onChange={(e) => setEditFormData({ ...editFormData, clientContactPhone: e.target.value })}
-                        className="mt-1 h-9 w-full text-sm"
+                        className="mt-1 h-9 w-full text-xs"
                       />
                     </div>
                     <div className="md:col-span-2">
-                      <Label htmlFor="edit-foreman" className="text-sm font-semibold">Foreman</Label>
+                      <Label htmlFor="edit-foreman" className="text-xs font-semibold">Foreman</Label>
                       <select
                         id="edit-foreman"
                         value={editFormData.foreman}
                         onChange={(e) => setEditFormData({ ...editFormData, foreman: e.target.value })}
-                        className="mt-1 h-9 px-2 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full text-sm"
+                        className="mt-1 h-9 px-2 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full text-xs"
                       >
                         <option value="">Select</option>
                         {editForemanOptions.map((name) => (
@@ -1776,17 +1776,17 @@ export default function JobOrdersPage() {
                   <div className="border-t pt-4">
                     <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
                       <div className="md:col-span-2">
-                        <Label htmlFor="edit-jobNumber" className="text-sm font-semibold">Job Number *</Label>
+                        <Label htmlFor="edit-jobNumber" className="text-xs font-semibold">Job Number *</Label>
                         <Input
                           id="edit-jobNumber"
                           value={editFormData.jobNumber}
                           onChange={(e) => setEditFormData({ ...editFormData, jobNumber: e.target.value })}
                           required
-                          className="mt-1 h-9 w-full text-sm"
+                          className="mt-1 h-9 w-full text-xs"
                         />
                       </div>
                       <div className="md:col-span-3">
-                        <Label htmlFor="edit-contactPerson" className="text-sm font-semibold">NBTC's Contact Person</Label>
+                        <Label htmlFor="edit-contactPerson" className="text-xs font-semibold">NBTC's Contact Person</Label>
                         <select
                           id="edit-contactPerson"
                           value={editFormData.contactPerson}
@@ -1799,7 +1799,7 @@ export default function JobOrdersPage() {
                               phone: match?.phone || prev.phone
                             }))
                           }}
-                          className="mt-1 h-9 px-2 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full text-sm"
+                          className="mt-1 h-9 px-2 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full text-xs"
                         >
                           <option value="">Select</option>
                           {editContactOptions.map((c) => (
@@ -1808,22 +1808,22 @@ export default function JobOrdersPage() {
                         </select>
                       </div>
                       <div className="md:col-span-2">
-                        <Label htmlFor="edit-phone" className="text-sm font-semibold">NBTC's Contact Phone No.</Label>
+                        <Label htmlFor="edit-phone" className="text-xs font-semibold">NBTC's Contact Phone No.</Label>
                         <Input
                           id="edit-phone"
                           value={editFormData.phone}
                           onChange={(e) => setEditFormData({ ...editFormData, phone: e.target.value })}
-                          className="mt-1 h-9 w-full text-sm"
+                          className="mt-1 h-9 w-full text-xs"
                         />
                       </div>
                       <div className="md:col-span-1">
-                        <Label htmlFor="edit-priority" className="text-sm font-semibold">Priority *</Label>
+                        <Label htmlFor="edit-priority" className="text-xs font-semibold">Priority *</Label>
                         <select
                           id="edit-priority"
                           value={editFormData.priority}
                           onChange={(e) => setEditFormData({ ...editFormData, priority: e.target.value })}
                           required
-                          className="mt-1 h-9 px-2 pr-8 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full text-sm z-20"
+                          className="mt-1 h-9 px-2 pr-8 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full text-xs z-20"
                         >
                           <option value="HIGH">HIGH</option>
                           <option value="MEDIUM">MEDIUM</option>
@@ -1831,12 +1831,12 @@ export default function JobOrdersPage() {
                         </select>
                       </div>
                       <div className="md:col-span-2">
-                        <Label htmlFor="edit-qaQcInCharge" className="text-sm font-semibold">QA/QC In Charge</Label>
+                        <Label htmlFor="edit-qaQcInCharge" className="text-xs font-semibold">QA/QC In Charge</Label>
                         <select
                           id="edit-qaQcInCharge"
                           value={editFormData.qaQcInCharge}
                           onChange={(e) => setEditFormData({ ...editFormData, qaQcInCharge: e.target.value })}
-                          className="mt-1 h-9 px-2 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full text-sm"
+                          className="mt-1 h-9 px-2 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full text-xs"
                         >
                           <option value="">Select</option>
                           {editQaQcOptions.map((name) => (
@@ -1845,12 +1845,12 @@ export default function JobOrdersPage() {
                         </select>
                       </div>
                       <div className="md:col-span-2">
-                        <Label htmlFor="edit-drawingRef" className="text-sm font-semibold">Drawing / Enquiry Ref</Label>
+                        <Label htmlFor="edit-drawingRef" className="text-xs font-semibold">Drawing / Enquiry Ref</Label>
                         <Input
                           id="edit-drawingRef"
                           value={editFormData.drawingRef}
                           onChange={(e) => setEditFormData({ ...editFormData, drawingRef: e.target.value })}
-                          className="mt-1 h-9 w-full text-sm"
+                          className="mt-1 h-9 w-full text-xs"
                         />
                       </div>
                     </div>
@@ -1858,10 +1858,10 @@ export default function JobOrdersPage() {
 
                   {/* Work Scope only */}
                   <div className="border-t pt-4">
-                    <h3 className="text-sm font-bold text-slate-700 mb-3">Work Details</h3>
+                    <h3 className="text-xs font-bold text-slate-700 mb-3">Work Details</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
                       <div>
-                        <Label htmlFor="edit-productName" className="text-sm font-semibold">Main Description *</Label>
+                        <Label htmlFor="edit-productName" className="text-xs font-semibold">Main Description *</Label>
                         <Input
                           id="edit-productName"
                           value={editFormData.productName}
@@ -1871,7 +1871,7 @@ export default function JobOrdersPage() {
                         />
                       </div>
                       <div>
-                        <Label htmlFor="edit-workScope" className="text-sm font-semibold">Additional Notes</Label>
+                        <Label htmlFor="edit-workScope" className="text-xs font-semibold">Additional Notes</Label>
                         <Input
                           id="edit-workScope"
                           value={editFormData.workScope}
@@ -1882,7 +1882,7 @@ export default function JobOrdersPage() {
                     </div>
 
                     <div className="mb-4">
-                      <Label className="text-sm font-semibold block mb-3">Scope of Works</Label>
+                      <Label className="text-xs font-semibold block mb-3">Scope of Works</Label>
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 bg-slate-50 p-4 rounded border border-slate-200">
                         {SCOPE_OF_WORKS_OPTIONS.map((option) => (
                           <div key={option} className="flex items-center gap-2">
@@ -1905,7 +1905,7 @@ export default function JobOrdersPage() {
                               }}
                               className="rounded"
                             />
-                            <label htmlFor={`edit-scope-${option}`} className="text-sm cursor-pointer text-slate-700">
+                            <label htmlFor={`edit-scope-${option}`} className="text-xs cursor-pointer text-slate-700">
                               {option}
                             </label>
                           </div>
@@ -1919,7 +1919,7 @@ export default function JobOrdersPage() {
                   {/* Work Items */}
                   <div className="border-t pt-4">
                     <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-sm font-bold text-slate-700">Work Items</h3>
+                      <h3 className="text-xs font-bold text-slate-700">Work Items</h3>
                       <Button
                         type="button"
                         variant="outline"
@@ -1961,7 +1961,7 @@ export default function JobOrdersPage() {
                               onChange={(e) => updateEditWorkItem(index, 'workDescription', e.target.value)}
                               placeholder="e.g., Fabrication of MS Bollard"
                               required
-                              className="h-8 text-sm"
+                              className="h-8 text-xs"
                             />
                           </div>
                           <div className="col-span-2">
@@ -1969,7 +1969,7 @@ export default function JobOrdersPage() {
                               type="number"
                               value={item.quantity || ''}
                               onChange={(e) => updateEditWorkItem(index, 'quantity', parseFloat(e.target.value) || 0)}
-                              className="h-8 text-sm"
+                              className="h-8 text-xs"
                             />
                           </div>
                           <div className="col-span-2">
@@ -1978,7 +1978,7 @@ export default function JobOrdersPage() {
                               onChange={(e) => updateEditWorkItem(index, 'unit', e.target.value)}
                               placeholder="Nos"
                               required
-                              className="h-8 text-sm"
+                              className="h-8 text-xs"
                             />
                           </div>
                           <div className="col-span-1">
@@ -1987,7 +1987,7 @@ export default function JobOrdersPage() {
                               step="0.01"
                               value={item.unitPrice || ''}
                               onChange={(e) => updateEditWorkItem(index, 'unitPrice', parseFloat(e.target.value) || 0)}
-                              className="h-8 text-sm"
+                              className="h-8 text-xs"
                             />
                           </div>
                           <div className="col-span-1">
@@ -1996,7 +1996,7 @@ export default function JobOrdersPage() {
                               step="0.01"
                               value={item.totalPrice || ''}
                               onChange={(e) => updateEditWorkItem(index, 'totalPrice', parseFloat(e.target.value) || 0)}
-                              className="h-8 text-sm"
+                              className="h-8 text-xs"
                             />
                           </div>
                           <div className="col-span-1 flex items-center justify-center">
@@ -2028,7 +2028,7 @@ export default function JobOrdersPage() {
 
                   {/* Totals & Adjustment (edit modal) */}
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end mb-2 mt-3">
-                    <div className="md:col-span-1 text-sm text-slate-600">
+                    <div className="md:col-span-1 text-xs text-slate-600">
                       Subtotal
                       <div className="font-semibold text-slate-800">
                         {editWorkItems.reduce((s, it) => s + (it.totalPrice ?? 0), 0).toFixed(2)} QAR
@@ -2041,7 +2041,7 @@ export default function JobOrdersPage() {
                         step="0.01"
                         value={(editFormData as any).discount || ''}
                         onChange={(e) => setEditFormData({ ...editFormData, discount: parseFloat(e.target.value) || 0 })}
-                        className="h-8 text-sm"
+                        className="h-8 text-xs"
                       />
                     </div>
                     <div className="md:col-span-1">
@@ -2051,10 +2051,10 @@ export default function JobOrdersPage() {
                         step="0.01"
                         value={(editFormData as any).roundOff || ''}
                         onChange={(e) => setEditFormData({ ...editFormData, roundOff: parseFloat(e.target.value) || 0 })}
-                        className="h-8 text-sm"
+                        className="h-8 text-xs"
                       />
                     </div>
-                    <div className="md:col-span-1 text-sm text-slate-600">
+                    <div className="md:col-span-1 text-xs text-slate-600">
                       Final Total
                       {editWorkItems.some(it => !it.quantity || it.quantity <= 0) ? (
                         <Input
@@ -2062,7 +2062,7 @@ export default function JobOrdersPage() {
                           step="0.01"
                           value={editFinalTotalOverride !== null ? String(editFinalTotalOverride) : (editWorkItems.reduce((s, it) => s + (it.totalPrice || 0), 0) - ((editFormData as any).discount || 0) + ((editFormData as any).roundOff || 0)).toFixed(2)}
                           onChange={(e) => setEditFinalTotalOverride(e.target.value === '' ? null : parseFloat(e.target.value))}
-                          className="mt-1 h-8 text-sm"
+                          className="mt-1 h-8 text-xs"
                         />
                       ) : (
                         <div className="font-bold text-blue-600">
@@ -2073,7 +2073,7 @@ export default function JobOrdersPage() {
                   </div>
 
                   {error && (
-                    <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded text-sm">
+                    <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded text-xs">
                       {error}
                     </div>
                   )}
@@ -2111,6 +2111,7 @@ export default function JobOrdersPage() {
     </div>
   )
 }
+
 
 
 
