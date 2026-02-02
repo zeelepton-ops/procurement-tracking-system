@@ -6,7 +6,8 @@ import { prisma } from '@/lib/prisma'
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-    if (!session?.user?.email) {
+    const userEmail = session?.user?.email
+    if (!userEmail) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -54,7 +55,7 @@ export async function POST(request: NextRequest) {
             jobOrderItemId: item.id,
             itpTemplateId,
             isCritical,
-            createdBy: session.user.email!,
+            createdBy: userEmail,
             steps: {
               create: template.steps.map((stepName) => ({
                 stepName,
