@@ -25,6 +25,11 @@ interface DeliveryNote {
   refPoNumber: string | null
   shipmentTo: string | null
   shipmentType: string | null
+  representativeName: string | null
+  representativeNo: string | null
+  qidNumber: string | null
+  vehicleNumber: string | null
+  vehicleType: string | null
   status: string
   totalQuantity: number
   totalWeight: number
@@ -371,10 +376,30 @@ export default function DeliveryNotesPage() {
       const url = editingId ? `/api/delivery-notes/${editingId}` : '/api/delivery-notes'
       const method = editingId ? 'PUT' : 'POST'
 
+      const normalizedLineItems = formData.lineItems.map((line) => {
+        const hasSubItems = Array.isArray(line.subItems) && line.subItems.length > 0
+        const normalizedSubItems = hasSubItems
+          ? line.subItems.map((sub) => ({
+              ...sub,
+              subDescription: sub.subDescription?.trim() ? sub.subDescription : line.description
+            }))
+          : [
+              {
+                id: `sub-${Math.random()}`,
+                subDescription: line.description,
+                unit: '',
+                deliveredQuantity: 0,
+                remarks: ''
+              }
+            ]
+
+        return { ...line, subItems: normalizedSubItems }
+      })
+
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify({ ...formData, lineItems: normalizedLineItems })
       })
 
       if (!res.ok) {
@@ -561,6 +586,8 @@ export default function DeliveryNotesPage() {
     )
   }
 
+  const selectedJobOrder = jobOrders.find(jo => jo.id === formData.jobOrderId)
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4">
       <div className="max-w-7xl mx-auto">
@@ -722,9 +749,29 @@ export default function DeliveryNotesPage() {
                   </div>
                 </div>
 
-                {/* Line 2: Client, Ref/PO, Job Order */}
+                {/* Line 2: Job Order, Client, Ref/PO */}
                 <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div>
+                      <Label className="font-semibold text-xs">Job Order</Label>
+                      <select
+                        value={formData.jobOrderId}
+                        onChange={(e) => handleJobOrderChange(e.target.value)}
+                        className="w-full mt-1 h-9 px-3 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="">-- Select Job Order --</option>
+                        {jobOrders.map(jo => (
+                          <option key={jo.id} value={jo.id}>
+                            {jo.jobNumber} - {jo.productName}{jo.clientName ? ` | ${jo.clientName}` : ''}
+                          </option>
+                        ))}
+                      </select>
+                      {selectedJobOrder && (
+                        <p className="mt-1 text-[10px] text-slate-500">
+                          Client: {selectedJobOrder.clientName || 'N/A'}{selectedJobOrder.lpoContractNo ? ` • LPO: ${selectedJobOrder.lpoContractNo}` : ''}
+                        </p>
+                      )}
+                    </div>
                     <div>
                       <Label className="font-semibold text-xs">Client</Label>
                       <Input
@@ -742,19 +789,6 @@ export default function DeliveryNotesPage() {
                         placeholder="PO Number"
                         className="mt-1 h-9 text-sm"
                       />
-                    </div>
-                    <div>
-                      <Label className="font-semibold text-xs">Job Order</Label>
-                      <select
-                        value={formData.jobOrderId}
-                        onChange={(e) => handleJobOrderChange(e.target.value)}
-                        className="w-full mt-1 h-9 px-3 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      >
-                        <option value="">-- Select Job Order --</option>
-                        {jobOrders.map(jo => (
-                          <option key={jo.id} value={jo.id}>{jo.jobNumber} - {jo.productName}</option>
-                        ))}
-                      </select>
                     </div>
                   </div>
                 </div>
@@ -1069,7 +1103,7 @@ export default function DeliveryNotesPage() {
                               </div>
                             </td>
                           </tr>
-                          {isExpanded && note.items && note.items.length > 0 && (
+                          {isExpanded && (
                             <tr>
                               <td colSpan={9} className="px-4 py-3 bg-slate-50">
                                 <div className="ml-8">
@@ -1083,7 +1117,17 @@ export default function DeliveryNotesPage() {
                                     }`}>{note.status}</span></div>
                                     <div><span className="font-semibold">Job Order No.:</span> {note.jobOrder?.jobNumber || 'N/A'}</div>
                                   </div>
-                                  <h4 className="text-sm font-semibold text-slate-700 mb-2">Line Items:</h4>
+                                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3 text-xs text-slate-700">
+                                    <div><span className="font-semibold">Representative Name:</span> {note.representativeName || 'N/A'}</div>
+                                    <div><span className="font-semibold">Representative No.:</span> {note.representativeNo || 'N/A'}</div>
+                                    <div><span className="font-semibold">QID Number:</span> {note.qidNumber || 'N/A'}</div>
+                                    <div><span className="font-semibold">Vehicle Number:</span> {note.vehicleNumber || 'N/A'}</div>
+                                    <div><span className="font-semibold">Vehicle Type:</span> {note.vehicleType || 'N/A'}</div>
+                                    <div><span className="font-semibold">Shipment Type:</span> {note.shipmentType || 'N/A'}</div>
+                                  </div>
+                                  {note.items && note.items.length > 0 ? (
+                                    <>
+                                      <h4 className="text-sm font-semibold text-slate-700 mb-2">Line Items:</h4>
                                   <table className="w-full border border-slate-200">
                                     <thead className="bg-slate-200">
                                       <tr>
@@ -1168,6 +1212,10 @@ export default function DeliveryNotesPage() {
                                       })()}
                                     </tbody>
                                   </table>
+                                    </>
+                                  ) : (
+                                    <p className="text-xs text-slate-500">No line items available.</p>
+                                  )}
                                 </div>
                               </td>
                             </tr>

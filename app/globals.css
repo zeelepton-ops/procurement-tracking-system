@@ -72,6 +72,12 @@ body {
   }
 }
 
+/* Job Orders placeholder sizing */
+.job-orders-form input::placeholder,
+.job-orders-form textarea::placeholder {
+  font-size: 0.6875rem;
+}
+
 /* Print Styles */
 @media print {
   .no-print {
