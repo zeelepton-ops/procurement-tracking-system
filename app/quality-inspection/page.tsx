@@ -56,6 +56,7 @@ interface QualityStep {
   remarks: string | null
   inspectedBy: string | null
   inspectedAt: string | null
+  quantity: number | null
   photos: QualityPhoto[]
 }
 
@@ -114,6 +115,7 @@ export default function QualityInspectionPage() {
     isDefault: false,
   })
   const [stepRemarks, setStepRemarks] = useState<Record<string, string>>({})
+  const [stepQty, setStepQty] = useState<Record<string, string>>({})
 
   const selectedJobItem = jobOrderItems.find(i => i.id === createForm.jobOrderItemId) || null
 
@@ -236,12 +238,16 @@ export default function QualityInspectionPage() {
     }
   }
 
-  const updateStepStatus = async (stepId: string, status: string, remarks?: string) => {
+  const updateStepStatus = async (stepId: string, status: string, remarks?: string, quantity?: string) => {
     try {
+      const payload: any = { status, remarks }
+      if (quantity && !isNaN(parseFloat(quantity))) {
+        payload.quantity = parseFloat(quantity)
+      }
       const res = await fetch(`/api/quality-inspection/steps/${stepId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status, remarks }),
+        body: JSON.stringify(payload),
       })
       if (res.ok) {
         fetchInspections()
@@ -540,7 +546,7 @@ export default function QualityInspectionPage() {
 
         {/* Inspection Details Dialog */}
         <Dialog open={!!selectedInspection} onOpenChange={() => setSelectedInspection(null)}>
-          <DialogContent className="w-[95vw] max-w-[95vw] h-[90vh] max-h-[90vh] overflow-y-auto">
+          <DialogContent className="w-[98vw] max-w-[98vw] h-[95vh] max-h-[95vh] overflow-y-auto p-6">
             {selectedInspection && (
               <>
                 <DialogHeader>

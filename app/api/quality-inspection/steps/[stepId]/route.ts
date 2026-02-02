@@ -9,7 +9,7 @@ export async function PATCH(
 ) {
   const session = await getServerSession();
   const body = await req.json();
-  const { status, remarks, photoUrl } = body;
+  const { status, remarks, photoUrl, quantity } = body;
   const inspectedBy = session?.user?.email || 'system';
   
   const updateData: any = {};
@@ -22,6 +22,10 @@ export async function PATCH(
   
   if (remarks !== undefined) {
     updateData.remarks = remarks;
+  }
+  
+  if (quantity !== undefined && quantity !== null && !isNaN(parseFloat(quantity))) {
+    updateData.quantity = parseFloat(quantity);
   }
   
   if (photoUrl) {
