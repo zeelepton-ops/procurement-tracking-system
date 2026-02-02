@@ -77,6 +77,7 @@ export default function JobOrdersPage() {
   const [clients, setClients] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
+  const [searchTerm, setSearchTerm] = useState('')
   const [filters, setFilters] = useState({
     search: '',
     priority: 'ALL'
@@ -110,7 +111,7 @@ export default function JobOrdersPage() {
     roundOff: 0
   })
   const [workItems, setWorkItems] = useState<JobOrderItem[]>([
-    { workDescription: '', quantity: 0, unit: 'PCS', unitPrice: 0, totalPrice: 0 }
+    { workDescription: '', quantity: 0, unit: 'Nos', unitPrice: 0, totalPrice: 0 }
   ])
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
@@ -147,7 +148,7 @@ export default function JobOrdersPage() {
     roundOff: 0
   })
   const [editWorkItems, setEditWorkItems] = useState<JobOrderItem[]>([
-    { workDescription: '', quantity: 0, unit: 'PCS', unitPrice: 0, totalPrice: 0 }
+    { workDescription: '', quantity: 0, unit: 'Nos', unitPrice: 0, totalPrice: 0 }
   ])
 
   useEffect(() => {
@@ -200,7 +201,7 @@ export default function JobOrdersPage() {
   const filteredOrders = jobOrders
 
   const addWorkItem = () => {
-    setWorkItems([...workItems, { workDescription: '', quantity: null, unit: 'PCS', unitPrice: null, totalPrice: null }])
+    setWorkItems([...workItems, { workDescription: '', quantity: null, unit: 'Nos', unitPrice: null, totalPrice: null }])
   }
 
   const removeWorkItem = (index: number) => {
@@ -242,7 +243,7 @@ export default function JobOrdersPage() {
   }
 
   const addEditWorkItem = () => {
-    setEditWorkItems([...editWorkItems, { workDescription: '', quantity: null, unit: 'PCS', unitPrice: null, totalPrice: null }])
+    setEditWorkItems([...editWorkItems, { workDescription: '', quantity: null, unit: 'Nos', unitPrice: null, totalPrice: null }])
   }
 
   const removeEditWorkItem = (index: number) => {
@@ -441,7 +442,7 @@ export default function JobOrdersPage() {
         discount: 0,
         roundOff: 0
       })
-      setWorkItems([{ workDescription: '', quantity: 0, unit: 'PCS', unitPrice: 0, totalPrice: 0 }])
+      setWorkItems([{ workDescription: '', quantity: 0, unit: 'Nos', unitPrice: 0, totalPrice: 0 }])
       setShowForm(false)
       setShowNewClientInput(false)
       setNewClientName('')
@@ -526,7 +527,7 @@ export default function JobOrdersPage() {
     setEditFinalTotalOverride((job as any).finalTotal !== undefined ? (job as any).finalTotal : null)
     setEditWorkItems(job.items && job.items.length > 0 
       ? job.items 
-      : [{ workDescription: '', quantity: 0, unit: 'PCS', unitPrice: 0, totalPrice: 0 }]
+      : [{ workDescription: '', quantity: 0, unit: 'Nos', unitPrice: 0, totalPrice: 0 }]
     )
 
     // focus job number in modal after small delay
@@ -1999,3 +2000,6 @@ export default function JobOrdersPage() {
     </div>
   )
 }
+
+
+
