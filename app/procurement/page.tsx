@@ -74,6 +74,8 @@ export default function ProcurementTrackingPage() {
   const [filterStatus, setFilterStatus] = useState('ALL')
   const [filterUrgency, setFilterUrgency] = useState('ALL')
   const [searchTerm, setSearchTerm] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
   
   const [actionForm, setActionForm] = useState({
     actionType: 'NOTE',
@@ -97,12 +99,17 @@ export default function ProcurementTrackingPage() {
 
   const fetchRequests = async () => {
     try {
+      setError(null)
       const res = await fetch('/api/material-requests')
+      if (!res.ok) {
+        throw new Error('Failed to load requests')
+      }
       const data = await res.json()
       setRequests(data)
       setLoading(false)
     } catch (error) {
       console.error('Failed to fetch requests:', error)
+      setError('Failed to load requests')
       setLoading(false)
     }
   }
@@ -213,6 +220,16 @@ export default function ProcurementTrackingPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4">
       <div className="max-w-7xl mx-auto">
+        {error && (
+          <div className="mb-4 rounded border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
+            {error}
+          </div>
+        )}
+        {success && (
+          <div className="mb-4 rounded border border-green-200 bg-green-50 px-4 py-2 text-sm text-green-700">
+            {success}
+          </div>
+        )}
         {/* Header */}
         <div className="mb-3 flex items-center justify-between">
           <div>

@@ -14,6 +14,8 @@ export default function EnquiriesPage() {
   const [suppliers, setSuppliers] = useState<Supplier[]>([])
   const [preps, setPreps] = useState<POPrep[]>([])
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
   const [showNew, setShowNew] = useState(false)
 
   // new enquiry form
@@ -29,11 +31,19 @@ export default function EnquiriesPage() {
   }, [])
 
   async function fetchList() {
-    setLoading(true)
-    const res = await fetch('/api/enquiries')
-    const data = await res.json()
-    setEnquiries(data.data ?? [])
-    setLoading(false)
+    try {
+      setError(null)
+      setLoading(true)
+      const res = await fetch('/api/enquiries')
+      if (!res.ok) throw new Error('Failed to load enquiries')
+      const data = await res.json()
+      setEnquiries(data.data ?? [])
+    } catch (err: any) {
+      console.error('Failed to fetch enquiries:', err)
+      setError('Failed to load enquiries')
+    } finally {
+      setLoading(false)
+    }
   }
 
   async function fetchSuppliers() {
@@ -50,25 +60,38 @@ export default function EnquiriesPage() {
 
   async function createEnquiry(e: React.FormEvent) {
     e.preventDefault()
-    if (!prepId) return alert('Select a preparation')
-    if (selectedSuppliers.length === 0) return alert('Select at least one supplier')
-
-    const res = await fetch('/api/enquiries', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prepId, supplierIds: selectedSuppliers, message, sendNow }),
-    })
-    if (!res.ok) {
-      const err = await res.json()
-      alert(err?.error || 'Failed')
+    if (!prepId) {
+      setError('Select a preparation')
       return
     }
-    setShowNew(false)
-    setPrepId(null)
-    setSelectedSuppliers([])
-    setMessage('')
-    setSendNow(false)
-    fetchList()
+    if (selectedSuppliers.length === 0) {
+      setError('Select at least one supplier')
+      return
+    }
+
+    try {
+      setError(null)
+      const res = await fetch('/api/enquiries', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prepId, supplierIds: selectedSuppliers, message, sendNow }),
+      })
+      if (!res.ok) {
+        const err = await res.json()
+        throw new Error(err?.error || 'Failed to create enquiry')
+      }
+      setSuccess('Enquiry created successfully')
+      setTimeout(() => setSuccess(null), 5000)
+      setShowNew(false)
+      setPrepId(null)
+      setSelectedSuppliers([])
+      setMessage('')
+      setSendNow(false)
+      fetchList()
+    } catch (err: any) {
+      console.error('Error creating enquiry:', err)
+      setError(err.message || 'Failed to create enquiry')
+    }
   }
 
   const selectedEnquiryRef = useRef<{ id: string } | null>(null)
@@ -100,19 +123,36 @@ export default function EnquiriesPage() {
     e.preventDefault()
     if (!modalOpen || !selectedEnquiryRef.current) return
 
-    const fd = new FormData(e.currentTarget)
-    const r = await fetch(`/api/enquiries/${selectedEnquiryRef.current.id}/responses`, { method: 'POST', body: fd })
-    if (!r.ok) {
-      alert('Failed to submit response')
-      return
+    try {
+      setError(null)
+      const fd = new FormData(e.currentTarget)
+      const r = await fetch(`/api/enquiries/${selectedEnquiryRef.current.id}/responses`, { method: 'POST', body: fd })
+      if (!r.ok) {
+        throw new Error('Failed to submit response')
+      }
+      const resp = await r.json() as EnquiryResponse
+      setSuccess('Response submitted successfully')
+      setTimeout(() => setSuccess(null), 5000)
+      setResponses([resp, ...responses])
+      (e.currentTarget as HTMLFormElement).reset()
+    } catch (err: any) {
+      console.error('Error submitting response:', err)
+      setError(err.message || 'Failed to submit response')
     }
-    const resp = await r.json() as EnquiryResponse;
-    setResponses([resp, ...responses]);
-    (e.currentTarget as HTMLFormElement).reset();
   }
 
   return (
     <div className="p-6">
+      {error && (
+        <div className="mb-4 rounded border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
+          {error}
+        </div>
+      )}
+      {success && (
+        <div className="mb-4 rounded border border-green-200 bg-green-50 px-4 py-2 text-sm text-green-700">
+          {success}
+        </div>
+      )}
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-semibold">Enquiries</h1>
         <button className="btn" onClick={() => setShowNew(true)}>New Enquiry</button>
@@ -256,13 +296,17 @@ export default function EnquiriesPage() {
                     <button type="submit" className="btn btn-primary">Submit Response</button>
                     <button type="button" className="btn" onClick={async () => {
                       // Quick parse: if there are responses, try to parse the latest quote into a CSV/preview (example feature)
-                      if ((responses || []).length === 0) return alert('No responses to parse')
+                      if ((responses || []).length === 0) {
+                        setError('No responses to parse')
+                        return
+                      }
                       const latest = (responses || [])[0]
                       try {
                         const q = latest.quoteJson
-                        alert('Parsed quote items: ' + JSON.stringify(q, null, 2))
+                        setSuccess('Parsed quote items: ' + JSON.stringify(q, null, 2))
+                        setTimeout(() => setSuccess(null), 5000)
                       } catch (err) {
-                        alert('Failed to parse quote')
+                        setError('Failed to parse quote')
                       }
                     }}>Quick Parse</button>
                   </div>

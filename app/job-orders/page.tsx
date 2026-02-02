@@ -115,6 +115,7 @@ export default function JobOrdersPage() {
   ])
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState<string | null>(null)
   const [showNewClientInput, setShowNewClientInput] = useState(false)
   const [newClientName, setNewClientName] = useState('')
   const [creatingClient, setCreatingClient] = useState(false)
@@ -387,6 +388,7 @@ export default function JobOrdersPage() {
 
   const fetchJobOrders = async () => {
     try {
+      setError('')
       setLoading(true)
       const params = new URLSearchParams()
       params.set('page', String(page))
@@ -405,11 +407,13 @@ export default function JobOrdersPage() {
         setTotalCount(data.totalCount || 0)
       } else {
         console.error('Invalid response format:', data)
+        setError('Failed to load job orders')
         setJobOrders([])
         setTotalCount(0)
       }
     } catch (error) {
       console.error('Failed to fetch job orders:', error)
+      setError('Failed to load job orders')
       setJobOrders([])
       setTotalCount(0)
     } finally {
@@ -457,7 +461,7 @@ export default function JobOrdersPage() {
   const createNewClient = async () => {
     const clientNameToCreate = newClientName || clientSearchQuery
     if (!clientNameToCreate.trim()) {
-      alert('Please enter a client name')
+      setError('Please enter a client name')
       return
     }
 
@@ -493,9 +497,10 @@ export default function JobOrdersPage() {
       setNewClientName('')
       setClientSearchQuery(newClient.name)
       
-      alert(`Client "${newClient.name}" created successfully! You can complete the details in the Clients panel.`)
+      setSuccess(`Client "${newClient.name}" created successfully! You can complete the details in the Clients panel.`)
+      setTimeout(() => setSuccess(null), 5000)
     } catch (error: any) {
-      alert(error.message || 'Failed to create client')
+      setError(error.message || 'Failed to create client')
     } finally {
       setCreatingClient(false)
     }
@@ -572,7 +577,7 @@ export default function JobOrdersPage() {
       fetchJobOrders()
       fetchDeletedJobOrders()
     } catch (err: any) {
-      alert(err.message)
+      setError(err.message || 'Failed to delete job order')
     }
   }
 
@@ -594,7 +599,7 @@ export default function JobOrdersPage() {
       fetchJobOrders()
       fetchDeletedJobOrders()
     } catch (err: any) {
-      alert(err.message)
+      setError(err.message || 'Failed to restore job order')
       setRestoring(null)
     }
   }
@@ -706,6 +711,16 @@ export default function JobOrdersPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4">
       <div className="max-w-7xl mx-auto">
+        {error && (
+          <div className="mb-4 rounded border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
+            {error}
+          </div>
+        )}
+        {success && (
+          <div className="mb-4 rounded border border-green-200 bg-green-50 px-4 py-2 text-sm text-green-700">
+            {success}
+          </div>
+        )}
         {/* Header */}
         <div className="mb-4 flex items-center justify-between">
           <div>
@@ -1319,7 +1334,12 @@ export default function JobOrdersPage() {
                           if (!confirm(`Delete ${selectedIds.length} selected job(s)?`)) return
                           const res = await fetch(`/api/job-orders?ids=${selectedIds.join(',')}`, { method: 'DELETE' })
                           const data = await res.json()
-                          alert(data.message || data.error || 'Done')
+                          if (data.success) {
+                            setSuccess(data.message || 'Job orders deleted successfully')
+                            setTimeout(() => setSuccess(null), 5000)
+                          } else {
+                            setError(data.message || data.error || 'Failed to delete job orders')
+                          }
                           setSelectedIds([])
                           fetchJobOrders()
                           fetchDeletedJobOrders()

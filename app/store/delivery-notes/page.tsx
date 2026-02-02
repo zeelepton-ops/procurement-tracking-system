@@ -71,6 +71,8 @@ export default function DeliveryNotesPage() {
   const [dnSuggestions, setDnSuggestions] = useState<string[]>([])
   const [showNotifications, setShowNotifications] = useState(false)
   const [notifications, setNotifications] = useState<Array<{type: string, message: string}>>([])
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
 
   const [formData, setFormData] = useState({
     deliveryNoteNumber: '',

@@ -30,6 +30,8 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [bankDetails, setBankDetails] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -44,6 +46,7 @@ export default function ProfilePage() {
 
   const fetchUserProfile = async () => {
     try {
+      setError(null)
       const res = await fetch('/api/users/me')
       const data = await res.json()
       setUser(data)
@@ -54,6 +57,7 @@ DOHA BRANCH`)
       setLoading(false)
     } catch (error) {
       console.error('Failed to fetch profile:', error)
+      setError('Failed to load profile')
       setLoading(false)
     }
   }
@@ -61,6 +65,7 @@ DOHA BRANCH`)
   const handleSaveBankDetails = async () => {
     setSaving(true)
     try {
+      setError(null)
       const res = await fetch('/api/users/me', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -68,14 +73,15 @@ DOHA BRANCH`)
       })
 
       if (res.ok) {
-        alert('Bank details updated successfully!')
+        setSuccess('Bank details updated successfully!')
+        setTimeout(() => setSuccess(null), 5000)
         fetchUserProfile()
       } else {
-        alert('Failed to update bank details')
+        setError('Failed to update bank details')
       }
     } catch (error) {
       console.error('Failed to update bank details:', error)
-      alert('Failed to update bank details')
+      setError('Failed to update bank details')
     } finally {
       setSaving(false)
     }
@@ -91,6 +97,16 @@ DOHA BRANCH`)
 
   return (
     <div className="p-8 max-w-4xl mx-auto">
+      {error && (
+        <div className="mb-4 rounded border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
+          {error}
+        </div>
+      )}
+      {success && (
+        <div className="mb-4 rounded border border-green-200 bg-green-50 px-4 py-2 text-sm text-green-700">
+          {success}
+        </div>
+      )}
       <div className="flex items-center gap-4 mb-6">
         <Button variant="outline" onClick={() => router.back()}>
           <ArrowLeft className="w-4 h-4 mr-2" />
