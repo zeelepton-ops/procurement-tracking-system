@@ -82,6 +82,8 @@ export default function QualityInspectionPage() {
   const [selectedInspection, setSelectedInspection] = useState<QualityInspection | null>(null)
   const [showCreateDialog, setShowCreateDialog] = useState(false)
   const [showTemplateDialog, setShowTemplateDialog] = useState(false)
+  const [templateSaving, setTemplateSaving] = useState(false)
+  const [templateError, setTemplateError] = useState<string | null>(null)
 
   // Create inspection form
   const [createForm, setCreateForm] = useState({
@@ -151,19 +153,32 @@ export default function QualityInspectionPage() {
 
   const createTemplate = async () => {
     try {
-      const steps = templateForm.steps.split('\n').filter(s => s.trim())
+      setTemplateError(null)
+      const steps = templateForm.steps.split('\n').map(s => s.trim()).filter(Boolean)
+      const name = templateForm.name.trim()
+      if (!name || steps.length === 0) {
+        setTemplateError('Template name and at least one step are required.')
+        return
+      }
+      setTemplateSaving(true)
       const res = await fetch('/api/quality-inspection/templates', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...templateForm, steps }),
+        body: JSON.stringify({ ...templateForm, name, steps }),
       })
       if (res.ok) {
         setShowTemplateDialog(false)
         setTemplateForm({ name: '', steps: '', isDefault: false })
         fetchTemplates()
+      } else {
+        const data = await res.json().catch(() => null)
+        setTemplateError(data?.error || 'Failed to create template. Please try again.')
       }
     } catch (error) {
-      console.error('Error creating template:', error)
+      setTemplateError('Failed to create template. Please try again.')
+    }
+    finally {
+      setTemplateSaving(false)
     }
   }
 
@@ -229,7 +244,15 @@ export default function QualityInspectionPage() {
             <h1 className="text-3xl font-bold text-gray-900">Quality Inspection Management</h1>
           </div>
           <div className="flex gap-2">
-            <Dialog open={showTemplateDialog} onOpenChange={setShowTemplateDialog}>
+            <Dialog
+              open={showTemplateDialog}
+              onOpenChange={(open) => {
+                setShowTemplateDialog(open)
+                if (!open) {
+                  setTemplateError(null)
+                }
+              }}
+            >
               <DialogTrigger asChild>
                 <Button variant="outline">
                   <Plus className="w-4 h-4 mr-2" />
@@ -267,7 +290,14 @@ export default function QualityInspectionPage() {
                     />
                     <Label htmlFor="isDefault">Set as default template</Label>
                   </div>
-                  <Button onClick={createTemplate} className="w-full">Create Template</Button>
+                  {templateError && (
+                    <div className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-md px-3 py-2">
+                      {templateError}
+                    </div>
+                  )}
+                  <Button onClick={createTemplate} className="w-full" disabled={templateSaving}>
+                    {templateSaving ? 'Saving...' : 'Create Template'}
+                  </Button>
                 </div>
               </DialogContent>
             </Dialog>
