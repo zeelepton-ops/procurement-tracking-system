@@ -508,11 +508,11 @@ export default function DeliveryNotesPage() {
       shipmentTo: note.shipmentTo || '',
       comments: '',
       shipmentType: note.shipmentType || 'Land',
-      representativeName: '',
-      representativeNo: '',
-      qidNumber: '',
-      vehicleNumber: '',
-      vehicleType: 'NBTC',
+      representativeName: note.representativeName || '',
+      representativeNo: note.representativeNo || '',
+      qidNumber: note.qidNumber || '',
+      vehicleNumber: note.vehicleNumber || '',
+      vehicleType: note.vehicleType || 'NBTC',
       lineItems: lineItems
     })
     setEditingId(note.id)
