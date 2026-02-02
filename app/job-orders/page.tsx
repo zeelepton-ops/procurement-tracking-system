@@ -1698,7 +1698,7 @@ export default function JobOrdersPage() {
                             contactPerson: value,
                             phone: match?.phone || prev.phone
                           }))
-                        }
+                        }}
                         className="mt-1 h-9 px-2 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full text-sm"
                       >
                         <option value="">Select</option>
