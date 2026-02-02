@@ -584,72 +584,72 @@ export default function QualityInspectionPage() {
 
         {/* Inspection Details Dialog */}
         <Dialog open={!!selectedInspection} onOpenChange={() => setSelectedInspection(null)}>
-          <DialogContent className="w-[98vw] max-w-[98vw] h-[95vh] max-h-[95vh] overflow-y-auto p-6">
+          <DialogContent className="w-[98vw] max-w-[98vw] h-[95vh] max-h-[95vh] overflow-y-auto p-4">
             {selectedInspection && (
               <>
                 <DialogHeader>
-                  <DialogTitle className="flex items-center justify-between">
+                  <DialogTitle className="flex items-center justify-between text-base">
                     <span>Quality Inspection Details</span>
                     <div className="flex items-center gap-2">
                       {getStatusBadge(selectedInspection.status)}
                       <Button
                         size="sm"
                         variant="outline"
-                        className="text-red-600"
+                        className="text-red-600 h-8"
                         onClick={() => setDeleteConfirm(selectedInspection.id)}
                       >
-                        <XCircle className="w-4 h-4 mr-1" />
+                        <XCircle className="w-3 h-3 mr-1" />
                         Delete
                       </Button>
                     </div>
                   </DialogTitle>
                 </DialogHeader>
                 
-                <div className="space-y-6">
+                <div className="space-y-4">
                   {/* Summary Stats */}
                   {inspectionSummary && (
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-4 bg-slate-50 rounded-lg border">
+                    <div className="grid grid-cols-4 gap-2 p-3 bg-slate-50 rounded-lg border">
                       <div className="text-center">
-                        <p className="text-xs text-slate-500">Total Steps</p>
-                        <p className="text-2xl font-bold text-slate-900">{inspectionSummary.totalSteps}</p>
+                        <p className="text-xs text-slate-500">Steps</p>
+                        <p className="text-xl font-bold text-slate-900">{inspectionSummary.totalSteps}</p>
                       </div>
                       <div className="text-center">
                         <p className="text-xs text-green-600 font-semibold">Approved</p>
-                        <p className="text-2xl font-bold text-green-700">{inspectionSummary.approved}</p>
+                        <p className="text-xl font-bold text-green-700">{inspectionSummary.approved}</p>
                         <p className="text-xs text-green-600">Qty: {inspectionSummary.totalApprovedQty}</p>
                       </div>
                       <div className="text-center">
                         <p className="text-xs text-red-600 font-semibold">Failed</p>
-                        <p className="text-2xl font-bold text-red-700">{inspectionSummary.failed}</p>
+                        <p className="text-xl font-bold text-red-700">{inspectionSummary.failed}</p>
                         <p className="text-xs text-red-600">Qty: {inspectionSummary.totalFailedQty}</p>
                       </div>
                       <div className="text-center">
                         <p className="text-xs text-yellow-600 font-semibold">Hold</p>
-                        <p className="text-2xl font-bold text-yellow-700">{inspectionSummary.hold}</p>
+                        <p className="text-xl font-bold text-yellow-700">{inspectionSummary.hold}</p>
                         <p className="text-xs text-yellow-600">Qty: {inspectionSummary.totalHoldQty}</p>
                       </div>
                     </div>
                   )}
 
                   {/* Job Info */}
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <h4 className="font-semibold mb-2">Job Information</h4>
-                    <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div className="bg-gray-50 rounded-lg p-3">
+                    <h4 className="font-semibold text-sm mb-2">Job Information</h4>
+                    <div className="grid grid-cols-4 gap-2 text-xs">
                       <div>
                         <span className="text-gray-500">Job Number:</span>
-                        <p className="font-medium">{selectedInspection.jobOrderItem.jobOrder.jobNumber}</p>
+                        <p className="font-medium text-sm">{selectedInspection.jobOrderItem.jobOrder.jobNumber}</p>
                       </div>
                       <div>
                         <span className="text-gray-500">Client:</span>
-                        <p className="font-medium">{selectedInspection.jobOrderItem.jobOrder.clientName}</p>
+                        <p className="font-medium text-sm">{selectedInspection.jobOrderItem.jobOrder.clientName}</p>
                       </div>
                       <div className="col-span-2">
                         <span className="text-gray-500">Work Description:</span>
-                        <p className="font-medium">{selectedInspection.jobOrderItem.workDescription}</p>
+                        <p className="font-medium text-sm">{selectedInspection.jobOrderItem.workDescription}</p>
                       </div>
                       <div>
                         <span className="text-gray-500">Inspection Qty:</span>
-                        <p className="font-medium">
+                        <p className="font-medium text-sm">
                           {selectedInspection.jobOrderItem.quantity ?? '-'} {selectedInspection.jobOrderItem.unit || ''}
                         </p>
                       </div>
@@ -658,17 +658,17 @@ export default function QualityInspectionPage() {
 
                   {/* Inspection Steps */}
                   <div>
-                    <h4 className="font-semibold mb-4">Inspection Steps</h4>
-                    <div className="space-y-4">
+                    <h4 className="font-semibold text-sm mb-3">Inspection Steps</h4>
+                    <div className="space-y-3">
                       {selectedInspection.steps.map((step, index) => (
-                        <div key={step.id} className="border rounded-lg p-4 bg-white shadow-sm">
-                          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                        <div key={step.id} className="border rounded-lg p-3 bg-white shadow-sm">
+                          <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
                             {/* Step Info */}
                             <div className="lg:col-span-3">
-                              <div className="flex items-start justify-between mb-3">
+                              <div className="flex items-start justify-between mb-2">
                                 <div>
-                                  <span className="font-semibold text-base">Step {index + 1}: {step.stepName}</span>
-                                  <p className="text-xs text-slate-500 mt-1">Response</p>
+                                  <span className="font-semibold text-sm">Step {index + 1}: {step.stepName}</span>
+                                  <p className="text-xs text-slate-500">Response</p>
                                 </div>
                               </div>
                               {getStatusBadge(step.status)}
@@ -681,13 +681,13 @@ export default function QualityInspectionPage() {
                                 value={stepRemarks[step.id] ?? step.remarks ?? ''}
                                 onChange={(e) => setStepRemarks(prev => ({ ...prev, [step.id]: e.target.value }))}
                                 placeholder="Add inspection comment or remark..."
-                                rows={3}
-                                className="text-sm"
+                                rows={2}
+                                className="text-xs"
                               />
                             </div>
 
                             {/* Quantity & Actions - Horizontal Layout */}
-                            <div className="lg:col-span-4 space-y-2">
+                            <div className="lg:col-span-4 space-y-1.5">
                               <div className="flex items-end gap-2">
                                 <div className="flex-1">
                                   <Label className="text-xs text-green-600 font-semibold">Approved Qty</Label>
@@ -697,16 +697,16 @@ export default function QualityInspectionPage() {
                                     value={stepApprovedQty[step.id] ?? step.approvedQty ?? ''}
                                     onChange={(e) => setStepApprovedQty(prev => ({ ...prev, [step.id]: e.target.value }))}
                                     min="0"
-                                    className="text-sm"
+                                    className="text-xs h-8"
                                   />
                                 </div>
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  className="text-green-600 h-9"
+                                  className="text-green-600 h-8 px-2 text-xs"
                                   onClick={() => updateStepStatus(step.id, 'APPROVED', (stepRemarks[step.id] ?? step.remarks ?? '').trim(), stepApprovedQty[step.id] ?? step.approvedQty?.toString() ?? '', stepFailedQty[step.id] ?? step.failedQty?.toString() ?? '', stepHoldQty[step.id] ?? step.holdQty?.toString() ?? '')}
                                 >
-                                  <CheckCircle2 className="w-4 h-4 mr-1" />
+                                  <CheckCircle2 className="w-3 h-3 mr-1" />
                                   Approve
                                 </Button>
                               </div>
@@ -719,16 +719,16 @@ export default function QualityInspectionPage() {
                                     value={stepFailedQty[step.id] ?? step.failedQty ?? ''}
                                     onChange={(e) => setStepFailedQty(prev => ({ ...prev, [step.id]: e.target.value }))}
                                     min="0"
-                                    className="text-sm"
+                                    className="text-xs h-8"
                                   />
                                 </div>
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  className="text-red-600 h-9"
+                                  className="text-red-600 h-8 px-2 text-xs"
                                   onClick={() => updateStepStatus(step.id, 'FAILED', (stepRemarks[step.id] ?? step.remarks ?? '').trim(), stepApprovedQty[step.id] ?? step.approvedQty?.toString() ?? '', stepFailedQty[step.id] ?? step.failedQty?.toString() ?? '', stepHoldQty[step.id] ?? step.holdQty?.toString() ?? '')}
                                 >
-                                  <XCircle className="w-4 h-4 mr-1" />
+                                  <XCircle className="w-3 h-3 mr-1" />
                                   Fail
                                 </Button>
                               </div>
@@ -741,16 +741,16 @@ export default function QualityInspectionPage() {
                                     value={stepHoldQty[step.id] ?? step.holdQty ?? ''}
                                     onChange={(e) => setStepHoldQty(prev => ({ ...prev, [step.id]: e.target.value }))}
                                     min="0"
-                                    className="text-sm"
+                                    className="text-xs h-8"
                                   />
                                 </div>
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  className="text-yellow-600 h-9"
+                                  className="text-yellow-600 h-8 px-2 text-xs"
                                   onClick={() => updateStepStatus(step.id, 'HOLD', (stepRemarks[step.id] ?? step.remarks ?? '').trim(), stepApprovedQty[step.id] ?? step.approvedQty?.toString() ?? '', stepFailedQty[step.id] ?? step.failedQty?.toString() ?? '', stepHoldQty[step.id] ?? step.holdQty?.toString() ?? '')}
                                 >
-                                  <AlertCircle className="w-4 h-4 mr-1" />
+                                  <AlertCircle className="w-3 h-3 mr-1" />
                                   Hold
                                 </Button>
                               </div>
@@ -758,7 +758,7 @@ export default function QualityInspectionPage() {
                           </div>
 
                           {step.inspectedBy && (
-                            <p className="text-xs text-gray-500 mt-3 border-t pt-2">
+                            <p className="text-xs text-gray-500 mt-2 pt-2 border-t">
                               Inspected by {step.inspectedBy} on {new Date(step.inspectedAt!).toLocaleString()}
                             </p>
                           )}
