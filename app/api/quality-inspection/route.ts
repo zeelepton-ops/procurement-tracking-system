@@ -38,6 +38,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
   }
   
+  // Validate job order item
+  const jobOrderItem = await prisma.jobOrderItem.findUnique({
+    where: { id: jobOrderItemId },
+    select: { id: true }
+  });
+  if (!jobOrderItem) {
+    return NextResponse.json({ error: 'Job order item not found' }, { status: 400 });
+  }
+
   // Get ITP steps
   const itp = await prisma.iTPTemplate.findUnique({ where: { id: itpTemplateId } });
   if (!itp) return NextResponse.json({ error: 'ITP Template not found' }, { status: 404 });

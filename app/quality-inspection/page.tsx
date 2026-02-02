@@ -71,17 +71,25 @@ interface ITPTemplate {
   isDefault: boolean
 }
 
+interface JobOrderItemOption {
+  id: string
+  label: string
+}
+
 export default function QualityInspectionPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
   const [inspections, setInspections] = useState<QualityInspection[]>([])
   const [templates, setTemplates] = useState<ITPTemplate[]>([])
+  const [jobOrderItems, setJobOrderItems] = useState<JobOrderItemOption[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('ALL')
   const [selectedInspection, setSelectedInspection] = useState<QualityInspection | null>(null)
   const [showCreateDialog, setShowCreateDialog] = useState(false)
   const [showTemplateDialog, setShowTemplateDialog] = useState(false)
+  const [createSaving, setCreateSaving] = useState(false)
+  const [createError, setCreateError] = useState<string | null>(null)
   const [templateSaving, setTemplateSaving] = useState(false)
   const [templateError, setTemplateError] = useState<string | null>(null)
 
@@ -105,6 +113,7 @@ export default function QualityInspectionPage() {
     } else if (status === 'authenticated') {
       fetchInspections()
       fetchTemplates()
+      fetchJobOrderItems()
     }
   }, [status, router])
 
@@ -134,8 +143,32 @@ export default function QualityInspectionPage() {
     }
   }
 
+  const fetchJobOrderItems = async () => {
+    try {
+      const res = await fetch('/api/job-orders?perPage=200')
+      if (res.ok) {
+        const data = await res.json()
+        const items: JobOrderItemOption[] = (data?.jobs || []).flatMap((job: any) =>
+          (job.items || []).map((item: any) => ({
+            id: item.id,
+            label: `${job.jobNumber} - ${item.workDescription}${job.clientName ? ` (${job.clientName})` : ''}`,
+          }))
+        )
+        setJobOrderItems(items)
+      }
+    } catch (error) {
+      console.error('Error fetching job order items:', error)
+    }
+  }
+
   const createInspection = async () => {
     try {
+      setCreateError(null)
+      if (!createForm.jobOrderItemId || !createForm.itpTemplateId) {
+        setCreateError('Job Order Item and ITP Template are required.')
+        return
+      }
+      setCreateSaving(true)
       const res = await fetch('/api/quality-inspection', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -145,9 +178,15 @@ export default function QualityInspectionPage() {
         setShowCreateDialog(false)
         setCreateForm({ jobOrderItemId: '', itpTemplateId: '', isCritical: false })
         fetchInspections()
+      } else {
+        const data = await res.json().catch(() => null)
+        setCreateError(data?.error || 'Failed to create inspection. Please try again.')
       }
     } catch (error) {
-      console.error('Error creating inspection:', error)
+      setCreateError('Failed to create inspection. Please try again.')
+    }
+    finally {
+      setCreateSaving(false)
     }
   }
 
@@ -302,7 +341,15 @@ export default function QualityInspectionPage() {
               </DialogContent>
             </Dialog>
 
-            <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+            <Dialog
+              open={showCreateDialog}
+              onOpenChange={(open) => {
+                setShowCreateDialog(open)
+                if (!open) {
+                  setCreateError(null)
+                }
+              }}
+            >
               <DialogTrigger asChild>
                 <Button>
                   <Plus className="w-4 h-4 mr-2" />
@@ -315,12 +362,27 @@ export default function QualityInspectionPage() {
                 </DialogHeader>
                 <div className="space-y-4">
                   <div>
-                    <Label>Job Order Item ID</Label>
-                    <Input
+                    <Label>Job Order Item</Label>
+                    <Select
                       value={createForm.jobOrderItemId}
-                      onChange={(e) => setCreateForm({ ...createForm, jobOrderItemId: e.target.value })}
-                      placeholder="Enter job order item ID"
-                    />
+                      onValueChange={(value) => setCreateForm({ ...createForm, jobOrderItemId: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select job order item" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {jobOrderItems.length === 0 && (
+                          <SelectItem value="__none" disabled>
+                            No job order items found
+                          </SelectItem>
+                        )}
+                        {jobOrderItems.map(item => (
+                          <SelectItem key={item.id} value={item.id}>
+                            {item.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div>
                     <Label>ITP Template</Label>
@@ -349,7 +411,14 @@ export default function QualityInspectionPage() {
                     />
                     <Label htmlFor="isCritical">Mark as Critical Item</Label>
                   </div>
-                  <Button onClick={createInspection} className="w-full">Create Inspection</Button>
+                  {createError && (
+                    <div className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-md px-3 py-2">
+                      {createError}
+                    </div>
+                  )}
+                  <Button onClick={createInspection} className="w-full" disabled={createSaving}>
+                    {createSaving ? 'Saving...' : 'Create Inspection'}
+                  </Button>
                 </div>
               </DialogContent>
             </Dialog>
