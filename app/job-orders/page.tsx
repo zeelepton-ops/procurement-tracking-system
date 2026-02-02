@@ -797,21 +797,17 @@ export default function JobOrdersPage() {
                 )}
 
                 <h3 className="text-sm font-bold text-slate-700 mb-3">Client & NBTC Contact Information</h3>
-                {/* Contact block - line 1 (Priority, NBTC contact + phone, QA/QC, Drawing, Foreman) */}
+                {/* Contact block - line 1 (LPO Date, Client, LPO Contract, Client Contact, Client Phone, Foreman) */}
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-                  <div className="md:col-span-2 relative" data-edit-key="priority">
-                    <Label htmlFor="priority" className="text-sm font-semibold">Priority *</Label>
-                    <select
-                      id="priority"
-                      value={formData.priority}
-                      onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
-                      required
-                      className="mt-1 h-9 px-2 pr-8 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full text-sm z-20"
-                    >
-                      <option value="HIGH">HIGH</option>
-                      <option value="MEDIUM">MEDIUM</option>
-                      <option value="LOW">LOW</option>
-                    </select>
+                  <div className="md:col-span-1">
+                    <Label htmlFor="lpoIssueDate" className="text-sm font-semibold">LPO Issue Date</Label>
+                    <Input
+                      type="date"
+                      id="lpoIssueDate"
+                      value={formData.lpoIssueDate}
+                      onChange={(e) => setFormData({ ...formData, lpoIssueDate: e.target.value })}
+                      className="mt-1 h-9 w-full"
+                    />
                   </div>
                   <div className="md:col-span-3" data-edit-key="client">
                     <Label htmlFor="clientSearch" className="text-sm font-semibold">Client *</Label>
@@ -895,31 +891,27 @@ export default function JobOrdersPage() {
                       className="mt-1 h-9 w-full"
                     />
                   </div>
-                  <div className="md:col-span-2" data-edit-key="qaQc">
-                    <Label htmlFor="qaQcInCharge" className="text-sm font-semibold">QA/QC In Charge</Label>
-                    <select
-                      id="qaQcInCharge"
-                      value={formData.qaQcInCharge}
-                      onChange={(e) => setFormData({ ...formData, qaQcInCharge: e.target.value })}
-                      className="mt-1 h-9 px-2 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full text-sm"
-                    >
-                      <option value="">Select</option>
-                      {qaQcOptions.map((name) => (
-                        <option key={name} value={name}>{name}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="md:col-span-2" data-edit-key="drawing">
-                    <Label htmlFor="drawingRef" className="text-sm font-semibold">Drawing / Enquiry Ref</Label>
+                  <div className="md:col-span-2">
+                    <Label htmlFor="clientContactPerson" className="text-sm font-semibold">Client's Contact Person</Label>
                     <Input
-                      id="drawingRef"
-                      value={formData.drawingRef}
-                      onChange={(e) => setFormData({ ...formData, drawingRef: e.target.value })}
-                      placeholder="e.g., E-11899"
+                      id="clientContactPerson"
+                      value={formData.clientContactPerson}
+                      onChange={(e) => setFormData({ ...formData, clientContactPerson: e.target.value })}
+                      placeholder="e.g., LENIN.M"
                       className="mt-1 h-9 w-full"
                     />
                   </div>
-                  <div className="md:col-span-1" data-edit-key="foreman">
+                  <div className="md:col-span-2">
+                    <Label htmlFor="clientContactPhone" className="text-sm font-semibold">Client's Phone No.</Label>
+                    <Input
+                      id="clientContactPhone"
+                      value={formData.clientContactPhone}
+                      onChange={(e) => setFormData({ ...formData, clientContactPhone: e.target.value })}
+                      placeholder="+974 55xx xxxx"
+                      className="mt-1 h-9 w-full"
+                    />
+                  </div>
+                  <div className="md:col-span-2" data-edit-key="foreman">
                     <Label htmlFor="foreman" className="text-sm font-semibold">Foreman</Label>
                     <select
                       id="foreman"
@@ -980,33 +972,41 @@ export default function JobOrdersPage() {
                       className="mt-1 h-9 w-full"
                     />
                   </div>
-                  <div className="md:col-span-2">
-                    <Label htmlFor="lpoIssueDate" className="text-sm font-semibold">LPO Issue Date</Label>
-                    <Input
-                      type="date"
-                      id="lpoIssueDate"
-                      value={formData.lpoIssueDate}
-                      onChange={(e) => setFormData({ ...formData, lpoIssueDate: e.target.value })}
-                      className="mt-1 h-9 w-full"
-                    />
+                  <div className="md:col-span-1 relative" data-edit-key="priority">
+                    <Label htmlFor="priority" className="text-sm font-semibold">Priority *</Label>
+                    <select
+                      id="priority"
+                      value={formData.priority}
+                      onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
+                      required
+                      className="mt-1 h-9 px-2 pr-8 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full text-sm z-20"
+                    >
+                      <option value="HIGH">HIGH</option>
+                      <option value="MEDIUM">MEDIUM</option>
+                      <option value="LOW">LOW</option>
+                    </select>
                   </div>
-                  <div className="md:col-span-1">
-                    <Label htmlFor="clientContactPerson" className="text-sm font-semibold">Client's Contact Person</Label>
-                    <Input
-                      id="clientContactPerson"
-                      value={formData.clientContactPerson}
-                      onChange={(e) => setFormData({ ...formData, clientContactPerson: e.target.value })}
-                      placeholder="e.g., LENIN.M"
-                      className="mt-1 h-9 w-full"
-                    />
+                  <div className="md:col-span-2" data-edit-key="qaQc">
+                    <Label htmlFor="qaQcInCharge" className="text-sm font-semibold">QA/QC In Charge</Label>
+                    <select
+                      id="qaQcInCharge"
+                      value={formData.qaQcInCharge}
+                      onChange={(e) => setFormData({ ...formData, qaQcInCharge: e.target.value })}
+                      className="mt-1 h-9 px-2 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full text-sm"
+                    >
+                      <option value="">Select</option>
+                      {qaQcOptions.map((name) => (
+                        <option key={name} value={name}>{name}</option>
+                      ))}
+                    </select>
                   </div>
-                  <div className="md:col-span-2">
-                    <Label htmlFor="clientContactPhone" className="text-sm font-semibold">Client's Phone No.</Label>
+                  <div className="md:col-span-2" data-edit-key="drawing">
+                    <Label htmlFor="drawingRef" className="text-sm font-semibold">Drawing / Enquiry Ref</Label>
                     <Input
-                      id="clientContactPhone"
-                      value={formData.clientContactPhone}
-                      onChange={(e) => setFormData({ ...formData, clientContactPhone: e.target.value })}
-                      placeholder="+974 55xx xxxx"
+                      id="drawingRef"
+                      value={formData.drawingRef}
+                      onChange={(e) => setFormData({ ...formData, drawingRef: e.target.value })}
+                      placeholder="e.g., E-11899"
                       className="mt-1 h-9 w-full"
                     />
                   </div>
@@ -1671,19 +1671,15 @@ export default function JobOrdersPage() {
                   <h3 className="text-sm font-bold text-slate-700 mb-3">Client & NBTC Contact Information</h3>
                   {/* Contact block - line 1 (edit modal) */}
                   <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-                    <div className="md:col-span-2">
-                      <Label htmlFor="edit-priority" className="text-sm font-semibold">Priority *</Label>
-                      <select
-                        id="edit-priority"
-                        value={editFormData.priority}
-                        onChange={(e) => setEditFormData({ ...editFormData, priority: e.target.value })}
-                        required
-                        className="mt-1 h-9 px-2 pr-8 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full text-sm z-20"
-                      >
-                        <option value="HIGH">HIGH</option>
-                        <option value="MEDIUM">MEDIUM</option>
-                        <option value="LOW">LOW</option>
-                      </select>
+                    <div className="md:col-span-1">
+                      <Label htmlFor="edit-lpoIssueDate" className="text-sm font-semibold">LPO Issue Date</Label>
+                      <Input
+                        type="date"
+                        id="edit-lpoIssueDate"
+                        value={editFormData.lpoIssueDate}
+                        onChange={(e) => setEditFormData({ ...editFormData, lpoIssueDate: e.target.value })}
+                        className="mt-1 h-9 w-full text-sm"
+                      />
                     </div>
                     <div className="md:col-span-3">
                       <Label htmlFor="edit-clientName" className="text-sm font-semibold">Client Name *</Label>
@@ -1743,29 +1739,24 @@ export default function JobOrdersPage() {
                       />
                     </div>
                     <div className="md:col-span-2">
-                      <Label htmlFor="edit-qaQcInCharge" className="text-sm font-semibold">QA/QC In Charge</Label>
-                      <select
-                        id="edit-qaQcInCharge"
-                        value={editFormData.qaQcInCharge}
-                        onChange={(e) => setEditFormData({ ...editFormData, qaQcInCharge: e.target.value })}
-                        className="mt-1 h-9 px-2 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full text-sm"
-                      >
-                        <option value="">Select</option>
-                        {editQaQcOptions.map((name) => (
-                          <option key={name} value={name}>{name}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="md:col-span-2">
-                      <Label htmlFor="edit-drawingRef" className="text-sm font-semibold">Drawing / Enquiry Ref</Label>
+                      <Label htmlFor="edit-clientContactPerson" className="text-sm font-semibold">Client's Contact Person</Label>
                       <Input
-                        id="edit-drawingRef"
-                        value={editFormData.drawingRef}
-                        onChange={(e) => setEditFormData({ ...editFormData, drawingRef: e.target.value })}
-                        className="mt-1 h-9 w-full"
+                        id="edit-clientContactPerson"
+                        value={editFormData.clientContactPerson}
+                        onChange={(e) => setEditFormData({ ...editFormData, clientContactPerson: e.target.value })}
+                        className="mt-1 h-9 w-full text-sm"
                       />
                     </div>
-                    <div className="md:col-span-1">
+                    <div className="md:col-span-2">
+                      <Label htmlFor="edit-clientContactPhone" className="text-sm font-semibold">Client's Phone No.</Label>
+                      <Input
+                        id="edit-clientContactPhone"
+                        value={editFormData.clientContactPhone}
+                        onChange={(e) => setEditFormData({ ...editFormData, clientContactPhone: e.target.value })}
+                        className="mt-1 h-9 w-full text-sm"
+                      />
+                    </div>
+                    <div className="md:col-span-2">
                       <Label htmlFor="edit-foreman" className="text-sm font-semibold">Foreman</Label>
                       <select
                         id="edit-foreman"
@@ -1825,31 +1816,40 @@ export default function JobOrdersPage() {
                           className="mt-1 h-9 w-full text-sm"
                         />
                       </div>
-                      <div className="md:col-span-2">
-                        <Label htmlFor="edit-lpoIssueDate" className="text-sm font-semibold">LPO Issue Date</Label>
-                        <Input
-                          type="date"
-                          id="edit-lpoIssueDate"
-                          value={editFormData.lpoIssueDate}
-                          onChange={(e) => setEditFormData({ ...editFormData, lpoIssueDate: e.target.value })}
-                          className="mt-1 h-9 w-full text-sm"
-                        />
-                      </div>
                       <div className="md:col-span-1">
-                        <Label htmlFor="edit-clientContactPerson" className="text-sm font-semibold">Client's Contact Person</Label>
-                        <Input
-                          id="edit-clientContactPerson"
-                          value={editFormData.clientContactPerson}
-                          onChange={(e) => setEditFormData({ ...editFormData, clientContactPerson: e.target.value })}
-                          className="mt-1 h-9 w-full text-sm"
-                        />
+                        <Label htmlFor="edit-priority" className="text-sm font-semibold">Priority *</Label>
+                        <select
+                          id="edit-priority"
+                          value={editFormData.priority}
+                          onChange={(e) => setEditFormData({ ...editFormData, priority: e.target.value })}
+                          required
+                          className="mt-1 h-9 px-2 pr-8 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full text-sm z-20"
+                        >
+                          <option value="HIGH">HIGH</option>
+                          <option value="MEDIUM">MEDIUM</option>
+                          <option value="LOW">LOW</option>
+                        </select>
                       </div>
                       <div className="md:col-span-2">
-                        <Label htmlFor="edit-clientContactPhone" className="text-sm font-semibold">Client's Phone No.</Label>
+                        <Label htmlFor="edit-qaQcInCharge" className="text-sm font-semibold">QA/QC In Charge</Label>
+                        <select
+                          id="edit-qaQcInCharge"
+                          value={editFormData.qaQcInCharge}
+                          onChange={(e) => setEditFormData({ ...editFormData, qaQcInCharge: e.target.value })}
+                          className="mt-1 h-9 px-2 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full text-sm"
+                        >
+                          <option value="">Select</option>
+                          {editQaQcOptions.map((name) => (
+                            <option key={name} value={name}>{name}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="md:col-span-2">
+                        <Label htmlFor="edit-drawingRef" className="text-sm font-semibold">Drawing / Enquiry Ref</Label>
                         <Input
-                          id="edit-clientContactPhone"
-                          value={editFormData.clientContactPhone}
-                          onChange={(e) => setEditFormData({ ...editFormData, clientContactPhone: e.target.value })}
+                          id="edit-drawingRef"
+                          value={editFormData.drawingRef}
+                          onChange={(e) => setEditFormData({ ...editFormData, drawingRef: e.target.value })}
                           className="mt-1 h-9 w-full text-sm"
                         />
                       </div>
