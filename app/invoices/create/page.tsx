@@ -20,8 +20,11 @@ interface Client {
 interface JobOrder {
   id: string
   jobNumber: string
+  productName?: string
   clientId: string | null
+  clientName?: string | null
   lpoContractNo: string | null
+  workScope?: string
   items: JobOrderItem[]
 }
 
@@ -189,7 +192,8 @@ DOHA BRANCH`
           clientId: client.id,
           clientReference: jobOrder.lpoContractNo || '',
           terms: client.paymentTerms || 'Net 30',
-          mainDescription: (jobOrder as any).description || (jobOrder as any).mainDescription || 'Job Order'
+            paymentTerms: client.paymentTerms || 'Net 30',
+            mainDescription: jobOrder.workScope || jobOrder.productName || 'Job Order'
         }))
         console.log('✓ Auto-filled client:', client.name, 'Reference:', jobOrder.lpoContractNo)
       } else {
@@ -269,9 +273,19 @@ DOHA BRANCH`
 
     // Convert to array and format descriptions
     const loadedItems = Array.from(itemsMap.values()).map(item => {
-      // Format: Job Order Description\nDN1 Description - Qty\nDN2 Description - Qty
-      const dnLines = item.dnDetails.map((dn: any) => `${dn.description} - ${dn.quantity}`).join('\n')
-      const fullDescription = item.lineItemDescription + (dnLines ? '\n' + dnLines : '')
+        const allSameAsLineItem = item.dnDetails.every((dn: any) => dn.description === item.lineItemDescription)
+
+        let fullDescription: string
+        if (allSameAsLineItem && item.dnDetails.length > 0) {
+          const qtySummary = item.dnDetails
+            .map((dn: any) => `${dn.dnNumber}: ${dn.quantity}`)
+            .join(', ')
+          fullDescription = `${item.lineItemDescription} (Qty: ${qtySummary})`
+        } else {
+          // Format: Job Order Description\nDN1 Description - Qty\nDN2 Description - Qty
+          const dnLines = item.dnDetails.map((dn: any) => `${dn.description} - ${dn.quantity}`).join('\n')
+          fullDescription = item.lineItemDescription + (dnLines ? '\n' + dnLines : '')
+        }
       
       return {
         jobOrderItemId: item.jobOrderItemId,
@@ -393,6 +407,7 @@ DOHA BRANCH`
   }
 
   const selectedClient = clients.find(c => c.id === invoiceForm.clientId)
+  const selectedJobOrder = jobOrders.find(jo => jo.id === invoiceForm.jobOrderId)
 
   return (
     <div className="p-8 max-w-7xl mx-auto">
@@ -458,7 +473,16 @@ DOHA BRANCH`
                     <select
                       required
                       value={invoiceForm.clientId}
-                      onChange={(e) => setInvoiceForm({...invoiceForm, clientId: e.target.value})}
+                        onChange={(e) => {
+                          const selectedId = e.target.value
+                          const client = clients.find(c => c.id === selectedId)
+                          setInvoiceForm({
+                            ...invoiceForm,
+                            clientId: selectedId,
+                            paymentTerms: client?.paymentTerms || invoiceForm.paymentTerms,
+                            terms: client?.paymentTerms || invoiceForm.terms
+                          })
+                        }}
                       disabled={!!invoiceForm.jobOrderId}
                       className="w-full p-2 border rounded disabled:bg-gray-100 disabled:cursor-not-allowed"
                     >
@@ -480,9 +504,16 @@ DOHA BRANCH`
                     >
                       <option value="">Select Job Order</option>
                       {jobOrders.map(jo => (
-                        <option key={jo.id} value={jo.id}>{jo.jobNumber}</option>
+                          <option key={jo.id} value={jo.id}>
+                            {jo.jobNumber} - {jo.productName || ''}{jo.clientName ? ` | ${jo.clientName}` : ''}
+                          </option>
                       ))}
                     </select>
+                      {selectedJobOrder && (
+                        <p className="text-xs text-gray-500 mt-1">
+                          Client: {selectedJobOrder.clientName || 'N/A'} • LPO: {selectedJobOrder.lpoContractNo || 'N/A'}
+                        </p>
+                      )}
                   </div>
                   <div className="col-span-2">
                     <Label>Client Reference (e.g., QF-PO-29344-QEE Dtd 25/08/2024)</Label>
@@ -497,7 +528,27 @@ DOHA BRANCH`
                     <select
                       required
                       value={invoiceForm.currency}
-                      onChange={(e) => setInvoiceForm({...invoiceForm, currency: e.target.value})}
+                        onChange={(e) => {
+                          const oldCurrency = invoiceForm.currency
+                          const newCurrency = e.target.value
+                          const conversionRates: { [key: string]: { [key: string]: number } } = {
+                            QAR: { USD: 0.27, QAR: 1 },
+                            USD: { QAR: 3.64, USD: 1 }
+                          }
+                          const rate = conversionRates[oldCurrency]?.[newCurrency] || 1
+
+                          const updatedItems = items.map(item => ({
+                            ...item,
+                            unitPrice: item.unitPrice * rate,
+                            totalPrice: item.totalPrice * rate
+                          }))
+                          setItems(updatedItems)
+                          setInvoiceForm({
+                            ...invoiceForm,
+                            currency: newCurrency,
+                            discount: invoiceForm.discount * rate
+                          })
+                        }}
                       className="w-full p-2 border rounded"
                     >
                       <option value="QAR">QAR (Qatari Riyal)</option>
@@ -586,7 +637,7 @@ DOHA BRANCH`
                   
                   <div className="flex justify-between pt-2">
                     <span>Subtotal:</span>
-                    <span className="font-semibold">{calculateSubtotal().toFixed(2)} QAR</span>
+                      <span className="font-semibold">{calculateSubtotal().toFixed(2)} {invoiceForm.currency}</span>
                   </div>
                   
                   <div className="grid grid-cols-2 gap-4">
@@ -601,7 +652,7 @@ DOHA BRANCH`
                     </div>
                     
                     <div>
-                      <Label className="text-xs">Discount (QAR)</Label>
+                      <Label className="text-xs">Discount ({invoiceForm.currency})</Label>
                       <Input
                         type="number"
                         step="0.01"
@@ -613,12 +664,12 @@ DOHA BRANCH`
                   
                   <div className="flex justify-between text-sm">
                     <span>Tax Amount:</span>
-                    <span>{calculateTaxAmount().toFixed(2)} QAR</span>
+                      <span>{calculateTaxAmount().toFixed(2)} {invoiceForm.currency}</span>
                   </div>
                   
                   <div className="flex justify-between font-bold text-lg pt-2 border-t">
                     <span>TOTAL:</span>
-                    <span>{calculateTotal().toFixed(2)} QAR</span>
+                      <span>{calculateTotal().toFixed(2)} {invoiceForm.currency}</span>
                   </div>
                   
                   <div className="text-xs text-gray-600 pt-2">
