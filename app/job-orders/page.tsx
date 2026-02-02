@@ -813,92 +813,7 @@ export default function JobOrdersPage() {
                       <option value="LOW">LOW</option>
                     </select>
                   </div>
-                  <div className="md:col-span-3" data-edit-key="contactPerson">
-                    <Label htmlFor="contactPerson" className="text-sm font-semibold">NBTC's Contact Person</Label>
-                    <select
-                      id="contactPerson"
-                      value={formData.contactPerson}
-                      onChange={(e) => {
-                        const value = e.target.value
-                        const match = contactOptions.find((c) => c.name === value)
-                        setFormData((prev) => ({
-                          ...prev,
-                          contactPerson: value,
-                          phone: match?.phone || prev.phone
-                        }))
-                      }}
-                      className="mt-1 h-9 px-2 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full text-sm"
-                    >
-                      <option value="">Select</option>
-                      {contactOptions.map((c) => (
-                        <option key={c.name} value={c.name}>{c.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="md:col-span-2" data-edit-key="phone">
-                    <Label htmlFor="phone" className="text-sm font-semibold">NBTC's Contact Phone No.</Label>
-                    <Input
-                      id="phone"
-                      value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      placeholder="+974 5508 7272"
-                      className="mt-1 h-9 w-full"
-                    />
-                  </div>
-                  <div className="md:col-span-2" data-edit-key="qaQc">
-                    <Label htmlFor="qaQcInCharge" className="text-sm font-semibold">QA/QC In Charge</Label>
-                    <select
-                      id="qaQcInCharge"
-                      value={formData.qaQcInCharge}
-                      onChange={(e) => setFormData({ ...formData, qaQcInCharge: e.target.value })}
-                      className="mt-1 h-9 px-2 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full text-sm"
-                    >
-                      <option value="">Select</option>
-                      {qaQcOptions.map((name) => (
-                        <option key={name} value={name}>{name}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="md:col-span-2" data-edit-key="drawing">
-                    <Label htmlFor="drawingRef" className="text-sm font-semibold">Drawing / Enquiry Ref</Label>
-                    <Input
-                      id="drawingRef"
-                      value={formData.drawingRef}
-                      onChange={(e) => setFormData({ ...formData, drawingRef: e.target.value })}
-                      placeholder="e.g., E-11899"
-                      className="mt-1 h-9 w-full"
-                    />
-                  </div>
-                  <div className="md:col-span-1" data-edit-key="foreman">
-                    <Label htmlFor="foreman" className="text-sm font-semibold">Foreman</Label>
-                    <select
-                      id="foreman"
-                      value={formData.foreman}
-                      onChange={(e) => setFormData({ ...formData, foreman: e.target.value })}
-                      className="mt-1 h-9 px-2 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full text-sm"
-                    >
-                      <option value="">Select</option>
-                      {foremanOptions.map((name) => (
-                        <option key={name} value={name}>{name}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div> 
-
-                {/* Job & Client quick row (line 2) */}
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-                  <div className="md:col-span-2" data-edit-key="jobNumber">
-                    <Label htmlFor="jobNumber" className="text-sm font-semibold">Job Number *</Label>
-                    <Input
-                      id="jobNumber"
-                      value={formData.jobNumber}
-                      onChange={(e) => setFormData({ ...formData, jobNumber: e.target.value })}
-                      placeholder="e.g., 07439"
-                      required
-                      className="mt-1 h-9 w-full text-sm"
-                    />
-                  </div>
-                  <div className="md:col-span-2" data-edit-key="client">
+                  <div className="md:col-span-3" data-edit-key="client">
                     <Label htmlFor="clientSearch" className="text-sm font-semibold">Client *</Label>
                     <div className="relative mt-1">
                       <Input
@@ -980,6 +895,91 @@ export default function JobOrdersPage() {
                       className="mt-1 h-9 w-full"
                     />
                   </div>
+                  <div className="md:col-span-2" data-edit-key="qaQc">
+                    <Label htmlFor="qaQcInCharge" className="text-sm font-semibold">QA/QC In Charge</Label>
+                    <select
+                      id="qaQcInCharge"
+                      value={formData.qaQcInCharge}
+                      onChange={(e) => setFormData({ ...formData, qaQcInCharge: e.target.value })}
+                      className="mt-1 h-9 px-2 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full text-sm"
+                    >
+                      <option value="">Select</option>
+                      {qaQcOptions.map((name) => (
+                        <option key={name} value={name}>{name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="md:col-span-2" data-edit-key="drawing">
+                    <Label htmlFor="drawingRef" className="text-sm font-semibold">Drawing / Enquiry Ref</Label>
+                    <Input
+                      id="drawingRef"
+                      value={formData.drawingRef}
+                      onChange={(e) => setFormData({ ...formData, drawingRef: e.target.value })}
+                      placeholder="e.g., E-11899"
+                      className="mt-1 h-9 w-full"
+                    />
+                  </div>
+                  <div className="md:col-span-1" data-edit-key="foreman">
+                    <Label htmlFor="foreman" className="text-sm font-semibold">Foreman</Label>
+                    <select
+                      id="foreman"
+                      value={formData.foreman}
+                      onChange={(e) => setFormData({ ...formData, foreman: e.target.value })}
+                      className="mt-1 h-9 px-2 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full text-sm"
+                    >
+                      <option value="">Select</option>
+                      {foremanOptions.map((name) => (
+                        <option key={name} value={name}>{name}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div> 
+
+                {/* Job & Client quick row (line 2) */}
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+                  <div className="md:col-span-2" data-edit-key="jobNumber">
+                    <Label htmlFor="jobNumber" className="text-sm font-semibold">Job Number *</Label>
+                    <Input
+                      id="jobNumber"
+                      value={formData.jobNumber}
+                      onChange={(e) => setFormData({ ...formData, jobNumber: e.target.value })}
+                      placeholder="e.g., 07439"
+                      required
+                      className="mt-1 h-9 w-full text-sm"
+                    />
+                  </div>
+                  <div className="md:col-span-3" data-edit-key="contactPerson">
+                    <Label htmlFor="contactPerson" className="text-sm font-semibold">NBTC's Contact Person</Label>
+                    <select
+                      id="contactPerson"
+                      value={formData.contactPerson}
+                      onChange={(e) => {
+                        const value = e.target.value
+                        const match = contactOptions.find((c) => c.name === value)
+                        setFormData((prev) => ({
+                          ...prev,
+                          contactPerson: value,
+                          phone: match?.phone || prev.phone
+                        }))
+                      }}
+                      className="mt-1 h-9 px-2 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full text-sm"
+                    >
+                      <option value="">Select</option>
+                      {contactOptions.map((c) => (
+                        <option key={c.name} value={c.name}>{c.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="md:col-span-2" data-edit-key="phone">
+                    <Label htmlFor="phone" className="text-sm font-semibold">NBTC's Contact Phone No.</Label>
+                    <Input
+                      id="phone"
+                      value={formData.phone}
+                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                      placeholder="+974 5508 7272"
+                      className="mt-1 h-9 w-full"
+                    />
+                  </div>
                   <div className="md:col-span-2">
                     <Label htmlFor="lpoIssueDate" className="text-sm font-semibold">LPO Issue Date</Label>
                     <Input
@@ -990,7 +990,7 @@ export default function JobOrdersPage() {
                       className="mt-1 h-9 w-full"
                     />
                   </div>
-                  <div className="md:col-span-2">
+                  <div className="md:col-span-1">
                     <Label htmlFor="clientContactPerson" className="text-sm font-semibold">Client's Contact Person</Label>
                     <Input
                       id="clientContactPerson"
@@ -1000,7 +1000,7 @@ export default function JobOrdersPage() {
                       className="mt-1 h-9 w-full"
                     />
                   </div>
-                  <div className="md:col-span-1">
+                  <div className="md:col-span-2">
                     <Label htmlFor="clientContactPhone" className="text-sm font-semibold">Client's Phone No.</Label>
                     <Input
                       id="clientContactPhone"
@@ -1686,34 +1686,60 @@ export default function JobOrdersPage() {
                       </select>
                     </div>
                     <div className="md:col-span-3">
-                      <Label htmlFor="edit-contactPerson" className="text-sm font-semibold">NBTC's Contact Person</Label>
-                      <select
-                        id="edit-contactPerson"
-                        value={editFormData.contactPerson}
+                      <Label htmlFor="edit-clientName" className="text-sm font-semibold">Client Name *</Label>
+                      <Input
+                        id="edit-clientName"
+                        value={editClientSearchQuery}
                         onChange={(e) => {
-                          const value = e.target.value
-                          const match = editContactOptions.find((c) => c.name === value)
-                          setEditFormData((prev) => ({
-                            ...prev,
-                            contactPerson: value,
-                            phone: match?.phone || prev.phone
-                          }))
+                          setEditClientSearchQuery(e.target.value)
+                          setShowEditClientSuggestions(true)
                         }}
-                        className="mt-1 h-9 px-2 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full text-sm"
-                      >
-                        <option value="">Select</option>
-                        {editContactOptions.map((c) => (
-                          <option key={c.name} value={c.name}>{c.name}</option>
-                        ))}
-                      </select>
+                        onFocus={() => setShowEditClientSuggestions(true)}
+                        onBlur={() => setTimeout(() => setShowEditClientSuggestions(false), 200)}
+                        placeholder="Type to search clients..."
+                        required
+                        className="mt-1 h-9 w-full text-sm"
+                      />
+                      
+                      {/* Client Suggestions Dropdown for Edit */}
+                      {showEditClientSuggestions && editClientSearchQuery && (
+                        <div 
+                          className="absolute z-50 w-full bg-white border border-gray-300 rounded-md shadow-lg mt-1 max-h-60 overflow-y-auto"
+                          onMouseLeave={() => setShowEditClientSuggestions(false)}
+                        >
+                          {clients
+                            .filter(client => 
+                              client.name.toLowerCase().includes(editClientSearchQuery.toLowerCase())
+                            )
+                            .map(client => (
+                              <div
+                                key={client.id}
+                                onClick={() => {
+                                  setEditFormData({
+                                    ...editFormData,
+                                    clientId: client.id,
+                                    clientName: client.name,
+                                    clientContactPerson: client.contactPerson || '',
+                                    clientContactPhone: client.phone || ''
+                                  })
+                                  setEditClientSearchQuery(client.name)
+                                  setShowEditClientSuggestions(false)
+                                }}
+                                className="px-3 py-2 hover:bg-blue-50 cursor-pointer text-sm"
+                              >
+                                {client.name}
+                              </div>
+                            ))}
+                        </div>
+                      )}
                     </div>
                     <div className="md:col-span-2">
-                      <Label htmlFor="edit-phone" className="text-sm font-semibold">NBTC's Contact Phone No.</Label>
+                      <Label htmlFor="edit-lpoContractNo" className="text-sm font-semibold">LPO / Contract No</Label>
                       <Input
-                        id="edit-phone"
-                        value={editFormData.phone}
-                        onChange={(e) => setEditFormData({ ...editFormData, phone: e.target.value })}
-                        className="mt-1 h-9 w-full"
+                        id="edit-lpoContractNo"
+                        value={editFormData.lpoContractNo}
+                        onChange={(e) => setEditFormData({ ...editFormData, lpoContractNo: e.target.value })}
+                        className="mt-1 h-9 w-full text-sm"
                       />
                     </div>
                     <div className="md:col-span-2">
@@ -1768,104 +1794,34 @@ export default function JobOrdersPage() {
                           className="mt-1 h-9 w-full text-sm"
                         />
                       </div>
-                      <div className="md:col-span-3 relative">
-                        <Label htmlFor="edit-clientName" className="text-sm font-semibold">Client Name *</Label>
-                        <Input
-                          id="edit-clientName"
-                          value={editClientSearchQuery}
+                      <div className="md:col-span-3">
+                        <Label htmlFor="edit-contactPerson" className="text-sm font-semibold">NBTC's Contact Person</Label>
+                        <select
+                          id="edit-contactPerson"
+                          value={editFormData.contactPerson}
                           onChange={(e) => {
-                            setEditClientSearchQuery(e.target.value)
-                            setShowEditClientSuggestions(true)
+                            const value = e.target.value
+                            const match = editContactOptions.find((c) => c.name === value)
+                            setEditFormData((prev) => ({
+                              ...prev,
+                              contactPerson: value,
+                              phone: match?.phone || prev.phone
+                            }))
                           }}
-                          onFocus={() => setShowEditClientSuggestions(true)}
-                          onBlur={() => setTimeout(() => setShowEditClientSuggestions(false), 200)}
-                          placeholder="Type to search clients..."
-                          required
-                          className="mt-1 h-9 w-full text-sm"
-                        />
-                        
-                        {/* Client Suggestions Dropdown */}
-                        {showEditClientSuggestions && editClientSearchQuery && (
-                          <div 
-                            className="absolute z-50 w-full bg-white border border-gray-300 rounded-md shadow-lg mt-1 max-h-60 overflow-y-auto"
-                            onMouseLeave={() => setShowEditClientSuggestions(false)}
-                          >
-                            {clients
-                              .filter(client => 
-                                client.name.toLowerCase().includes(editClientSearchQuery.toLowerCase())
-                              )
-                              .map(client => (
-                                <div
-                                  key={client.id}
-                                  onClick={() => {
-                                    setEditFormData({
-                                      ...editFormData,
-                                      clientId: client.id,
-                                      clientName: client.name
-                                    })
-                                    setEditClientSearchQuery(client.name)
-                                    setShowEditClientSuggestions(false)
-                                  }}
-                                  className="px-3 py-2 hover:bg-blue-50 cursor-pointer border-b last:border-b-0"
-                                >
-                                  <div className="font-medium">{client.name}</div>
-                                  {client.email && <div className="text-xs text-gray-500">{client.email}</div>}
-                                </div>
-                              ))}
-                            
-                            {/* Create New Client Option */}
-                            <div
-                              onClick={() => {
-                                const clientNameToCreate = editClientSearchQuery.trim()
-                                if (clientNameToCreate) {
-                                  // Create new client inline
-                                  fetch('/api/clients', {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({
-                                      name: clientNameToCreate,
-                                      email: '',
-                                      phone: '',
-                                      address: '',
-                                      isDraft: true
-                                    })
-                                  })
-                                  .then(res => res.json())
-                                  .then(newClient => {
-                                    setClients([...clients, newClient])
-                                    setEditFormData({
-                                      ...editFormData,
-                                      clientId: newClient.id,
-                                      clientName: newClient.name
-                                    })
-                                    setEditClientSearchQuery(newClient.name)
-                                    setShowEditClientSuggestions(false)
-                                    alert(`Client "${newClient.name}" created successfully!`)
-                                  })
-                                  .catch(err => {
-                                    alert('Failed to create client')
-                                  })
-                                }
-                              }}
-                              className="px-3 py-2 bg-green-50 hover:bg-green-100 cursor-pointer text-green-700 font-medium border-t-2 border-green-200"
-                            >
-                              + Create new client "{editClientSearchQuery}"
-                            </div>
-                          </div>
-                        )}
-                        
-                        {editFormData.clientId && !showEditClientSuggestions && (
-                          <div className="text-xs text-green-600 mt-1">
-                            ✓ Selected: {editFormData.clientName}
-                          </div>
-                        )}
+                          className="mt-1 h-9 px-2 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full text-sm"
+                        >
+                          <option value="">Select</option>
+                          {editContactOptions.map((c) => (
+                            <option key={c.name} value={c.name}>{c.name}</option>
+                          ))}
+                        </select>
                       </div>
                       <div className="md:col-span-2">
-                        <Label htmlFor="edit-lpoContractNo" className="text-sm font-semibold">LPO / Contract No</Label>
+                        <Label htmlFor="edit-phone" className="text-sm font-semibold">NBTC's Contact Phone No.</Label>
                         <Input
-                          id="edit-lpoContractNo"
-                          value={editFormData.lpoContractNo}
-                          onChange={(e) => setEditFormData({ ...editFormData, lpoContractNo: e.target.value })}
+                          id="edit-phone"
+                          value={editFormData.phone}
+                          onChange={(e) => setEditFormData({ ...editFormData, phone: e.target.value })}
                           className="mt-1 h-9 w-full text-sm"
                         />
                       </div>
@@ -1879,7 +1835,7 @@ export default function JobOrdersPage() {
                           className="mt-1 h-9 w-full text-sm"
                         />
                       </div>
-                      <div className="md:col-span-2">
+                      <div className="md:col-span-1">
                         <Label htmlFor="edit-clientContactPerson" className="text-sm font-semibold">Client's Contact Person</Label>
                         <Input
                           id="edit-clientContactPerson"
@@ -1888,7 +1844,7 @@ export default function JobOrdersPage() {
                           className="mt-1 h-9 w-full text-sm"
                         />
                       </div>
-                      <div className="md:col-span-1">
+                      <div className="md:col-span-2">
                         <Label htmlFor="edit-clientContactPhone" className="text-sm font-semibold">Client's Phone No.</Label>
                         <Input
                           id="edit-clientContactPhone"
