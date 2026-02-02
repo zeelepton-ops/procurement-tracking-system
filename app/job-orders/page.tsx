@@ -1014,7 +1014,7 @@ export default function JobOrdersPage() {
                           <Input
                             value={item.unit}
                             onChange={(e) => updateWorkItem(index, 'unit', e.target.value)}
-                            placeholder="PCS"
+                            placeholder="Nos"
                             required
                             className="h-8 text-sm"
                           />
@@ -1865,7 +1865,7 @@ export default function JobOrdersPage() {
                             <Input
                               value={item.unit}
                               onChange={(e) => updateEditWorkItem(index, 'unit', e.target.value)}
-                              placeholder="PCS"
+                              placeholder="Nos"
                               required
                               className="h-8 text-sm"
                             />

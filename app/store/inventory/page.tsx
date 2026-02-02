@@ -147,7 +147,7 @@ export default function InventoryPage() {
           return {
             itemName: String(itemName).trim(),
             currentStock: Number(pick(row, ['currentStock', 'Current Stock', 'Quantity', 'Qty']) || 0),
-            unit: String(pick(row, ['unit', 'Unit']) || 'PCS'),
+            unit: String(pick(row, ['unit', 'Unit']) || 'Nos'),
             minimumStock: Number(pick(row, ['minimumStock', 'Min', 'Minimum']) || 0),
             location: pick(row, ['location', 'Location']) || null,
             description: pick(row, ['description', 'Description']) || null,

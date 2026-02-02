@@ -38,7 +38,7 @@ export default function PreparePO() {
   const [supplierContact, setSupplierContact] = useState('')
   const [paymentTerms, setPaymentTerms] = useState('')
   const [poNumber, setPONumber] = useState('')
-  const [items, setItems] = useState<POItem[]>([{ materialRequestId: '', description: '', quantity: 1, unit: 'PCS' }])
+  const [items, setItems] = useState<POItem[]>([{ materialRequestId: '', description: '', quantity: 1, unit: 'Nos' }])
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
   const [preps, setPreps] = useState<any[]>([])
@@ -82,7 +82,7 @@ export default function PreparePO() {
   }
 
   const addItemRow = () => {
-    setItems([...items, { materialRequestId: '', description: '', quantity: 1, unit: 'PCS' }])
+    setItems([...items, { materialRequestId: '', description: '', quantity: 1, unit: 'Nos' }])
   }
 
   const removeItemRow = (index: number) => {
@@ -146,7 +146,7 @@ export default function PreparePO() {
       setSelectedSupplier(null)
       setSupplierContact('')
       setPaymentTerms('')
-      setItems([{ materialRequestId: '', description: '', quantity: 1, unit: 'PCS' }])
+      setItems([{ materialRequestId: '', description: '', quantity: 1, unit: 'Nos' }])
       
       setTimeout(() => setMessage(''), 3000)
       fetchPreps()
@@ -272,7 +272,7 @@ export default function PreparePO() {
                     onChange={(e) => updateItemField(idx, 'unit', e.target.value)}
                     disabled={loading}
                   >
-                    <option value="PCS">PCS</option>
+                    <option value="Nos">Nos</option>
                     <option value="KG">KG</option>
                     <option value="M">M</option>
                     <option value="L">L</option>

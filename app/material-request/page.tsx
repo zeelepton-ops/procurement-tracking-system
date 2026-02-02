@@ -115,7 +115,7 @@ export default function MaterialRequestPage() {
     itemName: '', 
     description: '', 
     quantity: '', 
-    unit: 'PCS', 
+    unit: 'Nos', 
     stockQty: '0',
     reasonForRequest: '',
     urgencyLevel: 'NORMAL',
@@ -182,7 +182,7 @@ export default function MaterialRequestPage() {
         if (!itemName) return null
 
         const quantity = Number(pick('quantity', 'Quantity', 'Qty') || 1)
-        const unit = String(pick('unit', 'Unit') || 'PCS')
+        const unit = String(pick('unit', 'Unit') || 'Nos')
         const requiredDateRaw = pick('requiredDate', 'Required Date')
         const requiredDate = requiredDateRaw ? new Date(requiredDateRaw) : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
 
@@ -459,7 +459,7 @@ export default function MaterialRequestPage() {
           itemName: '', 
           description: '', 
           quantity: '', 
-          unit: 'PCS', 
+          unit: 'Nos', 
           stockQty: '0',
           reasonForRequest: '',
           urgencyLevel: 'NORMAL',
@@ -538,7 +538,7 @@ export default function MaterialRequestPage() {
       itemName: '', 
       description: '', 
       quantity: '', 
-      unit: 'PCS', 
+      unit: 'Nos', 
       stockQty: '0',
       reasonForRequest: '',
       urgencyLevel: 'NORMAL',
@@ -738,7 +738,7 @@ export default function MaterialRequestPage() {
                         onChange={(e) => updateItemField(idx, 'unit', e.target.value)}
                         className="h-7 px-1 rounded-md border border-slate-300 text-[11px] w-full focus:z-10 focus:ring-2 focus:ring-blue-400 focus:outline-none"
                       >
-                        <option value="PCS">PCS</option>
+                        <option value="Nos">Nos</option>
                         <option value="KG">KG</option>
                         <option value="L">L</option>
                         <option value="M">M</option>
@@ -1129,7 +1129,7 @@ export default function MaterialRequestPage() {
                         onChange={(e) => updateItemField(idx, 'unit', e.target.value)}
                         className="h-7 px-1 rounded-md border border-slate-300 text-[11px]"
                       >
-                        <option value="PCS">PCS</option>
+                        <option value="Nos">Nos</option>
                         <option value="KG">KG</option>
                         <option value="L">L</option>
                         <option value="M">M</option>
