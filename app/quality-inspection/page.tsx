@@ -86,12 +86,20 @@ interface JobOrderItemOption {
   clientName: string | null
 }
 
+interface JobOrderOption {
+  id: string
+  jobNumber: string
+  clientName: string | null
+  items: JobOrderItemOption[]
+}
+
 export default function QualityInspectionPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
   const [inspections, setInspections] = useState<QualityInspection[]>([])
   const [templates, setTemplates] = useState<ITPTemplate[]>([])
   const [jobOrderItems, setJobOrderItems] = useState<JobOrderItemOption[]>([])
+  const [jobOrders, setJobOrders] = useState<JobOrderOption[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('ALL')
@@ -105,7 +113,7 @@ export default function QualityInspectionPage() {
 
   // Create inspection form
   const [createForm, setCreateForm] = useState({
-    jobOrderItemId: '',
+    jobOrderId: '',
     itpTemplateId: '',
     isCritical: false,
   })
@@ -122,7 +130,7 @@ export default function QualityInspectionPage() {
   const [stepHoldQty, setStepHoldQty] = useState<Record<string, string>>({})
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
 
-  const selectedJobItem = jobOrderItems.find(i => i.id === createForm.jobOrderItemId) || null
+  const selectedJobOrder = jobOrders.find(j => j.id === createForm.jobOrderId) || null
 
   // Calculate summary stats for selected inspection
   const inspectionSummary = selectedInspection ? {
@@ -177,17 +185,22 @@ export default function QualityInspectionPage() {
       const res = await fetch('/api/job-orders?perPage=200')
       if (res.ok) {
         const data = await res.json()
-        const items: JobOrderItemOption[] = (data?.jobs || []).flatMap((job: any) =>
-          (job.items || []).map((item: any) => ({
+        const orders: JobOrderOption[] = (data?.jobs || []).map((job: any) => ({
+          id: job.id,
+          jobNumber: job.jobNumber,
+          clientName: job.clientName || null,
+          items: (job.items || []).map((item: any) => ({
             id: item.id,
-            label: `${job.jobNumber} - ${item.workDescription}${job.clientName ? ` (${job.clientName})` : ''}`,
+            label: `${item.workDescription}`,
             workDescription: item.workDescription,
             quantity: item.quantity ?? null,
             unit: item.unit,
             jobNumber: job.jobNumber,
             clientName: job.clientName || null,
           }))
-        )
+        }))
+        setJobOrders(orders)
+        const items: JobOrderItemOption[] = orders.flatMap(job => job.items)
         setJobOrderItems(items)
       }
     } catch (error) {
@@ -198,26 +211,26 @@ export default function QualityInspectionPage() {
   const createInspection = async () => {
     try {
       setCreateError(null)
-      if (!createForm.jobOrderItemId || !createForm.itpTemplateId) {
-        setCreateError('Job Order Item and ITP Template are required.')
+      if (!createForm.jobOrderId || !createForm.itpTemplateId) {
+        setCreateError('Job Order and ITP Template are required.')
         return
       }
       setCreateSaving(true)
-      const res = await fetch('/api/quality-inspection', {
+      const res = await fetch('/api/quality-inspection/batch', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(createForm),
       })
       if (res.ok) {
         setShowCreateDialog(false)
-        setCreateForm({ jobOrderItemId: '', itpTemplateId: '', isCritical: false })
+        setCreateForm({ jobOrderId: '', itpTemplateId: '', isCritical: false })
         fetchInspections()
       } else {
         const data = await res.json().catch(() => null)
-        setCreateError(data?.error || 'Failed to create inspection. Please try again.')
+        setCreateError(data?.error || 'Failed to create inspections. Please try again.')
       }
     } catch (error) {
-      setCreateError('Failed to create inspection. Please try again.')
+      setCreateError('Failed to create inspections. Please try again.')
     }
     finally {
       setCreateSaving(false)
@@ -417,52 +430,49 @@ export default function QualityInspectionPage() {
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Create Quality Inspection</DialogTitle>
+                  <DialogTitle>Create Quality Inspections</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4">
                   <div>
-                    <Label>Job Order Item</Label>
+                    <Label>Job Order</Label>
                     <Select
-                      value={createForm.jobOrderItemId}
-                      onValueChange={(value) => setCreateForm({ ...createForm, jobOrderItemId: value })}
+                      value={createForm.jobOrderId}
+                      onValueChange={(value) => setCreateForm({ ...createForm, jobOrderId: value })}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select job order item" />
+                        <SelectValue placeholder="Select job order" />
                       </SelectTrigger>
                       <SelectContent>
-                        {jobOrderItems.length === 0 && (
+                        {jobOrders.length === 0 && (
                           <SelectItem value="__none" disabled>
-                            No job order items found
+                            No job orders found
                           </SelectItem>
                         )}
-                        {jobOrderItems.map(item => (
-                          <SelectItem key={item.id} value={item.id}>
-                            {item.label}
+                        {jobOrders.map(jo => (
+                          <SelectItem key={jo.id} value={jo.id}>
+                            {jo.jobNumber} - {jo.clientName || 'No Client'}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
-                  {selectedJobItem && (
-                    <div className="rounded-lg border bg-slate-50 p-3 text-sm">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                        <div>
-                          <span className="text-slate-500">Job Number:</span>
-                          <p className="font-medium text-slate-900">{selectedJobItem.jobNumber}</p>
-                        </div>
-                        <div>
-                          <span className="text-slate-500">Client:</span>
-                          <p className="font-medium text-slate-900">{selectedJobItem.clientName || '-'}</p>
-                        </div>
-                        <div className="md:col-span-2">
-                          <span className="text-slate-500">Work Description:</span>
-                          <p className="font-medium text-slate-900">{selectedJobItem.workDescription}</p>
-                        </div>
-                        <div>
-                          <span className="text-slate-500">Inspection Qty:</span>
-                          <p className="font-medium text-slate-900">
-                            {selectedJobItem.quantity ?? '-'} {selectedJobItem.unit || ''}
-                          </p>
+                  {selectedJobOrder && (
+                    <div className="rounded-lg border bg-slate-50 p-3 text-sm space-y-3">
+                      <div>
+                        <span className="text-slate-500 font-semibold">Job Order: {selectedJobOrder.jobNumber}</span>
+                        <p className="text-slate-600">{selectedJobOrder.clientName || 'No Client'}</p>
+                      </div>
+                      <div>
+                        <span className="text-slate-500 font-semibold block mb-2">Line Items ({selectedJobOrder.items.length}):</span>
+                        <div className="space-y-2">
+                          {selectedJobOrder.items.map(item => (
+                            <div key={item.id} className="bg-white rounded p-2 border border-slate-200">
+                              <p className="font-medium text-slate-900 text-xs">{item.workDescription}</p>
+                              <p className="text-xs text-slate-500">
+                                Qty: {item.quantity ?? '-'} {item.unit || ''}
+                              </p>
+                            </div>
+                          ))}
                         </div>
                       </div>
                     </div>
