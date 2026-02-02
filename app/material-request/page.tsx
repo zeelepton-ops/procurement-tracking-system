@@ -143,6 +143,8 @@ export default function MaterialRequestPage() {
     requestedBy: ''
   })
   const importInputRef = useRef<HTMLInputElement | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
 
   useEffect(() => {
     fetchJobOrders()

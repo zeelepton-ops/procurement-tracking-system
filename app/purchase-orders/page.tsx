@@ -56,6 +56,8 @@ export default function PurchaseOrdersPage() {
   const [isViewingPO, setIsViewingPO] = useState(false)
   const [isEditingPO, setIsEditingPO] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
 
   // Form state
   const [formData, setFormData] = useState({
@@ -84,11 +86,13 @@ export default function PurchaseOrdersPage() {
 
   async function fetchPurchaseOrders() {
     try {
+      setError(null)
       const res = await fetch('/api/purchase-orders')
       const data = await res.json()
       setPos(Array.isArray(data) ? data : [])
     } catch (error) {
       console.error('Failed to fetch POs:', error)
+      setError('Failed to load purchase orders')
     }
   }
 
@@ -108,12 +112,13 @@ export default function PurchaseOrdersPage() {
 
   async function createPurchaseOrder() {
     if (!formData.poNumber.trim() || !formData.supplierName.trim() || selectedItems.length === 0) {
-      alert('Please fill in all required fields and select at least one item')
+      setError('Please fill in all required fields and select at least one item')
       return
     }
 
     setLoading(true)
     try {
+      setError(null)
       const res = await fetch('/api/purchase-orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -125,7 +130,7 @@ export default function PurchaseOrdersPage() {
 
       if (!res.ok) {
         const error = await res.json()
-        alert(error.error || 'Failed to create PO')
+        setError(error.error || 'Failed to create PO')
         return
       }
 
@@ -138,11 +143,12 @@ export default function PurchaseOrdersPage() {
       })
       setSelectedItems([])
       setShowCreateForm(false)
+      setSuccess('Purchase Order created successfully!')
       fetchPurchaseOrders()
-      alert('Purchase Order created successfully!')
+      setTimeout(() => setSuccess(null), 5000)
     } catch (error) {
       console.error('Failed to create PO:', error)
-      alert('Failed to create purchase order')
+      setError('Failed to create purchase order')
     } finally {
       setLoading(false)
     }
@@ -193,7 +199,7 @@ export default function PurchaseOrdersPage() {
       }
     } catch (error) {
       console.error('Failed to delete PO:', error)
-      alert('Failed to delete PO')
+      setError('Failed to delete PO')
     }
   }
 
@@ -235,6 +241,16 @@ Generated: ${new Date().toLocaleString()}
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4">
       <div className="max-w-7xl mx-auto">
+        {error && (
+          <div className="mb-4 rounded border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
+            {error}
+          </div>
+        )}
+        {success && (
+          <div className="mb-4 rounded border border-green-200 bg-green-50 px-4 py-2 text-sm text-green-700">
+            {success}
+          </div>
+        )}
         {/* Header */}
         <div className="mb-6 flex items-center justify-between">
           <div>

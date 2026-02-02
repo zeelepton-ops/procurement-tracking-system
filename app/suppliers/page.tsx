@@ -67,6 +67,8 @@ export default function SuppliersPage() {
   const [categoryFilter, setCategoryFilter] = useState('ALL')
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'PENDING' | 'APPROVED' | 'REJECTED' | 'SUSPENDED'>('APPROVED')
   const [drafts, setDrafts] = useState<Draft[]>([])
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
 
   useEffect(() => {
     fetchSuppliers()
@@ -91,6 +93,7 @@ export default function SuppliersPage() {
   async function fetchSuppliers() {
     setLoading(true)
     try {
+      setError(null)
       const params = new URLSearchParams()
       if (searchQuery) params.set('q', searchQuery)
       if (categoryFilter !== 'ALL') params.set('category', categoryFilter)
@@ -101,6 +104,7 @@ export default function SuppliersPage() {
       setSuppliers(Array.isArray(data) ? data : [])
     } catch (error) {
       console.error('Failed to fetch suppliers:', error)
+      setError('Failed to load suppliers')
       setSuppliers([])
     } finally {
       setLoading(false)
@@ -123,6 +127,16 @@ export default function SuppliersPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-8">
       <div className="max-w-7xl mx-auto px-4">
+        {error && (
+          <div className="mb-4 rounded border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
+            {error}
+          </div>
+        )}
+        {success && (
+          <div className="mb-4 rounded border border-green-200 bg-green-50 px-4 py-2 text-sm text-green-700">
+            {success}
+          </div>
+        )}
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>

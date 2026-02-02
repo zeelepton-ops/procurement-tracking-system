@@ -43,6 +43,8 @@ export default function ClientsPage() {
   const [showModal, setShowModal] = useState(false)
   const [modalMode, setModalMode] = useState<'add' | 'edit'>('add')
   const [selectedClient, setSelectedClient] = useState<Client | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
 
   const [clientForm, setClientForm] = useState({
     name: '',
@@ -72,6 +74,7 @@ export default function ClientsPage() {
 
   const fetchClients = async () => {
     try {
+      setError(null)
       const params = new URLSearchParams()
       if (statusFilter !== 'ALL') params.set('status', statusFilter)
       if (searchTerm) params.set('search', searchTerm)
@@ -82,6 +85,7 @@ export default function ClientsPage() {
       setLoading(false)
     } catch (error) {
       console.error('Failed to fetch clients:', error)
+      setError('Failed to load clients')
       setClients([])
       setLoading(false)
     }
@@ -173,16 +177,17 @@ export default function ClientsPage() {
       const data = await res.json()
 
       if (!res.ok) {
-        alert(data.error || 'Failed to save client')
+        setError(data.error || 'Failed to save client')
         return
       }
 
-      alert(`Client ${modalMode === 'add' ? 'created' : 'updated'} successfully!`)
+      setSuccess(`Client ${modalMode === 'add' ? 'created' : 'updated'} successfully!`)
+      setTimeout(() => setSuccess(null), 5000)
       setShowModal(false)
       fetchClients()
     } catch (error) {
       console.error('Failed to save client:', error)
-      alert('Failed to save client')
+      setError('Failed to save client')
     }
   }
 
@@ -194,15 +199,16 @@ export default function ClientsPage() {
       const data = await res.json()
 
       if (!res.ok) {
-        alert(data.error || 'Failed to delete client')
+        setError(data.error || 'Failed to delete client')
         return
       }
 
-      alert('Client deleted successfully!')
+      setSuccess('Client deleted successfully!')
+      setTimeout(() => setSuccess(null), 5000)
       fetchClients()
     } catch (error) {
       console.error('Failed to delete client:', error)
-      alert('Failed to delete client')
+      setError('Failed to delete client')
     }
   }
 
@@ -212,6 +218,16 @@ export default function ClientsPage() {
 
   return (
     <div className="p-8 max-w-7xl mx-auto">
+      {error && (
+        <div className="mb-4 rounded border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
+          {error}
+        </div>
+      )}
+      {success && (
+        <div className="mb-4 rounded border border-green-200 bg-green-50 px-4 py-2 text-sm text-green-700">
+          {success}
+        </div>
+      )}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <Building2 className="w-8 h-8 text-blue-600" />
