@@ -40,6 +40,7 @@ export default function InvoicesPage() {
   const { data: session } = useSession()
   const [invoices, setInvoices] = useState<Invoice[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('ALL')
   const [paymentStatusFilter, setPaymentStatusFilter] = useState('ALL')
@@ -50,6 +51,7 @@ export default function InvoicesPage() {
 
   const fetchInvoices = async () => {
     try {
+      setError(null)
       const params = new URLSearchParams()
       if (statusFilter !== 'ALL') params.set('status', statusFilter)
       if (paymentStatusFilter !== 'ALL') params.set('paymentStatus', paymentStatusFilter)
@@ -61,6 +63,7 @@ export default function InvoicesPage() {
       setLoading(false)
     } catch (error) {
       console.error('Failed to fetch invoices:', error)
+      setError('Failed to load invoices. Please try again.')
       setLoading(false)
     }
   }
@@ -73,7 +76,7 @@ export default function InvoicesPage() {
       const data = await res.json()
 
       if (!res.ok) {
-        alert(data.error || 'Failed to delete invoice')
+        setError(data.error || 'Failed to delete invoice')
         return
       }
 
@@ -81,7 +84,7 @@ export default function InvoicesPage() {
       fetchInvoices()
     } catch (error) {
       console.error('Failed to delete invoice:', error)
-      alert('Failed to delete invoice')
+      setError('Failed to delete invoice')
     }
   }
 
@@ -106,12 +109,24 @@ export default function InvoicesPage() {
     return colors[status] || 'bg-gray-100 text-gray-800'
   }
 
+  const summary = {
+    totalCount: invoices.length,
+    totalAmount: invoices.reduce((sum, inv) => sum + (inv.totalAmount || 0), 0),
+    totalBalance: invoices.reduce((sum, inv) => sum + (inv.balanceAmount || 0), 0),
+    overdueCount: invoices.filter(inv => inv.paymentStatus === 'OVERDUE').length
+  }
+
   if (loading) {
     return <div className="p-8">Loading...</div>
   }
 
   return (
     <div className="p-8 max-w-7xl mx-auto">
+      {error && (
+        <div className="mb-4 rounded border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
+          {error}
+        </div>
+      )}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <FileText className="w-8 h-8 text-blue-600" />
@@ -175,74 +190,103 @@ export default function InvoicesPage() {
         </CardContent>
       </Card>
 
+      {/* Summary */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <Card>
+          <CardContent className="pt-4">
+            <p className="text-xs text-gray-500">Total Invoices</p>
+            <p className="text-2xl font-bold">{summary.totalCount}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4">
+            <p className="text-xs text-gray-500">Total Amount</p>
+            <p className="text-2xl font-bold">{summary.totalAmount.toFixed(2)}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4">
+            <p className="text-xs text-gray-500">Total Balance</p>
+            <p className="text-2xl font-bold">{summary.totalBalance.toFixed(2)}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-4">
+            <p className="text-xs text-gray-500">Overdue</p>
+            <p className="text-2xl font-bold">{summary.overdueCount}</p>
+          </CardContent>
+        </Card>
+      </div>
+
       {/* Invoices Table */}
       <Card>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Invoice #</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Client</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Job Order</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Balance</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Payment</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {invoices.map((invoice) => (
-                  <tr key={invoice.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap font-medium">{invoice.invoiceNumber}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">{invoice.client.name}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {invoice.jobOrder ? invoice.jobOrder.jobNumber : '-'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {new Date(invoice.invoiceDate).toLocaleDateString()}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">{invoice.totalAmount.toFixed(2)}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">{invoice.balanceAmount.toFixed(2)}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 py-1 text-xs rounded ${getStatusColor(invoice.status)}`}>
-                        {invoice.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 py-1 text-xs rounded ${getPaymentStatusColor(invoice.paymentStatus)}`}>
-                        {invoice.paymentStatus}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex gap-2">
-                        <Link href={`/invoices/${invoice.id}`}>
-                          <button className="p-1 hover:bg-gray-100 rounded">
-                            <Eye className="w-4 h-4 text-blue-600" />
-                          </button>
-                        </Link>
-                        {session?.user?.role === 'ADMIN' && invoice.status === 'DRAFT' && (
-                          <button
-                            onClick={() => handleDelete(invoice.id)}
-                            className="p-1 hover:bg-gray-100 rounded"
-                          >
-                            <Trash2 className="w-4 h-4 text-red-600" />
-                          </button>
-                        )}
-                      </div>
-                    </td>
+          {invoices.length === 0 ? (
+            <div className="p-8 text-center text-sm text-gray-500">
+              No invoices found for the selected filters.
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Invoice #</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Client</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Job Order</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Balance</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Payment</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
                   </tr>
-                ))}
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {invoices.map((invoice) => (
+                    <tr key={invoice.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap font-medium">{invoice.invoiceNumber}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">{invoice.client.name}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {invoice.jobOrder ? invoice.jobOrder.jobNumber : '-'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {new Date(invoice.invoiceDate).toLocaleDateString()}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">{invoice.totalAmount.toFixed(2)}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">{invoice.balanceAmount.toFixed(2)}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2 py-1 text-xs rounded ${getStatusColor(invoice.status)}`}>
+                          {invoice.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2 py-1 text-xs rounded ${getPaymentStatusColor(invoice.paymentStatus)}`}>
+                          {invoice.paymentStatus}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex gap-2">
+                          <Link href={`/invoices/${invoice.id}`}>
+                            <button className="p-1 hover:bg-gray-100 rounded">
+                              <Eye className="w-4 h-4 text-blue-600" />
+                            </button>
+                          </Link>
+                          {session?.user?.role === 'ADMIN' && invoice.status === 'DRAFT' && (
+                            <button
+                              onClick={() => handleDelete(invoice.id)}
+                              className="p-1 hover:bg-gray-100 rounded"
+                            >
+                              <Trash2 className="w-4 h-4 text-red-600" />
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
               </tbody>
             </table>
           </div>
-          {invoices.length === 0 && (
-            <div className="text-center py-12 text-gray-500">
-              No invoices found. Click "Create Invoice" to get started.
-            </div>
-          )}
+        )}
         </CardContent>
       </Card>
     </div>

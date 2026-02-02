@@ -60,6 +60,7 @@ export default function StatusDashboardPage() {
   const [filteredRequests, setFilteredRequests] = useState<MaterialRequest[]>([])
   const [loading, setLoading] = useState(true)
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date())
+  const [error, setError] = useState<string | null>(null)
   
   const [userRole, setUserRole] = useState('production')
   const [filterStatus, setFilterStatus] = useState('ALL')
@@ -80,6 +81,7 @@ export default function StatusDashboardPage() {
 
   const fetchRequests = async () => {
     try {
+      setError(null)
       const res = await fetch('/api/material-requests')
       const data = await res.json()
       setRequests(data)
@@ -87,6 +89,7 @@ export default function StatusDashboardPage() {
       setLoading(false)
     } catch (error) {
       console.error('Failed to fetch requests:', error)
+      setError('Failed to load dashboard data. Please refresh.')
       setLoading(false)
     }
   }
@@ -149,6 +152,11 @@ export default function StatusDashboardPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4">
       <div className="max-w-7xl mx-auto">
+        {error && (
+          <div className="mb-4 rounded border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
+            {error}
+          </div>
+        )}
         {/* Header */}
         <div className="mb-4">
           <div className="flex items-center justify-between mb-1">
