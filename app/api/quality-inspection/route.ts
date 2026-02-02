@@ -12,7 +12,10 @@ export async function GET(req: NextRequest) {
       itpTemplate: true,
       steps: { include: { photos: true } },
       jobOrderItem: {
-        include: {
+        select: {
+          workDescription: true,
+          quantity: true,
+          unit: true,
           jobOrder: {
             select: {
               jobNumber: true,
@@ -66,7 +69,10 @@ export async function POST(req: NextRequest) {
       steps: true,
       itpTemplate: true,
       jobOrderItem: {
-        include: {
+        select: {
+          workDescription: true,
+          quantity: true,
+          unit: true,
           jobOrder: {
             select: {
               jobNumber: true,
@@ -96,7 +102,10 @@ export async function PATCH(req: NextRequest) {
       steps: { include: { photos: true } },
       itpTemplate: true,
       jobOrderItem: {
-        include: {
+        select: {
+          workDescription: true,
+          quantity: true,
+          unit: true,
           jobOrder: {
             select: {
               jobNumber: true,

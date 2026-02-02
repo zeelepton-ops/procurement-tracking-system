@@ -35,6 +35,8 @@ interface QualityInspection {
   updatedAt: string
   jobOrderItem: {
     workDescription: string
+    quantity: number | null
+    unit: string
     jobOrder: {
       jobNumber: string
       clientName: string
@@ -74,6 +76,11 @@ interface ITPTemplate {
 interface JobOrderItemOption {
   id: string
   label: string
+  workDescription: string
+  quantity: number | null
+  unit: string
+  jobNumber: string
+  clientName: string | null
 }
 
 export default function QualityInspectionPage() {
@@ -106,6 +113,9 @@ export default function QualityInspectionPage() {
     steps: '',
     isDefault: false,
   })
+  const [stepRemarks, setStepRemarks] = useState<Record<string, string>>({})
+
+  const selectedJobItem = jobOrderItems.find(i => i.id === createForm.jobOrderItemId) || null
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -152,6 +162,11 @@ export default function QualityInspectionPage() {
           (job.items || []).map((item: any) => ({
             id: item.id,
             label: `${job.jobNumber} - ${item.workDescription}${job.clientName ? ` (${job.clientName})` : ''}`,
+            workDescription: item.workDescription,
+            quantity: item.quantity ?? null,
+            unit: item.unit,
+            jobNumber: job.jobNumber,
+            clientName: job.clientName || null,
           }))
         )
         setJobOrderItems(items)
@@ -384,6 +399,30 @@ export default function QualityInspectionPage() {
                       </SelectContent>
                     </Select>
                   </div>
+                  {selectedJobItem && (
+                    <div className="rounded-lg border bg-slate-50 p-3 text-sm">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        <div>
+                          <span className="text-slate-500">Job Number:</span>
+                          <p className="font-medium text-slate-900">{selectedJobItem.jobNumber}</p>
+                        </div>
+                        <div>
+                          <span className="text-slate-500">Client:</span>
+                          <p className="font-medium text-slate-900">{selectedJobItem.clientName || '-'}</p>
+                        </div>
+                        <div className="md:col-span-2">
+                          <span className="text-slate-500">Work Description:</span>
+                          <p className="font-medium text-slate-900">{selectedJobItem.workDescription}</p>
+                        </div>
+                        <div>
+                          <span className="text-slate-500">Inspection Qty:</span>
+                          <p className="font-medium text-slate-900">
+                            {selectedJobItem.quantity ?? '-'} {selectedJobItem.unit || ''}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                   <div>
                     <Label>ITP Template</Label>
                     <Select
@@ -501,7 +540,7 @@ export default function QualityInspectionPage() {
 
         {/* Inspection Details Dialog */}
         <Dialog open={!!selectedInspection} onOpenChange={() => setSelectedInspection(null)}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="w-[95vw] max-w-[95vw] h-[90vh] max-h-[90vh] overflow-y-auto">
             {selectedInspection && (
               <>
                 <DialogHeader>
@@ -528,6 +567,12 @@ export default function QualityInspectionPage() {
                         <span className="text-gray-500">Work Description:</span>
                         <p className="font-medium">{selectedInspection.jobOrderItem.workDescription}</p>
                       </div>
+                      <div>
+                        <span className="text-gray-500">Inspection Qty:</span>
+                        <p className="font-medium">
+                          {selectedInspection.jobOrderItem.quantity ?? '-'} {selectedInspection.jobOrderItem.unit || ''}
+                        </p>
+                      </div>
                     </div>
                   </div>
 
@@ -536,53 +581,63 @@ export default function QualityInspectionPage() {
                     <h4 className="font-semibold mb-4">Inspection Steps</h4>
                     <div className="space-y-3">
                       {selectedInspection.steps.map((step, index) => (
-                        <div key={step.id} className="border rounded-lg p-4">
-                          <div className="flex items-center justify-between mb-2">
+                        <div key={step.id} className="border rounded-lg p-4 bg-white shadow-sm">
+                          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
                             <div className="flex items-center gap-2">
                               <span className="font-medium">Step {index + 1}: {step.stepName}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-slate-500">Response</span>
                               {getStatusBadge(step.status)}
                             </div>
                           </div>
-                          
-                          {step.remarks && (
-                            <p className="text-sm text-gray-600 mb-2">{step.remarks}</p>
-                          )}
-                          
+
+                          <div className="mt-3 grid grid-cols-1 lg:grid-cols-3 gap-3">
+                            <div className="lg:col-span-2">
+                              <Label className="text-xs text-slate-500">Comment / Remarks</Label>
+                              <Textarea
+                                value={stepRemarks[step.id] ?? step.remarks ?? ''}
+                                onChange={(e) => setStepRemarks(prev => ({ ...prev, [step.id]: e.target.value }))}
+                                placeholder="Add inspection comment or remark..."
+                                rows={2}
+                              />
+                            </div>
+                            <div className="flex flex-wrap gap-2 lg:justify-end lg:items-end">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="text-green-600"
+                                onClick={() => updateStepStatus(step.id, 'APPROVED', (stepRemarks[step.id] ?? step.remarks ?? '').trim())}
+                              >
+                                <CheckCircle2 className="w-4 h-4 mr-1" />
+                                Approve
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="text-red-600"
+                                onClick={() => updateStepStatus(step.id, 'FAILED', (stepRemarks[step.id] ?? step.remarks ?? '').trim())}
+                              >
+                                <XCircle className="w-4 h-4 mr-1" />
+                                Fail
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="text-yellow-600"
+                                onClick={() => updateStepStatus(step.id, 'HOLD', (stepRemarks[step.id] ?? step.remarks ?? '').trim())}
+                              >
+                                <AlertCircle className="w-4 h-4 mr-1" />
+                                Hold
+                              </Button>
+                            </div>
+                          </div>
+
                           {step.inspectedBy && (
-                            <p className="text-xs text-gray-500">
+                            <p className="text-xs text-gray-500 mt-3">
                               Inspected by {step.inspectedBy} on {new Date(step.inspectedAt!).toLocaleString()}
                             </p>
                           )}
-
-                          <div className="flex gap-2 mt-3">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="text-green-600"
-                              onClick={() => updateStepStatus(step.id, 'APPROVED')}
-                            >
-                              <CheckCircle2 className="w-4 h-4 mr-1" />
-                              Approve
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="text-red-600"
-                              onClick={() => updateStepStatus(step.id, 'FAILED')}
-                            >
-                              <XCircle className="w-4 h-4 mr-1" />
-                              Fail
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="text-yellow-600"
-                              onClick={() => updateStepStatus(step.id, 'HOLD')}
-                            >
-                              <AlertCircle className="w-4 h-4 mr-1" />
-                              Hold
-                            </Button>
-                          </div>
                         </div>
                       ))}
                     </div>
