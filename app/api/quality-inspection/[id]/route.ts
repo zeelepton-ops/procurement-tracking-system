@@ -15,7 +15,10 @@ export async function GET(
         orderBy: { createdAt: 'asc' }
       },
       jobOrderItem: {
-        include: {
+        select: {
+          workDescription: true,
+          quantity: true,
+          unit: true,
           jobOrder: {
             select: {
               jobNumber: true,
@@ -32,4 +35,19 @@ export async function GET(
   }
   
   return NextResponse.json(inspection);
+}
+
+// DELETE: Delete an inspection
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    await prisma.qualityInspection.delete({
+      where: { id: params.id }
+    });
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    return NextResponse.json({ error: 'Failed to delete inspection' }, { status: 500 });
+  }
 }

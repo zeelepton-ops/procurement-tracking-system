@@ -120,8 +120,21 @@ export default function QualityInspectionPage() {
   const [stepApprovedQty, setStepApprovedQty] = useState<Record<string, string>>({})
   const [stepFailedQty, setStepFailedQty] = useState<Record<string, string>>({})
   const [stepHoldQty, setStepHoldQty] = useState<Record<string, string>>({})
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
 
   const selectedJobItem = jobOrderItems.find(i => i.id === createForm.jobOrderItemId) || null
+
+  // Calculate summary stats for selected inspection
+  const inspectionSummary = selectedInspection ? {
+    totalSteps: selectedInspection.steps.length,
+    approved: selectedInspection.steps.filter(s => s.status === 'APPROVED').length,
+    failed: selectedInspection.steps.filter(s => s.status === 'FAILED').length,
+    hold: selectedInspection.steps.filter(s => s.status === 'HOLD').length,
+    pending: selectedInspection.steps.filter(s => s.status === 'PENDING').length,
+    totalApprovedQty: selectedInspection.steps.reduce((sum, s) => sum + (s.approvedQty || 0), 0),
+    totalFailedQty: selectedInspection.steps.reduce((sum, s) => sum + (s.failedQty || 0), 0),
+    totalHoldQty: selectedInspection.steps.reduce((sum, s) => sum + (s.holdQty || 0), 0),
+  } : null
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -268,6 +281,21 @@ export default function QualityInspectionPage() {
       }
     } catch (error) {
       console.error('Error updating step:', error)
+    }
+  }
+
+  const deleteInspection = async (inspectionId: string) => {
+    try {
+      const res = await fetch(`/api/quality-inspection/${inspectionId}`, {
+        method: 'DELETE',
+      })
+      if (res.ok) {
+        setSelectedInspection(null)
+        setDeleteConfirm(null)
+        fetchInspections()
+      }
+    } catch (error) {
+      console.error('Error deleting inspection:', error)
     }
   }
 
@@ -562,11 +590,47 @@ export default function QualityInspectionPage() {
                 <DialogHeader>
                   <DialogTitle className="flex items-center justify-between">
                     <span>Quality Inspection Details</span>
-                    {getStatusBadge(selectedInspection.status)}
+                    <div className="flex items-center gap-2">
+                      {getStatusBadge(selectedInspection.status)}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-red-600"
+                        onClick={() => setDeleteConfirm(selectedInspection.id)}
+                      >
+                        <XCircle className="w-4 h-4 mr-1" />
+                        Delete
+                      </Button>
+                    </div>
                   </DialogTitle>
                 </DialogHeader>
                 
                 <div className="space-y-6">
+                  {/* Summary Stats */}
+                  {inspectionSummary && (
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-4 bg-slate-50 rounded-lg border">
+                      <div className="text-center">
+                        <p className="text-xs text-slate-500">Total Steps</p>
+                        <p className="text-2xl font-bold text-slate-900">{inspectionSummary.totalSteps}</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-xs text-green-600 font-semibold">Approved</p>
+                        <p className="text-2xl font-bold text-green-700">{inspectionSummary.approved}</p>
+                        <p className="text-xs text-green-600">Qty: {inspectionSummary.totalApprovedQty}</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-xs text-red-600 font-semibold">Failed</p>
+                        <p className="text-2xl font-bold text-red-700">{inspectionSummary.failed}</p>
+                        <p className="text-xs text-red-600">Qty: {inspectionSummary.totalFailedQty}</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-xs text-yellow-600 font-semibold">Hold</p>
+                        <p className="text-2xl font-bold text-yellow-700">{inspectionSummary.hold}</p>
+                        <p className="text-xs text-yellow-600">Qty: {inspectionSummary.totalHoldQty}</p>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Job Info */}
                   <div className="bg-gray-50 rounded-lg p-4">
                     <h4 className="font-semibold mb-2">Job Information</h4>
@@ -622,11 +686,11 @@ export default function QualityInspectionPage() {
                               />
                             </div>
 
-                            {/* Quantity & Actions */}
-                            <div className="lg:col-span-4 flex flex-col gap-2">
-                              <div className="flex items-center gap-2">
+                            {/* Quantity & Actions - Horizontal Layout */}
+                            <div className="lg:col-span-4 space-y-2">
+                              <div className="flex items-end gap-2">
                                 <div className="flex-1">
-                                  <Label className="text-xs text-green-600 font-semibold">Approved</Label>
+                                  <Label className="text-xs text-green-600 font-semibold">Approved Qty</Label>
                                   <Input
                                     type="number"
                                     placeholder="0"
@@ -639,16 +703,16 @@ export default function QualityInspectionPage() {
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  className="text-green-600 mt-5"
+                                  className="text-green-600 h-9"
                                   onClick={() => updateStepStatus(step.id, 'APPROVED', (stepRemarks[step.id] ?? step.remarks ?? '').trim(), stepApprovedQty[step.id] ?? step.approvedQty?.toString() ?? '', stepFailedQty[step.id] ?? step.failedQty?.toString() ?? '', stepHoldQty[step.id] ?? step.holdQty?.toString() ?? '')}
                                 >
                                   <CheckCircle2 className="w-4 h-4 mr-1" />
                                   Approve
                                 </Button>
                               </div>
-                              <div className="flex items-center gap-2">
+                              <div className="flex items-end gap-2">
                                 <div className="flex-1">
-                                  <Label className="text-xs text-red-600 font-semibold">Failed</Label>
+                                  <Label className="text-xs text-red-600 font-semibold">Failed Qty</Label>
                                   <Input
                                     type="number"
                                     placeholder="0"
@@ -661,16 +725,16 @@ export default function QualityInspectionPage() {
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  className="text-red-600 mt-5"
+                                  className="text-red-600 h-9"
                                   onClick={() => updateStepStatus(step.id, 'FAILED', (stepRemarks[step.id] ?? step.remarks ?? '').trim(), stepApprovedQty[step.id] ?? step.approvedQty?.toString() ?? '', stepFailedQty[step.id] ?? step.failedQty?.toString() ?? '', stepHoldQty[step.id] ?? step.holdQty?.toString() ?? '')}
                                 >
                                   <XCircle className="w-4 h-4 mr-1" />
                                   Fail
                                 </Button>
                               </div>
-                              <div className="flex items-center gap-2">
+                              <div className="flex items-end gap-2">
                                 <div className="flex-1">
-                                  <Label className="text-xs text-yellow-600 font-semibold">Hold</Label>
+                                  <Label className="text-xs text-yellow-600 font-semibold">Hold Qty</Label>
                                   <Input
                                     type="number"
                                     placeholder="0"
@@ -683,7 +747,7 @@ export default function QualityInspectionPage() {
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  className="text-yellow-600 mt-5"
+                                  className="text-yellow-600 h-9"
                                   onClick={() => updateStepStatus(step.id, 'HOLD', (stepRemarks[step.id] ?? step.remarks ?? '').trim(), stepApprovedQty[step.id] ?? step.approvedQty?.toString() ?? '', stepFailedQty[step.id] ?? step.failedQty?.toString() ?? '', stepHoldQty[step.id] ?? step.holdQty?.toString() ?? '')}
                                 >
                                   <AlertCircle className="w-4 h-4 mr-1" />
@@ -705,6 +769,30 @@ export default function QualityInspectionPage() {
                 </div>
               </>
             )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={!!deleteConfirm} onOpenChange={() => setDeleteConfirm(null)}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Delete Quality Inspection?</DialogTitle>
+            </DialogHeader>
+            <p className="text-sm text-gray-600">
+              Are you sure you want to delete this quality inspection? This action cannot be undone.
+            </p>
+            <div className="flex gap-2 justify-end mt-4">
+              <Button variant="outline" onClick={() => setDeleteConfirm(null)}>
+                Cancel
+              </Button>
+              <Button
+                variant="outline"
+                className="text-red-600"
+                onClick={() => deleteConfirm && deleteInspection(deleteConfirm)}
+              >
+                Delete
+              </Button>
+            </div>
           </DialogContent>
         </Dialog>
       </div>
