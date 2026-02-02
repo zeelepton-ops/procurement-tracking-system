@@ -539,10 +539,12 @@ export default function QualityInspectionPage() {
           {filteredInspections.map(inspection => (
             <div
               key={inspection.id}
-              className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow cursor-pointer"
-              onClick={() => setSelectedInspection(inspection)}
+              className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow"
             >
-              <div className="p-6">
+              <div 
+                className="p-6 cursor-pointer"
+                onClick={() => setSelectedInspection(inspection)}
+              >
                 <div className="flex items-start justify-between mb-4">
                   <div>
                     <h3 className="font-semibold text-lg text-gray-900">
@@ -569,6 +571,21 @@ export default function QualityInspectionPage() {
                     )}
                   </div>
                 </div>
+              </div>
+              
+              <div className="px-6 pb-4 pt-2 border-t bg-gray-50 rounded-b-lg">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-red-600 hover:bg-red-50 w-full"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setDeleteConfirm(inspection.id);
+                  }}
+                >
+                  <XCircle className="w-3 h-3 mr-1" />
+                  Delete Inspection
+                </Button>
               </div>
             </div>
           ))}
