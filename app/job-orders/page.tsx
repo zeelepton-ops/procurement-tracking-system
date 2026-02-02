@@ -799,7 +799,7 @@ export default function JobOrdersPage() {
                 <h3 className="text-sm font-bold text-slate-700 mb-3">Client & NBTC Contact Information</h3>
                 {/* Contact block - line 1 (Priority, NBTC contact + phone, QA/QC, Drawing, Foreman) */}
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-                  <div className="md:col-span-1 relative" data-edit-key="priority">
+                  <div className="md:col-span-2 relative" data-edit-key="priority">
                     <Label htmlFor="priority" className="text-sm font-semibold">Priority *</Label>
                     <select
                       id="priority"
@@ -813,7 +813,7 @@ export default function JobOrdersPage() {
                       <option value="LOW">LOW</option>
                     </select>
                   </div>
-                  <div className="md:col-span-2" data-edit-key="contactPerson">
+                  <div className="md:col-span-3" data-edit-key="contactPerson">
                     <Label htmlFor="contactPerson" className="text-sm font-semibold">NBTC's Contact Person</Label>
                     <select
                       id="contactPerson"
@@ -845,7 +845,7 @@ export default function JobOrdersPage() {
                       className="mt-1 h-9 w-full"
                     />
                   </div>
-                  <div className="md:col-span-1" data-edit-key="qaQc">
+                  <div className="md:col-span-2" data-edit-key="qaQc">
                     <Label htmlFor="qaQcInCharge" className="text-sm font-semibold">QA/QC In Charge</Label>
                     <select
                       id="qaQcInCharge"
@@ -869,7 +869,7 @@ export default function JobOrdersPage() {
                       className="mt-1 h-9 w-full"
                     />
                   </div>
-                  <div className="md:col-span-2" data-edit-key="foreman">
+                  <div className="md:col-span-1" data-edit-key="foreman">
                     <Label htmlFor="foreman" className="text-sm font-semibold">Foreman</Label>
                     <select
                       id="foreman"
@@ -980,7 +980,7 @@ export default function JobOrdersPage() {
                       className="mt-1 h-9 w-full"
                     />
                   </div>
-                  <div className="md:col-span-1">
+                  <div className="md:col-span-2">
                     <Label htmlFor="lpoIssueDate" className="text-sm font-semibold">LPO Issue Date</Label>
                     <Input
                       type="date"
@@ -1000,7 +1000,7 @@ export default function JobOrdersPage() {
                       className="mt-1 h-9 w-full"
                     />
                   </div>
-                  <div className="md:col-span-2">
+                  <div className="md:col-span-1">
                     <Label htmlFor="clientContactPhone" className="text-sm font-semibold">Client's Phone No.</Label>
                     <Input
                       id="clientContactPhone"
@@ -1671,7 +1671,7 @@ export default function JobOrdersPage() {
                   <h3 className="text-sm font-bold text-slate-700 mb-3">Client & NBTC Contact Information</h3>
                   {/* Contact block - line 1 (edit modal) */}
                   <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-                    <div className="md:col-span-1">
+                    <div className="md:col-span-2">
                       <Label htmlFor="edit-priority" className="text-sm font-semibold">Priority *</Label>
                       <select
                         id="edit-priority"
@@ -1685,7 +1685,7 @@ export default function JobOrdersPage() {
                         <option value="LOW">LOW</option>
                       </select>
                     </div>
-                    <div className="md:col-span-2">
+                    <div className="md:col-span-3">
                       <Label htmlFor="edit-contactPerson" className="text-sm font-semibold">NBTC's Contact Person</Label>
                       <select
                         id="edit-contactPerson"
@@ -1716,7 +1716,7 @@ export default function JobOrdersPage() {
                         className="mt-1 h-9 w-full"
                       />
                     </div>
-                    <div className="md:col-span-1">
+                    <div className="md:col-span-2">
                       <Label htmlFor="edit-qaQcInCharge" className="text-sm font-semibold">QA/QC In Charge</Label>
                       <select
                         id="edit-qaQcInCharge"
@@ -1739,7 +1739,7 @@ export default function JobOrdersPage() {
                         className="mt-1 h-9 w-full"
                       />
                     </div>
-                    <div className="md:col-span-2">
+                    <div className="md:col-span-1">
                       <Label htmlFor="edit-foreman" className="text-sm font-semibold">Foreman</Label>
                       <select
                         id="edit-foreman"
@@ -1758,7 +1758,7 @@ export default function JobOrdersPage() {
                   {/* Job & Client quick row (edit modal) */}
                   <div className="border-t pt-4">
                     <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-                      <div className="md:col-span-1">
+                      <div className="md:col-span-2">
                         <Label htmlFor="edit-jobNumber" className="text-sm font-semibold">Job Number *</Label>
                         <Input
                           id="edit-jobNumber"
@@ -1768,7 +1768,7 @@ export default function JobOrdersPage() {
                           className="mt-1 h-9 w-full text-sm"
                         />
                       </div>
-                      <div className="md:col-span-4 relative">
+                      <div className="md:col-span-3 relative">
                         <Label htmlFor="edit-clientName" className="text-sm font-semibold">Client Name *</Label>
                         <Input
                           id="edit-clientName"
@@ -1869,7 +1869,7 @@ export default function JobOrdersPage() {
                           className="mt-1 h-9 w-full text-sm"
                         />
                       </div>
-                      <div className="md:col-span-1">
+                      <div className="md:col-span-2">
                         <Label htmlFor="edit-lpoIssueDate" className="text-sm font-semibold">LPO Issue Date</Label>
                         <Input
                           type="date"
@@ -1888,7 +1888,7 @@ export default function JobOrdersPage() {
                           className="mt-1 h-9 w-full text-sm"
                         />
                       </div>
-                      <div className="md:col-span-2">
+                      <div className="md:col-span-1">
                         <Label htmlFor="edit-clientContactPhone" className="text-sm font-semibold">Client's Phone No.</Label>
                         <Input
                           id="edit-clientContactPhone"
