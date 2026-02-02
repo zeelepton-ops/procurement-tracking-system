@@ -800,7 +800,7 @@ export default function JobOrdersPage() {
                 {/* Contact block - line 1 (LPO Date, Client, LPO Contract, Client Contact, Client Phone, Foreman) */}
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
                   <div className="md:col-span-1">
-                    <Label htmlFor="lpoIssueDate" className="text-sm font-semibold">LPO Issue Date</Label>
+                    <Label htmlFor="lpoIssueDate" className="text-sm font-semibold">LPO Date</Label>
                     <Input
                       type="date"
                       id="lpoIssueDate"
@@ -1672,7 +1672,7 @@ export default function JobOrdersPage() {
                   {/* Contact block - line 1 (edit modal) */}
                   <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
                     <div className="md:col-span-1">
-                      <Label htmlFor="edit-lpoIssueDate" className="text-sm font-semibold">LPO Issue Date</Label>
+                      <Label htmlFor="edit-lpoIssueDate" className="text-sm font-semibold">LPO Date</Label>
                       <Input
                         type="date"
                         id="edit-lpoIssueDate"
