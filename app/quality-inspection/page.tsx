@@ -623,9 +623,9 @@ export default function QualityInspectionPage() {
                             </div>
 
                             {/* Quantity & Actions */}
-                            <div className="lg:col-span-4 flex flex-col gap-3">
-                              <div className="grid grid-cols-3 gap-2">
-                                <div>
+                            <div className="lg:col-span-4 flex flex-col gap-2">
+                              <div className="flex items-center gap-2">
+                                <div className="flex-1">
                                   <Label className="text-xs text-green-600 font-semibold">Approved</Label>
                                   <Input
                                     type="number"
@@ -636,7 +636,18 @@ export default function QualityInspectionPage() {
                                     className="text-sm"
                                   />
                                 </div>
-                                <div>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="text-green-600 mt-5"
+                                  onClick={() => updateStepStatus(step.id, 'APPROVED', (stepRemarks[step.id] ?? step.remarks ?? '').trim(), stepApprovedQty[step.id] ?? step.approvedQty?.toString() ?? '', stepFailedQty[step.id] ?? step.failedQty?.toString() ?? '', stepHoldQty[step.id] ?? step.holdQty?.toString() ?? '')}
+                                >
+                                  <CheckCircle2 className="w-4 h-4 mr-1" />
+                                  Approve
+                                </Button>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <div className="flex-1">
                                   <Label className="text-xs text-red-600 font-semibold">Failed</Label>
                                   <Input
                                     type="number"
@@ -647,7 +658,18 @@ export default function QualityInspectionPage() {
                                     className="text-sm"
                                   />
                                 </div>
-                                <div>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="text-red-600 mt-5"
+                                  onClick={() => updateStepStatus(step.id, 'FAILED', (stepRemarks[step.id] ?? step.remarks ?? '').trim(), stepApprovedQty[step.id] ?? step.approvedQty?.toString() ?? '', stepFailedQty[step.id] ?? step.failedQty?.toString() ?? '', stepHoldQty[step.id] ?? step.holdQty?.toString() ?? '')}
+                                >
+                                  <XCircle className="w-4 h-4 mr-1" />
+                                  Fail
+                                </Button>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <div className="flex-1">
                                   <Label className="text-xs text-yellow-600 font-semibold">Hold</Label>
                                   <Input
                                     type="number"
@@ -658,30 +680,10 @@ export default function QualityInspectionPage() {
                                     className="text-sm"
                                   />
                                 </div>
-                              </div>
-                              <div className="flex flex-col gap-2">
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  className="text-green-600 flex-1"
-                                  onClick={() => updateStepStatus(step.id, 'APPROVED', (stepRemarks[step.id] ?? step.remarks ?? '').trim(), stepApprovedQty[step.id] ?? step.approvedQty?.toString() ?? '', stepFailedQty[step.id] ?? step.failedQty?.toString() ?? '', stepHoldQty[step.id] ?? step.holdQty?.toString() ?? '')}
-                                >
-                                  <CheckCircle2 className="w-4 h-4 mr-1" />
-                                  Approve
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="text-red-600 flex-1"
-                                  onClick={() => updateStepStatus(step.id, 'FAILED', (stepRemarks[step.id] ?? step.remarks ?? '').trim(), stepApprovedQty[step.id] ?? step.approvedQty?.toString() ?? '', stepFailedQty[step.id] ?? step.failedQty?.toString() ?? '', stepHoldQty[step.id] ?? step.holdQty?.toString() ?? '')}
-                                >
-                                  <XCircle className="w-4 h-4 mr-1" />
-                                  Fail
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="text-yellow-600 flex-1"
+                                  className="text-yellow-600 mt-5"
                                   onClick={() => updateStepStatus(step.id, 'HOLD', (stepRemarks[step.id] ?? step.remarks ?? '').trim(), stepApprovedQty[step.id] ?? step.approvedQty?.toString() ?? '', stepFailedQty[step.id] ?? step.failedQty?.toString() ?? '', stepHoldQty[step.id] ?? step.holdQty?.toString() ?? '')}
                                 >
                                   <AlertCircle className="w-4 h-4 mr-1" />
