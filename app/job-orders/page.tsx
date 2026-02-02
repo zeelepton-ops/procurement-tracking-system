@@ -799,14 +799,14 @@ export default function JobOrdersPage() {
                 <h3 className="text-sm font-bold text-slate-700 mb-3">Client & NBTC Contact Information</h3>
                 {/* Contact block - line 1 (Priority, NBTC contact + phone, QA/QC, Drawing, Foreman) */}
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-                  <div className="md:col-span-1 relative" data-edit-key="priority">
+                  <div className="md:col-span-2 relative" data-edit-key="priority">
                     <Label htmlFor="priority" className="text-sm font-semibold">Priority *</Label>
                     <select
                       id="priority"
                       value={formData.priority}
                       onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
                       required
-                      className="mt-1 h-9 px-2 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full text-sm z-20"
+                      className="mt-1 h-9 px-2 pr-8 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full text-sm z-20"
                     >
                       <option value="HIGH">HIGH</option>
                       <option value="MEDIUM">MEDIUM</option>
@@ -887,7 +887,7 @@ export default function JobOrdersPage() {
 
                 {/* Job & Client quick row (line 2) */}
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-                  <div className="md:col-span-1" data-edit-key="jobNumber">
+                  <div className="md:col-span-2" data-edit-key="jobNumber">
                     <Label htmlFor="jobNumber" className="text-sm font-semibold">Job Number *</Label>
                     <Input
                       id="jobNumber"
@@ -898,7 +898,7 @@ export default function JobOrdersPage() {
                       className="mt-1 h-9 w-full text-sm"
                     />
                   </div>
-                  <div className="md:col-span-4" data-edit-key="client">
+                  <div className="md:col-span-2" data-edit-key="client">
                     <Label htmlFor="clientSearch" className="text-sm font-semibold">Client *</Label>
                     <div className="relative mt-1">
                       <Input
@@ -970,7 +970,7 @@ export default function JobOrdersPage() {
                       )}
                     </div>
                   </div>
-                  <div data-edit-key="lpo">
+                  <div className="md:col-span-2" data-edit-key="lpo">
                     <Label htmlFor="lpoContractNo" className="text-sm font-semibold">LPO / Contract No</Label>
                     <Input
                       id="lpoContractNo"
@@ -980,7 +980,7 @@ export default function JobOrdersPage() {
                       className="mt-1 h-9 w-full"
                     />
                   </div>
-                  <div>
+                  <div className="md:col-span-2">
                     <Label htmlFor="lpoIssueDate" className="text-sm font-semibold">LPO Issue Date</Label>
                     <Input
                       type="date"
@@ -1671,14 +1671,14 @@ export default function JobOrdersPage() {
                   <h3 className="text-sm font-bold text-slate-700 mb-3">Client & NBTC Contact Information</h3>
                   {/* Contact block - line 1 (edit modal) */}
                   <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-                    <div className="md:col-span-1">
+                    <div className="md:col-span-2">
                       <Label htmlFor="edit-priority" className="text-sm font-semibold">Priority *</Label>
                       <select
                         id="edit-priority"
                         value={editFormData.priority}
                         onChange={(e) => setEditFormData({ ...editFormData, priority: e.target.value })}
                         required
-                        className="mt-1 h-9 px-2 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full text-sm z-20"
+                        className="mt-1 h-9 px-2 pr-8 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full text-sm z-20"
                       >
                         <option value="HIGH">HIGH</option>
                         <option value="MEDIUM">MEDIUM</option>
@@ -1758,7 +1758,7 @@ export default function JobOrdersPage() {
                   {/* Job & Client quick row (edit modal) */}
                   <div className="border-t pt-4">
                     <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-                      <div className="md:col-span-1">
+                      <div className="md:col-span-2">
                         <Label htmlFor="edit-jobNumber" className="text-sm font-semibold">Job Number *</Label>
                         <Input
                           id="edit-jobNumber"
@@ -1768,7 +1768,7 @@ export default function JobOrdersPage() {
                           className="mt-1 h-9 w-full text-sm"
                         />
                       </div>
-                      <div className="md:col-span-4 relative">
+                      <div className="md:col-span-2 relative">
                         <Label htmlFor="edit-clientName" className="text-sm font-semibold">Client Name *</Label>
                         <Input
                           id="edit-clientName"
@@ -1860,7 +1860,7 @@ export default function JobOrdersPage() {
                           </div>
                         )}
                       </div>
-                      <div>
+                      <div className="md:col-span-2">
                         <Label htmlFor="edit-lpoContractNo" className="text-sm font-semibold">LPO / Contract No</Label>
                         <Input
                           id="edit-lpoContractNo"
@@ -1869,7 +1869,7 @@ export default function JobOrdersPage() {
                           className="mt-1 h-9 w-full text-sm"
                         />
                       </div>
-                      <div>
+                      <div className="md:col-span-2">
                         <Label htmlFor="edit-lpoIssueDate" className="text-sm font-semibold">LPO Issue Date</Label>
                         <Input
                           type="date"
