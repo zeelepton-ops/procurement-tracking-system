@@ -48,6 +48,8 @@ export default function DeliveryNoteDetailPage() {
   const id = params.id as string
   const [deliveryNote, setDeliveryNote] = useState<DeliveryNote | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
 
   useEffect(() => {
     fetchDeliveryNote()
@@ -55,12 +57,15 @@ export default function DeliveryNoteDetailPage() {
 
   const fetchDeliveryNote = async () => {
     try {
+      setError(null)
       const res = await fetch(`/api/delivery-notes/${id}`)
+      if (!res.ok) throw new Error('Failed to load delivery note')
       const data = await res.json()
       setDeliveryNote(data)
-      setLoading(false)
     } catch (error) {
       console.error('Failed to fetch delivery note:', error)
+      setError('Failed to load delivery note')
+    } finally {
       setLoading(false)
     }
   }
@@ -69,11 +74,14 @@ export default function DeliveryNoteDetailPage() {
     if (!confirm('Are you sure you want to delete this delivery note?')) return
 
     try {
+      setError(null)
       const res = await fetch(`/api/delivery-notes/${id}`, { method: 'DELETE' })
-      if (!res.ok) throw new Error('Failed to delete')
-      router.push('/store/delivery-notes')
+      if (!res.ok) throw new Error('Failed to delete delivery note')
+      setSuccess('Delivery note deleted successfully')
+      setTimeout(() => router.push('/store/delivery-notes'), 1500)
     } catch (error) {
-      alert(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      console.error('Failed to delete delivery note:', error)
+      setError(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
 
@@ -103,6 +111,16 @@ export default function DeliveryNoteDetailPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6">
       <div className="max-w-6xl mx-auto">
+        {error && (
+          <div className="mb-4 rounded border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
+            {error}
+          </div>
+        )}
+        {success && (
+          <div className="mb-4 rounded border border-green-200 bg-green-50 px-4 py-2 text-sm text-green-700">
+            {success}
+          </div>
+        )}
         {/* Header */}
         <div className="mb-6 flex items-center justify-between">
           <div className="flex items-center gap-3">

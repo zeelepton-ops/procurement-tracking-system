@@ -40,7 +40,8 @@ export default function PreparePO() {
   const [poNumber, setPONumber] = useState('')
   const [items, setItems] = useState<POItem[]>([{ materialRequestId: '', description: '', quantity: 1, unit: 'Nos' }])
   const [loading, setLoading] = useState(false)
-  const [message, setMessage] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
   const [preps, setPreps] = useState<any[]>([])
 
   useEffect(() => {
@@ -50,12 +51,13 @@ export default function PreparePO() {
 
   async function fetchSuppliers() {
     try {
+      setError(null)
       const res = await fetch('/api/suppliers')
       const data = await res.json()
       setSuppliers(Array.isArray(data) ? data : [])
     } catch (error) {
       console.error('Failed to fetch suppliers:', error)
-      setMessage('Failed to load suppliers')
+      setError('Failed to load suppliers')
     }
   }
 
@@ -109,12 +111,13 @@ export default function PreparePO() {
     }
 
     if (items.some(item => !item.description || !item.quantity)) {
-      setMessage('Please fill in all item details')
+      setError('Please fill in all item details')
       return
     }
 
     setLoading(true)
     try {
+      setError(null)
       const poData = {
         poNumber,
         supplierName: selectedSupplier.name,
@@ -141,18 +144,18 @@ export default function PreparePO() {
         throw new Error(error.error || 'Failed to create PO')
       }
 
-      setMessage('PO created successfully!')
+      setSuccess('PO created successfully!')
+      setTimeout(() => setSuccess(null), 5000)
       setPONumber('')
       setSelectedSupplier(null)
       setSupplierContact('')
       setPaymentTerms('')
       setItems([{ materialRequestId: '', description: '', quantity: 1, unit: 'Nos' }])
       
-      setTimeout(() => setMessage(''), 3000)
       fetchPreps()
     } catch (error) {
       console.error('Failed to create PO:', error)
-      setMessage(error instanceof Error ? error.message : 'Failed to create PO')
+      setError(error instanceof Error ? error.message : 'Failed to create PO')
     } finally {
       setLoading(false)
     }
@@ -165,9 +168,14 @@ export default function PreparePO() {
         <p className="text-slate-600 text-sm">Select a supplier and add items to create a new PO</p>
       </div>
 
-      {message && (
-        <div className={`p-3 rounded text-sm ${message.includes('success') ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
-          {message}
+      {error && (
+        <div className="rounded border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
+          {error}
+        </div>
+      )}
+      {success && (
+        <div className="rounded border border-green-200 bg-green-50 px-4 py-2 text-sm text-green-700">
+          {success}
         </div>
       )}
 
