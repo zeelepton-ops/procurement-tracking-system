@@ -9,7 +9,7 @@ export async function PATCH(
 ) {
   const session = await getServerSession();
   const body = await req.json();
-  const { status, remarks, photoUrl, quantity } = body;
+  const { status, remarks, photoUrl, approvedQty, failedQty, holdQty } = body;
   const inspectedBy = session?.user?.email || 'system';
   
   const updateData: any = {};
@@ -24,8 +24,16 @@ export async function PATCH(
     updateData.remarks = remarks;
   }
   
-  if (quantity !== undefined && quantity !== null && !isNaN(parseFloat(quantity))) {
-    updateData.quantity = parseFloat(quantity);
+  if (approvedQty !== undefined && approvedQty !== null && !isNaN(parseFloat(approvedQty))) {
+    updateData.approvedQty = parseFloat(approvedQty);
+  }
+  
+  if (failedQty !== undefined && failedQty !== null && !isNaN(parseFloat(failedQty))) {
+    updateData.failedQty = parseFloat(failedQty);
+  }
+  
+  if (holdQty !== undefined && holdQty !== null && !isNaN(parseFloat(holdQty))) {
+    updateData.holdQty = parseFloat(holdQty);
   }
   
   if (photoUrl) {

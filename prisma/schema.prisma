@@ -133,6 +133,9 @@ model QualityStep {
   remarks             String?
   inspectedBy         String?
   inspectedAt         DateTime?
+  approvedQty         Float?   // Quantity that passed inspection
+  failedQty           Float?   // Quantity that failed inspection
+  holdQty             Float?   // Quantity on hold pending review
   photos              QualityPhoto[]
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt

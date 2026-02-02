@@ -56,7 +56,9 @@ interface QualityStep {
   remarks: string | null
   inspectedBy: string | null
   inspectedAt: string | null
-  quantity: number | null
+  approvedQty: number | null
+  failedQty: number | null
+  holdQty: number | null
   photos: QualityPhoto[]
 }
 
@@ -115,7 +117,9 @@ export default function QualityInspectionPage() {
     isDefault: false,
   })
   const [stepRemarks, setStepRemarks] = useState<Record<string, string>>({})
-  const [stepQty, setStepQty] = useState<Record<string, string>>({})
+  const [stepApprovedQty, setStepApprovedQty] = useState<Record<string, string>>({})
+  const [stepFailedQty, setStepFailedQty] = useState<Record<string, string>>({})
+  const [stepHoldQty, setStepHoldQty] = useState<Record<string, string>>({})
 
   const selectedJobItem = jobOrderItems.find(i => i.id === createForm.jobOrderItemId) || null
 
@@ -238,11 +242,17 @@ export default function QualityInspectionPage() {
     }
   }
 
-  const updateStepStatus = async (stepId: string, status: string, remarks?: string, quantity?: string) => {
+  const updateStepStatus = async (stepId: string, status: string, remarks?: string, approvedQty?: string, failedQty?: string, holdQty?: string) => {
     try {
       const payload: any = { status, remarks }
-      if (quantity && !isNaN(parseFloat(quantity))) {
-        payload.quantity = parseFloat(quantity)
+      if (approvedQty && !isNaN(parseFloat(approvedQty))) {
+        payload.approvedQty = parseFloat(approvedQty)
+      }
+      if (failedQty && !isNaN(parseFloat(failedQty))) {
+        payload.failedQty = parseFloat(failedQty)
+      }
+      if (holdQty && !isNaN(parseFloat(holdQty))) {
+        payload.holdQty = parseFloat(holdQty)
       }
       const res = await fetch(`/api/quality-inspection/steps/${stepId}`, {
         method: 'PATCH',
@@ -614,23 +624,47 @@ export default function QualityInspectionPage() {
 
                             {/* Quantity & Actions */}
                             <div className="lg:col-span-4 flex flex-col gap-3">
-                              <div>
-                                <Label className="text-xs text-slate-500 font-semibold">Qty</Label>
-                                <Input
-                                  type="number"
-                                  placeholder="0"
-                                  value={stepQty[step.id] ?? step.quantity ?? ''}
-                                  onChange={(e) => setStepQty(prev => ({ ...prev, [step.id]: e.target.value }))}
-                                  min="0"
-                                  className="text-sm"
-                                />
+                              <div className="grid grid-cols-3 gap-2">
+                                <div>
+                                  <Label className="text-xs text-green-600 font-semibold">Approved</Label>
+                                  <Input
+                                    type="number"
+                                    placeholder="0"
+                                    value={stepApprovedQty[step.id] ?? step.approvedQty ?? ''}
+                                    onChange={(e) => setStepApprovedQty(prev => ({ ...prev, [step.id]: e.target.value }))}
+                                    min="0"
+                                    className="text-sm"
+                                  />
+                                </div>
+                                <div>
+                                  <Label className="text-xs text-red-600 font-semibold">Failed</Label>
+                                  <Input
+                                    type="number"
+                                    placeholder="0"
+                                    value={stepFailedQty[step.id] ?? step.failedQty ?? ''}
+                                    onChange={(e) => setStepFailedQty(prev => ({ ...prev, [step.id]: e.target.value }))}
+                                    min="0"
+                                    className="text-sm"
+                                  />
+                                </div>
+                                <div>
+                                  <Label className="text-xs text-yellow-600 font-semibold">Hold</Label>
+                                  <Input
+                                    type="number"
+                                    placeholder="0"
+                                    value={stepHoldQty[step.id] ?? step.holdQty ?? ''}
+                                    onChange={(e) => setStepHoldQty(prev => ({ ...prev, [step.id]: e.target.value }))}
+                                    min="0"
+                                    className="text-sm"
+                                  />
+                                </div>
                               </div>
                               <div className="flex flex-col gap-2">
                                 <Button
                                   size="sm"
                                   variant="outline"
                                   className="text-green-600 flex-1"
-                                  onClick={() => updateStepStatus(step.id, 'APPROVED', (stepRemarks[step.id] ?? step.remarks ?? '').trim(), stepQty[step.id] ?? step.quantity?.toString() ?? '')}
+                                  onClick={() => updateStepStatus(step.id, 'APPROVED', (stepRemarks[step.id] ?? step.remarks ?? '').trim(), stepApprovedQty[step.id] ?? step.approvedQty?.toString() ?? '', stepFailedQty[step.id] ?? step.failedQty?.toString() ?? '', stepHoldQty[step.id] ?? step.holdQty?.toString() ?? '')}
                                 >
                                   <CheckCircle2 className="w-4 h-4 mr-1" />
                                   Approve
@@ -639,7 +673,7 @@ export default function QualityInspectionPage() {
                                   size="sm"
                                   variant="outline"
                                   className="text-red-600 flex-1"
-                                  onClick={() => updateStepStatus(step.id, 'FAILED', (stepRemarks[step.id] ?? step.remarks ?? '').trim(), stepQty[step.id] ?? step.quantity?.toString() ?? '')}
+                                  onClick={() => updateStepStatus(step.id, 'FAILED', (stepRemarks[step.id] ?? step.remarks ?? '').trim(), stepApprovedQty[step.id] ?? step.approvedQty?.toString() ?? '', stepFailedQty[step.id] ?? step.failedQty?.toString() ?? '', stepHoldQty[step.id] ?? step.holdQty?.toString() ?? '')}
                                 >
                                   <XCircle className="w-4 h-4 mr-1" />
                                   Fail
@@ -648,7 +682,7 @@ export default function QualityInspectionPage() {
                                   size="sm"
                                   variant="outline"
                                   className="text-yellow-600 flex-1"
-                                  onClick={() => updateStepStatus(step.id, 'HOLD', (stepRemarks[step.id] ?? step.remarks ?? '').trim(), stepQty[step.id] ?? step.quantity?.toString() ?? '')}
+                                  onClick={() => updateStepStatus(step.id, 'HOLD', (stepRemarks[step.id] ?? step.remarks ?? '').trim(), stepApprovedQty[step.id] ?? step.approvedQty?.toString() ?? '', stepFailedQty[step.id] ?? step.failedQty?.toString() ?? '', stepHoldQty[step.id] ?? step.holdQty?.toString() ?? '')}
                                 >
                                   <AlertCircle className="w-4 h-4 mr-1" />
                                   Hold
