@@ -185,6 +185,14 @@ export default function JobOrdersPage() {
     fetchJobOrders()
   }, [filters, page, perPage])
 
+  // Debounce search input to avoid blocking typing
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setFilters((prev) => ({ ...prev, search: searchTerm }))
+    }, 500)
+    return () => window.clearTimeout(timer)
+  }, [searchTerm])
+
   // Autosave draft locally
   useEffect(() => {
     try {
@@ -199,6 +207,100 @@ export default function JobOrdersPage() {
 
   // server-side filtered/paginated orders
   const filteredOrders = jobOrders
+
+  const recentJobOrders = [...jobOrders]
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 5)
+
+  const recentForemen = Array.from(
+    new Set(recentJobOrders.map((o) => o.foreman).filter(Boolean) as string[])
+  )
+
+  const recentQaQc = Array.from(
+    new Set(recentJobOrders.map((o) => o.qaQcInCharge).filter(Boolean) as string[])
+  )
+
+  const recentContacts = (() => {
+    const map = new Map<string, string>()
+    recentJobOrders.forEach((o) => {
+      if (o.contactPerson) {
+        if (!map.has(o.contactPerson)) {
+          map.set(o.contactPerson, o.phone || '')
+        }
+      }
+    })
+    return Array.from(map.entries()).map(([name, phone]) => ({ name, phone }))
+  })()
+
+  const foremanOptions = Array.from(
+    new Set([formData.foreman, ...recentForemen].filter(Boolean) as string[])
+  )
+
+  const qaQcOptions = Array.from(
+    new Set([formData.qaQcInCharge, ...recentQaQc].filter(Boolean) as string[])
+  )
+
+  const contactOptions = (() => {
+    const map = new Map<string, string>()
+    if (formData.contactPerson) {
+      map.set(formData.contactPerson, formData.phone || '')
+    }
+    recentContacts.forEach((c) => {
+      if (!map.has(c.name)) {
+        map.set(c.name, c.phone)
+      }
+    })
+    return Array.from(map.entries()).map(([name, phone]) => ({ name, phone }))
+  })()
+
+  const editForemanOptions = Array.from(
+    new Set([editFormData.foreman, ...recentForemen].filter(Boolean) as string[])
+  )
+
+  const editQaQcOptions = Array.from(
+    new Set([editFormData.qaQcInCharge, ...recentQaQc].filter(Boolean) as string[])
+  )
+
+  const editContactOptions = (() => {
+    const map = new Map<string, string>()
+    if (editFormData.contactPerson) {
+      map.set(editFormData.contactPerson, editFormData.phone || '')
+    }
+    recentContacts.forEach((c) => {
+      if (!map.has(c.name)) {
+        map.set(c.name, c.phone)
+      }
+    })
+    return Array.from(map.entries()).map(([name, phone]) => ({ name, phone }))
+  })()
+
+  useEffect(() => {
+    if (!showForm) return
+    setFormData((prev) => {
+      let changed = false
+      const next = { ...prev }
+
+      if (!prev.foreman && recentForemen.length > 0) {
+        next.foreman = recentForemen[0]
+        changed = true
+      }
+
+      if (!prev.qaQcInCharge && recentQaQc.length > 0) {
+        next.qaQcInCharge = recentQaQc[0]
+        changed = true
+      }
+
+      if (!prev.contactPerson && recentContacts.length > 0) {
+        next.contactPerson = recentContacts[0].name
+        if (!prev.phone || prev.phone === '+974 ') {
+          next.phone = recentContacts[0].phone || prev.phone
+        }
+        changed = true
+      }
+
+      return changed ? next : prev
+    })
+  }, [showForm, recentForemen, recentQaQc, recentContacts])
 
   const addWorkItem = () => {
     setWorkItems([...workItems, { workDescription: '', quantity: null, unit: 'Nos', unitPrice: null, totalPrice: null }])
@@ -634,8 +736,8 @@ export default function JobOrdersPage() {
           <div>
             <Label className="text-xs text-slate-600">Search</Label>
             <Input
-              value={filters.search}
-              onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Job #, description, client, foreman"
               className="h-9 text-sm"
             />
@@ -695,18 +797,8 @@ export default function JobOrdersPage() {
                 )}
 
                 <h3 className="text-sm font-bold text-slate-700 mb-3">Client & NBTC Contact Information</h3>
-                {/* Contact block - line 1 (Foreman, Priority, NBTC contact + phone, QA/QC, Drawing) */}
+                {/* Contact block - line 1 (Priority, NBTC contact + phone, QA/QC, Drawing, Foreman) */}
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-                  <div className="md:col-span-2" data-edit-key="foreman">
-                    <Label htmlFor="foreman" className="text-sm font-semibold">Foreman</Label>
-                    <Input
-                      id="foreman"
-                      value={formData.foreman}
-                      onChange={(e) => setFormData({ ...formData, foreman: e.target.value })}
-                      placeholder="e.g., GUNA"
-                      className="mt-1 h-9 w-full"
-                    />
-                  </div>
                   <div className="md:col-span-2 relative" data-edit-key="priority">
                     <Label htmlFor="priority" className="text-sm font-semibold">Priority *</Label>
                     <select
@@ -725,11 +817,25 @@ export default function JobOrdersPage() {
                     <Label htmlFor="contactPerson" className="text-sm font-semibold">NBTC's Contact Person</Label>
                     <Input
                       id="contactPerson"
+                      list="contact-person-options"
                       value={formData.contactPerson}
-                      onChange={(e) => setFormData({ ...formData, contactPerson: e.target.value })}
-                      placeholder="e.g., NBTC Rep"
+                      onChange={(e) => {
+                        const value = e.target.value
+                        const match = contactOptions.find((c) => c.name === value)
+                        setFormData((prev) => ({
+                          ...prev,
+                          contactPerson: value,
+                          phone: match?.phone || prev.phone
+                        }))
+                      }}
+                      placeholder="Select or type"
                       className="mt-1 h-9 w-full"
                     />
+                    <datalist id="contact-person-options">
+                      {contactOptions.map((c) => (
+                        <option key={c.name} value={c.name} />
+                      ))}
+                    </datalist>
                   </div>
                   <div className="md:col-span-2" data-edit-key="phone">
                     <Label htmlFor="phone" className="text-sm font-semibold">NBTC's Contact Phone No.</Label>
@@ -745,11 +851,17 @@ export default function JobOrdersPage() {
                     <Label htmlFor="qaQcInCharge" className="text-sm font-semibold">QA/QC In Charge</Label>
                     <Input
                       id="qaQcInCharge"
+                      list="qaqc-options"
                       value={formData.qaQcInCharge}
                       onChange={(e) => setFormData({ ...formData, qaQcInCharge: e.target.value })}
-                      placeholder="e.g., Mr. VILLAVAN"
+                      placeholder="Select or type"
                       className="mt-1 h-9 w-full"
                     />
+                    <datalist id="qaqc-options">
+                      {qaQcOptions.map((name) => (
+                        <option key={name} value={name} />
+                      ))}
+                    </datalist>
                   </div>
                   <div className="md:col-span-2" data-edit-key="drawing">
                     <Label htmlFor="drawingRef" className="text-sm font-semibold">Drawing / Enquiry Ref</Label>
@@ -760,6 +872,22 @@ export default function JobOrdersPage() {
                       placeholder="e.g., E-11899"
                       className="mt-1 h-9 w-full"
                     />
+                  </div>
+                  <div className="md:col-span-2" data-edit-key="foreman">
+                    <Label htmlFor="foreman" className="text-sm font-semibold">Foreman</Label>
+                    <Input
+                      id="foreman"
+                      list="foreman-options"
+                      value={formData.foreman}
+                      onChange={(e) => setFormData({ ...formData, foreman: e.target.value })}
+                      placeholder="Select or type"
+                      className="mt-1 h-9 w-full"
+                    />
+                    <datalist id="foreman-options">
+                      {foremanOptions.map((name) => (
+                        <option key={name} value={name} />
+                      ))}
+                    </datalist>
                   </div>
                 </div> 
 
@@ -1212,11 +1340,12 @@ export default function JobOrdersPage() {
                           else setSelectedIds([])
                         }}
                       />
-                      <span>Job # / Priority</span>
+                      <span>Job #</span>
                     </div>
                     <div className="col-span-4">Description</div>
                     <div className="col-span-2">Client / Foreman</div>
-                    <div className="col-span-2">Created</div>
+                    <div className="col-span-1">Created</div>
+                    <div className="col-span-1">Priority</div>
                     <div className="col-span-1 text-right">Materials</div>
                     <div className="col-span-1 text-right">Actions</div>
                   </div>
@@ -1242,22 +1371,31 @@ export default function JobOrdersPage() {
                           className="mr-2"
                           onClick={(e) => e.stopPropagation()}
                         />
-                        <div className={`text-[11px] px-2 py-0.5 rounded-full font-semibold ${
+                        <div className="font-semibold text-slate-900">JO-{order.jobNumber}</div>
+                      </div>
+                      <div className="col-span-4 leading-tight">
+                        <div className="truncate" title={order.productName}>{order.productName}</div>
+                        {order.items?.[0]?.workDescription && (
+                          <div className="truncate text-slate-500" title={order.items[0].workDescription}>
+                            {order.items[0].workDescription}
+                          </div>
+                        )}
+                      </div>
+                      <div className="col-span-2 truncate">
+                        {order.clientName && <span className="block text-slate-800 truncate">{order.clientName}</span>}
+                        {order.foreman && <span className="block text-slate-500 truncate">Foreman: {order.foreman}</span>}
+                      </div>
+                      <div className="col-span-1 text-slate-600">
+                        {new Date(order.createdAt).toLocaleDateString()}
+                      </div>
+                      <div className="col-span-1">
+                        <div className={`inline-block text-[11px] px-2 py-0.5 rounded-full font-semibold ${
                           order.priority === 'HIGH' ? 'bg-red-100 text-red-700' :
                           order.priority === 'MEDIUM' ? 'bg-yellow-100 text-yellow-700' :
                           'bg-green-100 text-green-700'
                         }`}>
                           {order.priority || 'MEDIUM'}
                         </div>
-                        <div className="font-semibold text-slate-900">JO-{order.jobNumber}</div>
-                      </div>
-                      <div className="col-span-4 truncate" title={order.productName}>{order.productName}</div>
-                      <div className="col-span-2 truncate">
-                        {order.clientName && <span className="block text-slate-800 truncate">{order.clientName}</span>}
-                        {order.foreman && <span className="block text-slate-500 truncate">Foreman: {order.foreman}</span>}
-                      </div>
-                      <div className="col-span-2 text-slate-600">
-                        {new Date(order.createdAt).toLocaleDateString()}
                       </div>
                       <div className="col-span-1 text-right font-semibold text-blue-700">
                         {order._count?.materialRequests ?? 0}
@@ -1539,15 +1677,6 @@ export default function JobOrdersPage() {
                   <h3 className="text-sm font-bold text-slate-700 mb-3">Client & NBTC Contact Information</h3>
                   {/* Contact block - line 1 (edit modal) */}
                   <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-                    <div className="md:col-span-2">
-                      <Label htmlFor="edit-foreman" className="text-sm font-semibold">Foreman</Label>
-                      <Input
-                        id="edit-foreman"
-                        value={editFormData.foreman}
-                        onChange={(e) => setEditFormData({ ...editFormData, foreman: e.target.value })}
-                        className="mt-1 h-9 w-full"
-                      />
-                    </div>
                     <div className="md:col-span-3">
                       <Label htmlFor="edit-priority" className="text-sm font-semibold">Priority *</Label>
                       <select
@@ -1566,10 +1695,24 @@ export default function JobOrdersPage() {
                       <Label htmlFor="edit-contactPerson" className="text-sm font-semibold">NBTC's Contact Person</Label>
                       <Input
                         id="edit-contactPerson"
+                        list="edit-contact-person-options"
                         value={editFormData.contactPerson}
-                        onChange={(e) => setEditFormData({ ...editFormData, contactPerson: e.target.value })}
+                        onChange={(e) => {
+                          const value = e.target.value
+                          const match = editContactOptions.find((c) => c.name === value)
+                          setEditFormData((prev) => ({
+                            ...prev,
+                            contactPerson: value,
+                            phone: match?.phone || prev.phone
+                          }))
+                        }}
                         className="mt-1 h-9 w-full"
                       />
+                      <datalist id="edit-contact-person-options">
+                        {editContactOptions.map((c) => (
+                          <option key={c.name} value={c.name} />
+                        ))}
+                      </datalist>
                     </div>
                     <div className="md:col-span-2">
                       <Label htmlFor="edit-phone" className="text-sm font-semibold">NBTC's Contact Phone No.</Label>
@@ -1584,10 +1727,16 @@ export default function JobOrdersPage() {
                       <Label htmlFor="edit-qaQcInCharge" className="text-sm font-semibold">QA/QC In Charge</Label>
                       <Input
                         id="edit-qaQcInCharge"
+                        list="edit-qaqc-options"
                         value={editFormData.qaQcInCharge}
                         onChange={(e) => setEditFormData({ ...editFormData, qaQcInCharge: e.target.value })}
                         className="mt-1 h-9 w-full"
                       />
+                      <datalist id="edit-qaqc-options">
+                        {editQaQcOptions.map((name) => (
+                          <option key={name} value={name} />
+                        ))}
+                      </datalist>
                     </div>
                     <div className="md:col-span-2">
                       <Label htmlFor="edit-drawingRef" className="text-sm font-semibold">Drawing / Enquiry Ref</Label>
@@ -1597,6 +1746,21 @@ export default function JobOrdersPage() {
                         onChange={(e) => setEditFormData({ ...editFormData, drawingRef: e.target.value })}
                         className="mt-1 h-9 w-full"
                       />
+                    </div>
+                    <div className="md:col-span-2">
+                      <Label htmlFor="edit-foreman" className="text-sm font-semibold">Foreman</Label>
+                      <Input
+                        id="edit-foreman"
+                        list="edit-foreman-options"
+                        value={editFormData.foreman}
+                        onChange={(e) => setEditFormData({ ...editFormData, foreman: e.target.value })}
+                        className="mt-1 h-9 w-full"
+                      />
+                      <datalist id="edit-foreman-options">
+                        {editForemanOptions.map((name) => (
+                          <option key={name} value={name} />
+                        ))}
+                      </datalist>
                     </div>
                   </div>
 

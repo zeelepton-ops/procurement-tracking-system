@@ -85,7 +85,7 @@ export async function POST(request: Request) {
               materialRequestId: item.materialRequestId || randomUUID(),
               description: item.description || '',
               quantity: parseFloat(item.quantity) || 0,
-              unit: item.unit || 'PCS',
+              unit: item.unit || 'Nos',
               unitPrice: parseFloat(item.unitPrice) || 0,
               totalPrice: (parseFloat(item.quantity) || 0) * (parseFloat(item.unitPrice) || 0)
             }))

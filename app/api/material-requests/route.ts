@@ -203,7 +203,7 @@ export async function POST(request: Request) {
       itemName: item.itemName || 'Unnamed Item',
       description: item.description || null,
       quantity: Number(item.quantity) || 0,
-      unit: item.unit || 'PCS',
+      unit: item.unit || 'Nos',
       stockQtyInInventory: Number(item.stockQty) || 0,
       reasonForRequest: item.reasonForRequest || null,
       // New: support jobOrderId at item level
@@ -230,7 +230,7 @@ export async function POST(request: Request) {
           itemName: firstItem?.itemName || body.itemName || 'Multiple Items',
           description: firstItem?.description || body.description || 'See items list',
           quantity: mainQuantity,
-          unit: firstItem?.unit || body.unit || 'PCS',
+          unit: firstItem?.unit || body.unit || 'Nos',
           reasonForRequest: firstItem?.reasonForRequest || body.reasonForRequest || 'As required',
           requiredDate,
           preferredSupplier: firstItem?.preferredSupplier || body.preferredSupplier || null,
@@ -284,7 +284,7 @@ export async function POST(request: Request) {
               itemName: firstItem?.itemName || body.itemName || 'Multiple Items',
               description: firstItem?.description || body.description || 'See items list',
               quantity: mainQuantity,
-              unit: firstItem?.unit || body.unit || 'PCS',
+              unit: firstItem?.unit || body.unit || 'Nos',
               reasonForRequest: firstItem?.reasonForRequest || body.reasonForRequest || 'As required',
               requiredDate,
               preferredSupplier: firstItem?.preferredSupplier || body.preferredSupplier || null,
@@ -315,7 +315,7 @@ export async function POST(request: Request) {
                   itemName: firstItem?.itemName || body.itemName || 'Multiple Items',
                   description: firstItem?.description || body.description || 'See items list',
                   quantity: mainQuantity,
-                  unit: firstItem?.unit || body.unit || 'PCS',
+                  unit: firstItem?.unit || body.unit || 'Nos',
                   reasonForRequest: firstItem?.reasonForRequest || body.reasonForRequest || 'As required',
                   requiredDate,
                   preferredSupplier: firstItem?.preferredSupplier || body.preferredSupplier || null,
@@ -336,7 +336,7 @@ export async function POST(request: Request) {
                 // Insert main material request row without the status column but include isDeleted so it appears in queries
                 const inserted = await prisma.$queryRaw`
                   INSERT INTO "MaterialRequest" ("id","requestNumber","requestContext","jobOrderId","assetId","materialType","itemName","description","quantity","unit","reasonForRequest","requiredDate","preferredSupplier","stockQtyInInventory","urgencyLevel","requestedBy","createdBy","isDeleted","createdAt","updatedAt")
-                  VALUES (${explicitId}, ${requestNumber}, ${body.requestContext}, ${body.jobOrderId || null}, ${body.assetId || null}, ${body.materialType}, ${firstItem?.itemName || body.itemName || 'Multiple Items'}, ${firstItem?.description || body.description || 'See items list'}, ${mainQuantity}, ${firstItem?.unit || body.unit || 'PCS'}, ${firstItem?.reasonForRequest || body.reasonForRequest || 'As required'}, ${requiredDate}, ${firstItem?.preferredSupplier || body.preferredSupplier || null}, ${mainStockQty}, ${firstItem?.urgencyLevel || body.urgencyLevel || 'NORMAL'}, ${body.requestedBy}, ${session?.user?.email || body.requestedBy}, false, ${now}, ${now})
+                  VALUES (${explicitId}, ${requestNumber}, ${body.requestContext}, ${body.jobOrderId || null}, ${body.assetId || null}, ${body.materialType}, ${firstItem?.itemName || body.itemName || 'Multiple Items'}, ${firstItem?.description || body.description || 'See items list'}, ${mainQuantity}, ${firstItem?.unit || body.unit || 'Nos'}, ${firstItem?.reasonForRequest || body.reasonForRequest || 'As required'}, ${requiredDate}, ${firstItem?.preferredSupplier || body.preferredSupplier || null}, ${mainStockQty}, ${firstItem?.urgencyLevel || body.urgencyLevel || 'NORMAL'}, ${body.requestedBy}, ${session?.user?.email || body.requestedBy}, false, ${now}, ${now})
                   RETURNING *
                 `
 

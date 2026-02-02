@@ -270,7 +270,7 @@ export async function POST(request: Request) {
             return {
               workDescription: item.workDescription,
               quantity: quantity,
-              unit: item.unit || 'PCS',
+              unit: item.unit || 'Nos',
               unitPrice: unitPrice,
               totalPrice: totalPrice != null ? totalPrice : computedTotal
             }
@@ -506,7 +506,7 @@ export async function PUT(request: Request) {
                 create: items.map((item: any) => ({
                   workDescription: item.workDescription,
                   quantity: Number(item.quantity) || 0,
-                  unit: item.unit || 'PCS',
+                  unit: item.unit || 'Nos',
                   unitPrice: Number(item.unitPrice) || 0,
                   totalPrice: Number(item.totalPrice) || ((Number(item.quantity) || 0) * (Number(item.unitPrice) || 0))
                 }))
