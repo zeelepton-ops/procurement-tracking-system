@@ -94,7 +94,6 @@ export default function MaterialRequestPage() {
     urgency: 'ALL'
   })
   const { data: session, status } = useSession()
-  const [success, setSuccess] = useState(false)
   const [items, setItems] = useState<Array<{ 
     itemName: string; 
     description: string; 
