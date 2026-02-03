@@ -17,32 +17,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: `Password must be at least ${MIN_PASSWORD_LENGTH} characters.` }, { status: 400 })
     }
 
-    const tokenHash = crypto.createHash('sha256').update(token).digest('hex')
-
-    const user = await prisma.user.findFirst({
-      where: {
-        resetTokenHash: tokenHash,
-        resetTokenExpiresAt: { gt: new Date() },
-      },
-    })
-
-    if (!user) {
-      return NextResponse.json({ error: 'Invalid or expired reset token.' }, { status: 400 })
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10)
-
-    await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        hashedPassword,
-        resetTokenHash: null,
-        resetTokenExpiresAt: null,
-        resetRequestedAt: null,
-      },
-    })
-
-    return NextResponse.json({ message: 'Password updated successfully.' })
+    // Password reset functionality temporarily disabled
+    // resetTokenHash field was removed from schema
+    return NextResponse.json({ error: 'Password reset is not currently available. Please contact an administrator.' }, { status: 400 })
   } catch (error) {
     console.error('Reset password error:', error)
     return NextResponse.json({ error: 'Failed to reset password.' }, { status: 500 })

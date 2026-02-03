@@ -27,37 +27,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: 'If an account exists, we have sent reset instructions.' })
     }
 
-    const rawToken = crypto.randomBytes(32).toString('hex')
-    const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex')
-    const expiresAt = new Date(Date.now() + RESET_TOKEN_EXPIRY_MINUTES * 60 * 1000)
-
-    await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        resetTokenHash: tokenHash,
-        resetTokenExpiresAt: expiresAt,
-        resetRequestedAt: new Date(),
-      },
-    })
-
-    const resetLink = buildResetLink(rawToken)
-    const subject = 'Reset your NBTC Procurement password'
-    const text = `Hello ${user.name},\n\nWe received a request to reset your password. Use the link below to set a new password.\n\n${resetLink}\n\nIf you did not request this, you can ignore this email.`
-    const html = `
-      <p>Hello ${user.name},</p>
-      <p>We received a request to reset your password. Use the button below to set a new password.</p>
-      <p style="margin: 24px 0;"><a href="${resetLink}" style="background:#1d4ed8;color:#fff;padding:12px 18px;border-radius:6px;text-decoration:none;display:inline-block">Reset Password</a></p>
-      <p>If the button does not work, copy and paste this link into your browser:</p>
-      <p><a href="${resetLink}">${resetLink}</a></p>
-      <p>If you did not request this, you can ignore this email.</p>
-    `
-
-    const emailResult = await sendEmail({ to: user.email, subject, text, html })
-
-    if (!emailResult.success) {
-      console.error('Failed to send reset password email:', emailResult.error)
-      return NextResponse.json({ error: 'Unable to send reset email. Please contact an administrator.' }, { status: 500 })
-    }
+    // Password reset functionality temporarily disabled
+    // Fields were removed from schema - will implement alternative mechanism
+    // For now return success for security
 
     return NextResponse.json({ message: 'If an account exists, we have sent reset instructions.' })
   } catch (error) {
