@@ -31,9 +31,6 @@ model User {
   approvedAt DateTime?
 
   isActive  Boolean  @default(true)
-  resetTokenHash      String?  @unique
-  resetTokenExpiresAt DateTime?
-  resetRequestedAt    DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
