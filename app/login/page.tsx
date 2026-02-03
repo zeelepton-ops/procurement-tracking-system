@@ -132,6 +132,7 @@ function LoginForm() {
             </Link>
           </div>
         </div>
+        </div>
       </div>
     </div>
   )
