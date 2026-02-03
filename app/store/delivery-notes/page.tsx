@@ -207,6 +207,16 @@ export default function DeliveryNotesPage() {
     }
   }
 
+  const formatDnNumber = (numberPart: string) => {
+    const currentYear = new Date().getFullYear().toString().slice(-2)
+    return `DN-${numberPart.padStart(4, '0')}/${currentYear}`
+  }
+
+  const extractDnNumber = (fullDn: string) => {
+    const match = fullDn.match(/^DN-(\d+)\/\d{2}$/)
+    return match ? match[1] : fullDn
+  }
+
   const generateDnSuggestions = () => {
     // Parse existing DN numbers to find the highest number for current year
     const currentYear = new Date().getFullYear().toString().slice(-2) // Get last 2 digits
@@ -226,11 +236,11 @@ export default function DeliveryNotesPage() {
       }
     })
 
-    // Generate 5 previous and 5 next numbers
+    // Generate 5 previous and 5 next numbers (just the number part)
     const suggestions: string[] = []
     const startNum = Math.max(1, maxNumber - 4)
     for (let i = startNum; i <= maxNumber + 5; i++) {
-      suggestions.push(`DN-${i.toString().padStart(4, '0')}/${currentYear}`)
+      suggestions.push(i.toString())
     }
     
     setDnSuggestions(suggestions)
@@ -469,6 +479,9 @@ export default function DeliveryNotesPage() {
       return
     }
 
+    // Format the DN number before submission
+    const fullDnNumber = formatDnNumber(formData.deliveryNoteNumber)
+
     // Check if job order has quality inspections completed
     if (formData.jobOrderId) {
       try {
@@ -524,7 +537,11 @@ export default function DeliveryNotesPage() {
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...formData, lineItems: normalizedLineItems })
+        body: JSON.stringify({ 
+          ...formData, 
+          deliveryNoteNumber: fullDnNumber,  // Use formatted DN number
+          lineItems: normalizedLineItems 
+        })
       })
 
       if (!res.ok) {
@@ -626,7 +643,7 @@ export default function DeliveryNotesPage() {
     })
 
     setFormData({
-      deliveryNoteNumber: note.deliveryNoteNumber,
+      deliveryNoteNumber: extractDnNumber(note.deliveryNoteNumber),  // Extract just the number part
       jobOrderId: note.jobOrderId || '',
       client: note.client || '',
       country: note.country || 'Qatar',
@@ -874,7 +891,7 @@ export default function DeliveryNotesPage() {
                                         {new Date(draft.timestamp).toLocaleString()}
                                       </p>
                                       <p className="text-xs text-slate-600 mt-1">
-                                        DN: {draft.data.deliveryNoteNumber || 'Not set'} • 
+                                        DN: {draft.data.deliveryNoteNumber ? formatDnNumber(draft.data.deliveryNoteNumber) : 'Not set'} • 
                                         Job: {draft.data.jobSalesOrder || 'Not set'} • 
                                         Items: {draft.data.lineItems?.length || 0}
                                       </p>
@@ -949,32 +966,48 @@ export default function DeliveryNotesPage() {
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                     <div className="relative">
                       <Label className="font-semibold text-xs">Delivery Note Number *</Label>
-                      <Input
-                        value={formData.deliveryNoteNumber}
-                        onChange={(e) => {
-                          handleInputChange('deliveryNoteNumber', e.target.value)
-                          setShowSuggestions(prev => ({ ...prev, dnNumber: true }))
-                        }}
-                        onFocus={() => {
-                          setShowSuggestions(prev => ({ ...prev, dnNumber: true }))
-                          if (dnSuggestions.length === 0) generateDnSuggestions()
-                        }}
-                        onBlur={() => setTimeout(() => setShowSuggestions(prev => ({ ...prev, dnNumber: false })), 200)}
-                        placeholder="e.g., DN-0001/26"
-                        className="mt-1 h-9 text-sm"
-                        autoComplete="off"
-                      />
+                      <div className="relative">
+                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm pointer-events-none">
+                          DN-
+                        </div>
+                        <Input
+                          value={formData.deliveryNoteNumber}
+                          onChange={(e) => {
+                            const value = e.target.value.replace(/\D/g, '') // Only allow digits
+                            handleInputChange('deliveryNoteNumber', value)
+                            setShowSuggestions(prev => ({ ...prev, dnNumber: true }))
+                          }}
+                          onFocus={() => {
+                            setShowSuggestions(prev => ({ ...prev, dnNumber: true }))
+                            if (dnSuggestions.length === 0) generateDnSuggestions()
+                          }}
+                          onBlur={() => setTimeout(() => setShowSuggestions(prev => ({ ...prev, dnNumber: false })), 200)}
+                          placeholder="0001"
+                          className="mt-1 h-9 text-sm pl-10 pr-16"
+                          autoComplete="off"
+                          maxLength={4}
+                        />
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm pointer-events-none">
+                          /{new Date().getFullYear().toString().slice(-2)}
+                        </div>
+                      </div>
+                      {formData.deliveryNoteNumber && (
+                        <p className="text-xs text-slate-600 mt-1">
+                          Preview: <span className="font-semibold">{formatDnNumber(formData.deliveryNoteNumber)}</span>
+                        </p>
+                      )}
                       {showSuggestions.dnNumber && dnSuggestions.length > 0 && (
                         <div className="absolute top-full left-0 right-0 bg-white border border-slate-300 rounded-lg mt-1 shadow-lg z-50 max-h-60 overflow-y-auto">
                           {dnSuggestions
-                            .filter(dn => dn.toLowerCase().includes(formData.deliveryNoteNumber.toLowerCase()) || !formData.deliveryNoteNumber)
-                            .map((dn, idx) => {
-                              const exists = deliveryNotes.some(note => note.deliveryNoteNumber === dn)
+                            .filter(num => num.includes(formData.deliveryNoteNumber) || !formData.deliveryNoteNumber)
+                            .map((num, idx) => {
+                              const fullDn = formatDnNumber(num)
+                              const exists = deliveryNotes.some(note => note.deliveryNoteNumber === fullDn)
                               return (
                                 <button
                                   key={idx}
                                   onClick={() => {
-                                    handleInputChange('deliveryNoteNumber', dn)
+                                    handleInputChange('deliveryNoteNumber', num)
                                     setShowSuggestions(prev => ({ ...prev, dnNumber: false }))
                                   }}
                                   className={`w-full text-left px-3 py-2 hover:bg-blue-50 text-sm flex justify-between items-center ${
@@ -982,7 +1015,7 @@ export default function DeliveryNotesPage() {
                                   }`}
                                   disabled={exists}
                                 >
-                                  <span>{dn}</span>
+                                  <span>{fullDn}</span>
                                   {exists && <span className="text-xs">(Used)</span>}
                                 </button>
                               )
