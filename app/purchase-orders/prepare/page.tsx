@@ -101,12 +101,12 @@ export default function PreparePO() {
 
   const createPO = async () => {
     if (!selectedSupplier) {
-      setMessage('Please select a supplier')
+      setError('Please select a supplier')
       return
     }
 
     if (!poNumber) {
-      setMessage('Please enter a PO number')
+      setError('Please enter a PO number')
       return
     }
 
