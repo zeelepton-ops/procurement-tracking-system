@@ -5,7 +5,7 @@ import { useSession, signOut } from 'next-auth/react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { Package, FileText, BarChart3, LogOut, Briefcase, Users, Boxes, User, ChevronDown, Settings, Building2, Receipt, ClipboardCheck } from 'lucide-react'
+import { Package, FileText, BarChart3, LogOut, Briefcase, Users, Boxes, User, ChevronDown, Settings, Building2, Receipt, ClipboardCheck, Factory } from 'lucide-react'
 
 export default function Header() {
   const { data: session } = useSession()
@@ -30,7 +30,15 @@ export default function Header() {
   const navItems = [
     { href: '/dashboard', label: 'Dashboard', icon: BarChart3 },
     { href: '/job-orders', label: 'Job Orders', icon: Briefcase },
-    { href: '/quality-inspection', label: 'Quality Inspection', icon: ClipboardCheck },
+    {
+      href: '/quality-management',
+      label: 'Quality Management',
+      icon: ClipboardCheck,
+      children: [
+        { href: '/production', label: 'Production (L3)', icon: Factory },
+        { href: '/quality-inspection', label: 'Quality Inspection (L4)', icon: ClipboardCheck },
+      ]
+    },
     {
       href: '/procurement',
       label: 'Procurement',
