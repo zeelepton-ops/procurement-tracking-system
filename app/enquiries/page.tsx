@@ -133,8 +133,8 @@ export default function EnquiriesPage() {
       const resp = await r.json() as EnquiryResponse
       setSuccess('Response submitted successfully')
       setTimeout(() => setSuccess(null), 5000)
-      setResponses([resp, ...responses])
-      (e.currentTarget as HTMLFormElement).reset()
+      setResponses((prev) => [resp, ...prev])
+      ;(e.currentTarget as HTMLFormElement).reset()
     } catch (err: any) {
       console.error('Error submitting response:', err)
       setError(err.message || 'Failed to submit response')
