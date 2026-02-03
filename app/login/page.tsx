@@ -55,16 +55,16 @@ function LoginForm() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-900 via-indigo-800 to-purple-900 p-4 overflow-hidden relative">
+    <div className="h-screen w-screen flex items-center justify-center bg-gradient-to-br from-blue-900 via-indigo-800 to-purple-900 overflow-hidden relative">
       {/* Abstract animated background shapes */}
       <div className="absolute top-0 left-0 w-96 h-96 bg-blue-400 opacity-10 rounded-full mix-blend-multiply filter blur-3xl animate-blob" />
       <div className="absolute top-32 right-0 w-96 h-96 bg-purple-400 opacity-10 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-2s" />
       <div className="absolute bottom-0 left-1/3 w-96 h-96 bg-indigo-400 opacity-10 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-4s" />
       
       {/* Content Container */}
-      <div className="w-full max-w-lg relative z-10">
+      <div className="w-full max-w-2xl mx-4 relative z-10">
         {/* Elegant Card */}
-        <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl p-8 border border-white/20">
+        <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl p-8 md:p-12 border border-white/20 max-h-[90vh] overflow-y-auto">
           {/* Logo and Title Header */}
           <div className="flex flex-col items-center text-center mb-8">
             <img 
@@ -140,10 +140,12 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
-      <Suspense fallback={<div>Loading...</div>}>
-        <LoginForm />
-      </Suspense>
-    </div>
+    <Suspense fallback={
+      <div className="h-screen w-screen flex items-center justify-center bg-gradient-to-br from-blue-900 via-indigo-800 to-purple-900">
+        <div className="text-white text-lg">Loading...</div>
+      </div>
+    }>
+      <LoginForm />
+    </Suspense>
   )
 }
