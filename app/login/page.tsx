@@ -74,7 +74,7 @@ function LoginForm() {
               style={{ width: '90px', height: '90px', objectFit: 'contain', marginBottom: '12px' }}
             />
             <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-1">Welcome Back</h1>
-            <p className="text-slate-600 text-sm font-medium">NBTC Procurement & Delivery Management</p>
+            <p className="text-slate-600 text-sm font-medium">NBTC Operations & Management</p>
           </div>
 
         {/* Form */}
