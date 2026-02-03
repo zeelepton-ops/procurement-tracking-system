@@ -4,10 +4,13 @@ import { prisma } from '@/lib/prisma'
 export async function PUT(request: Request) {
   try {
     const body = await request.json()
-    const { productionReleaseId, result, remarks, inspectedBy, inspectedQty, approvedQty, rejectedQty, holdQty } = body
+    const { productionReleaseId, productionInspectionId, result, remarks, inspectedBy, inspectedQty, approvedQty, rejectedQty, holdQty } = body
 
-    if (!productionReleaseId || !result || !inspectedBy) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+    // Try to get releaseId from either field
+    const releaseId = productionReleaseId
+    
+    if (!releaseId || !result || !inspectedBy) {
+      return NextResponse.json({ error: 'Missing required fields: productionReleaseId, result, inspectedBy' }, { status: 400 })
     }
 
     // Validate result value
@@ -18,7 +21,7 @@ export async function PUT(request: Request) {
 
     // Get current release
     const release = await prisma.productionRelease.findUnique({
-      where: { id: productionReleaseId }
+      where: { id: releaseId }
     })
 
     if (!release) {
@@ -39,7 +42,7 @@ export async function PUT(request: Request) {
     const [inspection, updatedRelease] = await Promise.all([
       prisma.productionInspection.updateMany({
         where: {
-          productionReleaseId,
+          productionReleaseId: releaseId,
           result: null // Only update the pending inspection
         },
         data: {
@@ -47,14 +50,14 @@ export async function PUT(request: Request) {
           remarks,
           inspectedBy,
           inspectionTimestamp: new Date(),
-          inspectedQty,
-          approvedQty,
-          rejectedQty,
-          holdQty
+          inspectedQty: inspectedQty || 0,
+          approvedQty: approvedQty || 0,
+          rejectedQty: rejectedQty || 0,
+          holdQty: holdQty || 0
         }
       }),
       prisma.productionRelease.update({
-        where: { id: productionReleaseId },
+        where: { id: releaseId },
         data: {
           status: newStatus
         },
@@ -78,6 +81,7 @@ export async function PUT(request: Request) {
       release: updatedRelease,
       message: `Inspection completed. Status: ${newStatus}`
     })
+
   } catch (error) {
     console.error('Error completing inspection:', error)
     return NextResponse.json({ error: 'Failed to complete inspection' }, { status: 500 })

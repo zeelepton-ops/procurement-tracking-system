@@ -355,7 +355,7 @@ export default function QualityInspectionPage() {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          productionInspectionId: selectedPendingInspection.id,
+          productionReleaseId: selectedPendingInspection.productionReleaseId,
           result: completeForm.result,
           remarks: completeForm.remarks,
           inspectedBy: completeForm.inspectedBy || (session?.user?.name || 'System'),
