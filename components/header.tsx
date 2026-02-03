@@ -47,7 +47,7 @@ export default function Header() {
   ]
 
   return (
-    <header className="bg-white/90 backdrop-blur border-b border-slate-200 sticky top-0 z-50 no-print shadow-sm overflow-hidden">
+    <header className="bg-white/90 backdrop-blur border-b border-slate-200 sticky top-0 z-50 no-print shadow-sm">
       <div className="w-full px-3 py-2">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 flex-shrink-0">
