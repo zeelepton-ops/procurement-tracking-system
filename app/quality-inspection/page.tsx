@@ -782,89 +782,93 @@ export default function QualityInspectionPage() {
                   {/* Inspection Steps */}
                   <div>
                     <h4 className="font-semibold text-sm mb-3">Inspection Steps</h4>
-                    <div className="space-y-3">
+                    <div className="grid grid-cols-3 gap-2">
                       {selectedInspection.steps.map((step, index) => (
-                        <div key={step.id} className="border rounded-lg p-3 bg-white shadow-sm">
+                        <div key={step.id} className="border rounded-lg p-2 bg-white shadow-sm">
                           {/* Step Info and Status */}
                           <div className="flex items-start justify-between mb-2">
-                            <div>
-                              <span className="font-semibold text-sm">Step {index + 1}: {step.stepName}</span>
+                            <div className="flex-1">
+                              <span className="font-semibold text-xs line-clamp-2">Step {index + 1}: {step.stepName}</span>
                               <p className="text-xs text-slate-500">Response</p>
                             </div>
-                            {getStatusBadge(step.status)}
+                            <div className="flex-shrink-0">
+                              {getStatusBadge(step.status)}
+                            </div>
                           </div>
 
                           {/* Remarks */}
                           <div className="mb-2">
-                            <Label className="text-xs text-slate-500 font-semibold">Comment / Remarks</Label>
+                            <Label className="text-xs text-slate-500 font-semibold">Comment</Label>
                             <Textarea
                               value={stepRemarks[step.id] ?? step.remarks ?? ''}
                               onChange={(e) => setStepRemarks(prev => ({ ...prev, [step.id]: e.target.value }))}
-                              placeholder="Add inspection comment or remark..."
+                              placeholder="Remarks..."
                               rows={2}
                               className="text-xs"
                             />
                           </div>
 
-                          {/* Quantity & Actions - Single Inline Row */}
-                          <div className="flex items-end gap-2 flex-wrap">
-                            <div className="flex-1 min-w-[120px]">
-                              <Label className="text-xs text-green-600 font-semibold">Approved Qty</Label>
+                          {/* Quantity Fields - Compact */}
+                          <div className="space-y-1 mb-2">
+                            <div>
+                              <Label className="text-xs text-green-600 font-semibold">Approved</Label>
                               <Input
                                 type="number"
                                 placeholder="0"
                                 value={stepApprovedQty[step.id] ?? step.approvedQty ?? ''}
                                 onChange={(e) => setStepApprovedQty(prev => ({ ...prev, [step.id]: e.target.value }))}
                                 min="0"
-                                className="text-xs h-8"
+                                className="text-xs h-7"
                               />
                             </div>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="text-green-600 h-8 px-2 text-xs"
-                              onClick={() => updateStepStatus(step.id, 'APPROVED', (stepRemarks[step.id] ?? step.remarks ?? '').trim(), stepApprovedQty[step.id] ?? step.approvedQty?.toString() ?? '', stepFailedQty[step.id] ?? step.failedQty?.toString() ?? '', stepHoldQty[step.id] ?? step.holdQty?.toString() ?? '')}
-                            >
-                              <CheckCircle2 className="w-3 h-3 mr-1" />
-                              Approve
-                            </Button>
-                            
-                            <div className="flex-1 min-w-[120px]">
-                              <Label className="text-xs text-red-600 font-semibold">Failed Qty</Label>
+                            <div>
+                              <Label className="text-xs text-red-600 font-semibold">Failed</Label>
                               <Input
                                 type="number"
                                 placeholder="0"
                                 value={stepFailedQty[step.id] ?? step.failedQty ?? ''}
                                 onChange={(e) => setStepFailedQty(prev => ({ ...prev, [step.id]: e.target.value }))}
                                 min="0"
-                                className="text-xs h-8"
+                                className="text-xs h-7"
                               />
                             </div>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="text-red-600 h-8 px-2 text-xs"
-                              onClick={() => updateStepStatus(step.id, 'FAILED', (stepRemarks[step.id] ?? step.remarks ?? '').trim(), stepApprovedQty[step.id] ?? step.approvedQty?.toString() ?? '', stepFailedQty[step.id] ?? step.failedQty?.toString() ?? '', stepHoldQty[step.id] ?? step.holdQty?.toString() ?? '')}
-                            >
-                              <XCircle className="w-3 h-3 mr-1" />
-                              Fail
-                            </Button>
-                            
-                            <div className="flex-1 min-w-[120px]">
-                              <Label className="text-xs text-yellow-600 font-semibold">Hold Qty</Label>
+                            <div>
+                              <Label className="text-xs text-yellow-600 font-semibold">Hold</Label>
                               <Input
                                 type="number"
                                 placeholder="0"
                                 value={stepHoldQty[step.id] ?? step.holdQty ?? ''}
                                 onChange={(e) => setStepHoldQty(prev => ({ ...prev, [step.id]: e.target.value }))}
                                 min="0"
-                                className="text-xs h-8"
+                                className="text-xs h-7"
                               />
                             </div>
+                          </div>
+
+                          {/* Action Buttons - Stacked */}
+                          <div className="space-y-1">
                             <Button
                               size="sm"
                               variant="outline"
-                              className="text-yellow-600 h-8 px-2 text-xs"
+                              className="text-green-600 h-7 px-1 text-xs w-full"
+                              onClick={() => updateStepStatus(step.id, 'APPROVED', (stepRemarks[step.id] ?? step.remarks ?? '').trim(), stepApprovedQty[step.id] ?? step.approvedQty?.toString() ?? '', stepFailedQty[step.id] ?? step.failedQty?.toString() ?? '', stepHoldQty[step.id] ?? step.holdQty?.toString() ?? '')}
+                            >
+                              <CheckCircle2 className="w-3 h-3 mr-1" />
+                              Approve
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-red-600 h-7 px-1 text-xs w-full"
+                              onClick={() => updateStepStatus(step.id, 'FAILED', (stepRemarks[step.id] ?? step.remarks ?? '').trim(), stepApprovedQty[step.id] ?? step.approvedQty?.toString() ?? '', stepFailedQty[step.id] ?? step.failedQty?.toString() ?? '', stepHoldQty[step.id] ?? step.holdQty?.toString() ?? '')}
+                            >
+                              <XCircle className="w-3 h-3 mr-1" />
+                              Fail
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-yellow-600 h-7 px-1 text-xs w-full"
                               onClick={() => updateStepStatus(step.id, 'HOLD', (stepRemarks[step.id] ?? step.remarks ?? '').trim(), stepApprovedQty[step.id] ?? step.approvedQty?.toString() ?? '', stepFailedQty[step.id] ?? step.failedQty?.toString() ?? '', stepHoldQty[step.id] ?? step.holdQty?.toString() ?? '')}
                             >
                               <AlertCircle className="w-3 h-3 mr-1" />
@@ -873,8 +877,8 @@ export default function QualityInspectionPage() {
                           </div>
 
                           {step.inspectedBy && (
-                            <p className="text-xs text-gray-500 mt-2 pt-2 border-t">
-                              Inspected by {step.inspectedBy} on {new Date(step.inspectedAt!).toLocaleString()}
+                            <p className="text-xs text-gray-500 mt-2 pt-1 border-t line-clamp-2">
+                              By {step.inspectedBy}
                             </p>
                           )}
                         </div>
