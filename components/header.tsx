@@ -32,7 +32,7 @@ export default function Header() {
     { href: '/job-orders', label: 'Job Orders', icon: Briefcase },
     {
       href: '/quality-management',
-      label: 'Quality Management',
+      label: 'Execution',
       icon: ClipboardCheck,
       children: [
         { href: '/production', label: 'Production (L3)', icon: Factory },
@@ -117,7 +117,7 @@ export default function Header() {
 
                     {openIndex === idx && (
                       <div
-                        className="absolute right-0 top-full mt-1 bg-white border rounded shadow-md z-50 min-w-[200px]"
+                        className="absolute right-0 top-full mt-1 bg-white border rounded shadow-md z-50 min-w-max whitespace-nowrap"
                         onMouseEnter={() => {
                           if (closeTimeoutRef.current) {
                             clearTimeout(closeTimeoutRef.current)
