@@ -370,45 +370,87 @@ export default function QualityInspectionPage() {
                   ITP Template
                 </Button>
               </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Create ITP Template</DialogTitle>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 -mx-6 -mt-6 px-6 pt-6 pb-4 border-b border-blue-100 rounded-t-lg">
+                  <DialogTitle className="text-xl font-bold text-blue-900 flex items-center gap-2">
+                    <ClipboardCheck className="w-5 h-5 text-blue-600" />
+                    Create ITP Template
+                  </DialogTitle>
+                  <p className="text-sm text-blue-700 mt-1">Define inspection steps for quality assurance</p>
                 </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <Label>Template Name</Label>
+                <div className="space-y-5 mt-4">
+                  <div className="space-y-2">
+                    <Label className="font-semibold text-slate-900">Template Name *</Label>
                     <Input
                       value={templateForm.name}
                       onChange={(e) => setTemplateForm({ ...templateForm, name: e.target.value })}
                       placeholder="e.g., Steel Fabrication ITP"
+                      className="border-slate-300 focus:border-blue-500 focus:ring-blue-500 transition-all"
                     />
+                    {!templateForm.name && <p className="text-xs text-slate-500">Enter a descriptive name for this template</p>}
                   </div>
-                  <div>
-                    <Label>Steps (one per line)</Label>
+                  
+                  <div className="space-y-2">
+                    <Label className="font-semibold text-slate-900">Inspection Steps *</Label>
+                    <p className="text-xs text-slate-500">Add one step per line (e.g., Material Check, Cutting, Welding, Final Inspection)</p>
                     <Textarea
                       value={templateForm.steps}
                       onChange={(e) => setTemplateForm({ ...templateForm, steps: e.target.value })}
                       placeholder="Material Verification&#10;Cutting&#10;Welding&#10;Final Inspection"
                       rows={8}
+                      className="border-slate-300 focus:border-blue-500 focus:ring-blue-500 transition-all font-mono text-sm resize-none"
                     />
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                      <p className="text-xs font-semibold text-blue-900 mb-2">Steps Preview:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {templateForm.steps.split('\n').filter(s => s.trim()).map((step, idx) => (
+                          <span key={idx} className="inline-flex items-center gap-1 bg-blue-100 text-blue-900 px-3 py-1 rounded-full text-xs font-medium">
+                            <span className="font-bold text-blue-600">{idx + 1}.</span> {step.trim().slice(0, 30)}
+                            {step.trim().length > 30 ? '...' : ''}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      id="isDefault"
-                      checked={templateForm.isDefault}
-                      onChange={(e) => setTemplateForm({ ...templateForm, isDefault: e.target.checked })}
-                    />
-                    <Label htmlFor="isDefault">Set as default template</Label>
+
+                  <div className="bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-200 rounded-lg p-4 space-y-3">
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="checkbox"
+                        id="isDefault"
+                        checked={templateForm.isDefault}
+                        onChange={(e) => setTemplateForm({ ...templateForm, isDefault: e.target.checked })}
+                        className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                      />
+                      <Label htmlFor="isDefault" className="font-semibold text-slate-900 cursor-pointer flex-1">
+                        Set as default template
+                        <p className="text-xs text-slate-600 font-normal mt-1">Automatically apply this template to new inspections</p>
+                      </Label>
+                    </div>
                   </div>
+
                   {templateError && (
-                    <div className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-md px-3 py-2">
-                      {templateError}
+                    <div className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-4 py-3 flex items-start gap-3">
+                      <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                      <span>{templateError}</span>
                     </div>
                   )}
-                  <Button onClick={createTemplate} className="w-full" disabled={templateSaving}>
-                    {templateSaving ? 'Saving...' : 'Create Template'}
-                  </Button>
+                  
+                  <div className="flex gap-3 pt-4">
+                    <Button onClick={createTemplate} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white" disabled={templateSaving || !templateForm.name.trim()}>
+                      {templateSaving ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2" />
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle2 className="w-4 h-4 mr-2" />
+                          Create Template
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 </div>
               </DialogContent>
             </Dialog>
@@ -428,90 +470,155 @@ export default function QualityInspectionPage() {
                   New Inspection
                 </Button>
               </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Create Quality Inspections</DialogTitle>
+              <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                <DialogHeader className="bg-gradient-to-r from-green-50 to-emerald-50 -mx-6 -mt-6 px-6 pt-6 pb-4 border-b border-green-100 rounded-t-lg sticky top-0 z-10">
+                  <DialogTitle className="text-xl font-bold text-green-900 flex items-center gap-2">
+                    <Camera className="w-5 h-5 text-green-600" />
+                    Create Quality Inspections
+                  </DialogTitle>
+                  <p className="text-sm text-green-700 mt-1">Set up inspections for selected job order items</p>
                 </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <Label>Job Order</Label>
+                
+                <div className="space-y-5 mt-4 pb-4">
+                  <div className="space-y-2">
+                    <Label className="font-semibold text-slate-900">Select Job Order *</Label>
                     <Select
                       value={createForm.jobOrderId}
                       onValueChange={(value) => setCreateForm({ ...createForm, jobOrderId: value })}
                     >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select job order" />
+                      <SelectTrigger className="border-slate-300 focus:border-green-500 focus:ring-green-500">
+                        <SelectValue placeholder="Choose a job order..." />
                       </SelectTrigger>
                       <SelectContent>
-                        {jobOrders.length === 0 && (
-                          <SelectItem value="__none" disabled>
-                            No job orders found
+                        {jobOrders.length === 0 ? (
+                          <SelectItem value="__none" disabled className="text-slate-500">
+                            No job orders available
                           </SelectItem>
+                        ) : (
+                          jobOrders.map(jo => (
+                            <SelectItem key={jo.id} value={jo.id}>
+                              <span className="font-semibold">{jo.jobNumber}</span> • {jo.clientName || 'No Client'}
+                            </SelectItem>
+                          ))
                         )}
-                        {jobOrders.map(jo => (
-                          <SelectItem key={jo.id} value={jo.id}>
-                            {jo.jobNumber} - {jo.clientName || 'No Client'}
-                          </SelectItem>
-                        ))}
                       </SelectContent>
                     </Select>
                   </div>
+
                   {selectedJobOrder && (
-                    <div className="rounded-lg border bg-slate-50 p-3 text-sm space-y-3">
-                      <div>
-                        <span className="text-slate-500 font-semibold">Job Order: {selectedJobOrder.jobNumber}</span>
-                        <p className="text-slate-600">{selectedJobOrder.clientName || 'No Client'}</p>
+                    <div className="space-y-3 bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4 animate-in fade-in duration-300">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <h3 className="font-bold text-green-900 flex items-center gap-2">
+                            <CheckCircle2 className="w-4 h-4 text-green-600" />
+                            {selectedJobOrder.jobNumber}
+                          </h3>
+                          <p className="text-sm text-green-700 mt-1">{selectedJobOrder.clientName || 'No Client'}</p>
+                        </div>
+                        <Badge className="bg-green-100 text-green-800 font-semibold">
+                          {selectedJobOrder.items.length} items
+                        </Badge>
                       </div>
-                      <div>
-                        <span className="text-slate-500 font-semibold block mb-2">Line Items ({selectedJobOrder.items.length}):</span>
-                        <div className="space-y-2">
-                          {selectedJobOrder.items.map(item => (
-                            <div key={item.id} className="bg-white rounded p-2 border border-slate-200">
-                              <p className="font-medium text-slate-900 text-xs">{item.workDescription}</p>
-                              <p className="text-xs text-slate-500">
-                                Qty: {item.quantity ?? '-'} {item.unit || ''}
-                              </p>
+                      
+                      <div className="space-y-2">
+                        <p className="text-xs font-semibold text-green-900 uppercase tracking-wider">Line Items:</p>
+                        <div className="grid gap-2 max-h-40 overflow-y-auto">
+                          {selectedJobOrder.items.map((item, idx) => (
+                            <div key={item.id} className="bg-white rounded-lg p-3 border-l-4 border-green-400 hover:shadow-sm transition-shadow">
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                  <p className="font-medium text-slate-900 text-sm">{idx + 1}. {item.workDescription}</p>
+                                  <p className="text-xs text-slate-600 mt-1">
+                                    <span className="inline-block bg-slate-100 px-2 py-0.5 rounded mr-2">
+                                      Qty: {item.quantity ?? '-'} {item.unit || ''}
+                                    </span>
+                                  </p>
+                                </div>
+                              </div>
                             </div>
                           ))}
                         </div>
                       </div>
                     </div>
                   )}
-                  <div>
-                    <Label>ITP Template</Label>
+
+                  <div className="space-y-2">
+                    <Label className="font-semibold text-slate-900">Select ITP Template *</Label>
                     <Select
                       value={createForm.itpTemplateId}
                       onValueChange={(value) => setCreateForm({ ...createForm, itpTemplateId: value })}
                     >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select template" />
+                      <SelectTrigger className="border-slate-300 focus:border-green-500 focus:ring-green-500">
+                        <SelectValue placeholder="Choose inspection template..." />
                       </SelectTrigger>
                       <SelectContent>
                         {templates.map(template => (
                           <SelectItem key={template.id} value={template.id}>
-                            {template.name} {template.isDefault && '(Default)'}
+                            <span className="font-medium">{template.name}</span>
+                            {template.isDefault && <Badge className="ml-2 bg-blue-100 text-blue-800">Default</Badge>}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
+                    {!createForm.itpTemplateId && templates.length === 0 && (
+                      <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-md px-3 py-2">
+                        ⚠️ No templates available. Please create an ITP Template first.
+                      </p>
+                    )}
                   </div>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      id="isCritical"
-                      checked={createForm.isCritical}
-                      onChange={(e) => setCreateForm({ ...createForm, isCritical: e.target.checked })}
-                    />
-                    <Label htmlFor="isCritical">Mark as Critical Item</Label>
+
+                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4 space-y-3">
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="checkbox"
+                        id="isCritical"
+                        checked={createForm.isCritical}
+                        onChange={(e) => setCreateForm({ ...createForm, isCritical: e.target.checked })}
+                        className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                      />
+                      <Label htmlFor="isCritical" className="font-semibold text-slate-900 cursor-pointer flex-1">
+                        Critical Item
+                        <p className="text-xs text-slate-600 font-normal mt-1">Mark if this item requires strict quality checks</p>
+                      </Label>
+                    </div>
                   </div>
+
                   {createError && (
-                    <div className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-md px-3 py-2">
-                      {createError}
+                    <div className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-4 py-3 flex items-start gap-3">
+                      <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                      <span>{createError}</span>
                     </div>
                   )}
-                  <Button onClick={createInspection} className="w-full" disabled={createSaving}>
-                    {createSaving ? 'Saving...' : 'Create Inspection'}
-                  </Button>
+
+                  <div className="flex gap-3 pt-4 border-t border-slate-200">
+                    <Button
+                      onClick={() => {
+                        setShowCreateDialog(false)
+                        setCreateError(null)
+                      }}
+                      variant="outline"
+                      className="flex-1"
+                    >
+                      Cancel
+                    </Button>
+                    <Button 
+                      onClick={createInspections} 
+                      className="flex-1 bg-green-600 hover:bg-green-700 text-white" 
+                      disabled={createLoading || !createForm.jobOrderId || !createForm.itpTemplateId}
+                    >
+                      {createLoading ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2" />
+                          Creating...
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle2 className="w-4 h-4 mr-2" />
+                          Create Inspections
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 </div>
               </DialogContent>
             </Dialog>

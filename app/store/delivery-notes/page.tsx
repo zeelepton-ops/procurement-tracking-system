@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Plus, FileText, Printer, Trash2, Eye, Settings, Bell, AlertTriangle } from 'lucide-react'
+import { Plus, FileText, Printer, Trash2, Eye, Settings, Bell, AlertTriangle, CheckCircle2 } from 'lucide-react'
 
 interface DeliveryNote {
   id: string
@@ -370,10 +370,38 @@ export default function DeliveryNotesPage() {
     e.preventDefault()
     
     if (!formData.deliveryNoteNumber) {
-      alert('Delivery Note Number is required')
+      setError('Delivery Note Number is required')
       return
     }
 
+    // Check if job order has quality inspections completed
+    if (formData.jobOrderId) {
+      try {
+        const inspectionRes = await fetch(`/api/quality-inspection?jobOrderId=${formData.jobOrderId}`)
+        if (inspectionRes.ok) {
+          const inspections = await inspectionRes.json()
+          const allCompleted = Array.isArray(inspections) && inspections.length > 0 && 
+                              inspections.every((insp: any) => insp.status === 'COMPLETED')
+          
+          if (inspections.length === 0) {
+            setError('⚠️ No quality inspections found for this job order. Please complete quality inspection first.')
+            return
+          }
+          
+          if (!allCompleted) {
+            const pendingCount = inspections.filter((insp: any) => insp.status !== 'COMPLETED').length
+            setError(`⚠️ Quality inspection not fully completed. ${pendingCount} inspection(s) still pending. Please complete all inspections before creating delivery note.`)
+            return
+          }
+        }
+      } catch (error) {
+        console.error('Failed to check quality inspections:', error)
+        setError('Failed to verify quality inspection status')
+        return
+      }
+    }
+
+    setError(null)
     try {
       const url = editingId ? `/api/delivery-notes/${editingId}` : '/api/delivery-notes'
       const method = editingId ? 'PUT' : 'POST'
@@ -409,12 +437,16 @@ export default function DeliveryNotesPage() {
         throw new Error(error.error || 'Failed to save delivery note')
       }
 
-      setShowForm(false)
-      setEditingId(null)
-      resetForm()
-      fetchDeliveryNotes()
+      setSuccess('Delivery note created successfully!')
+      setTimeout(() => {
+        setShowForm(false)
+        setEditingId(null)
+        resetForm()
+        setSuccess(null)
+        fetchDeliveryNotes()
+      }, 2000)
     } catch (error) {
-      alert(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      setError(error instanceof Error ? error.message : 'Unknown error occurred')
     }
   }
 
@@ -667,9 +699,32 @@ export default function DeliveryNotesPage() {
         {/* Form */}
         {showForm && (
           <Card className="mb-6 shadow-lg">
-            <CardHeader className="pb-3">
+            <CardHeader className="pb-3 bg-gradient-to-r from-blue-50 to-blue-100 border-b border-blue-200">
               <CardTitle className="text-lg">{editingId ? 'Edit' : 'Create'} Delivery Note</CardTitle>
+              <p className="text-sm text-blue-700 mt-2">
+                <AlertTriangle className="inline-block w-4 h-4 mr-2" />
+                Ensure quality inspection is fully completed before creating delivery note
+              </p>
             </CardHeader>
+            {error && (
+              <div className="bg-red-50 border-b border-red-200 px-4 py-3">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-red-800 font-semibold text-sm">Cannot Create Delivery Note</p>
+                    <p className="text-red-700 text-sm mt-1">{error}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+            {success && (
+              <div className="bg-green-50 border-b border-green-200 px-4 py-3">
+                <div className="flex items-start gap-3">
+                  <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                  <p className="text-green-800 font-semibold text-sm">{success}</p>
+                </div>
+              </div>
+            )}
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
                 {/* Line 1: Delivery Note Number, Country, Division, Department */}
