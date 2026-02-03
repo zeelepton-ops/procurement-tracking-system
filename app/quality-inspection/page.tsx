@@ -602,7 +602,7 @@ export default function QualityInspectionPage() {
                       Cancel
                     </Button>
                     <Button 
-                      onClick={createInspections} 
+                      onClick={createInspection} 
                       className="flex-1 bg-green-600 hover:bg-green-700 text-white" 
                       disabled={createLoading || !createForm.jobOrderId || !createForm.itpTemplateId}
                     >
