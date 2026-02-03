@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Plus, FileText, Printer, Trash2, Eye, Settings, Bell, AlertTriangle, CheckCircle2 } from 'lucide-react'
+import { Plus, FileText, Printer, Trash2, Eye, Settings, Bell, AlertTriangle, CheckCircle2, Save, FolderOpen, X } from 'lucide-react'
 
 interface DeliveryNote {
   id: string
@@ -73,6 +73,9 @@ export default function DeliveryNotesPage() {
   const [notifications, setNotifications] = useState<Array<{type: string, message: string}>>([])
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+  const [showDraftMenu, setShowDraftMenu] = useState(false)
+  const [draftName, setDraftName] = useState('')
+  const [savedDrafts, setSavedDrafts] = useState<Array<{name: string, data: any, timestamp: number}>>([])
 
   const [formData, setFormData] = useState({
     deliveryNoteNumber: '',
@@ -110,7 +113,99 @@ export default function DeliveryNotesPage() {
   useEffect(() => {
     fetchDeliveryNotes()
     fetchJobOrders()
+    loadDrafts()
   }, [])
+
+  const loadDrafts = () => {
+    try {
+      const drafts = localStorage.getItem('deliveryNoteDrafts')
+      if (drafts) {
+        setSavedDrafts(JSON.parse(drafts))
+      }
+    } catch (error) {
+      console.error('Failed to load drafts:', error)
+    }
+  }
+
+  const saveDraft = () => {
+    if (!draftName.trim()) {
+      setError('Please enter a name for the draft')
+      setTimeout(() => setError(null), 3000)
+      return
+    }
+
+    try {
+      const drafts = [...savedDrafts]
+      
+      // Check if draft name already exists
+      const existingIndex = drafts.findIndex(d => d.name === draftName.trim())
+      
+      const draftData = {
+        name: draftName.trim(),
+        data: formData,
+        timestamp: Date.now()
+      }
+
+      if (existingIndex >= 0) {
+        // Update existing draft
+        drafts[existingIndex] = draftData
+      } else {
+        // Add new draft
+        if (drafts.length >= 5) {
+          setError('Maximum 5 drafts allowed. Please delete an old draft first.')
+          setTimeout(() => setError(null), 3000)
+          return
+        }
+        drafts.push(draftData)
+      }
+
+      localStorage.setItem('deliveryNoteDrafts', JSON.stringify(drafts))
+      setSavedDrafts(drafts)
+      setDraftName('')
+      setSuccess(`Draft "${draftData.name}" saved successfully!`)
+      setTimeout(() => setSuccess(null), 3000)
+    } catch (error) {
+      console.error('Failed to save draft:', error)
+      setError('Failed to save draft')
+      setTimeout(() => setError(null), 3000)
+    }
+  }
+
+  const loadDraft = (draft: any) => {
+    setFormData(draft.data)
+    setShowDraftMenu(false)
+    setSuccess(`Draft "${draft.name}" loaded successfully!`)
+    setTimeout(() => setSuccess(null), 3000)
+  }
+
+  const deleteDraft = (draftName: string) => {
+    try {
+      const drafts = savedDrafts.filter(d => d.name !== draftName)
+      localStorage.setItem('deliveryNoteDrafts', JSON.stringify(drafts))
+      setSavedDrafts(drafts)
+      setSuccess(`Draft "${draftName}" deleted successfully!`)
+      setTimeout(() => setSuccess(null), 3000)
+    } catch (error) {
+      console.error('Failed to delete draft:', error)
+      setError('Failed to delete draft')
+      setTimeout(() => setError(null), 3000)
+    }
+  }
+
+  const clearAllDrafts = () => {
+    if (confirm('Are you sure you want to delete all drafts? This action cannot be undone.')) {
+      try {
+        localStorage.removeItem('deliveryNoteDrafts')
+        setSavedDrafts([])
+        setSuccess('All drafts cleared successfully!')
+        setTimeout(() => setSuccess(null), 3000)
+      } catch (error) {
+        console.error('Failed to clear drafts:', error)
+        setError('Failed to clear drafts')
+        setTimeout(() => setError(null), 3000)
+      }
+    }
+  }
 
   const generateDnSuggestions = () => {
     // Parse existing DN numbers to find the highest number for current year
@@ -700,11 +795,133 @@ export default function DeliveryNotesPage() {
         {showForm && (
           <Card className="mb-6 shadow-lg">
             <CardHeader className="pb-3 bg-gradient-to-r from-blue-50 to-blue-100 border-b border-blue-200">
-              <CardTitle className="text-lg">{editingId ? 'Edit' : 'Create'} Delivery Note</CardTitle>
-              <p className="text-sm text-blue-700 mt-2">
-                <AlertTriangle className="inline-block w-4 h-4 mr-2" />
-                Ensure quality inspection is fully completed before creating delivery note
-              </p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-lg">{editingId ? 'Edit' : 'Create'} Delivery Note</CardTitle>
+                  <p className="text-sm text-blue-700 mt-2">
+                    <AlertTriangle className="inline-block w-4 h-4 mr-2" />
+                    Ensure quality inspection is fully completed before creating delivery note
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <div className="relative">
+                    <Button
+                      type="button"
+                      onClick={() => setShowDraftMenu(!showDraftMenu)}
+                      variant="outline"
+                      size="sm"
+                      className="bg-white"
+                    >
+                      <FolderOpen className="w-4 h-4 mr-2" />
+                      Drafts ({savedDrafts.length}/5)
+                    </Button>
+                    {showDraftMenu && (
+                      <div className="absolute right-0 top-full mt-2 w-96 bg-white border border-slate-300 rounded-lg shadow-xl z-50">
+                        <div className="p-4 border-b border-slate-200">
+                          <h3 className="font-semibold text-sm mb-3">Save Current Form as Draft</h3>
+                          <div className="flex gap-2">
+                            <Input
+                              value={draftName}
+                              onChange={(e) => setDraftName(e.target.value)}
+                              placeholder="Enter draft name..."
+                              className="h-9 text-sm"
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.preventDefault()
+                                  saveDraft()
+                                }
+                              }}
+                            />
+                            <Button
+                              type="button"
+                              onClick={saveDraft}
+                              size="sm"
+                              disabled={savedDrafts.length >= 5 && !savedDrafts.some(d => d.name === draftName.trim())}
+                            >
+                              <Save className="w-4 h-4 mr-1" />
+                              Save
+                            </Button>
+                          </div>
+                          {savedDrafts.length >= 5 && !savedDrafts.some(d => d.name === draftName.trim()) && (
+                            <p className="text-xs text-red-600 mt-2">Maximum 5 drafts reached. Delete a draft to save new one.</p>
+                          )}
+                        </div>
+                        <div className="p-4">
+                          <div className="flex items-center justify-between mb-3">
+                            <h3 className="font-semibold text-sm">Saved Drafts</h3>
+                            {savedDrafts.length > 0 && (
+                              <Button
+                                type="button"
+                                onClick={clearAllDrafts}
+                                variant="ghost"
+                                size="sm"
+                                className="text-red-600 hover:text-red-700 hover:bg-red-50 h-7 text-xs"
+                              >
+                                Clear All
+                              </Button>
+                            )}
+                          </div>
+                          {savedDrafts.length === 0 ? (
+                            <p className="text-sm text-slate-500 text-center py-4">No saved drafts</p>
+                          ) : (
+                            <div className="space-y-2 max-h-80 overflow-y-auto">
+                              {savedDrafts.map((draft, index) => (
+                                <div key={index} className="border border-slate-200 rounded-lg p-3 hover:bg-slate-50">
+                                  <div className="flex items-start justify-between gap-2">
+                                    <div className="flex-1 min-w-0">
+                                      <p className="font-medium text-sm truncate">{draft.name}</p>
+                                      <p className="text-xs text-slate-500 mt-1">
+                                        {new Date(draft.timestamp).toLocaleString()}
+                                      </p>
+                                      <p className="text-xs text-slate-600 mt-1">
+                                        DN: {draft.data.deliveryNoteNumber || 'Not set'} • 
+                                        Job: {draft.data.jobSalesOrder || 'Not set'} • 
+                                        Items: {draft.data.lineItems?.length || 0}
+                                      </p>
+                                    </div>
+                                    <div className="flex gap-1">
+                                      <Button
+                                        type="button"
+                                        onClick={() => loadDraft(draft)}
+                                        size="sm"
+                                        variant="outline"
+                                        className="h-8 px-2"
+                                      >
+                                        Load
+                                      </Button>
+                                      <Button
+                                        type="button"
+                                        onClick={() => deleteDraft(draft.name)}
+                                        size="sm"
+                                        variant="ghost"
+                                        className="h-8 px-2 text-red-600 hover:text-red-700 hover:bg-red-50"
+                                      >
+                                        <Trash2 className="w-4 h-4" />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        <div className="p-3 border-t border-slate-200 bg-slate-50 rounded-b-lg">
+                          <Button
+                            type="button"
+                            onClick={() => setShowDraftMenu(false)}
+                            variant="ghost"
+                            size="sm"
+                            className="w-full"
+                          >
+                            <X className="w-4 h-4 mr-2" />
+                            Close
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
             </CardHeader>
             {error && (
               <div className="bg-red-50 border-b border-red-200 px-4 py-3">
