@@ -12,7 +12,7 @@ export default function RegisterPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [success, setSuccess] = useState(false)
+  const [success, setSuccess] = useState<string | null>(null)
 
   const [formData, setFormData] = useState({
     email: '',
@@ -67,7 +67,7 @@ export default function RegisterPage() {
         throw new Error(data.error || 'Registration failed')
       }
 
-      setSuccess(true)
+      setSuccess('Registration submitted successfully!')
       setTimeout(() => {
         router.push('/login')
       }, 3000)
@@ -79,7 +79,7 @@ export default function RegisterPage() {
     }
   }
 
-  if (success) {
+  if (success !== null) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 p-4">
         <Card className="w-full max-w-md border-green-200">
