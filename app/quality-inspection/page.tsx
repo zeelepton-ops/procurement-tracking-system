@@ -370,7 +370,7 @@ export default function QualityInspectionPage() {
         // Reset form and close dialog
         setShowCompleteInspectionDialog(false)
         setSelectedPendingInspection(null)
-        setCompleteForm({ result: '', remarks: '', inspectedBy: '', inspectedQty: '', approvedQty: '', rejectedQty: '', holdQty: '' })
+        setCompleteForm({ result: '' as 'APPROVED' | 'REJECTED' | 'HOLD', remarks: '', inspectedBy: '', inspectedQty: '', approvedQty: '', rejectedQty: '', holdQty: '' })
         
         // Refresh both lists
         await fetchPendingInspections()
@@ -1045,7 +1045,7 @@ export default function QualityInspectionPage() {
             setShowCompleteInspectionDialog(open)
             if (!open) {
               setSelectedPendingInspection(null)
-              setCompleteForm({ result: '', remarks: '', inspectedBy: '', inspectedQty: '', approvedQty: '', rejectedQty: '', holdQty: '' })
+              setCompleteForm({ result: '' as 'APPROVED' | 'REJECTED' | 'HOLD', remarks: '', inspectedBy: '', inspectedQty: '', approvedQty: '', rejectedQty: '', holdQty: '' })
               setCompleteError(null)
             }
           }}
