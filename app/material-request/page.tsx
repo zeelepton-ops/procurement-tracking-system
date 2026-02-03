@@ -436,7 +436,7 @@ export default function MaterialRequestPage() {
       })
       
       if (res.ok) {
-        setSuccess(true)
+        setSuccess('Material request created successfully!')
         setShowForm(false)
         fetchMaterialRequests()
         // Reset form
@@ -468,7 +468,7 @@ export default function MaterialRequestPage() {
           preferredSupplier: ''
         }])
         
-        setTimeout(() => setSuccess(false), 3000)
+        setTimeout(() => setSuccess(null), 3000)
       }
     } catch (error) {
       console.error('Failed to create material request:', error)
