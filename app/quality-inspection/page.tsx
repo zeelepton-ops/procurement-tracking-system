@@ -604,9 +604,9 @@ export default function QualityInspectionPage() {
                     <Button 
                       onClick={createInspection} 
                       className="flex-1 bg-green-600 hover:bg-green-700 text-white" 
-                      disabled={createLoading || !createForm.jobOrderId || !createForm.itpTemplateId}
+                      disabled={createSaving || !createForm.jobOrderId || !createForm.itpTemplateId}
                     >
-                      {createLoading ? (
+                      {createSaving ? (
                         <>
                           <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2" />
                           Creating...
