@@ -266,13 +266,15 @@ export async function POST(request: Request) {
             const quantity = item.quantity === null || item.quantity === undefined || item.quantity === '' ? null : Number(item.quantity)
             const unitPrice = item.unitPrice === null || item.unitPrice === undefined || item.unitPrice === '' ? null : Number(item.unitPrice)
             const totalPrice = item.totalPrice === null || item.totalPrice === undefined || item.totalPrice === '' ? null : Number(item.totalPrice)
+            const unitWeight = item.unitWeight === null || item.unitWeight === undefined || item.unitWeight === '' ? null : Number(item.unitWeight)
             const computedTotal = (quantity != null && unitPrice != null) ? (quantity * unitPrice) : null
             return {
               workDescription: item.workDescription,
               quantity: quantity,
               unit: item.unit || 'Nos',
               unitPrice: unitPrice,
-              totalPrice: totalPrice != null ? totalPrice : computedTotal
+              totalPrice: totalPrice != null ? totalPrice : computedTotal,
+              unitWeight: unitWeight
             }
           })
       : []
@@ -478,7 +480,8 @@ export async function PUT(request: Request) {
                 quantity: parseFloat(item.quantity),
                 unit: item.unit,
                 unitPrice: parseFloat(item.unitPrice),
-                totalPrice: parseFloat(item.totalPrice)
+                totalPrice: parseFloat(item.totalPrice),
+                unitWeight: item.unitWeight ? parseFloat(item.unitWeight) : null
               }))
             } : undefined
           },

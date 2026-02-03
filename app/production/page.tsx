@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -41,6 +42,7 @@ interface ITPTemplate {
 
 export default function ProductionPage() {
   const router = useRouter()
+  const { data: session } = useSession()
   const [jobOrders, setJobOrders] = useState<JobOrder[]>([])
   const [releases, setReleases] = useState<ProductionRelease[]>([])
   const [loading, setLoading] = useState(true)
@@ -55,7 +57,9 @@ export default function ProductionPage() {
     drawingNumber: '',
     releaseQty: 0,
     itpTemplateId: '',
-    productionStartDate: ''
+    productionStartDate: '',
+    productionEndDate: '',
+    actualCompletionDate: ''
   })
 
   useEffect(() => {
@@ -151,7 +155,7 @@ export default function ProductionPage() {
         body: JSON.stringify({
           ...formData,
           releaseQty: parseFloat(formData.releaseQty.toString()),
-          createdBy: 'Current User' // TODO: Get from session
+          createdBy: session?.user?.email || session?.user?.name || 'System'
         })
       })
 
@@ -167,7 +171,9 @@ export default function ProductionPage() {
         drawingNumber: '',
         releaseQty: 0,
         itpTemplateId: '',
-        productionStartDate: ''
+        productionStartDate: '',
+        productionEndDate: '',
+        actualCompletionDate: ''
       })
       fetchReleases()
       setTimeout(() => setSuccess(null), 3000)
@@ -436,6 +442,28 @@ export default function ProductionPage() {
                       type="datetime-local"
                       value={formData.productionStartDate}
                       onChange={(e) => setFormData({ ...formData, productionStartDate: e.target.value })}
+                      className="bg-slate-700 border-slate-600 text-white"
+                    />
+                  </div>
+
+                  {/* Production End Date (Expected) */}
+                  <div>
+                    <Label className="text-slate-200 text-sm">Expected End Date</Label>
+                    <Input
+                      type="datetime-local"
+                      value={formData.productionEndDate}
+                      onChange={(e) => setFormData({ ...formData, productionEndDate: e.target.value })}
+                      className="bg-slate-700 border-slate-600 text-white"
+                    />
+                  </div>
+
+                  {/* Actual Completion Date */}
+                  <div>
+                    <Label className="text-slate-200 text-sm">Actual Completion Date</Label>
+                    <Input
+                      type="datetime-local"
+                      value={formData.actualCompletionDate}
+                      onChange={(e) => setFormData({ ...formData, actualCompletionDate: e.target.value })}
                       className="bg-slate-700 border-slate-600 text-white"
                     />
                   </div>

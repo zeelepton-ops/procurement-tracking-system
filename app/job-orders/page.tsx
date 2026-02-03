@@ -48,6 +48,7 @@ interface JobOrderItem {
   unit: string
   unitPrice: number | null
   totalPrice: number | null
+  unitWeight?: number | null
 }
 
 const SCOPE_OF_WORKS_OPTIONS = [
@@ -1113,13 +1114,13 @@ export default function JobOrdersPage() {
                   
                   {/* Header row - shown once */}
                   <div className="grid grid-cols-12 gap-2 mb-2 px-3">
-                    <div className="col-span-5">
+                    <div className="col-span-4">
                       <Label className="text-xs font-semibold text-slate-600">Work Description *</Label>
                     </div>
                     <div className="col-span-2">
                       <Label className="text-xs font-semibold text-slate-600">Quantity</Label>
                     </div>
-                    <div className="col-span-2">
+                    <div className="col-span-1">
                       <Label className="text-xs font-semibold text-slate-600">Unit *</Label>
                     </div>
                     <div className="col-span-1">
@@ -1128,13 +1129,16 @@ export default function JobOrdersPage() {
                     <div className="col-span-1">
                       <Label className="text-xs font-semibold text-slate-600">Total</Label>
                     </div>
-                    <div className="col-span-1"></div>
+                    <div className="col-span-1">
+                      <Label className="text-xs font-semibold text-slate-600">Unit Wt (kg)</Label>
+                    </div>
+                    <div className="col-span-2"></div>
                   </div>
 
                   <div className="space-y-2">
                     {workItems.map((item, index) => (
                       <div key={index} className="grid grid-cols-12 gap-2 items-center bg-slate-50 p-3 rounded">
-                        <div className="col-span-5">
+                        <div className="col-span-4">
                           <Input
                             value={item.workDescription}
                             onChange={(e) => updateWorkItem(index, 'workDescription', e.target.value)}
@@ -1151,7 +1155,7 @@ export default function JobOrdersPage() {
                             className="h-8 text-xs"
                           />
                         </div>
-                        <div className="col-span-2">
+                        <div className="col-span-1">
                           <Input
                             value={item.unit}
                             onChange={(e) => updateWorkItem(index, 'unit', e.target.value)}
@@ -1178,7 +1182,17 @@ export default function JobOrdersPage() {
                             className="h-8 text-xs"
                           />
                         </div>
-                        <div className="col-span-1 flex items-center justify-center">
+                        <div className="col-span-1">
+                          <Input
+                            type="number"
+                            step="0.01"
+                            value={item.unitWeight == null ? '' : String(item.unitWeight)}
+                            onChange={(e) => updateWorkItem(index, 'unitWeight', e.target.value === '' ? null : parseFloat(e.target.value))}
+                            placeholder="0.00"
+                            className="h-8 text-xs"
+                          />
+                        </div>
+                        <div className="col-span-2 flex items-center justify-end">
                           {workItems.length > 1 && (
                             <Button
                               type="button"
@@ -1962,13 +1976,13 @@ export default function JobOrdersPage() {
                     
                     {/* Header row - shown once */}
                     <div className="grid grid-cols-12 gap-2 mb-2 px-3">
-                      <div className="col-span-5">
+                      <div className="col-span-4">
                         <Label className="text-xs font-semibold text-slate-600">Work Description *</Label>
                       </div>
                       <div className="col-span-2">
                         <Label className="text-xs font-semibold text-slate-600">Quantity</Label>
                       </div>
-                      <div className="col-span-2">
+                      <div className="col-span-1">
                         <Label className="text-xs font-semibold text-slate-600">Unit *</Label>
                       </div>
                       <div className="col-span-1">
@@ -1977,13 +1991,16 @@ export default function JobOrdersPage() {
                       <div className="col-span-1">
                         <Label className="text-xs font-semibold text-slate-600">Total</Label>
                       </div>
-                      <div className="col-span-1"></div>
+                      <div className="col-span-1">
+                        <Label className="text-xs font-semibold text-slate-600">Unit Wt (kg)</Label>
+                      </div>
+                      <div className="col-span-2"></div>
                     </div>
 
                     <div className="space-y-2">
                       {editWorkItems.map((item, index) => (
                         <div key={index} className="grid grid-cols-12 gap-2 items-center bg-slate-50 p-3 rounded">
-                          <div className="col-span-5">
+                          <div className="col-span-4">
                             <Input
                               value={item.workDescription}
                               onChange={(e) => updateEditWorkItem(index, 'workDescription', e.target.value)}
@@ -2000,7 +2017,7 @@ export default function JobOrdersPage() {
                               className="h-8 text-xs"
                             />
                           </div>
-                          <div className="col-span-2">
+                          <div className="col-span-1">
                             <Input
                               value={item.unit}
                               onChange={(e) => updateEditWorkItem(index, 'unit', e.target.value)}
@@ -2027,7 +2044,17 @@ export default function JobOrdersPage() {
                               className="h-8 text-xs"
                             />
                           </div>
-                          <div className="col-span-1 flex items-center justify-center">
+                          <div className="col-span-1">
+                            <Input
+                              type="number"
+                              step="0.01"
+                              value={item.unitWeight || ''}
+                              onChange={(e) => updateEditWorkItem(index, 'unitWeight', parseFloat(e.target.value) || 0)}
+                              placeholder="0.00"
+                              className="h-8 text-xs"
+                            />
+                          </div>
+                          <div className="col-span-2 flex items-center justify-end">
                             {editWorkItems.length > 1 && (
                               <Button
                                 type="button"

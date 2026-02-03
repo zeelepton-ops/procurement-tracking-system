@@ -61,7 +61,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { jobOrderItemId, drawingNumber, releaseQty, itpTemplateId, productionStartDate, createdBy } = body
+    const { jobOrderItemId, drawingNumber, releaseQty, itpTemplateId, productionStartDate, productionEndDate, actualCompletionDate, createdBy } = body
 
     // Validate input
     if (!jobOrderItemId || !releaseQty || !createdBy) {
@@ -102,6 +102,8 @@ export async function POST(request: Request) {
         releaseWeight,
         itpTemplateId,
         productionStartDate: productionStartDate ? new Date(productionStartDate) : undefined,
+        productionEndDate: productionEndDate ? new Date(productionEndDate) : undefined,
+        actualCompletionDate: actualCompletionDate ? new Date(actualCompletionDate) : undefined,
         createdBy,
         status: 'PLANNING'
       },
