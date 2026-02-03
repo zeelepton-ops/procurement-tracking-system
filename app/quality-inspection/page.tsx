@@ -22,7 +22,8 @@ import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { ClipboardCheck, Plus, Search, Camera, CheckCircle2, XCircle, Clock, AlertCircle } from 'lucide-react'
+import { ClipboardCheck, Plus, Search, Camera, CheckCircle2, XCircle, Clock, AlertCircle, Bell, X } from 'lucide-react'
+import { ProductionInspection, ProductionRelease } from '@/types/production'
 
 interface QualityInspection {
   id: string
@@ -97,6 +98,7 @@ export default function QualityInspectionPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
   const [inspections, setInspections] = useState<QualityInspection[]>([])
+  const [pendingInspections, setPendingInspections] = useState<any[]>([])
   const [templates, setTemplates] = useState<ITPTemplate[]>([])
   const [jobOrderItems, setJobOrderItems] = useState<JobOrderItemOption[]>([])
   const [jobOrders, setJobOrders] = useState<JobOrderOption[]>([])
@@ -104,18 +106,33 @@ export default function QualityInspectionPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('ALL')
   const [selectedInspection, setSelectedInspection] = useState<QualityInspection | null>(null)
+  const [selectedPendingInspection, setSelectedPendingInspection] = useState<any>(null)
   const [showCreateDialog, setShowCreateDialog] = useState(false)
   const [showTemplateDialog, setShowTemplateDialog] = useState(false)
+  const [showCompleteInspectionDialog, setShowCompleteInspectionDialog] = useState(false)
   const [createSaving, setCreateSaving] = useState(false)
   const [createError, setCreateError] = useState<string | null>(null)
   const [templateSaving, setTemplateSaving] = useState(false)
   const [templateError, setTemplateError] = useState<string | null>(null)
+  const [completeSaving, setCompleteSaving] = useState(false)
+  const [completeError, setCompleteError] = useState<string | null>(null)
 
   // Create inspection form
   const [createForm, setCreateForm] = useState({
     jobOrderId: '',
     itpTemplateId: '',
     isCritical: false,
+  })
+
+  // Complete inspection form
+  const [completeForm, setCompleteForm] = useState({
+    result: '' as 'APPROVED' | 'REJECTED' | 'HOLD',
+    remarks: '',
+    inspectedBy: '',
+    inspectedQty: '',
+    approvedQty: '',
+    rejectedQty: '',
+    holdQty: '',
   })
 
   // Template form
@@ -149,6 +166,7 @@ export default function QualityInspectionPage() {
       router.push('/login')
     } else if (status === 'authenticated') {
       fetchInspections()
+      fetchPendingInspections()
       fetchTemplates()
       fetchJobOrderItems()
     }
@@ -165,6 +183,18 @@ export default function QualityInspectionPage() {
       console.error('Error fetching inspections:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchPendingInspections = async () => {
+    try {
+      const res = await fetch('/api/production-releases/pending-inspections')
+      if (res.ok) {
+        const data = await res.json()
+        setPendingInspections(data)
+      }
+    } catch (error) {
+      console.error('Error fetching pending inspections:', error)
     }
   }
 
@@ -312,6 +342,51 @@ export default function QualityInspectionPage() {
     }
   }
 
+  const completeProductionInspection = async () => {
+    try {
+      setCompleteError(null)
+      if (!selectedPendingInspection || !completeForm.result) {
+        setCompleteError('Please select a result (APPROVED, REJECTED, or HOLD).')
+        return
+      }
+
+      setCompleteSaving(true)
+      const res = await fetch('/api/production-releases/complete-inspection', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          productionInspectionId: selectedPendingInspection.id,
+          result: completeForm.result,
+          remarks: completeForm.remarks,
+          inspectedBy: completeForm.inspectedBy || (session?.user?.name || 'System'),
+          inspectedQty: completeForm.inspectedQty ? parseFloat(completeForm.inspectedQty) : undefined,
+          approvedQty: completeForm.approvedQty ? parseFloat(completeForm.approvedQty) : undefined,
+          rejectedQty: completeForm.rejectedQty ? parseFloat(completeForm.rejectedQty) : undefined,
+          holdQty: completeForm.holdQty ? parseFloat(completeForm.holdQty) : undefined,
+        }),
+      })
+
+      if (res.ok) {
+        // Reset form and close dialog
+        setShowCompleteInspectionDialog(false)
+        setSelectedPendingInspection(null)
+        setCompleteForm({ result: '', remarks: '', inspectedBy: '', inspectedQty: '', approvedQty: '', rejectedQty: '', holdQty: '' })
+        
+        // Refresh both lists
+        await fetchPendingInspections()
+        await fetchInspections()
+      } else {
+        const data = await res.json().catch(() => null)
+        setCompleteError(data?.error || 'Failed to complete inspection. Please try again.')
+      }
+    } catch (error) {
+      console.error('Error completing inspection:', error)
+      setCompleteError('Failed to complete inspection. Please try again.')
+    } finally {
+      setCompleteSaving(false)
+    }
+  }
+
   const getStatusBadge = (status: string) => {
     const variants: Record<string, { color: string; icon: any }> = {
       PENDING: { color: 'bg-gray-100 text-gray-700', icon: Clock },
@@ -348,6 +423,54 @@ export default function QualityInspectionPage() {
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-7xl mx-auto">
+        {/* Pending Inspections Banner */}
+        {pendingInspections.length > 0 && (
+          <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4 shadow-sm">
+            <div className="flex items-start justify-between">
+              <div className="flex items-start gap-3">
+                <Bell className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                <div>
+                  <h3 className="font-semibold text-blue-900 mb-2">
+                    {pendingInspections.length} Pending Production {pendingInspections.length === 1 ? 'Inspection' : 'Inspections'}
+                  </h3>
+                  <div className="space-y-2">
+                    {pendingInspections.map((inspection, idx) => (
+                      <div key={inspection.id} className="flex items-center justify-between bg-white rounded p-2 text-sm">
+                        <span className="text-gray-700">
+                          <strong>{inspection.productionRelease?.jobOrderItem?.jobOrder?.jobNumber}</strong>
+                          {' - '}
+                          {inspection.productionRelease?.jobOrderItem?.workDescription}
+                          {' (Qty: '}
+                          {inspection.productionRelease?.releaseQty}
+                          {')'}
+                        </span>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="ml-2"
+                          onClick={() => {
+                            setSelectedPendingInspection(inspection)
+                            setShowCompleteInspectionDialog(true)
+                            setCompleteForm({ result: '', remarks: '', inspectedBy: session?.user?.name || '', inspectedQty: '', approvedQty: '', rejectedQty: '', holdQty: '' })
+                          }}
+                        >
+                          Complete
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={() => setPendingInspections([])}
+                className="text-blue-400 hover:text-blue-600 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
@@ -912,6 +1035,192 @@ export default function QualityInspectionPage() {
                 Delete
               </Button>
             </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Complete Production Inspection Dialog */}
+        <Dialog
+          open={showCompleteInspectionDialog}
+          onOpenChange={(open) => {
+            setShowCompleteInspectionDialog(open)
+            if (!open) {
+              setSelectedPendingInspection(null)
+              setCompleteForm({ result: '', remarks: '', inspectedBy: '', inspectedQty: '', approvedQty: '', rejectedQty: '', holdQty: '' })
+              setCompleteError(null)
+            }
+          }}
+        >
+          <DialogContent className="max-w-2xl">
+            <DialogHeader className="bg-gradient-to-r from-green-50 to-emerald-50 -mx-6 -mt-6 px-6 pt-6 pb-4 border-b border-green-100 rounded-t-lg">
+              <DialogTitle className="text-xl font-bold text-green-900 flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5 text-green-600" />
+                Complete Production Inspection
+              </DialogTitle>
+            </DialogHeader>
+
+            {selectedPendingInspection && (
+              <div className="space-y-5 mt-4">
+                {/* Production Details */}
+                <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
+                  <h4 className="font-semibold text-sm text-slate-900 mb-3">Production Details</h4>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <p className="text-slate-600">Job Order</p>
+                      <p className="font-semibold text-slate-900">
+                        {selectedPendingInspection.productionRelease?.jobOrderItem?.jobOrder?.jobNumber}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-slate-600">Item Description</p>
+                      <p className="font-semibold text-slate-900">
+                        {selectedPendingInspection.productionRelease?.jobOrderItem?.workDescription}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-slate-600">Release Quantity</p>
+                      <p className="font-semibold text-slate-900">
+                        {selectedPendingInspection.productionRelease?.releaseQty}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-slate-600">Drawing Number</p>
+                      <p className="font-semibold text-slate-900">
+                        {selectedPendingInspection.productionRelease?.drawingNumber || 'N/A'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Inspection Result */}
+                <div className="space-y-3">
+                  <div>
+                    <Label className="font-semibold text-slate-900">Inspection Result *</Label>
+                    <div className="grid grid-cols-3 gap-2 mt-2">
+                      {['APPROVED', 'REJECTED', 'HOLD'].map((result) => (
+                        <button
+                          key={result}
+                          onClick={() => setCompleteForm({ ...completeForm, result: result as any })}
+                          className={`p-3 rounded-lg border-2 transition-all ${
+                            completeForm.result === result
+                              ? 'border-green-500 bg-green-50'
+                              : result === 'APPROVED'
+                              ? 'border-green-200 bg-green-50/50 hover:border-green-300'
+                              : result === 'REJECTED'
+                              ? 'border-red-200 bg-red-50/50 hover:border-red-300'
+                              : 'border-yellow-200 bg-yellow-50/50 hover:border-yellow-300'
+                          }`}
+                        >
+                          <span className={`font-semibold text-sm ${
+                            result === 'APPROVED'
+                              ? 'text-green-700'
+                              : result === 'REJECTED'
+                              ? 'text-red-700'
+                              : 'text-yellow-700'
+                          }`}>
+                            {result}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Quantity Fields */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label className="font-semibold text-slate-900">Inspected Quantity</Label>
+                      <Input
+                        type="number"
+                        value={completeForm.inspectedQty}
+                        onChange={(e) => setCompleteForm({ ...completeForm, inspectedQty: e.target.value })}
+                        placeholder="0"
+                        min="0"
+                        className="border-slate-300"
+                      />
+                    </div>
+                    <div>
+                      <Label className="font-semibold text-slate-900">Approved Quantity</Label>
+                      <Input
+                        type="number"
+                        value={completeForm.approvedQty}
+                        onChange={(e) => setCompleteForm({ ...completeForm, approvedQty: e.target.value })}
+                        placeholder="0"
+                        min="0"
+                        className="border-slate-300"
+                      />
+                    </div>
+                    <div>
+                      <Label className="font-semibold text-slate-900">Rejected Quantity</Label>
+                      <Input
+                        type="number"
+                        value={completeForm.rejectedQty}
+                        onChange={(e) => setCompleteForm({ ...completeForm, rejectedQty: e.target.value })}
+                        placeholder="0"
+                        min="0"
+                        className="border-slate-300"
+                      />
+                    </div>
+                    <div>
+                      <Label className="font-semibold text-slate-900">Hold Quantity</Label>
+                      <Input
+                        type="number"
+                        value={completeForm.holdQty}
+                        onChange={(e) => setCompleteForm({ ...completeForm, holdQty: e.target.value })}
+                        placeholder="0"
+                        min="0"
+                        className="border-slate-300"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Remarks */}
+                  <div>
+                    <Label className="font-semibold text-slate-900">Remarks</Label>
+                    <Textarea
+                      value={completeForm.remarks}
+                      onChange={(e) => setCompleteForm({ ...completeForm, remarks: e.target.value })}
+                      placeholder="Enter inspection remarks or notes..."
+                      rows={3}
+                      className="border-slate-300"
+                    />
+                  </div>
+
+                  {/* Inspected By */}
+                  <div>
+                    <Label className="font-semibold text-slate-900">Inspected By</Label>
+                    <Input
+                      value={completeForm.inspectedBy}
+                      onChange={(e) => setCompleteForm({ ...completeForm, inspectedBy: e.target.value })}
+                      placeholder={session?.user?.name || 'Your Name'}
+                      className="border-slate-300"
+                    />
+                  </div>
+                </div>
+
+                {/* Error Message */}
+                {completeError && (
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">
+                    {completeError}
+                  </div>
+                )}
+
+                {/* Buttons */}
+                <div className="flex justify-end gap-2 pt-4">
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowCompleteInspectionDialog(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={completeProductionInspection}
+                    disabled={completeSaving || !completeForm.result}
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    {completeSaving ? 'Submitting...' : 'Submit Inspection'}
+                  </Button>
+                </div>
+              </div>
+            )}
           </DialogContent>
         </Dialog>
       </div>
