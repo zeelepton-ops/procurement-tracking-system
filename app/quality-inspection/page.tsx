@@ -451,7 +451,7 @@ export default function QualityInspectionPage() {
                           onClick={() => {
                             setSelectedPendingInspection(inspection)
                             setShowCompleteInspectionDialog(true)
-                            setCompleteForm({ result: '', remarks: '', inspectedBy: session?.user?.name || '', inspectedQty: '', approvedQty: '', rejectedQty: '', holdQty: '' })
+                            setCompleteForm({ result: '' as 'APPROVED' | 'REJECTED' | 'HOLD', remarks: '', inspectedBy: session?.user?.name || '', inspectedQty: '', approvedQty: '', rejectedQty: '', holdQty: '' })
                           }}
                         >
                           Complete
