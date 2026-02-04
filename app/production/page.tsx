@@ -227,31 +227,47 @@ export default function ProductionPage() {
   const selectedJob = jobOrders.find(jo => jo.id === selectedJobOrder)
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 p-8">
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
+    <div className="min-h-screen bg-slate-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+        {/* Header Section */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-3">
-            <Factory className="w-8 h-8 text-blue-400" />
+            <div className="h-12 w-12 rounded-lg bg-gradient-to-br from-primary-600 to-primary-700 flex items-center justify-center">
+              <Factory className="w-6 h-6 text-white" />
+            </div>
             <div>
-              <h1 className="text-3xl font-bold text-white">Production Management</h1>
-              <p className="text-slate-400 text-sm mt-1">L3: Work Packages & Production Releases</p>
+              <h1 className="text-3xl font-bold text-slate-900">Production Management</h1>
+              <p className="text-slate-600 text-sm mt-1">L3: Work Packages & Production Releases</p>
             </div>
           </div>
           <Button
             onClick={() => setShowCreateModal(true)}
-            className="bg-blue-600 hover:bg-blue-700"
+            className="bg-primary-600 hover:bg-primary-700 h-11"
           >
-            <Plus className="w-4 h-4 mr-2" />
+            <Plus className="w-5 h-5 mr-2" />
             New Release
           </Button>
         </div>
 
+        {/* Status Messages */}
+        {error && (
+          <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 flex items-center gap-2">
+            <AlertCircle className="h-5 w-5 flex-shrink-0" />
+            {error}
+          </div>
+        )}
+        {success && (
+          <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 flex items-center gap-2">
+            <CheckCircle2 className="h-5 w-5 flex-shrink-0" />
+            {success}
+          </div>
+        )}
+
         {/* Job Order Selection */}
-        <Card className="bg-slate-800 border-slate-700">
+        <Card className="shadow-md">
           <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-blue-400" />
+            <CardTitle className="text-slate-900 flex items-center gap-2 text-lg">
+              <TrendingUp className="w-5 h-5 text-primary-600" />
               Select Job Order
             </CardTitle>
           </CardHeader>
@@ -259,7 +275,7 @@ export default function ProductionPage() {
             <select
               value={selectedJobOrder}
               onChange={(e) => setSelectedJobOrder(e.target.value)}
-              className="w-full p-3 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full p-3 bg-white border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary-500 font-medium"
             >
               <option value="">-- Select a Job Order --</option>
               {jobOrders.map(jo => (
@@ -293,48 +309,48 @@ export default function ProductionPage() {
               const itemReleases = releases.filter(r => r.jobOrderItemId === item.id)
 
               return (
-                <Card key={item.id} className="bg-slate-800 border-slate-700">
-                  <CardHeader className="pb-3">
+                <Card key={item.id} className="shadow-md hover:shadow-lg transition-shadow">
+                  <CardHeader className="pb-3 bg-gradient-to-r from-primary-50 to-transparent border-b border-slate-200">
                     <div className="flex items-start justify-between">
                       <div>
-                        <CardTitle className="text-white text-lg">{item.workDescription}</CardTitle>
-                        <CardDescription className="text-slate-400 text-sm mt-1">
-                          Order Qty: {item.quantity} {item.unit} 
+                        <CardTitle className="text-slate-900 text-lg">{item.workDescription}</CardTitle>
+                        <CardDescription className="text-slate-600 text-sm mt-1">
+                          Order Qty: <span className="font-semibold">{item.quantity} {item.unit}</span>
                           {item.unitWeight && ` • Unit Wt: ${item.unitWeight} kg`}
                         </CardDescription>
                       </div>
-                      <div className="text-right">
-                        <div className="text-2xl font-bold text-blue-400">{remainingQty}</div>
-                        <div className="text-slate-400 text-xs">Remaining</div>
+                      <div className="text-right bg-primary-100 rounded-lg px-3 py-2">
+                        <div className="text-2xl font-bold text-primary-700">{remainingQty}</div>
+                        <div className="text-primary-600 text-xs font-medium">Remaining</div>
                       </div>
                     </div>
                   </CardHeader>
 
                   {/* Releases for this item */}
                   {itemReleases.length > 0 ? (
-                    <CardContent className="space-y-2">
+                    <CardContent className="space-y-3 pt-4">
                       {itemReleases.map(release => (
-                        <div key={release.id} className="bg-slate-700 rounded-lg p-3 space-y-2">
-                          <div className="flex items-center justify-between">
+                        <div key={release.id} className="bg-slate-50 rounded-lg p-4 border border-slate-200 hover:border-primary-300 transition-colors">
+                          <div className="flex items-center justify-between mb-3">
                             <div className="flex items-center gap-2">
                               {getStatusIcon(release.status)}
-                              <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(release.status)}`}>
-                                {release.status}
+                              <span className={`px-3 py-1 rounded-full text-xs font-bold ${getStatusColor(release.status)}`}>
+                                {release.status.replace(/_/g, ' ')}
                               </span>
                             </div>
-                            <div className="text-sm text-slate-300">
-                              Release: {release.releaseQty} {item.unit}
+                            <div className="text-sm font-medium text-slate-700">
+                              Release: <span className="text-primary-700">{release.releaseQty} {item.unit}</span>
                               {release.releaseWeight && ` • Wt: ${release.releaseWeight.toFixed(2)} kg`}
                             </div>
                           </div>
 
                           {/* Latest Inspection Info */}
                           {release.inspections && release.inspections.length > 0 && (
-                            <div className="bg-slate-600 rounded p-2 text-xs text-slate-200">
-                              <div className="font-semibold mb-1">Latest Inspection:</div>
-                              <div>Result: {release.inspections[0].result || 'Pending'}</div>
+                            <div className="bg-primary-50 rounded p-3 text-xs text-slate-700 border border-primary-200 mb-3">
+                              <div className="font-semibold mb-2 text-slate-900">Latest Inspection:</div>
+                              <div>Result: <span className="font-medium">{release.inspections[0].result || 'Pending'}</span></div>
                               {release.inspections[0].remarks && (
-                                <div className="text-yellow-300 mt-1">Remarks: {release.inspections[0].remarks}</div>
+                                <div className="text-slate-700 mt-2">Remarks: {release.inspections[0].remarks}</div>
                               )}
                             </div>
                           )}
@@ -343,14 +359,14 @@ export default function ProductionPage() {
                           {release.status === 'IN_PRODUCTION' || release.status === 'PLANNING' ? (
                             <Button
                               onClick={() => handlePushForInspection(release.id)}
-                              className="w-full bg-green-600 hover:bg-green-700 text-white text-sm"
+                              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium"
                             >
                               Push for Inspection
                             </Button>
                           ) : release.status === 'REWORK' ? (
                             <Button
                               onClick={() => handlePushForInspection(release.id)}
-                              className="w-full bg-orange-600 hover:bg-orange-700 text-white text-sm"
+                              className="w-full bg-orange-600 hover:bg-orange-700 text-white text-sm font-medium"
                             >
                               Re-inspect ({release.inspectionCount} attempts)
                             </Button>
@@ -360,7 +376,7 @@ export default function ProductionPage() {
                     </CardContent>
                   ) : (
                     <CardContent>
-                      <p className="text-slate-400 text-sm italic">No releases yet</p>
+                      <p className="text-slate-500 text-sm italic">No releases yet</p>
                     </CardContent>
                   )}
                 </Card>
@@ -372,19 +388,20 @@ export default function ProductionPage() {
         {/* Create Release Modal */}
         {showCreateModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <Card className="w-full max-w-md bg-slate-800 border-slate-700">
-              <CardHeader>
-                <CardTitle className="text-white">Create Production Release</CardTitle>
+            <Card className="w-full max-w-md bg-white border-slate-200">
+              <CardHeader className="pb-4 border-b border-slate-200">
+                <CardTitle className="text-xl font-bold text-slate-900">Create Production Release</CardTitle>
+                <CardDescription className="text-slate-600 mt-1">Add a new release for the selected item</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-6">
                 <form onSubmit={handleCreateRelease} className="space-y-4">
                   {/* Job Order Item Selection */}
                   <div>
-                    <Label className="text-slate-200 text-sm">Item *</Label>
+                    <Label className="text-slate-900 text-sm font-semibold\">Item *</Label>
                     <select
                       value={formData.jobOrderItemId}
                       onChange={(e) => setFormData({ ...formData, jobOrderItemId: e.target.value })}
-                      className="w-full mt-1 p-2 bg-slate-700 border border-slate-600 rounded text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full mt-1 p-2.5 border border-slate-300 rounded-lg bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                     >
                       <option value="">-- Select Item --</option>
                       {selectedJob?.items?.map(item => (
@@ -397,34 +414,34 @@ export default function ProductionPage() {
 
                   {/* Drawing Number */}
                   <div>
-                    <Label className="text-slate-200 text-sm">Drawing Number</Label>
+                    <Label className="text-slate-900 text-sm font-semibold">Drawing Number</Label>
                     <Input
                       value={formData.drawingNumber}
                       onChange={(e) => setFormData({ ...formData, drawingNumber: e.target.value })}
                       placeholder="DRW-001"
-                      className="bg-slate-700 border-slate-600 text-white"
+                      className="bg-white border-slate-300 text-slate-900 focus:ring-primary-500 focus:border-transparent"
                     />
                   </div>
 
                   {/* Release Quantity */}
                   <div>
-                    <Label className="text-slate-200 text-sm">Release Quantity *</Label>
+                    <Label className="text-slate-900 text-sm font-semibold">Release Quantity *</Label>
                     <Input
                       type="number"
                       value={formData.releaseQty}
                       onChange={(e) => setFormData({ ...formData, releaseQty: parseFloat(e.target.value) })}
                       placeholder="0"
-                      className="bg-slate-700 border-slate-600 text-white"
+                      className="bg-white border-slate-300 text-slate-900 focus:ring-primary-500 focus:border-transparent"
                     />
                   </div>
 
                   {/* ITP Template */}
                   <div>
-                    <Label className="text-slate-200 text-sm">ITP Template</Label>
+                    <Label className="text-slate-900 text-sm font-semibold">ITP Template</Label>
                     <select
                       value={formData.itpTemplateId}
                       onChange={(e) => setFormData({ ...formData, itpTemplateId: e.target.value })}
-                      className="w-full mt-1 p-2 bg-slate-700 border border-slate-600 rounded text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full mt-1 p-2.5 border border-slate-300 rounded-lg bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                     >
                       <option value="">-- Select Template --</option>
                       {itpTemplates.map(template => (
@@ -437,50 +454,50 @@ export default function ProductionPage() {
 
                   {/* Production Start Date */}
                   <div>
-                    <Label className="text-slate-200 text-sm">Production Start Date</Label>
+                    <Label className="text-slate-900 text-sm font-semibold">Production Start Date</Label>
                     <Input
                       type="datetime-local"
                       value={formData.productionStartDate}
                       onChange={(e) => setFormData({ ...formData, productionStartDate: e.target.value })}
-                      className="bg-slate-700 border-slate-600 text-white"
+                      className="bg-white border-slate-300 text-slate-900 focus:ring-primary-500 focus:border-transparent"
                     />
                   </div>
 
                   {/* Production End Date (Expected) */}
                   <div>
-                    <Label className="text-slate-200 text-sm">Expected End Date</Label>
+                    <Label className="text-slate-900 text-sm font-semibold">Expected End Date</Label>
                     <Input
                       type="datetime-local"
                       value={formData.productionEndDate}
                       onChange={(e) => setFormData({ ...formData, productionEndDate: e.target.value })}
-                      className="bg-slate-700 border-slate-600 text-white"
+                      className="bg-white border-slate-300 text-slate-900 focus:ring-primary-500 focus:border-transparent"
                     />
                   </div>
 
                   {/* Actual Completion Date */}
                   <div>
-                    <Label className="text-slate-200 text-sm">Actual Completion Date</Label>
+                    <Label className="text-slate-900 text-sm font-semibold">Actual Completion Date</Label>
                     <Input
                       type="datetime-local"
                       value={formData.actualCompletionDate}
                       onChange={(e) => setFormData({ ...formData, actualCompletionDate: e.target.value })}
-                      className="bg-slate-700 border-slate-600 text-white"
+                      className="bg-white border-slate-300 text-slate-900 focus:ring-primary-500 focus:border-transparent"
                     />
                   </div>
 
                   {/* Buttons */}
-                  <div className="flex gap-2 pt-4">
+                  <div className="flex gap-3 pt-4">
                     <Button
                       type="submit"
-                      className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                      className="flex-1 bg-primary-600 hover:bg-primary-700 text-white font-medium"
                     >
-                      Create
+                      Create Release
                     </Button>
                     <Button
                       type="button"
                       onClick={() => setShowCreateModal(false)}
                       variant="outline"
-                      className="flex-1 bg-slate-700 border-slate-600 text-white hover:bg-slate-600"
+                      className="flex-1 border-slate-300 text-slate-700 hover:bg-slate-50"
                     >
                       Cancel
                     </Button>
