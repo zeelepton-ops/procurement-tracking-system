@@ -702,7 +702,7 @@ export default function JobOrdersPage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
           <p className="mt-4 text-slate-600">Loading job orders...</p>
         </div>
       </div>
@@ -730,7 +730,7 @@ export default function JobOrdersPage() {
           </div>
           <Button 
             onClick={() => setShowForm(!showForm)}
-            className="bg-blue-600 hover:bg-blue-700"
+            className="bg-primary-600 hover:bg-primary-700"
             size="sm"
           >
             {showForm ? (
@@ -763,7 +763,7 @@ export default function JobOrdersPage() {
             <select
               value={filters.priority}
               onChange={(e) => setFilters({ ...filters, priority: e.target.value })}
-              className="mt-1 h-9 w-full px-3 rounded-md border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="mt-1 h-9 w-full px-3 rounded-md border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-primary-500"
             >
               <option value="ALL">All</option>
               <option value="HIGH">High</option>
@@ -780,9 +780,9 @@ export default function JobOrdersPage() {
 
         {/* Create Form */}
         {showForm && (
-          <Card className="mb-6 border-blue-200 shadow-lg">
-            <CardHeader className="bg-blue-50 py-3">
-              <CardTitle className="text-blue-900 text-lg">Create New Job Order</CardTitle>
+          <Card className="mb-6 border-primary-200 shadow-lg">
+            <CardHeader className="bg-primary-50 py-3">
+              <CardTitle className="text-primary-900 text-lg">Create New Job Order</CardTitle>
               <CardDescription>Enter the details for the new job order (as per NBTC template)</CardDescription>
             </CardHeader>
             <CardContent className="pt-4">
@@ -935,7 +935,7 @@ export default function JobOrdersPage() {
                       value={formData.foreman}
                       onChange={(e) => setFormData({ ...formData, foreman: e.target.value })}
                       placeholder="Select or type"
-                      className="mt-1 h-9 px-2 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full text-xs"
+                      className="mt-1 h-9 px-2 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-primary-500 w-full text-xs"
                     />
                     <datalist id="foremanOptionsList">
                       {foremanOptions.map((name) => (
@@ -972,7 +972,7 @@ export default function JobOrdersPage() {
                           phone: match?.phone || prev.phone
                         }))
                       }}
-                      className="mt-1 h-9 px-2 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full text-xs"
+                      className="mt-1 h-9 px-2 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-primary-500 w-full text-xs"
                     >
                       <option value="">Select</option>
                       {contactOptions.map((c) => (
@@ -997,7 +997,7 @@ export default function JobOrdersPage() {
                       value={formData.priority}
                       onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
                       required
-                      className="mt-1 h-9 px-2 pr-8 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full text-xs z-20"
+                      className="mt-1 h-9 px-2 pr-8 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-primary-500 w-full text-xs z-20"
                     >
                       <option value="HIGH">HIGH</option>
                       <option value="MEDIUM">MEDIUM</option>
@@ -1012,7 +1012,7 @@ export default function JobOrdersPage() {
                       value={formData.qaQcInCharge}
                       onChange={(e) => setFormData({ ...formData, qaQcInCharge: e.target.value })}
                       placeholder="Select or type"
-                      className="mt-1 h-9 px-2 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full text-xs"
+                      className="mt-1 h-9 px-2 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-primary-500 w-full text-xs"
                     />
                     <datalist id="qaQcOptionsList">
                       {qaQcOptions.map((name) => (
@@ -1266,7 +1266,7 @@ export default function JobOrdersPage() {
                   <Button 
                     type="submit" 
                     disabled={submitting}
-                    className="bg-blue-600 hover:bg-blue-700"
+                    className="bg-primary-600 hover:bg-primary-700"
                     size="sm"
                   >
                     {submitting ? 'Creating...' : 'Create Job Order'}
@@ -1326,7 +1326,7 @@ export default function JobOrdersPage() {
                     <div className="text-xs font-medium">{selectedIds.length} selected</div>
                     <div className="flex items-center gap-2">
                       <button
-                        className="text-xs bg-blue-600 text-white px-3 py-1 rounded"
+                        className="text-xs bg-primary-600 text-white px-3 py-1 rounded"
                         onClick={async () => {
                           // Export selected
                           const ids = selectedIds.join(',')
@@ -1388,7 +1388,7 @@ export default function JobOrdersPage() {
                   {filteredOrders.map((order) => (
                     <div
                       key={order.id}
-                      className={`grid grid-cols-12 items-center gap-2 px-3 py-2 text-[12px] cursor-pointer hover:bg-blue-50 ${selectedJob?.id === order.id ? 'bg-blue-50' : ''}`}
+                      className={`grid grid-cols-12 items-center gap-2 px-3 py-2 text-[12px] cursor-pointer hover:bg-primary-50 ${selectedJob?.id === order.id ? 'bg-primary-50' : ''}`}
                       onClick={() => handleSelectJob(order.jobNumber, order)}
                     >
                       <div className="col-span-2 flex items-center gap-2">
@@ -1429,7 +1429,7 @@ export default function JobOrdersPage() {
                           {order.priority || 'MEDIUM'}
                         </div>
                       </div>
-                      <div className="col-span-1 text-right font-semibold text-blue-700">
+                      <div className="col-span-1 text-right font-semibold text-primary-700">
                         {order._count?.materialRequests ?? 0}
                       </div>
                       <div className="col-span-1 flex justify-end">
@@ -1480,18 +1480,18 @@ export default function JobOrdersPage() {
 
         {/* Selected job details */}
         {selectedJob && (
-          <Card className="mt-3 border-blue-100">
-            <CardHeader className="py-3 bg-blue-50">
+          <Card className="mt-3 border-primary-100">
+            <CardHeader className="py-3 bg-primary-50">
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="text-lg text-blue-900">Job Order Details</CardTitle>
+                  <CardTitle className="text-lg text-primary-900">Job Order Details</CardTitle>
                   <CardDescription>JO-{selectedJob.jobNumber}</CardDescription>
                 </div>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => handleEditClick(selectedJob)}
-                  className="h-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                  className="h-8 text-primary-600 hover:text-primary-700 hover:bg-primary-50"
                 >
                   <Edit className="h-4 w-4 mr-2" />
                   Edit
@@ -1608,7 +1608,7 @@ export default function JobOrdersPage() {
                         </tr>
                         <tr>
                           <td colSpan={4} className="p-2 text-right font-bold">Final Total:</td>
-                          <td className="p-2 text-right font-bold text-blue-600">{((selectedJob as any).finalTotal !== undefined && (selectedJob as any).finalTotal !== null ? (selectedJob as any).finalTotal : ((Array.isArray(selectedJob.items) ? selectedJob.items.reduce((sum, item) => sum + (item.totalPrice ?? 0), 0) : 0) - ((selectedJob as any).discount || 0) + ((selectedJob as any).roundOff || 0))).toFixed(2)} QAR</td>
+                          <td className="p-2 text-right font-bold text-primary-600">{((selectedJob as any).finalTotal !== undefined && (selectedJob as any).finalTotal !== null ? (selectedJob as any).finalTotal : ((Array.isArray(selectedJob.items) ? selectedJob.items.reduce((sum, item) => sum + (item.totalPrice ?? 0), 0) : 0) - ((selectedJob as any).discount || 0) + ((selectedJob as any).roundOff || 0))).toFixed(2)} QAR</td>
                         </tr>
                       </tfoot>
                     </table>
@@ -1625,7 +1625,7 @@ export default function JobOrdersPage() {
               <div className="border-t pt-3 space-y-1">
                 <div className="text-xs text-slate-500">Created: {new Date(selectedJob.createdAt).toLocaleString()}</div>
                 {selectedJob.lastEditedBy && selectedJob.lastEditedAt && (
-                  <div className="text-xs text-blue-600">
+                  <div className="text-xs text-primary-600">
                     Last edited: {new Date(selectedJob.lastEditedAt).toLocaleString()} by {selectedJob.lastEditedBy}
                   </div>
                 )}
@@ -1687,10 +1687,10 @@ export default function JobOrdersPage() {
           <div className="fixed inset-0 bg-black/50 flex items-start justify-center p-4 z-50 overflow-y-auto" onClick={() => setEditingJob(null)}>
             <div className="w-full max-w-5xl my-8" onClick={(e) => e.stopPropagation()}>
               <Card className="w-full bg-white shadow-2xl max-h-[95vh] flex flex-col">
-                <CardHeader className="bg-blue-50 py-3 flex-shrink-0 border-b border-blue-100">
+                <CardHeader className="bg-primary-50 py-3 flex-shrink-0 border-b border-primary-100">
                   <div className="flex items-center justify-between">
                     <div>
-                      <CardTitle className="text-blue-900 text-lg">Edit Job Order</CardTitle>
+                      <CardTitle className="text-primary-900 text-lg">Edit Job Order</CardTitle>
                       <CardDescription>JO-{editingJob.jobNumber}</CardDescription>
                     </div>
                     <Button
