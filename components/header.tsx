@@ -55,25 +55,26 @@ export default function Header() {
   ]
 
   return (
-    <header className="bg-white/90 backdrop-blur border-b border-slate-200 sticky top-0 z-50 no-print shadow-sm">
-      <div className="w-full px-3 py-2">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <Link href="/dashboard" className="flex items-center gap-2">
-              {/* NBTC Logo */}
+    <header className="bg-white border-b border-slate-200 sticky top-0 z-50 no-print shadow-md">
+      <div className="w-full px-4 py-3">
+        <div className="flex items-center justify-between gap-4">
+          {/* Logo & Brand */}
+          <div className="flex items-center gap-3 flex-shrink-0">
+            <Link href="/dashboard" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
               <img 
                 src="https://i.ibb.co/nMjzX2GS/Logo-NBTC-Transparent.png" 
                 alt="NBTC Logo"
-                className="h-9 w-auto object-contain"
+                className="h-10 w-auto object-contain"
               />
-              <div className="hidden xl:flex flex-col leading-tight">
-                <span className="text-base font-bold text-slate-900 whitespace-nowrap">Project ERP System</span>
-                <span className="text-xs text-slate-500 whitespace-nowrap">Operations, Procurement & Delivery</span>
+              <div className="hidden lg:flex flex-col leading-tight">
+                <span className="text-base font-bold text-slate-900">ERP System</span>
+                <span className="text-xs text-slate-500">Manufacturing & Procurement</span>
               </div>
             </Link>
           </div>
 
-          <nav className="flex gap-0.5 flex-1 justify-center items-center min-w-0">
+          {/* Main Navigation */}
+          <nav className="flex gap-1 flex-1 justify-center items-center min-w-0">
             {navItems.map((item, idx) => {
               const Icon = item.icon
               const isActive = pathname === item.href || (item.children && item.children.some((c: any) => pathname === c.href))
@@ -94,14 +95,14 @@ export default function Header() {
                       closeTimeoutRef.current = window.setTimeout(() => setOpenIndex(null), 150)
                     }}
                   >
-                    <Link
-                      href={item.href}
+                    <button
                       onClick={(e) => {
-                        // Allow navigation to parent page
                         setOpenIndex(null)
                       }}
-                      className={`flex items-center gap-1 px-2 py-1.5 rounded-lg transition-colors whitespace-nowrap text-sm ${
-                        isActive ? 'bg-blue-100 text-blue-700 font-medium' : 'text-slate-600 hover:bg-slate-100'
+                      className={`flex items-center gap-1.5 px-3 py-2 rounded-lg transition-all duration-150 whitespace-nowrap text-sm font-medium ${
+                        isActive 
+                          ? 'bg-primary-50 text-primary-700 shadow-sm' 
+                          : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
                       }`}
                       onMouseEnter={() => {
                         if (closeTimeoutRef.current) {
@@ -111,13 +112,14 @@ export default function Header() {
                         setOpenIndex(idx)
                       }}
                     >
-                      <Icon className="h-3.5 w-3.5 flex-shrink-0" />
+                      <Icon className="h-4 w-4 flex-shrink-0" />
                       <span>{item.label}</span>
-                    </Link>
+                      <ChevronDown className={`h-3 w-3 transition-transform duration-200 ${openIndex === idx ? 'rotate-180' : ''}`} />
+                    </button>
 
                     {openIndex === idx && (
                       <div
-                        className="absolute right-0 top-full mt-1 bg-white border rounded shadow-md z-50 min-w-max whitespace-nowrap"
+                        className="absolute left-1/2 -translate-x-1/2 top-full mt-2 bg-white border border-slate-200 rounded-lg shadow-lg z-50 min-w-max whitespace-nowrap py-1"
                         onMouseEnter={() => {
                           if (closeTimeoutRef.current) {
                             clearTimeout(closeTimeoutRef.current)
@@ -131,7 +133,7 @@ export default function Header() {
                         {item.children.map((child: any) => {
                           const ChildIcon = child.icon
                           return (
-                            <Link key={child.href} href={child.href} className={`block px-3 py-2 text-sm text-slate-600 hover:bg-slate-100 ${pathname === child.href ? 'bg-blue-50 text-blue-700 font-medium' : ''}`}>
+                            <Link key={child.href} href={child.href} className={`block px-4 py-2.5 text-sm transition-colors ${pathname === child.href ? 'bg-primary-50 text-primary-700 font-medium' : 'text-slate-700 hover:bg-slate-50'}`}>
                               <div className="flex items-center gap-2">
                                 {ChildIcon ? <ChildIcon className="h-4 w-4" /> : null}
                                 <span>{child.label}</span>
@@ -149,67 +151,68 @@ export default function Header() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex items-center gap-1 px-2 py-1.5 rounded-lg transition-colors whitespace-nowrap text-sm ${
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg transition-all duration-150 whitespace-nowrap text-sm font-medium ${
                     isActive
-                      ? 'bg-blue-100 text-blue-700 font-medium'
-                      : 'text-slate-600 hover:bg-slate-100'
+                      ? 'bg-primary-50 text-primary-700 shadow-sm'
+                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
                   }`}
                 >
-                  <Icon className="h-3.5 w-3.5 flex-shrink-0" />
-                  <span>{item.label}</span>
+                  <Icon className="h-4 w-4 flex-shrink-0" />
+                  <span className="hidden sm:inline">{item.label}</span>
                 </Link>
               )
             })}
           </nav>
 
-          <div className="relative flex items-center gap-2">
+          {/* User Menu */}
+          <div className="relative flex items-center gap-3">
             <div
-              className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-slate-100 cursor-pointer select-none"
+              className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-slate-100 cursor-pointer select-none transition-colors"
               onClick={() => setUserMenuOpen((v) => !v)}
             >
-              <div className="h-9 w-9 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-semibold">
+              <div className="h-9 w-9 rounded-full bg-gradient-to-br from-primary-600 to-primary-700 text-white flex items-center justify-center text-sm font-bold shadow-sm">
                 {initials}
               </div>
               <div className="hidden sm:flex flex-col leading-tight">
-                <span className="text-sm font-medium text-slate-900">{session.user?.name || 'User'}</span>
-                <span className="text-xs text-slate-500">{session.user?.email}</span>
+                <span className="text-sm font-semibold text-slate-900">{session.user?.name || 'User'}</span>
+                <span className="text-xs text-slate-500 truncate">{session.user?.email}</span>
               </div>
-              <ChevronDown className="h-4 w-4 text-slate-500" />
+              <ChevronDown className={`h-4 w-4 text-slate-500 transition-transform duration-200 ${userMenuOpen ? 'rotate-180' : ''}`} />
             </div>
 
             {userMenuOpen && (
-              <div className="absolute right-0 top-full mt-2 w-52 rounded-lg border border-slate-200 bg-white shadow-lg py-2">
-                <div className="px-3 pb-2 border-b border-slate-100">
+              <div className="absolute right-0 top-full mt-3 w-56 rounded-lg border border-slate-200 bg-white shadow-xl py-1">
+                <div className="px-4 py-3 border-b border-slate-100">
                   <div className="text-sm font-semibold text-slate-900">{session.user?.name || 'User'}</div>
-                  <div className="text-xs text-slate-500 truncate">{session.user?.email}</div>
+                  <div className="text-xs text-slate-500 truncate mt-0.5">{session.user?.email}</div>
                 </div>
                 <Link
                   href="/profile"
-                  className="w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                  className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-primary-50 hover:text-primary-700 flex items-center gap-2 transition-colors"
                   onClick={() => setUserMenuOpen(false)}
                 >
-                  <Settings className="h-4 w-4" />
+                  <User className="h-4 w-4" />
                   Profile Settings
                 </Link>
                 {session?.user?.role === 'ADMIN' && (
                   <Link
                     href="/users"
-                    className="w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                    className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-primary-50 hover:text-primary-700 flex items-center gap-2 transition-colors"
                     onClick={() => setUserMenuOpen(false)}
                   >
                     <Users className="h-4 w-4" />
-                    Users
+                    Manage Users
                   </Link>
                 )}
                 <button
-                  className="w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-100 mt-1 pt-2"
+                  className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-red-50 hover:text-red-700 flex items-center gap-2 border-t border-slate-100 mt-1 pt-2 transition-colors"
                   onClick={() => {
                     setUserMenuOpen(false)
                     signOut({ callbackUrl: '/login' })
                   }}
                 >
                   <LogOut className="h-4 w-4" />
-                  Logout
+                  Sign Out
                 </button>
               </div>
             )}

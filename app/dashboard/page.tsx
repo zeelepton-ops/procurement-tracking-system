@@ -150,150 +150,166 @@ export default function StatusDashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-slate-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {/* Error Alert */}
         {error && (
-          <div className="mb-4 rounded border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
-            {error}
+          <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 flex items-center gap-3">
+            <AlertTriangle className="h-5 w-5 flex-shrink-0" />
+            <span>{error}</span>
           </div>
         )}
-        {/* Header */}
-        <div className="mb-4">
-          <div className="flex items-center justify-between mb-1">
-            <h1 className="text-3xl font-bold text-slate-900">Live Status Dashboard</h1>
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-slate-600">View as:</span>
-              <Button
-                size="sm"
-                variant={userRole === 'production' ? 'default' : 'outline'}
-                onClick={() => setUserRole('production')}
-                className="h-7 text-xs"
-              >
-                Production
-              </Button>
-              <Button
-                size="sm"
-                variant={userRole === 'store' ? 'default' : 'outline'}
-                onClick={() => setUserRole('store')}
-                className="h-7 text-xs"
-              >
-                Store
-              </Button>
-              <Button
-                size="sm"
-                variant={userRole === 'project' ? 'default' : 'outline'}
-                onClick={() => setUserRole('project')}
-                className="h-7 text-xs"
-              >
-                Project
-              </Button>
+
+        {/* Header Section */}
+        <div className="mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
+            <div>
+              <h1 className="text-3xl sm:text-4xl font-bold text-slate-900">Live Status Dashboard</h1>
+              <p className="text-slate-600 text-sm mt-2">Real-time tracking of material requests and procurement</p>
             </div>
-          </div>
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-slate-600">Real-time tracking • {userRole === 'production' ? 'Showing pending & in-progress items' : userRole === 'store' ? 'Showing items to receive' : 'Showing all items'}</p>
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2 text-xs text-slate-600">
-                <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></div>
-                Updated {lastUpdate.toLocaleTimeString()}
+            <div className="flex items-center gap-2 mt-4 sm:mt-0">
+              <div className="flex items-center gap-2 h-10 bg-white border border-slate-200 rounded-lg px-1 py-1">
+                <span className="text-xs font-medium text-slate-700 px-2">View as:</span>
+                <Button
+                  size="sm"
+                  variant={userRole === 'production' ? 'default' : 'ghost'}
+                  onClick={() => setUserRole('production')}
+                  className="h-8 text-xs"
+                >
+                  Production
+                </Button>
+                <Button
+                  size="sm"
+                  variant={userRole === 'store' ? 'default' : 'ghost'}
+                  onClick={() => setUserRole('store')}
+                  className="h-8 text-xs"
+                >
+                  Store
+                </Button>
+                <Button
+                  size="sm"
+                  variant={userRole === 'project' ? 'default' : 'ghost'}
+                  onClick={() => setUserRole('project')}
+                  className="h-8 text-xs"
+                >
+                  All
+                </Button>
               </div>
-              <Button onClick={fetchRequests} variant="outline" size="sm" className="h-7">
-                <RefreshCw className="h-3 w-3 mr-1" />
+              <Button onClick={fetchRequests} variant="outline" size="sm" className="h-10">
+                <RefreshCw className="h-4 w-4 mr-2" />
                 Refresh
               </Button>
             </div>
           </div>
+          
+          {/* Status Bar */}
+          <div className="flex items-center justify-between bg-white border border-slate-200 rounded-lg px-4 py-3">
+            <p className="text-sm text-slate-600">
+              {userRole === 'production' && 'Showing pending & in-progress items'}
+              {userRole === 'store' && 'Showing items to receive'}
+              {userRole === 'project' && 'Showing all items'}
+            </p>
+            <div className="flex items-center gap-2 text-xs text-slate-500">
+              <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></div>
+              Updated {lastUpdate.toLocaleTimeString()}
+            </div>
+          </div>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-4">
-          <Card className="border-l-4 border-l-blue-500">
-            <CardContent className="p-3">
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 mb-8">
+          <Card className="border-l-4 border-l-primary-600 hover:shadow-lg transition-shadow">
+            <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-slate-600 uppercase">Total</p>
-                  <p className="text-2xl font-bold text-slate-900">{stats.total}</p>
+                  <p className="text-xs font-semibold text-slate-600 uppercase">Total</p>
+                  <p className="text-3xl font-bold text-slate-900 mt-1">{stats.total}</p>
                 </div>
-                <Package className="h-6 w-6 text-blue-600" />
+                <Package className="h-8 w-8 text-primary-600 opacity-80" />
               </div>
             </CardContent>
           </Card>
           
-          <Card className="border-l-4 border-l-yellow-500">
-            <CardContent className="p-3">
+          <Card className="border-l-4 border-l-yellow-500 hover:shadow-lg transition-shadow">
+            <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-slate-600 uppercase">Pending</p>
-                  <p className="text-2xl font-bold text-yellow-600">{stats.pending}</p>
+                  <p className="text-xs font-semibold text-slate-600 uppercase">Pending</p>
+                  <p className="text-3xl font-bold text-yellow-600 mt-1">{stats.pending}</p>
                 </div>
-                <Clock className="h-6 w-6 text-yellow-600" />
+                <Clock className="h-8 w-8 text-yellow-600 opacity-80" />
               </div>
             </CardContent>
           </Card>
           
-          <Card className="border-l-4 border-l-indigo-500">
-            <CardContent className="p-3">
+          <Card className="border-l-4 border-l-blue-500 hover:shadow-lg transition-shadow">
+            <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-slate-600 uppercase">In Progress</p>
-                  <p className="text-2xl font-bold text-indigo-600">{stats.inProgress}</p>
+                  <p className="text-xs font-semibold text-slate-600 uppercase">In Progress</p>
+                  <p className="text-3xl font-bold text-blue-600 mt-1">{stats.inProgress}</p>
                 </div>
-                <TrendingUp className="h-6 w-6 text-indigo-600" />
+                <TrendingUp className="h-8 w-8 text-blue-600 opacity-80" />
               </div>
             </CardContent>
           </Card>
           
-          <Card className="border-l-4 border-l-green-500">
-            <CardContent className="p-3">
+          <Card className="border-l-4 border-l-emerald-500 hover:shadow-lg transition-shadow">
+            <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-slate-600 uppercase">Received</p>
-                  <p className="text-2xl font-bold text-green-600">{stats.received}</p>
+                  <p className="text-xs font-semibold text-slate-600 uppercase">Received</p>
+                  <p className="text-3xl font-bold text-emerald-600 mt-1">{stats.received}</p>
                 </div>
-                <CheckCircle className="h-6 w-6 text-green-600" />
+                <CheckCircle className="h-8 w-8 text-emerald-600 opacity-80" />
               </div>
             </CardContent>
           </Card>
           
-          <Card className="border-l-4 border-l-orange-500">
-            <CardContent className="p-3">
+          <Card className="border-l-4 border-l-orange-500 hover:shadow-lg transition-shadow">
+            <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-slate-600 uppercase">Urgent</p>
-                  <p className="text-2xl font-bold text-orange-600">{stats.urgent}</p>
+                  <p className="text-xs font-semibold text-slate-600 uppercase">Urgent</p>
+                  <p className="text-3xl font-bold text-orange-600 mt-1">{stats.urgent}</p>
                 </div>
-                <Bell className="h-6 w-6 text-orange-600" />
+                <Bell className="h-8 w-8 text-orange-600 opacity-80" />
               </div>
             </CardContent>
           </Card>
           
-          <Card className="border-l-4 border-l-red-500">
-            <CardContent className="p-3">
+          <Card className="border-l-4 border-l-red-500 hover:shadow-lg transition-shadow">
+            <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-slate-600 uppercase">Overdue</p>
-                  <p className="text-2xl font-bold text-red-600">{stats.overdue}</p>
+                  <p className="text-xs font-semibold text-slate-600 uppercase">Overdue</p>
+                  <p className="text-3xl font-bold text-red-600 mt-1">{stats.overdue}</p>
                 </div>
-                <AlertTriangle className="h-6 w-6 text-red-600" />
+                <AlertTriangle className="h-8 w-8 text-red-600 opacity-80" />
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Filters */}
-        <Card className="mb-4">
-          <CardContent className="p-3">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+        {/* Filters Section */}
+        <Card className="mb-6 shadow-sm">
+          <CardContent className="p-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
                 <Input
-                  placeholder="Search requests..."
+                  placeholder="Search requests, items, job numbers..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 h-10"
                 />
               </div>
               
-              <SimpleSelect value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
+              <SimpleSelect 
+                value={filterStatus} 
+                onChange={(e) => setFilterStatus(e.target.value)}
+                className="h-10"
+              >
                 <option value="ALL">All Statuses</option>
                 <option value="PENDING">Pending</option>
                 <option value="IN_PROCUREMENT">In Procurement</option>
@@ -305,17 +321,21 @@ export default function StatusDashboardPage() {
               <Button
                 variant={showUrgentOnly ? 'default' : 'outline'}
                 onClick={() => setShowUrgentOnly(!showUrgentOnly)}
+                className="h-10"
               >
                 <AlertTriangle className="h-4 w-4 mr-2" />
                 Urgent Only
               </Button>
               
-              <Button variant="outline" onClick={() => {
-                setFilterStatus('ALL')
-                setSearchTerm('')
-                setShowUrgentOnly(false)
-              }}>
-                <Filter className="h-4 w-4 mr-2" />
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setFilterStatus('ALL')
+                  setSearchTerm('')
+                  setShowUrgentOnly(false)
+                }}
+                className="h-10"
+              >
                 Clear Filters
               </Button>
             </div>
@@ -323,29 +343,29 @@ export default function StatusDashboardPage() {
         </Card>
 
         {/* Requests Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BarChart3 className="h-5 w-5" />
-              Material Requests ({filteredRequests.length})
+        <Card className="shadow-md">
+          <CardHeader className="bg-white border-b border-slate-200">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <BarChart3 className="h-5 w-5 text-primary-600" />
+              Material Requests <span className="ml-2 bg-slate-100 text-slate-700 px-3 py-1 rounded-full text-sm font-normal">{filteredRequests.length}</span>
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-slate-100 border-b border-slate-200">
+                <thead className="bg-slate-50 border-b border-slate-200">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Request #</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Job Order</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Item</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Quantity</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Status</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Urgency</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Required Date</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-700 uppercase">Progress</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Request #</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Job Order</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Item</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Quantity</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Urgency</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Required Date</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-slate-700 uppercase tracking-wider">Progress</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-200">
+                <tbody className="divide-y divide-slate-100">
                   {filteredRequests.map((request) => {
                     const daysLeft = calculateDaysUntilRequired(request.requiredDate)
                     const overdue = isOverdue(request.requiredDate)
@@ -354,9 +374,9 @@ export default function StatusDashboardPage() {
                     return (
                       <tr 
                         key={request.id} 
-                        className={`hover:bg-slate-50 transition-colors ${urgent ? 'bg-orange-50' : ''}`}
+                        className={`hover:bg-slate-50 transition-colors border-b border-slate-100 ${urgent ? 'bg-orange-50/40' : ''}`}
                       >
-                        <td className="px-4 py-3">
+                        <td className="px-6 py-4">
                           <div className="flex items-center gap-2">
                             {urgent && <Bell className="h-4 w-4 text-orange-500 animate-pulse" />}
                             <span className="font-medium text-slate-900">{request.requestNumber}</span>
