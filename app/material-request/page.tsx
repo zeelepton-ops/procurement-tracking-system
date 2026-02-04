@@ -480,7 +480,7 @@ export default function MaterialRequestPage() {
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
       PENDING: 'bg-gray-100 text-gray-700',
-      IN_PROCUREMENT: 'bg-blue-100 text-blue-700',
+      IN_PROCUREMENT: 'bg-primary-100 text-primary-700',
       ORDERED: 'bg-yellow-100 text-yellow-700',
       PARTIALLY_RECEIVED: 'bg-orange-100 text-orange-700',
       RECEIVED: 'bg-green-100 text-green-700',
@@ -492,11 +492,11 @@ export default function MaterialRequestPage() {
   const getUrgencyColor = (urgency: string) => {
     const colors: Record<string, string> = {
       LOW: 'bg-green-100 text-green-700',
-      NORMAL: 'bg-blue-100 text-blue-700',
+      NORMAL: 'bg-primary-100 text-primary-700',
       HIGH: 'bg-orange-100 text-orange-700',
       CRITICAL: 'bg-red-100 text-red-700'
     }
-    return colors[urgency] || 'bg-blue-100 text-blue-700'
+    return colors[urgency] || 'bg-primary-100 text-primary-700'
   }
 
   const handleDelete = async (requestId: string, itemId?: string) => {
@@ -647,7 +647,7 @@ export default function MaterialRequestPage() {
             <select
               value={filters.status}
               onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-              className="mt-1 h-9 w-full px-3 rounded-md border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="mt-1 h-9 w-full px-3 rounded-md border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
             >
               <option value="ALL">All Status</option>
               <option value="PENDING">Pending</option>
@@ -663,7 +663,7 @@ export default function MaterialRequestPage() {
             <select
               value={filters.urgency}
               onChange={(e) => setFilters({ ...filters, urgency: e.target.value })}
-              className="mt-1 h-9 w-full px-3 rounded-md border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="mt-1 h-9 w-full px-3 rounded-md border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
             >
               <option value="ALL">All Urgency</option>
               <option value="LOW">Low</option>
@@ -676,9 +676,9 @@ export default function MaterialRequestPage() {
 
         {/* Create Form */}
         {showForm && (
-        <Card className="shadow-lg mb-4 border-blue-200">
-          <CardHeader className="bg-blue-50 py-3">
-            <CardTitle className="flex items-center gap-2 text-lg text-blue-900">
+        <Card className="shadow-lg mb-4 border-primary-200">
+          <CardHeader className="bg-primary-50 py-3">
+            <CardTitle className="flex items-center gap-2 text-lg text-primary-900">
               <Package className="h-5 w-5" />
               New Material Request
             </CardTitle>
@@ -737,7 +737,7 @@ export default function MaterialRequestPage() {
                       <select
                         value={item.unit}
                         onChange={(e) => updateItemField(idx, 'unit', e.target.value)}
-                        className="h-7 px-1 rounded-md border border-slate-300 text-[11px] w-full focus:z-10 focus:ring-2 focus:ring-blue-400 focus:outline-none"
+                        className="h-7 px-1 rounded-md border border-slate-300 text[11px] w-full focus:z-10 focus:ring-2 focus:ring-primary-400 focus:outline-none"
                       >
                         <option value="Nos">Nos</option>
                         <option value="KG">KG</option>
@@ -768,7 +768,7 @@ export default function MaterialRequestPage() {
                               ...assets.map(a => ({ id: a.id, label: `${a.code} - ${a.name}`, meta: a.category || a.location || '', type: 'asset' })),
                             ]}
                             placeholder="Reason (type to search or enter text)"
-                            inputClassName="h-7 px-1 rounded-md border border-slate-300 text-[11px] focus:z-10 focus:ring-2 focus:ring-blue-400 focus:outline-none"
+                            inputClassName="h-7 px-1 rounded-md border border-slate-300 text-[11px] focus:z-10 focus:ring-2 focus:ring-primary-400 focus:outline-none"
                             className="w-full"
                             dropdownMode
                           />
@@ -781,7 +781,7 @@ export default function MaterialRequestPage() {
                       <select
                         value={item.urgencyLevel}
                         onChange={(e) => updateItemField(idx, 'urgencyLevel', e.target.value)}
-                        className="h-7 px-1 rounded-md border border-slate-300 text-[11px] w-full focus:z-10 focus:ring-2 focus:ring-blue-400 focus:outline-none"
+                        className="h-7 px-1 rounded-md border border-slate-300 text-[11px] w-full focus:z-10 focus:ring-2 focus:ring-primary-400 focus:outline-none"
                       >
                         <option value="LOW">Low</option>
                         <option value="NORMAL">Normal</option>
@@ -836,7 +836,7 @@ export default function MaterialRequestPage() {
                   onChange={(e) => setFormData({ ...formData, requestedBy: e.target.value })}
                   placeholder="Your name"
                   required
-                  className="mt-1 h-9 focus:z-10 focus:ring-2 focus:ring-blue-400 focus:outline-none"
+                  className="mt-1 h-9 focus:z-10 focus:ring-2 focus:ring-primary-400 focus:outline-none"
                 />
               </div>
 
@@ -844,7 +844,7 @@ export default function MaterialRequestPage() {
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="bg-blue-600 hover:bg-blue-700"
+                  className="bg-primary-600 hover:bg-primary-700"
                   size="sm"
                 >
                   {loading ? 'Submitting...' : 'Submit Request'}
