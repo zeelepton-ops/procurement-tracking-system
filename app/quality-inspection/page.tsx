@@ -390,7 +390,7 @@ export default function QualityInspectionPage() {
   const getStatusBadge = (status: string) => {
     const variants: Record<string, { color: string; icon: any }> = {
       PENDING: { color: 'bg-gray-100 text-gray-700', icon: Clock },
-      IN_PROGRESS: { color: 'bg-blue-100 text-blue-700', icon: AlertCircle },
+      IN_PROGRESS: { color: 'bg-primary-100 text-primary-700', icon: AlertCircle },
       APPROVED: { color: 'bg-green-100 text-green-700', icon: CheckCircle2 },
       REJECTED: { color: 'bg-red-100 text-red-700', icon: XCircle },
       FAILED: { color: 'bg-red-100 text-red-700', icon: XCircle },
@@ -425,12 +425,12 @@ export default function QualityInspectionPage() {
       <div className="max-w-7xl mx-auto">
         {/* Pending Inspections Banner */}
         {pendingInspections.length > 0 && (
-          <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4 shadow-sm">
+          <div className="mb-6 bg-primary-50 border border-primary-200 rounded-lg p-4 shadow-sm">
             <div className="flex items-start justify-between">
               <div className="flex items-start gap-3">
-                <Bell className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                <Bell className="w-5 h-5 text-primary-600 mt-0.5 flex-shrink-0" />
                 <div>
-                  <h3 className="font-semibold text-blue-900 mb-2">
+                  <h3 className="font-semibold text-primary-900 mb-2">
                     {pendingInspections.length} Pending Production {pendingInspections.length === 1 ? 'Inspection' : 'Inspections'}
                   </h3>
                   <div className="space-y-2">
@@ -463,7 +463,7 @@ export default function QualityInspectionPage() {
               </div>
               <button
                 onClick={() => setPendingInspections([])}
-                className="text-blue-400 hover:text-blue-600 transition-colors"
+                className="text-primary-400 hover:text-primary-600 transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -474,7 +474,7 @@ export default function QualityInspectionPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
-            <ClipboardCheck className="w-8 h-8 text-blue-600" />
+            <ClipboardCheck className="w-8 h-8 text-primary-600" />
             <h1 className="text-3xl font-bold text-gray-900">Quality Inspection Management</h1>
           </div>
           <div className="flex gap-2">
@@ -494,12 +494,12 @@ export default function QualityInspectionPage() {
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-2xl">
-                <DialogHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 -mx-6 -mt-6 px-6 pt-6 pb-4 border-b border-blue-100 rounded-t-lg">
-                  <DialogTitle className="text-xl font-bold text-blue-900 flex items-center gap-2">
-                    <ClipboardCheck className="w-5 h-5 text-blue-600" />
+                <DialogHeader className="bg-gradient-to-r from-primary-50 to-primary-100 -mx-6 -mt-6 px-6 pt-6 pb-4 border-b border-primary-100 rounded-t-lg">
+                  <DialogTitle className="text-xl font-bold text-primary-900 flex items-center gap-2">
+                    <ClipboardCheck className="w-5 h-5 text-primary-600" />
                     Create ITP Template
                   </DialogTitle>
-                  <p className="text-sm text-blue-700 mt-1">Define inspection steps for quality assurance</p>
+                  <p className="text-sm text-primary-700 mt-1">Define inspection steps for quality assurance</p>
                 </DialogHeader>
                 <div className="space-y-5 mt-4">
                   <div className="space-y-2">
@@ -508,7 +508,7 @@ export default function QualityInspectionPage() {
                       value={templateForm.name}
                       onChange={(e) => setTemplateForm({ ...templateForm, name: e.target.value })}
                       placeholder="e.g., Steel Fabrication ITP"
-                      className="border-slate-300 focus:border-blue-500 focus:ring-blue-500 transition-all"
+                      className="border-slate-300 focus:border-primary-500 focus:ring-primary-500 transition-all"
                     />
                     {!templateForm.name && <p className="text-xs text-slate-500">Enter a descriptive name for this template</p>}
                   </div>
@@ -521,14 +521,14 @@ export default function QualityInspectionPage() {
                       onChange={(e) => setTemplateForm({ ...templateForm, steps: e.target.value })}
                       placeholder="Material Verification&#10;Cutting&#10;Welding&#10;Final Inspection"
                       rows={8}
-                      className="border-slate-300 focus:border-blue-500 focus:ring-blue-500 transition-all font-mono text-sm resize-none"
+                      className="border-slate-300 focus:border-primary-500 focus:ring-primary-500 transition-all font-mono text-sm resize-none"
                     />
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                      <p className="text-xs font-semibold text-blue-900 mb-2">Steps Preview:</p>
+                    <div className="bg-primary-50 border border-primary-200 rounded-lg p-3">
+                      <p className="text-xs font-semibold text-primary-900 mb-2">Steps Preview:</p>
                       <div className="flex flex-wrap gap-2">
                         {templateForm.steps.split('\n').filter(s => s.trim()).map((step, idx) => (
-                          <span key={idx} className="inline-flex items-center gap-1 bg-blue-100 text-blue-900 px-3 py-1 rounded-full text-xs font-medium">
-                            <span className="font-bold text-blue-600">{idx + 1}.</span> {step.trim().slice(0, 30)}
+                          <span key={idx} className="inline-flex items-center gap-1 bg-primary-100 text-primary-900 px-3 py-1 rounded-full text-xs font-medium">
+                            <span className="font-bold text-primary-600">{idx + 1}.</span> {step.trim().slice(0, 30)}
                             {step.trim().length > 30 ? '...' : ''}
                           </span>
                         ))}
@@ -536,14 +536,14 @@ export default function QualityInspectionPage() {
                     </div>
                   </div>
 
-                  <div className="bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-200 rounded-lg p-4 space-y-3">
+                  <div className="bg-gradient-to-r from-primary-50 to-primary-100 border border-primary-200 rounded-lg p-4 space-y-3">
                     <div className="flex items-center gap-3">
                       <input
                         type="checkbox"
                         id="isDefault"
                         checked={templateForm.isDefault}
                         onChange={(e) => setTemplateForm({ ...templateForm, isDefault: e.target.checked })}
-                        className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                        className="w-4 h-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500 cursor-pointer"
                       />
                       <Label htmlFor="isDefault" className="font-semibold text-slate-900 cursor-pointer flex-1">
                         Set as default template
@@ -560,7 +560,7 @@ export default function QualityInspectionPage() {
                   )}
                   
                   <div className="flex gap-3 pt-4">
-                    <Button onClick={createTemplate} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white" disabled={templateSaving || !templateForm.name.trim()}>
+                    <Button onClick={createTemplate} className="flex-1 bg-primary-600 hover:bg-primary-700 text-white" disabled={templateSaving || !templateForm.name.trim()}>
                       {templateSaving ? (
                         <>
                           <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2" />
@@ -678,7 +678,7 @@ export default function QualityInspectionPage() {
                         {templates.map(template => (
                           <SelectItem key={template.id} value={template.id}>
                             <span className="font-medium">{template.name}</span>
-                            {template.isDefault && <Badge className="ml-2 bg-blue-100 text-blue-800">Default</Badge>}
+                            {template.isDefault && <Badge className="ml-2 bg-primary-100 text-primary-800">Default</Badge>}
                           </SelectItem>
                         ))}
                       </SelectContent>
