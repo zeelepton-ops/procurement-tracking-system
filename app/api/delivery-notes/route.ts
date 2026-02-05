@@ -4,13 +4,18 @@ import { getServerSession } from 'next-auth/next'
 
 export async function GET(request: NextRequest) {
   try {
+    console.log('[API] Fetching delivery notes...')
     const session = await getServerSession()
+    console.log('[API] Session:', session ? 'authenticated' : 'not authenticated')
+    
     if (!session) {
+      console.log('[API] Returning 401 Unauthorized')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const { searchParams } = new URL(request.url)
     const jobOrderId = searchParams.get('jobOrderId')
+    console.log('[API] jobOrderId filter:', jobOrderId || 'none')
 
     // Check if table exists by attempting a query
     let deliveryNotes = []
@@ -29,15 +34,16 @@ export async function GET(request: NextRequest) {
         },
         orderBy: { createdAt: 'desc' }
       })
+      console.log('[API] Found', deliveryNotes.length, 'delivery notes')
     } catch (dbError) {
       // Table doesn't exist yet, return empty array
-      console.error('DeliveryNote table may not exist yet:', dbError)
+      console.error('[API] DeliveryNote table may not exist yet:', dbError)
       return NextResponse.json([])
     }
 
     return NextResponse.json(deliveryNotes)
   } catch (error) {
-    console.error('Failed to fetch delivery notes:', error)
+    console.error('[API] Failed to fetch delivery notes:', error)
     return NextResponse.json([], { status: 200 })
   }
 }

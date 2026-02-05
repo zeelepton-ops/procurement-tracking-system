@@ -434,30 +434,48 @@ export default function QualityInspectionPage() {
                     {pendingInspections.length} Pending Production {pendingInspections.length === 1 ? 'Inspection' : 'Inspections'}
                   </h3>
                   <div className="space-y-2">
-                    {pendingInspections.map((inspection, idx) => (
-                      <div key={inspection.id} className="flex items-center justify-between bg-white rounded p-2 text-sm">
-                        <span className="text-gray-700">
-                          <strong>{inspection.productionRelease?.jobOrderItem?.jobOrder?.jobNumber}</strong>
-                          {' - '}
-                          {inspection.productionRelease?.jobOrderItem?.workDescription}
-                          {' (Qty: '}
-                          {inspection.productionRelease?.releaseQty}
-                          {')'}
-                        </span>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="ml-2"
-                          onClick={() => {
-                            setSelectedPendingInspection(inspection)
-                            setShowCompleteInspectionDialog(true)
-                            setCompleteForm({ result: '' as 'APPROVED' | 'REJECTED' | 'HOLD', remarks: '', inspectedBy: session?.user?.name || '', inspectedQty: '', approvedQty: '', rejectedQty: '', holdQty: '' })
-                          }}
-                        >
-                          Complete
-                        </Button>
-                      </div>
-                    ))}
+                    {pendingInspections.map((inspection) => {
+                      const jobNumber = inspection.productionRelease?.jobOrderItem?.jobOrder?.jobNumber || 'N/A'
+                      const workDescription = inspection.productionRelease?.jobOrderItem?.workDescription || 'N/A'
+                      const drawingNumber = inspection.productionRelease?.drawingNumber || 'N/A'
+                      const unit = inspection.productionRelease?.jobOrderItem?.unit || ''
+                      const totalQty = inspection.productionRelease?.jobOrderItem?.quantity
+                      const releaseQty = inspection.productionRelease?.releaseQty || 0
+                      const balanceQty = typeof totalQty === 'number' ? totalQty - releaseQty : null
+                      const unitWeight = inspection.productionRelease?.jobOrderItem?.unitWeight
+                      const balanceWeight = typeof balanceQty === 'number' && typeof unitWeight === 'number'
+                        ? balanceQty * unitWeight
+                        : null
+
+                      return (
+                        <div key={inspection.id} className="flex items-center justify-between bg-white rounded p-2 text-sm">
+                          <div className="text-gray-700">
+                            <div className="font-semibold text-gray-900">{jobNumber} - {workDescription}</div>
+                            <div className="text-xs text-gray-600 mt-1 flex flex-wrap gap-x-3 gap-y-1">
+                              <span><span className="font-semibold">Drawing:</span> {drawingNumber}</span>
+                              <span><span className="font-semibold">Qty:</span> {releaseQty} {unit}</span>
+                              <span>
+                                <span className="font-semibold">Balance:</span>{' '}
+                                {typeof balanceQty === 'number' ? `${balanceQty} ${unit}` : 'N/A'}
+                                {balanceWeight !== null && ` • ${balanceWeight.toFixed(2)} kg`}
+                              </span>
+                            </div>
+                          </div>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="ml-2"
+                            onClick={() => {
+                              setSelectedPendingInspection(inspection)
+                              setShowCompleteInspectionDialog(true)
+                              setCompleteForm({ result: '' as 'APPROVED' | 'REJECTED' | 'HOLD', remarks: '', inspectedBy: session?.user?.name || '', inspectedQty: '', approvedQty: '', rejectedQty: '', holdQty: '' })
+                            }}
+                          >
+                            Complete
+                          </Button>
+                        </div>
+                      )
+                    })}
                   </div>
                 </div>
               </div>
@@ -470,6 +488,37 @@ export default function QualityInspectionPage() {
             </div>
           </div>
         )}
+
+        {/* Workflow Handoff */}
+        <div className="mb-6 bg-white border border-slate-200 rounded-lg p-4 shadow-sm">
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-semibold text-slate-900">Department Workflow</h3>
+                <p className="text-xs text-slate-600">Coordinate with Production and Store</p>
+              </div>
+              <div className="text-xs text-slate-600">
+                Pending: <span className="font-semibold text-slate-900">{pendingInspections.length}</span>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant="outline"
+                onClick={() => router.push('/production')}
+                className="border-slate-300 text-slate-700 hover:bg-slate-50"
+              >
+                Go to Production
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => router.push('/store/delivery-notes')}
+                className="border-slate-300 text-slate-700 hover:bg-slate-50"
+              >
+                Go to Delivery Notes
+              </Button>
+            </div>
+          </div>
+        </div>
 
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
@@ -799,6 +848,12 @@ export default function QualityInspectionPage() {
                   <div>
                     <span className="text-gray-500">Work:</span>
                     <p className="text-gray-900 line-clamp-2">{inspection.jobOrderItem.workDescription}</p>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Qty:</span>
+                    <p className="text-gray-900">
+                      {inspection.jobOrderItem.quantity ?? 0} {inspection.jobOrderItem.unit}
+                    </p>
                   </div>
                   <div>
                     <span className="text-gray-500">ITP Template:</span>

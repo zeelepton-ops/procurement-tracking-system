@@ -111,6 +111,7 @@ export default function DeliveryNotesPage() {
   })
 
   useEffect(() => {
+    console.log('Component mounted, fetching data...')
     fetchDeliveryNotes()
     fetchJobOrders()
     loadDrafts()
@@ -254,14 +255,22 @@ export default function DeliveryNotesPage() {
 
   const fetchDeliveryNotes = async () => {
     try {
+      console.log('Fetching delivery notes...')
       const res = await fetch('/api/delivery-notes')
+      console.log('Response status:', res.status, res.statusText)
+      
       if (!res.ok) {
+        const errorText = await res.text()
+        console.error('API error response:', errorText)
         throw new Error(`API error: ${res.status}`)
       }
+      
       const data = await res.json()
+      console.log('Delivery notes data:', data)
       setDeliveryNotes(Array.isArray(data) ? data : [])
       checkDeliveryIssues(Array.isArray(data) ? data : [])
       setLoading(false)
+      console.log('Loading complete, deliveryNotes.length:', Array.isArray(data) ? data.length : 0)
     } catch (error) {
       console.error('Failed to fetch delivery notes:', error)
       setDeliveryNotes([])
@@ -722,6 +731,7 @@ export default function DeliveryNotesPage() {
   }
 
   if (loading) {
+    console.log('Rendering loading state...')
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -732,6 +742,7 @@ export default function DeliveryNotesPage() {
     )
   }
 
+  console.log('Rendering main view, deliveryNotes.length:', deliveryNotes.length)
   const selectedJobOrder = jobOrders.find(jo => jo.id === formData.jobOrderId)
 
   return (

@@ -62,6 +62,10 @@ export default function ProductionPage() {
     actualCompletionDate: ''
   })
 
+  const totalReleases = releases.length
+  const pendingInspectionCount = releases.filter(r => r.status === 'PENDING_INSPECTION').length
+  const reworkCount = releases.filter(r => r.status === 'REWORK').length
+
   useEffect(() => {
     fetchJobOrders()
     fetchReleases()
@@ -263,6 +267,51 @@ export default function ProductionPage() {
           </div>
         )}
 
+        {/* Workflow Handoff */}
+        <Card className="shadow-md">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-slate-900 flex items-center gap-2 text-lg">
+              <Factory className="w-5 h-5 text-primary-600" />
+              Department Workflow
+            </CardTitle>
+            <CardDescription className="text-slate-600 text-sm">
+              Keep production, quality, and store aligned
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm">
+              <div className="bg-slate-50 border border-slate-200 px-3 py-2">
+                <div className="text-slate-500 text-xs">Total Releases</div>
+                <div className="text-slate-900 font-semibold">{totalReleases}</div>
+              </div>
+              <div className="bg-slate-50 border border-slate-200 px-3 py-2">
+                <div className="text-slate-500 text-xs">Pending Inspection</div>
+                <div className="text-slate-900 font-semibold">{pendingInspectionCount}</div>
+              </div>
+              <div className="bg-slate-50 border border-slate-200 px-3 py-2">
+                <div className="text-slate-500 text-xs">Rework</div>
+                <div className="text-slate-900 font-semibold">{reworkCount}</div>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant="outline"
+                onClick={() => router.push('/quality-inspection')}
+                className="border-slate-300 text-slate-700 hover:bg-slate-50"
+              >
+                Go to Quality Inspection
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => router.push('/store/delivery-notes')}
+                className="border-slate-300 text-slate-700 hover:bg-slate-50"
+              >
+                Go to Delivery Notes
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Job Order Selection */}
         <Card className="shadow-md">
           <CardHeader>
@@ -341,6 +390,23 @@ export default function ProductionPage() {
                             <div className="text-sm font-medium text-slate-700">
                               Release: <span className="text-primary-700">{release.releaseQty} {item.unit}</span>
                               {release.releaseWeight && ` • Wt: ${release.releaseWeight.toFixed(2)} kg`}
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 text-xs text-slate-700 mb-3">
+                            <div>
+                              <span className="font-semibold">Drawing:</span> {release.drawingNumber || 'N/A'}
+                            </div>
+                            <div>
+                              <span className="font-semibold">Job No.:</span> {selectedJob?.jobNumber || release.jobOrderItem?.jobOrder?.jobNumber || 'N/A'}
+                            </div>
+                            <div>
+                              <span className="font-semibold">Qty:</span> {release.releaseQty} {item.unit}
+                              {release.releaseWeight && ` • ${release.releaseWeight.toFixed(2)} kg`}
+                            </div>
+                            <div>
+                              <span className="font-semibold">Balance:</span> {remainingQty} {item.unit}
+                              {item.unitWeight && ` • ${(remainingQty * item.unitWeight).toFixed(2)} kg`}
                             </div>
                           </div>
 
