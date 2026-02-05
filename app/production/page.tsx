@@ -387,17 +387,17 @@ export default function ProductionPage() {
 
         {/* Create Release Modal */}
         {showCreateModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <Card className="w-full max-w-md bg-white border-slate-200">
-              <CardHeader className="pb-4 border-b border-slate-200">
-                <CardTitle className="text-xl font-bold text-slate-900">Create Production Release</CardTitle>
-                <CardDescription className="text-slate-600 mt-1">Add a new release for the selected item</CardDescription>
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-2">
+            <Card className="w-full max-w-xs bg-white border-slate-200 max-h-[85vh] overflow-y-auto">
+              <CardHeader className="pb-2 border-b border-slate-200">
+                <CardTitle className="text-base font-semibold text-slate-900">Create Production Release</CardTitle>
+                <CardDescription className="text-slate-600 mt-0.5 text-xs">Add a new release for the selected item</CardDescription>
               </CardHeader>
-              <CardContent className="pt-6">
-                <form onSubmit={handleCreateRelease} className="space-y-4">
+              <CardContent className="pt-3">
+                <form onSubmit={handleCreateRelease} className="space-y-3">
                   {/* Job Order Item Selection */}
                   <div>
-                    <Label className="text-slate-900 text-sm font-semibold\">Item *</Label>
+                    <Label className="text-slate-900 text-xs font-semibold">Item *</Label>
                     <select
                       value={formData.jobOrderItemId}
                       onChange={(e) => setFormData({ ...formData, jobOrderItemId: e.target.value })}
@@ -414,7 +414,7 @@ export default function ProductionPage() {
 
                   {/* Drawing Number */}
                   <div>
-                    <Label className="text-slate-900 text-sm font-semibold">Drawing Number</Label>
+                    <Label className="text-slate-900 text-xs font-semibold">Drawing Number</Label>
                     <Input
                       value={formData.drawingNumber}
                       onChange={(e) => setFormData({ ...formData, drawingNumber: e.target.value })}
@@ -425,7 +425,7 @@ export default function ProductionPage() {
 
                   {/* Release Quantity */}
                   <div>
-                    <Label className="text-slate-900 text-sm font-semibold">Release Quantity *</Label>
+                    <Label className="text-slate-900 text-xs font-semibold">Release Quantity *</Label>
                     <Input
                       type="number"
                       value={formData.releaseQty}
@@ -437,7 +437,7 @@ export default function ProductionPage() {
 
                   {/* ITP Template */}
                   <div>
-                    <Label className="text-slate-900 text-sm font-semibold">ITP Template</Label>
+                    <Label className="text-slate-900 text-xs font-semibold">ITP Template</Label>
                     <select
                       value={formData.itpTemplateId}
                       onChange={(e) => setFormData({ ...formData, itpTemplateId: e.target.value })}
@@ -454,7 +454,7 @@ export default function ProductionPage() {
 
                   {/* Production Start Date */}
                   <div>
-                    <Label className="text-slate-900 text-sm font-semibold">Production Start Date</Label>
+                    <Label className="text-slate-900 text-xs font-semibold">Production Start Date</Label>
                     <Input
                       type="datetime-local"
                       value={formData.productionStartDate}
@@ -465,7 +465,7 @@ export default function ProductionPage() {
 
                   {/* Production End Date (Expected) */}
                   <div>
-                    <Label className="text-slate-900 text-sm font-semibold">Expected End Date</Label>
+                    <Label className="text-slate-900 text-xs font-semibold">Expected End Date</Label>
                     <Input
                       type="datetime-local"
                       value={formData.productionEndDate}
@@ -476,7 +476,7 @@ export default function ProductionPage() {
 
                   {/* Actual Completion Date */}
                   <div>
-                    <Label className="text-slate-900 text-sm font-semibold">Actual Completion Date</Label>
+                    <Label className="text-slate-900 text-xs font-semibold">Actual Completion Date</Label>
                     <Input
                       type="datetime-local"
                       value={formData.actualCompletionDate}
@@ -486,7 +486,7 @@ export default function ProductionPage() {
                   </div>
 
                   {/* Buttons */}
-                  <div className="flex gap-3 pt-4">
+                  <div className="flex gap-2 pt-2">
                     <Button
                       type="submit"
                       className="flex-1 bg-primary-600 hover:bg-primary-700 text-white font-medium"

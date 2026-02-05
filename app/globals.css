@@ -13,7 +13,7 @@
   --popover-foreground: 222.2 84% 4.9%;
   
   /* Primary: Professional Blue (corporate, trustworthy) */
-  --primary: 217 91% 50%;
+  --primary: 217 91% 40%;
   --primary-foreground: 210 40% 98%;
   
   /* Secondary: Slate Gray (modern, neutral) */
@@ -35,8 +35,8 @@
   /* UI Elements */
   --border: 214 32% 91%;
   --input: 214 32% 91%;
-  --ring: 217 91% 50%;
-  --radius: 0.625rem;
+  --ring: 217 91% 40%;
+  --radius: 0rem;
 }
 
 * {
@@ -59,6 +59,7 @@ body {
       rgb(var(--background-end-rgb))
     )
     rgb(var(--background-start-rgb));
+  font-size: 0.875rem;
 }
 
 @layer utilities {
@@ -109,6 +110,17 @@ body {
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Square off common rounded utilities */
+.rounded,
+.rounded-sm,
+.rounded-md,
+.rounded-lg,
+.rounded-xl,
+.rounded-2xl,
+.rounded-3xl {
+  border-radius: 0 !important;
 }
 
 /* Job Orders placeholder sizing */

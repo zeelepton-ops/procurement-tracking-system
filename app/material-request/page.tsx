@@ -737,7 +737,7 @@ export default function MaterialRequestPage() {
                       <select
                         value={item.unit}
                         onChange={(e) => updateItemField(idx, 'unit', e.target.value)}
-                        className="h-7 px-1 rounded-md border border-slate-300 text[11px] w-full focus:z-10 focus:ring-2 focus:ring-primary-400 focus:outline-none"
+                        className="h-7 px-1 rounded-md border border-slate-300 text-[11px] w-full focus:z-10 focus:ring-2 focus:ring-primary-400 focus:outline-none"
                       >
                         <option value="Nos">Nos</option>
                         <option value="KG">KG</option>
