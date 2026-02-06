@@ -48,11 +48,28 @@ export default function ProductionPage() {
   const [loading, setLoading] = useState(true)
   const [selectedJobOrder, setSelectedJobOrder] = useState<string>('')
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
   const [itpTemplates, setItpTemplates] = useState<ITPTemplate[]>([])
   const [success, setSuccess] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [editingRelease, setEditingRelease] = useState<ProductionRelease | null>(null)
+  const [useMultipleDrawings, setUseMultipleDrawings] = useState(false)
+  const [releaseLines, setReleaseLines] = useState<Array<{ drawingNumber: string; releaseQty: number }>>([
+    { drawingNumber: '', releaseQty: 0 }
+  ])
 
   const [formData, setFormData] = useState({
+    jobOrderItemId: '',
+    drawingNumber: '',
+    releaseQty: 0,
+    itpTemplateId: '',
+    productionStartDate: '',
+    productionEndDate: '',
+    actualCompletionDate: ''
+  })
+
+  const [editFormData, setEditFormData] = useState({
+    id: '',
     jobOrderItemId: '',
     drawingNumber: '',
     releaseQty: 0,
@@ -141,13 +158,28 @@ export default function ProductionPage() {
   const handleCreateRelease = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!formData.jobOrderItemId || formData.releaseQty <= 0) {
+    if (!formData.jobOrderItemId) {
       setError('Please fill in all required fields')
       return
     }
 
     const remainingQty = calculateRemainingQty(formData.jobOrderItemId)
-    if (formData.releaseQty > remainingQty) {
+    const lines = useMultipleDrawings
+      ? releaseLines.filter(l => l.releaseQty > 0)
+      : [{ drawingNumber: formData.drawingNumber, releaseQty: formData.releaseQty }]
+
+    if (lines.length === 0) {
+      setError('Please add at least one drawing with quantity')
+      return
+    }
+
+    const totalRequested = lines.reduce((sum, l) => sum + l.releaseQty, 0)
+    if (totalRequested <= 0) {
+      setError('Release quantity must be greater than zero')
+      return
+    }
+
+    if (totalRequested > remainingQty) {
       setError(`Release quantity exceeds remaining quantity (${remainingQty})`)
       return
     }
@@ -159,6 +191,7 @@ export default function ProductionPage() {
         body: JSON.stringify({
           ...formData,
           releaseQty: parseFloat(formData.releaseQty.toString()),
+          releaseItems: useMultipleDrawings ? lines : undefined,
           createdBy: session?.user?.email || session?.user?.name || 'System'
         })
       })
@@ -170,6 +203,8 @@ export default function ProductionPage() {
 
       setSuccess('Production release created successfully!')
       setShowCreateModal(false)
+      setUseMultipleDrawings(false)
+      setReleaseLines([{ drawingNumber: '', releaseQty: 0 }])
       setFormData({
         jobOrderItemId: '',
         drawingNumber: '',
@@ -183,6 +218,83 @@ export default function ProductionPage() {
       setTimeout(() => setSuccess(null), 3000)
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Failed to create release')
+    }
+  }
+
+  const handleEditRelease = (release: ProductionRelease) => {
+    setEditingRelease(release)
+    setEditFormData({
+      id: release.id,
+      jobOrderItemId: release.jobOrderItemId,
+      drawingNumber: release.drawingNumber || '',
+      releaseQty: release.releaseQty,
+      itpTemplateId: release.itpTemplateId || '',
+      productionStartDate: release.productionStartDate ? new Date(release.productionStartDate).toISOString().slice(0, 16) : '',
+      productionEndDate: release.productionEndDate ? new Date(release.productionEndDate).toISOString().slice(0, 16) : '',
+      actualCompletionDate: release.actualCompletionDate ? new Date(release.actualCompletionDate).toISOString().slice(0, 16) : ''
+    })
+    setShowEditModal(true)
+  }
+
+  const handleUpdateRelease = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (!editFormData.id || editFormData.releaseQty <= 0) {
+      setError('Please provide a valid release quantity')
+      return
+    }
+
+    const remainingQty = calculateRemainingQty(editFormData.jobOrderItemId)
+    const currentReleaseQty = editingRelease?.releaseQty || 0
+    const allowedQty = remainingQty + currentReleaseQty
+    if (editFormData.releaseQty > allowedQty) {
+      setError(`Release quantity exceeds remaining quantity (${allowedQty})`)
+      return
+    }
+
+    try {
+      const res = await fetch('/api/production-releases', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...editFormData,
+          releaseQty: parseFloat(editFormData.releaseQty.toString())
+        })
+      })
+
+      const data = await res.json()
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to update release')
+      }
+
+      setSuccess('Production release updated successfully!')
+      setShowEditModal(false)
+      setEditingRelease(null)
+      fetchReleases()
+      setTimeout(() => setSuccess(null), 3000)
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Failed to update release')
+    }
+  }
+
+  const handleDeleteRelease = async (releaseId: string) => {
+    if (!confirm('Delete this production release?')) return
+
+    try {
+      const res = await fetch(`/api/production-releases?id=${releaseId}`, {
+        method: 'DELETE'
+      })
+
+      const data = await res.json()
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to delete release')
+      }
+
+      setSuccess('Production release deleted successfully!')
+      fetchReleases()
+      setTimeout(() => setSuccess(null), 3000)
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Failed to delete release')
     }
   }
 
@@ -422,21 +534,41 @@ export default function ProductionPage() {
                           )}
 
                           {/* Action Buttons */}
-                          {release.status === 'IN_PRODUCTION' || release.status === 'PLANNING' ? (
-                            <Button
-                              onClick={() => handlePushForInspection(release.id)}
-                              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium"
-                            >
-                              Push for Inspection
-                            </Button>
-                          ) : release.status === 'REWORK' ? (
-                            <Button
-                              onClick={() => handlePushForInspection(release.id)}
-                              className="w-full bg-orange-600 hover:bg-orange-700 text-white text-sm font-medium"
-                            >
-                              Re-inspect ({release.inspectionCount} attempts)
-                            </Button>
-                          ) : null}
+                          <div className="space-y-2">
+                            {release.status === 'IN_PRODUCTION' || release.status === 'PLANNING' ? (
+                              <Button
+                                onClick={() => handlePushForInspection(release.id)}
+                                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium"
+                              >
+                                Push for Inspection
+                              </Button>
+                            ) : release.status === 'REWORK' ? (
+                              <Button
+                                onClick={() => handlePushForInspection(release.id)}
+                                className="w-full bg-orange-600 hover:bg-orange-700 text-white text-sm font-medium"
+                              >
+                                Re-inspect ({release.inspectionCount} attempts)
+                              </Button>
+                            ) : null}
+                            <div className="flex gap-2">
+                              <Button
+                                variant="outline"
+                                className="flex-1 border-slate-300 text-slate-700 hover:bg-slate-50"
+                                onClick={() => handleEditRelease(release)}
+                                disabled={!!release.inspections && release.inspections.length > 0}
+                              >
+                                Edit
+                              </Button>
+                              <Button
+                                variant="outline"
+                                className="flex-1 border-red-300 text-red-600 hover:bg-red-50"
+                                onClick={() => handleDeleteRelease(release.id)}
+                                disabled={!!release.inspections && release.inspections.length > 0}
+                              >
+                                Delete
+                              </Button>
+                            </div>
+                          </div>
                         </div>
                       ))}
                     </CardContent>
@@ -478,28 +610,95 @@ export default function ProductionPage() {
                     </select>
                   </div>
 
-                  {/* Drawing Number */}
-                  <div>
-                    <Label className="text-slate-900 text-xs font-semibold">Drawing Number</Label>
-                    <Input
-                      value={formData.drawingNumber}
-                      onChange={(e) => setFormData({ ...formData, drawingNumber: e.target.value })}
-                      placeholder="DRW-001"
-                      className="bg-white border-slate-300 text-slate-900 focus:ring-primary-500 focus:border-transparent"
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={useMultipleDrawings}
+                      onChange={(e) => setUseMultipleDrawings(e.target.checked)}
                     />
+                    <span className="text-xs text-slate-700">Multiple drawings in one release</span>
                   </div>
 
-                  {/* Release Quantity */}
-                  <div>
-                    <Label className="text-slate-900 text-xs font-semibold">Release Quantity *</Label>
-                    <Input
-                      type="number"
-                      value={formData.releaseQty}
-                      onChange={(e) => setFormData({ ...formData, releaseQty: parseFloat(e.target.value) })}
-                      placeholder="0"
-                      className="bg-white border-slate-300 text-slate-900 focus:ring-primary-500 focus:border-transparent"
-                    />
-                  </div>
+                  {useMultipleDrawings ? (
+                    <div className="space-y-2">
+                      {releaseLines.map((line, idx) => (
+                        <div key={idx} className="grid grid-cols-3 gap-2">
+                          <div className="col-span-2">
+                            <Label className="text-slate-900 text-xs font-semibold">Drawing Number</Label>
+                            <Input
+                              value={line.drawingNumber}
+                              onChange={(e) => {
+                                const next = [...releaseLines]
+                                next[idx] = { ...next[idx], drawingNumber: e.target.value }
+                                setReleaseLines(next)
+                              }}
+                              placeholder="DRW-001"
+                              className="bg-white border-slate-300 text-slate-900 focus:ring-primary-500 focus:border-transparent"
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-slate-900 text-xs font-semibold">Qty *</Label>
+                            <Input
+                              type="number"
+                              value={line.releaseQty}
+                              onChange={(e) => {
+                                const next = [...releaseLines]
+                                next[idx] = { ...next[idx], releaseQty: parseFloat(e.target.value) || 0 }
+                                setReleaseLines(next)
+                              }}
+                              placeholder="0"
+                              className="bg-white border-slate-300 text-slate-900 focus:ring-primary-500 focus:border-transparent"
+                            />
+                          </div>
+                        </div>
+                      ))}
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="border-slate-300 text-slate-700 hover:bg-slate-50"
+                          onClick={() => setReleaseLines([...releaseLines, { drawingNumber: '', releaseQty: 0 }])}
+                        >
+                          Add Drawing
+                        </Button>
+                        {releaseLines.length > 1 && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="border-red-300 text-red-600 hover:bg-red-50"
+                            onClick={() => setReleaseLines(releaseLines.slice(0, -1))}
+                          >
+                            Remove Last
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      {/* Drawing Number */}
+                      <div>
+                        <Label className="text-slate-900 text-xs font-semibold">Drawing Number</Label>
+                        <Input
+                          value={formData.drawingNumber}
+                          onChange={(e) => setFormData({ ...formData, drawingNumber: e.target.value })}
+                          placeholder="DRW-001"
+                          className="bg-white border-slate-300 text-slate-900 focus:ring-primary-500 focus:border-transparent"
+                        />
+                      </div>
+
+                      {/* Release Quantity */}
+                      <div>
+                        <Label className="text-slate-900 text-xs font-semibold">Release Quantity *</Label>
+                        <Input
+                          type="number"
+                          value={formData.releaseQty}
+                          onChange={(e) => setFormData({ ...formData, releaseQty: parseFloat(e.target.value) || 0 })}
+                          placeholder="0"
+                          className="bg-white border-slate-300 text-slate-900 focus:ring-primary-500 focus:border-transparent"
+                        />
+                      </div>
+                    </>
+                  )}
 
                   {/* ITP Template */}
                   <div>
@@ -562,6 +761,78 @@ export default function ProductionPage() {
                     <Button
                       type="button"
                       onClick={() => setShowCreateModal(false)}
+                      variant="outline"
+                      className="flex-1 border-slate-300 text-slate-700 hover:bg-slate-50"
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* Edit Release Modal */}
+        {showEditModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-2">
+            <Card className="w-full max-w-xs bg-white border-slate-200 max-h-[85vh] overflow-y-auto">
+              <CardHeader className="pb-2 border-b border-slate-200">
+                <CardTitle className="text-base font-semibold text-slate-900">Edit Production Release</CardTitle>
+                <CardDescription className="text-slate-600 mt-0.5 text-xs">Update drawing and quantity</CardDescription>
+              </CardHeader>
+              <CardContent className="pt-3">
+                <form onSubmit={handleUpdateRelease} className="space-y-3">
+                  <div>
+                    <Label className="text-slate-900 text-xs font-semibold">Drawing Number</Label>
+                    <Input
+                      value={editFormData.drawingNumber}
+                      onChange={(e) => setEditFormData({ ...editFormData, drawingNumber: e.target.value })}
+                      placeholder="DRW-001"
+                      className="bg-white border-slate-300 text-slate-900 focus:ring-primary-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  <div>
+                    <Label className="text-slate-900 text-xs font-semibold">Release Quantity *</Label>
+                    <Input
+                      type="number"
+                      value={editFormData.releaseQty}
+                      onChange={(e) => setEditFormData({ ...editFormData, releaseQty: parseFloat(e.target.value) || 0 })}
+                      placeholder="0"
+                      className="bg-white border-slate-300 text-slate-900 focus:ring-primary-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  <div>
+                    <Label className="text-slate-900 text-xs font-semibold">ITP Template</Label>
+                    <select
+                      value={editFormData.itpTemplateId}
+                      onChange={(e) => setEditFormData({ ...editFormData, itpTemplateId: e.target.value })}
+                      className="w-full mt-1 p-2.5 border border-slate-300 rounded-lg bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    >
+                      <option value="">-- Select Template --</option>
+                      {itpTemplates.map(template => (
+                        <option key={template.id} value={template.id}>
+                          {template.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="flex gap-2 pt-2">
+                    <Button
+                      type="submit"
+                      className="flex-1 bg-primary-600 hover:bg-primary-700 text-white font-medium"
+                    >
+                      Save Changes
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={() => {
+                        setShowEditModal(false)
+                        setEditingRelease(null)
+                      }}
                       variant="outline"
                       className="flex-1 border-slate-300 text-slate-700 hover:bg-slate-50"
                     >

@@ -553,6 +553,7 @@ export async function DELETE(request: Request) {
     }
 
     const { searchParams } = new URL(request.url)
+    const hardDelete = searchParams.get('hardDelete') === 'true'
     const idsParam = searchParams.get('ids')
 
     if (idsParam) {
@@ -628,6 +629,26 @@ export async function DELETE(request: Request) {
 
     if (!jobOrder) {
       return NextResponse.json({ error: 'Job order not found' }, { status: 404 })
+    }
+
+    if (hardDelete) {
+      const userRole = session.user.role || 'USER'
+      if (userRole !== 'ADMIN') {
+        return NextResponse.json({ error: 'Admin access required for permanent delete' }, { status: 403 })
+      }
+
+      if (!jobOrder.isDeleted) {
+        return NextResponse.json({ error: 'Job order must be soft-deleted before permanent delete' }, { status: 400 })
+      }
+
+      const relatedMRs = await prisma.materialRequest.count({ where: { jobOrderId: id } })
+      if (relatedMRs > 0) {
+        return NextResponse.json({ error: 'Cannot permanently delete: linked material requests exist' }, { status: 400 })
+      }
+
+      await prisma.jobOrderItem.deleteMany({ where: { jobOrderId: id } })
+      await prisma.jobOrder.delete({ where: { id } })
+      return NextResponse.json({ message: 'Job order permanently deleted' })
     }
 
     // Check permission

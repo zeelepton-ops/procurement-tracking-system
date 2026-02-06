@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useSession } from 'next-auth/react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -73,6 +74,7 @@ const SCOPE_OF_WORKS_OPTIONS = [
 ]
 
 export default function JobOrdersPage() {
+  const { data: session } = useSession()
   const [jobOrders, setJobOrders] = useState<JobOrder[]>([])
   const [deletedJobOrders, setDeletedJobOrders] = useState<JobOrder[]>([])
   const [clients, setClients] = useState<any[]>([])
@@ -118,6 +120,9 @@ export default function JobOrdersPage() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState<string | null>(null)
   const [showNewClientInput, setShowNewClientInput] = useState(false)
+  const [deletingPermanent, setDeletingPermanent] = useState<string | null>(null)
+
+  const isAdmin = session?.user?.role === 'ADMIN'
   const [newClientName, setNewClientName] = useState('')
   const [creatingClient, setCreatingClient] = useState(false)
   const [clientSearchQuery, setClientSearchQuery] = useState('')
@@ -602,6 +607,31 @@ export default function JobOrdersPage() {
     } catch (err: any) {
       setError(err.message || 'Failed to restore job order')
       setRestoring(null)
+    }
+  }
+
+  const handlePermanentDelete = async (id: string) => {
+    if (!confirm('Permanently delete this job order? This cannot be undone.')) return
+
+    try {
+      setDeletingPermanent(id)
+      const res = await fetch(`/api/job-orders?id=${id}&hardDelete=true`, {
+        method: 'DELETE'
+      })
+
+      const data = await res.json()
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to permanently delete job order')
+      }
+
+      setSuccess(data.message || 'Job order permanently deleted')
+      setTimeout(() => setSuccess(null), 5000)
+      fetchJobOrders()
+      fetchDeletedJobOrders()
+    } catch (err: any) {
+      setError(err.message || 'Failed to permanently delete job order')
+    } finally {
+      setDeletingPermanent(null)
     }
   }
 
@@ -1661,7 +1691,7 @@ export default function JobOrdersPage() {
                     <div className="col-span-2 text-amber-700">
                       {new Date(order.createdAt).toLocaleDateString()}
                     </div>
-                    <div className="col-span-1 flex justify-end">
+                    <div className="col-span-1 flex justify-end gap-2">
                       <Button
                         variant="outline"
                         size="sm"
@@ -1674,6 +1704,20 @@ export default function JobOrdersPage() {
                       >
                         {restoring === order.id ? 'Restoring...' : 'Restore'}
                       </Button>
+                      {isAdmin && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handlePermanentDelete(order.id)
+                          }}
+                          disabled={deletingPermanent === order.id}
+                          className="h-7 text-[11px] text-red-600 hover:text-red-700 hover:bg-red-50 border-red-300"
+                        >
+                          {deletingPermanent === order.id ? 'Deleting...' : 'Delete'}
+                        </Button>
+                      )}
                     </div>
                   </div>
                 ))}
