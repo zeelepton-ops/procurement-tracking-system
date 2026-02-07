@@ -18,6 +18,7 @@ export async function GET(req: NextRequest) {
           unit: true,
           jobOrder: {
             select: {
+              id: true,
               jobNumber: true,
               clientName: true,
             }
@@ -75,6 +76,7 @@ export async function POST(req: NextRequest) {
           unit: true,
           jobOrder: {
             select: {
+              id: true,
               jobNumber: true,
               clientName: true,
             }
@@ -108,6 +110,7 @@ export async function PATCH(req: NextRequest) {
           unit: true,
           jobOrder: {
             select: {
+              id: true,
               jobNumber: true,
               clientName: true,
             }

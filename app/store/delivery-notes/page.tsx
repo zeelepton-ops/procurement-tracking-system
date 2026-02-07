@@ -75,6 +75,31 @@ interface DeliveryNoteRequest {
   } | null
 }
 
+interface QualityStep {
+  status: string
+  approvedQty?: number | null
+  failedQty?: number | null
+  holdQty?: number | null
+}
+
+interface ReadyInspection {
+  id: string
+  status: string
+  createdAt: string
+  jobOrderItemId: string
+  jobOrderItem: {
+    workDescription: string
+    quantity?: number | null
+    unit?: string | null
+    jobOrder: {
+      id: string
+      jobNumber: string
+      clientName?: string | null
+    }
+  }
+  steps: QualityStep[]
+}
+
 export default function DeliveryNotesPage() {
   const router = useRouter()
   const [deliveryNotes, setDeliveryNotes] = useState<DeliveryNote[]>([])
@@ -93,6 +118,8 @@ export default function DeliveryNotesPage() {
   const [draftName, setDraftName] = useState('')
   const [savedDrafts, setSavedDrafts] = useState<Array<{name: string, data: any, timestamp: number}>>([])
   const [dnRequests, setDnRequests] = useState<DeliveryNoteRequest[]>([])
+  const [readyInspections, setReadyInspections] = useState<ReadyInspection[]>([])
+  const [readyLoading, setReadyLoading] = useState(false)
 
   const [formData, setFormData] = useState({
     deliveryNoteNumber: '',
@@ -132,6 +159,7 @@ export default function DeliveryNotesPage() {
     fetchDeliveryNotes()
     fetchJobOrders()
     fetchDeliveryNoteRequests()
+    fetchReadyInspections()
     loadDrafts()
   }, [])
 
@@ -308,6 +336,55 @@ export default function DeliveryNotesPage() {
       console.error('Failed to fetch delivery note requests:', error)
       setDnRequests([])
     }
+  }
+
+  const getInspectionDerivedStatus = (inspection: ReadyInspection) => {
+    const steps = inspection.steps || []
+    const statuses = steps.map(step => step.status || 'PENDING')
+
+    if (statuses.some(status => status === 'FAILED')) return 'REJECTED'
+    if (statuses.some(status => status === 'HOLD')) return 'HOLD'
+    if (statuses.length > 0 && statuses.every(status => status === 'APPROVED')) return 'APPROVED'
+    if (statuses.some(status => status !== 'PENDING')) return 'IN_PROGRESS'
+    return inspection.status || 'PENDING'
+  }
+
+  const getApprovedQty = (inspection: ReadyInspection) =>
+    (inspection.steps || []).reduce((sum, step) => sum + (step.approvedQty || 0), 0)
+
+  const fetchReadyInspections = async () => {
+    setReadyLoading(true)
+    try {
+      const res = await fetch('/api/quality-inspection')
+      if (res.ok) {
+        const data = await res.json()
+        const inspections = Array.isArray(data) ? data : []
+        const approved = inspections.filter(
+          (inspection: ReadyInspection) => getInspectionDerivedStatus(inspection) === 'APPROVED'
+        )
+        setReadyInspections(approved)
+      } else {
+        setReadyInspections([])
+      }
+    } catch (error) {
+      console.error('Failed to fetch ready inspections:', error)
+      setReadyInspections([])
+    } finally {
+      setReadyLoading(false)
+    }
+  }
+
+  const startDeliveryNoteFromInspection = (inspection: ReadyInspection) => {
+    const jobOrderId = inspection.jobOrderItem?.jobOrder?.id
+    if (!jobOrderId) {
+      setError('Job order not found for this inspection.')
+      setTimeout(() => setError(null), 3000)
+      return
+    }
+
+    setShowForm(true)
+    setEditingId(null)
+    handleJobOrderChange(jobOrderId)
   }
 
   const markRequestCompleted = async (id: string) => {
@@ -869,6 +946,64 @@ export default function DeliveryNotesPage() {
             </Button>
           </div>
         </div>
+
+        {(readyLoading || readyInspections.length > 0) && (
+          <Card className="mb-6 border-emerald-200 bg-emerald-50">
+            <CardHeader className="py-3 bg-emerald-100">
+              <CardTitle className="text-emerald-900 text-lg flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4" />
+                Ready for Delivery Notes ({readyInspections.length})
+              </CardTitle>
+              <CardDescription className="text-emerald-700">
+                Approved inspections ready for delivery note processing
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-0">
+              {readyLoading ? (
+                <div className="px-3 py-3 text-sm text-emerald-700">Loading approvals...</div>
+              ) : readyInspections.length === 0 ? (
+                <div className="px-3 py-3 text-sm text-emerald-700">No approved inspections yet.</div>
+              ) : (
+                <div className="divide-y divide-emerald-200">
+                  {readyInspections.map((inspection) => {
+                    const jobOrder = inspection.jobOrderItem?.jobOrder
+                    const approvedQty = getApprovedQty(inspection)
+                    const totalQty = inspection.jobOrderItem?.quantity ?? 0
+                    const unit = inspection.jobOrderItem?.unit || ''
+
+                    return (
+                      <div key={inspection.id} className="grid grid-cols-12 items-center gap-2 px-3 py-2 text-[12px]">
+                        <div className="col-span-3">
+                          <div className="font-semibold text-emerald-900">{jobOrder?.jobNumber || 'N/A'}</div>
+                          <div className="text-[11px] text-emerald-700">{jobOrder?.clientName || 'N/A'}</div>
+                        </div>
+                        <div className="col-span-5 truncate text-emerald-800">
+                          {inspection.jobOrderItem?.workDescription || 'N/A'}
+                        </div>
+                        <div className="col-span-2 text-emerald-700">
+                          Approved: {approvedQty} / {totalQty} {unit}
+                        </div>
+                        <div className="col-span-1 text-emerald-700">
+                          {new Date(inspection.createdAt).toLocaleDateString()}
+                        </div>
+                        <div className="col-span-1 flex justify-end">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => startDeliveryNoteFromInspection(inspection)}
+                            className="h-7 text-[11px] text-emerald-700 hover:text-emerald-800 hover:bg-emerald-100 border-emerald-300"
+                          >
+                            Start
+                          </Button>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         {dnRequests.length > 0 && (
           <Card className="mb-6 border-amber-200 bg-amber-50">
