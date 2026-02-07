@@ -65,13 +65,15 @@ export async function POST(request: Request) {
     })
     const existingIds = new Set(existing.map(r => r.inspectionId).filter(Boolean) as string[])
 
+    const requestedBy = session.user?.email || session.user?.name || 'system'
+
     const toCreate = inspections
       .filter(i => !existingIds.has(i.id))
       .map(i => ({
         inspectionId: i.id,
         jobOrderId: i.jobOrderItem?.jobOrder?.id || null,
         jobOrderItemId: i.jobOrderItemId || null,
-        requestedBy: session.user.email || session.user.name || 'system',
+        requestedBy,
         status: 'PENDING'
       }))
 
