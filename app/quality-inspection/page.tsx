@@ -116,6 +116,9 @@ export default function QualityInspectionPage() {
   const [templateError, setTemplateError] = useState<string | null>(null)
   const [completeSaving, setCompleteSaving] = useState(false)
   const [completeError, setCompleteError] = useState<string | null>(null)
+  const [pageSuccess, setPageSuccess] = useState<string | null>(null)
+  const [pageError, setPageError] = useState<string | null>(null)
+  const [selectedInspectionIds, setSelectedInspectionIds] = useState<string[]>([])
 
   // Create inspection form
   const [createForm, setCreateForm] = useState({
@@ -195,6 +198,42 @@ export default function QualityInspectionPage() {
       }
     } catch (error) {
       console.error('Error fetching pending inspections:', error)
+    }
+  }
+
+  const requestDeliveryNotes = async () => {
+    if (selectedInspectionIds.length === 0) return
+
+    try {
+      const res = await fetch('/api/delivery-notes/requests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ inspectionIds: selectedInspectionIds })
+      })
+
+      const data = await res.json()
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to request delivery notes')
+      }
+
+      setSelectedInspectionIds([])
+      setPageSuccess(data.message || 'Delivery note requests created')
+      setTimeout(() => setPageSuccess(null), 4000)
+    } catch (error: any) {
+      setPageError(error.message || 'Failed to request delivery notes')
+    }
+  }
+
+  const deletePendingInspection = async (inspectionId: string) => {
+    try {
+      const res = await fetch(`/api/production-releases/pending-inspections?id=${inspectionId}`, {
+        method: 'DELETE'
+      })
+      if (res.ok) {
+        await fetchPendingInspections()
+      }
+    } catch (error) {
+      console.error('Error deleting pending inspection:', error)
     }
   }
 
@@ -387,6 +426,17 @@ export default function QualityInspectionPage() {
     }
   }
 
+  const getInspectionStatus = (inspection: QualityInspection) => {
+    const steps = inspection.steps || []
+    const statuses = steps.map(s => s.status || 'PENDING')
+
+    if (statuses.some(s => s === 'FAILED')) return 'REJECTED'
+    if (statuses.some(s => s === 'HOLD')) return 'HOLD'
+    if (statuses.length > 0 && statuses.every(s => s === 'APPROVED')) return 'APPROVED'
+    if (statuses.some(s => s !== 'PENDING')) return 'IN_PROGRESS'
+    return inspection.status || 'PENDING'
+  }
+
   const getStatusBadge = (status: string) => {
     const variants: Record<string, { color: string; icon: any }> = {
       PENDING: { color: 'bg-gray-100 text-gray-700', icon: Clock },
@@ -406,12 +456,13 @@ export default function QualityInspectionPage() {
   }
 
   const filteredInspections = inspections.filter(inspection => {
+    const derivedStatus = getInspectionStatus(inspection)
     const matchesSearch = 
       inspection.jobOrderItem.jobOrder.jobNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
       inspection.jobOrderItem.workDescription.toLowerCase().includes(searchTerm.toLowerCase()) ||
       inspection.jobOrderItem.jobOrder.clientName.toLowerCase().includes(searchTerm.toLowerCase())
     
-    const matchesStatus = statusFilter === 'ALL' || inspection.status === statusFilter
+    const matchesStatus = statusFilter === 'ALL' || derivedStatus === statusFilter
     
     return matchesSearch && matchesStatus
   })
@@ -461,18 +512,28 @@ export default function QualityInspectionPage() {
                               </span>
                             </div>
                           </div>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="ml-2"
-                            onClick={() => {
-                              setSelectedPendingInspection(inspection)
-                              setShowCompleteInspectionDialog(true)
-                              setCompleteForm({ result: '' as 'APPROVED' | 'REJECTED' | 'HOLD', remarks: '', inspectedBy: session?.user?.name || '', inspectedQty: '', approvedQty: '', rejectedQty: '', holdQty: '' })
-                            }}
-                          >
-                            Complete
-                          </Button>
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="ml-2"
+                              onClick={() => {
+                                setSelectedPendingInspection(inspection)
+                                setShowCompleteInspectionDialog(true)
+                                setCompleteForm({ result: '' as 'APPROVED' | 'REJECTED' | 'HOLD', remarks: '', inspectedBy: session?.user?.name || '', inspectedQty: '', approvedQty: '', rejectedQty: '', holdQty: '' })
+                              }}
+                            >
+                              Complete
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="border-red-300 text-red-600 hover:bg-red-50"
+                              onClick={() => deletePendingInspection(inspection.id)}
+                            >
+                              Delete
+                            </Button>
+                          </div>
                         </div>
                       )
                     })}
@@ -519,6 +580,42 @@ export default function QualityInspectionPage() {
             </div>
           </div>
         </div>
+
+        {pageSuccess && (
+          <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 flex items-center gap-2">
+            <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
+            {pageSuccess}
+          </div>
+        )}
+        {pageError && (
+          <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 flex items-center gap-2">
+            <AlertCircle className="h-4 w-4 flex-shrink-0" />
+            {pageError}
+          </div>
+        )}
+
+        {selectedInspectionIds.length > 0 && (
+          <div className="mb-4 flex items-center justify-between bg-primary-50 border border-primary-200 rounded-lg px-4 py-3 text-sm">
+            <div className="text-primary-900 font-semibold">
+              {selectedInspectionIds.length} inspection(s) selected for Delivery Note
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                className="border-slate-300 text-slate-700 hover:bg-slate-50"
+                onClick={() => setSelectedInspectionIds([])}
+              >
+                Clear
+              </Button>
+              <Button
+                className="bg-primary-600 hover:bg-primary-700 text-white"
+                onClick={requestDeliveryNotes}
+              >
+                Request Delivery Note
+              </Button>
+            </div>
+          </div>
+        )}
 
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
@@ -825,7 +922,12 @@ export default function QualityInspectionPage() {
 
         {/* Inspections Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredInspections.map(inspection => (
+          {filteredInspections.map(inspection => {
+            const derivedStatus = getInspectionStatus(inspection)
+            const isSelectable = derivedStatus === 'APPROVED'
+            const isSelected = selectedInspectionIds.includes(inspection.id)
+
+            return (
             <div
               key={inspection.id}
               className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow"
@@ -841,7 +943,23 @@ export default function QualityInspectionPage() {
                     </h3>
                     <p className="text-sm text-gray-600">{inspection.jobOrderItem.jobOrder.clientName}</p>
                   </div>
-                  {getStatusBadge(inspection.status)}
+                  <div className="flex items-center gap-2">
+                    {isSelectable && (
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={(e) => {
+                          e.stopPropagation()
+                          setSelectedInspectionIds((prev) =>
+                            prev.includes(inspection.id)
+                              ? prev.filter((id) => id !== inspection.id)
+                              : [...prev, inspection.id]
+                          )
+                        }}
+                      />
+                    )}
+                    {getStatusBadge(derivedStatus)}
+                  </div>
                 </div>
                 
                 <div className="space-y-2 text-sm">
@@ -883,7 +1001,7 @@ export default function QualityInspectionPage() {
                 </Button>
               </div>
             </div>
-          ))}
+          )})}
         </div>
 
         {filteredInspections.length === 0 && (
@@ -902,7 +1020,7 @@ export default function QualityInspectionPage() {
                 <DialogHeader>
                   <DialogTitle className="flex items-center justify-between text-base">
                     <span>Quality Inspection Details</span>
-                    {getStatusBadge(selectedInspection.status)}
+                    {getStatusBadge(getInspectionStatus(selectedInspection))}
                   </DialogTitle>
                 </DialogHeader>
                 

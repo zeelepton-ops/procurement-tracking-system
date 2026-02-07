@@ -72,6 +72,7 @@ model JobOrder {
   items                JobOrderItem[]
   deliveryNotes        DeliveryNote[] @relation("DeliveryNoteToJobOrder")
   invoices             Invoice[] @relation("InvoiceToJobOrder")
+  deliveryNoteRequests DeliveryNoteRequest[]
 
   @@unique([jobNumber, isDeleted])
 }
@@ -96,6 +97,7 @@ model JobOrderItem {
   
   // Production Releases (L3)
   productionReleases ProductionRelease[]
+  deliveryNoteRequests DeliveryNoteRequest[]
 }
 
 // L3: Production Release - The "Work Package"
@@ -190,6 +192,7 @@ model QualityInspection {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   steps          QualityStep[]
+  deliveryNoteRequests DeliveryNoteRequest[]
 }
 
 // Each step in the ITP for a QualityInspection
@@ -744,6 +747,25 @@ model DeliveryNote {
   
   @@index([jobOrderId])
   @@index([status])
+}
+
+model DeliveryNoteRequest {
+  id             String            @id @default(cuid())
+  jobOrderId     String?
+  jobOrder       JobOrder?         @relation(fields: [jobOrderId], references: [id], onDelete: SetNull)
+  jobOrderItemId String?
+  jobOrderItem   JobOrderItem?     @relation(fields: [jobOrderItemId], references: [id], onDelete: SetNull)
+  inspectionId   String?
+  inspection     QualityInspection? @relation(fields: [inspectionId], references: [id], onDelete: SetNull)
+  status         String            @default("PENDING")
+  requestedBy    String?
+  notes          String?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  @@index([status])
+  @@index([jobOrderId])
+  @@index([inspectionId])
 }
 
 model DeliveryNoteItem {

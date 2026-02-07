@@ -59,6 +59,22 @@ interface JobOrder {
   }>
 }
 
+interface DeliveryNoteRequest {
+  id: string
+  status: string
+  requestedBy?: string | null
+  createdAt: string
+  jobOrder?: {
+    jobNumber: string
+    clientName?: string | null
+  } | null
+  jobOrderItem?: {
+    workDescription: string
+    quantity?: number | null
+    unit?: string | null
+  } | null
+}
+
 export default function DeliveryNotesPage() {
   const router = useRouter()
   const [deliveryNotes, setDeliveryNotes] = useState<DeliveryNote[]>([])
@@ -76,6 +92,7 @@ export default function DeliveryNotesPage() {
   const [showDraftMenu, setShowDraftMenu] = useState(false)
   const [draftName, setDraftName] = useState('')
   const [savedDrafts, setSavedDrafts] = useState<Array<{name: string, data: any, timestamp: number}>>([])
+  const [dnRequests, setDnRequests] = useState<DeliveryNoteRequest[]>([])
 
   const [formData, setFormData] = useState({
     deliveryNoteNumber: '',
@@ -114,6 +131,7 @@ export default function DeliveryNotesPage() {
     console.log('Component mounted, fetching data...')
     fetchDeliveryNotes()
     fetchJobOrders()
+    fetchDeliveryNoteRequests()
     loadDrafts()
   }, [])
 
@@ -275,6 +293,39 @@ export default function DeliveryNotesPage() {
       console.error('Failed to fetch delivery notes:', error)
       setDeliveryNotes([])
       setLoading(false)
+    }
+  }
+
+  const fetchDeliveryNoteRequests = async () => {
+    try {
+      const res = await fetch('/api/delivery-notes/requests?status=PENDING')
+      if (!res.ok) {
+        throw new Error(`API error: ${res.status}`)
+      }
+      const data = await res.json()
+      setDnRequests(Array.isArray(data) ? data : [])
+    } catch (error) {
+      console.error('Failed to fetch delivery note requests:', error)
+      setDnRequests([])
+    }
+  }
+
+  const markRequestCompleted = async (id: string) => {
+    try {
+      const res = await fetch('/api/delivery-notes/requests', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, status: 'COMPLETED' })
+      })
+
+      const data = await res.json()
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to update request')
+      }
+
+      fetchDeliveryNoteRequests()
+    } catch (error) {
+      console.error('Failed to update delivery note request:', error)
     }
   }
 
@@ -818,6 +869,49 @@ export default function DeliveryNotesPage() {
             </Button>
           </div>
         </div>
+
+        {dnRequests.length > 0 && (
+          <Card className="mb-6 border-amber-200 bg-amber-50">
+            <CardHeader className="py-3 bg-amber-100">
+              <CardTitle className="text-amber-900 text-lg flex items-center gap-2">
+                <Bell className="h-4 w-4" />
+                Delivery Note Print Requests ({dnRequests.length})
+              </CardTitle>
+              <CardDescription className="text-amber-700">Requests from Quality Inspection for DN issue</CardDescription>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="divide-y divide-amber-200">
+                {dnRequests.map((req) => (
+                  <div key={req.id} className="grid grid-cols-12 items-center gap-2 px-3 py-2 text-[12px]">
+                    <div className="col-span-3">
+                      <div className="font-semibold text-amber-900">{req.jobOrder?.jobNumber || 'N/A'}</div>
+                      <div className="text-[11px] text-amber-700">{req.jobOrder?.clientName || 'N/A'}</div>
+                    </div>
+                    <div className="col-span-5 truncate text-amber-800">
+                      {req.jobOrderItem?.workDescription || 'N/A'}
+                    </div>
+                    <div className="col-span-2 text-amber-700">
+                      {req.jobOrderItem?.quantity ?? 0} {req.jobOrderItem?.unit || ''}
+                    </div>
+                    <div className="col-span-1 text-amber-700">
+                      {new Date(req.createdAt).toLocaleDateString()}
+                    </div>
+                    <div className="col-span-1 flex justify-end">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => markRequestCompleted(req.id)}
+                        className="h-7 text-[11px] text-green-600 hover:text-green-700 hover:bg-green-50 border-green-300"
+                      >
+                        Done
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Form */}
         {showForm && (

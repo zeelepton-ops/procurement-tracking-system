@@ -2,6 +2,8 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(req: Request) {
   try {
     const session = await getServerSession(authOptions)
@@ -49,5 +51,53 @@ export async function GET(req: Request) {
       { error: 'Failed to fetch pending inspections' },
       { status: 500 }
     )
+  }
+}
+
+export async function DELETE(req: Request) {
+  try {
+    const { searchParams } = new URL(req.url)
+    const id = searchParams.get('id')
+
+    if (!id) {
+      return Response.json({ error: 'Inspection id is required' }, { status: 400 })
+    }
+
+    const inspection = await prisma.productionInspection.findUnique({
+      where: { id },
+      include: { productionRelease: true }
+    })
+
+    if (!inspection) {
+      return Response.json({ error: 'Inspection not found' }, { status: 404 })
+    }
+
+    const releaseId = inspection.productionReleaseId
+
+    await prisma.$transaction(async (tx) => {
+      await tx.productionInspection.delete({ where: { id } })
+
+      const remaining = await tx.productionInspection.count({
+        where: { productionReleaseId: releaseId }
+      })
+
+      if (remaining === 0) {
+        const current = await tx.productionRelease.findUnique({ where: { id: releaseId } })
+        if (current) {
+          await tx.productionRelease.update({
+            where: { id: releaseId },
+            data: {
+              status: 'IN_PRODUCTION',
+              inspectionCount: Math.max((current.inspectionCount || 0) - 1, 0)
+            }
+          })
+        }
+      }
+    })
+
+    return Response.json({ message: 'Inspection deleted' })
+  } catch (error) {
+    console.error('Error deleting pending inspection:', error)
+    return Response.json({ error: 'Failed to delete inspection' }, { status: 500 })
   }
 }
