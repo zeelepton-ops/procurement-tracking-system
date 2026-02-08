@@ -39,6 +39,7 @@ interface QualityInspection {
     quantity: number | null
     unit: string
     jobOrder: {
+      id: string
       jobNumber: string
       clientName: string
     }
@@ -222,6 +223,25 @@ export default function QualityInspectionPage() {
     } catch (error: any) {
       setPageError(error.message || 'Failed to request delivery notes')
     }
+  }
+
+  const prepareDeliveryNoteFromSelection = () => {
+    if (selectedInspectionIds.length === 0) return
+
+    const selected = inspections.filter(inspection => selectedInspectionIds.includes(inspection.id))
+    const jobOrderIds = Array.from(new Set(selected.map(i => i.jobOrderItem?.jobOrder?.id).filter(Boolean)))
+
+    if (jobOrderIds.length === 0) {
+      setPageError('Job order not found for selected inspections.')
+      return
+    }
+
+    if (jobOrderIds.length > 1) {
+      setPageError('Select inspections from the same job order to prepare a delivery note.')
+      return
+    }
+
+    router.push(`/store/delivery-notes?jobOrderId=${jobOrderIds[0]}&openForm=1`)
   }
 
   const deletePendingInspection = async (inspectionId: string) => {
@@ -437,6 +457,9 @@ export default function QualityInspectionPage() {
     return inspection.status || 'PENDING'
   }
 
+  const getApprovedQty = (inspection: QualityInspection) =>
+    inspection.steps.reduce((sum, step) => sum + (step.approvedQty || 0), 0)
+
   const getStatusBadge = (status: string) => {
     const variants: Record<string, { color: string; icon: any }> = {
       PENDING: { color: 'bg-gray-100 text-gray-700', icon: Clock },
@@ -581,6 +604,53 @@ export default function QualityInspectionPage() {
           </div>
         </div>
 
+        {inspections.some(inspection => getInspectionStatus(inspection) === 'APPROVED') && (
+          <div className="mb-6 bg-emerald-50 border border-emerald-200 rounded-lg p-4 shadow-sm">
+            <div className="flex items-start justify-between">
+              <div className="flex items-start gap-3">
+                <CheckCircle2 className="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" />
+                <div>
+                  <h3 className="font-semibold text-emerald-900 mb-2">Approved Inspections Ready for Delivery Notes</h3>
+                  <div className="space-y-2">
+                    {inspections
+                      .filter(inspection => getInspectionStatus(inspection) === 'APPROVED')
+                      .map((inspection) => {
+                        const jobOrder = inspection.jobOrderItem.jobOrder
+                        const approvedQty = getApprovedQty(inspection)
+                        const totalQty = inspection.jobOrderItem.quantity ?? 0
+                        const unit = inspection.jobOrderItem.unit || ''
+
+                        return (
+                          <div key={inspection.id} className="flex items-center justify-between bg-white rounded p-2 text-sm">
+                            <div className="text-gray-700">
+                              <div className="font-semibold text-gray-900">
+                                {jobOrder.jobNumber} • {jobOrder.clientName || 'No Client'}
+                              </div>
+                              <div className="text-xs text-gray-600 mt-1 flex flex-wrap gap-x-3 gap-y-1">
+                                <span>{inspection.jobOrderItem.workDescription}</span>
+                                <span>Approved: {approvedQty} / {totalQty} {unit}</span>
+                              </div>
+                            </div>
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="border-emerald-300 text-emerald-700 hover:bg-emerald-50"
+                                onClick={() => router.push(`/store/delivery-notes?jobOrderId=${jobOrder.id}&openForm=1`)}
+                              >
+                                Prepare DN
+                              </Button>
+                            </div>
+                          </div>
+                        )
+                      })}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {pageSuccess && (
           <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 flex items-center gap-2">
             <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
@@ -606,6 +676,13 @@ export default function QualityInspectionPage() {
                 onClick={() => setSelectedInspectionIds([])}
               >
                 Clear
+              </Button>
+              <Button
+                variant="outline"
+                className="border-emerald-300 text-emerald-700 hover:bg-emerald-50"
+                onClick={prepareDeliveryNoteFromSelection}
+              >
+                Prepare Delivery Note
               </Button>
               <Button
                 className="bg-primary-600 hover:bg-primary-700 text-white"

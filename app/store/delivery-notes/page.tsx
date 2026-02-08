@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -102,6 +102,7 @@ interface ReadyInspection {
 
 export default function DeliveryNotesPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [deliveryNotes, setDeliveryNotes] = useState<DeliveryNote[]>([])
   const [jobOrders, setJobOrders] = useState<JobOrder[]>([])
   const [loading, setLoading] = useState(true)
@@ -162,6 +163,17 @@ export default function DeliveryNotesPage() {
     fetchReadyInspections()
     loadDrafts()
   }, [])
+
+  useEffect(() => {
+    const jobOrderId = searchParams.get('jobOrderId')
+    const openForm = searchParams.get('openForm')
+
+    if (jobOrderId && openForm === '1' && jobOrders.length > 0) {
+      setShowForm(true)
+      setEditingId(null)
+      handleJobOrderChange(jobOrderId)
+    }
+  }, [jobOrders, searchParams])
 
   const loadDrafts = () => {
     try {
