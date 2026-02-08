@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -100,7 +100,7 @@ interface ReadyInspection {
   steps: QualityStep[]
 }
 
-export default function DeliveryNotesPage() {
+function DeliveryNotesContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [deliveryNotes, setDeliveryNotes] = useState<DeliveryNote[]>([])
@@ -1790,5 +1790,13 @@ export default function DeliveryNotesPage() {
         </Card>
       </div>
     </div>
+  )
+}
+
+export default function DeliveryNotesPage() {
+  return (
+    <Suspense fallback={<div className="p-6 text-sm text-slate-600">Loading delivery notes...</div>}>
+      <DeliveryNotesContent />
+    </Suspense>
   )
 }
