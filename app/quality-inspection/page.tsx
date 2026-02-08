@@ -100,6 +100,7 @@ export default function QualityInspectionPage() {
   const router = useRouter()
   const [inspections, setInspections] = useState<QualityInspection[]>([])
   const [pendingInspections, setPendingInspections] = useState<any[]>([])
+  const [completedInspections, setCompletedInspections] = useState<any[]>([])
   const [templates, setTemplates] = useState<ITPTemplate[]>([])
   const [jobOrderItems, setJobOrderItems] = useState<JobOrderItemOption[]>([])
   const [jobOrders, setJobOrders] = useState<JobOrderOption[]>([])
@@ -171,6 +172,7 @@ export default function QualityInspectionPage() {
     } else if (status === 'authenticated') {
       fetchInspections()
       fetchPendingInspections()
+      fetchCompletedInspections()
       fetchTemplates()
       fetchJobOrderItems()
     }
@@ -199,6 +201,18 @@ export default function QualityInspectionPage() {
       }
     } catch (error) {
       console.error('Error fetching pending inspections:', error)
+    }
+  }
+
+  const fetchCompletedInspections = async () => {
+    try {
+      const res = await fetch('/api/production-releases/completed-inspections')
+      if (res.ok) {
+        const data = await res.json()
+        setCompletedInspections(data)
+      }
+    } catch (error) {
+      console.error('Error fetching completed inspections:', error)
     }
   }
 
@@ -425,17 +439,22 @@ export default function QualityInspectionPage() {
         }),
       })
 
+      const data = await res.json().catch(() => null)
+
       if (res.ok) {
         // Reset form and close dialog
         setShowCompleteInspectionDialog(false)
         setSelectedPendingInspection(null)
         setCompleteForm({ result: '' as 'APPROVED' | 'REJECTED' | 'HOLD', remarks: '', inspectedBy: '', inspectedQty: '', approvedQty: '', rejectedQty: '', holdQty: '' })
-        
+
+        setPageSuccess(data?.message || 'Inspection completed successfully.')
+        setTimeout(() => setPageSuccess(null), 4000)
+
         // Refresh both lists
         await fetchPendingInspections()
         await fetchInspections()
+        await fetchCompletedInspections()
       } else {
-        const data = await res.json().catch(() => null)
         setCompleteError(data?.error || 'Failed to complete inspection. Please try again.')
       }
     } catch (error) {
@@ -569,6 +588,54 @@ export default function QualityInspectionPage() {
               >
                 <X className="w-5 h-5" />
               </button>
+            </div>
+          </div>
+        )}
+
+        {completedInspections.length > 0 && (
+          <div className="mb-6 bg-white border border-slate-200 rounded-lg p-4 shadow-sm">
+            <div className="flex items-start justify-between">
+              <div className="flex items-start gap-3">
+                <CheckCircle2 className="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" />
+                <div>
+                  <h3 className="font-semibold text-slate-900 mb-2">Completed Production Inspections</h3>
+                  <div className="space-y-2">
+                    {completedInspections.map((inspection) => {
+                      const jobNumber = inspection.productionRelease?.jobOrderItem?.jobOrder?.jobNumber || 'N/A'
+                      const workDescription = inspection.productionRelease?.jobOrderItem?.workDescription || 'N/A'
+                      const drawingNumber = inspection.productionRelease?.drawingNumber || 'N/A'
+                      const unit = inspection.productionRelease?.jobOrderItem?.unit || ''
+                      const releaseQty = inspection.productionRelease?.releaseQty || 0
+                      const inspectedAt = inspection.inspectionTimestampFormatted || 'N/A'
+
+                      return (
+                        <div key={inspection.id} className="flex items-center justify-between bg-slate-50 rounded p-2 text-sm">
+                          <div className="text-gray-700">
+                            <div className="font-semibold text-gray-900">{jobNumber} - {workDescription}</div>
+                            <div className="text-xs text-gray-600 mt-1 flex flex-wrap gap-x-3 gap-y-1">
+                              <span><span className="font-semibold">Drawing:</span> {drawingNumber}</span>
+                              <span><span className="font-semibold">Qty:</span> {releaseQty} {unit}</span>
+                              <span><span className="font-semibold">Inspected:</span> {inspectedAt}</span>
+                              <span>
+                                <span className="font-semibold">Approved:</span> {inspection.approvedQty ?? 0}
+                              </span>
+                              <span>
+                                <span className="font-semibold">Rejected:</span> {inspection.rejectedQty ?? 0}
+                              </span>
+                              <span>
+                                <span className="font-semibold">Hold:</span> {inspection.holdQty ?? 0}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {getStatusBadge(inspection.result || 'PENDING')}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         )}
