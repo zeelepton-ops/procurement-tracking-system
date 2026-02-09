@@ -1960,8 +1960,3 @@ export default function QualityInspectionPage() {
     </div>
   )
 }
-        </Dialog>
-      </div>
-    </div>
-  )
-}
