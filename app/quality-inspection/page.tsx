@@ -31,6 +31,15 @@ interface QualityInspection {
   itpTemplateId: string
   isCritical: boolean
   status: string
+  drawingNumber?: string | null
+  transmittalNo?: string | null
+  inspectedQty?: number | null
+  approvedQty?: number | null
+  rejectedQty?: number | null
+  holdQty?: number | null
+  inspectedWeight?: number | null
+  inspectionDate?: string | null
+  remarks?: string | null
   createdBy: string
   createdAt: string
   updatedAt: string
@@ -38,10 +47,12 @@ interface QualityInspection {
     workDescription: string
     quantity: number | null
     unit: string
+    unitWeight?: number | null
     jobOrder: {
       id: string
       jobNumber: string
       clientName: string
+      drawingRef?: string | null
     }
   }
   itpTemplate: {
@@ -104,6 +115,8 @@ export default function QualityInspectionPage() {
   const [templates, setTemplates] = useState<ITPTemplate[]>([])
   const [jobOrderItems, setJobOrderItems] = useState<JobOrderItemOption[]>([])
   const [jobOrders, setJobOrders] = useState<JobOrderOption[]>([])
+  const [pendingDnRequests, setPendingDnRequests] = useState<any[]>([])
+  const [deliveryNotesCount, setDeliveryNotesCount] = useState(0)
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('ALL')
@@ -121,6 +134,23 @@ export default function QualityInspectionPage() {
   const [pageSuccess, setPageSuccess] = useState<string | null>(null)
   const [pageError, setPageError] = useState<string | null>(null)
   const [selectedInspectionIds, setSelectedInspectionIds] = useState<string[]>([])
+  const [editSaving, setEditSaving] = useState(false)
+  const [editError, setEditError] = useState<string | null>(null)
+  const [editSuccess, setEditSuccess] = useState<string | null>(null)
+
+  const isAdmin = session?.user?.role === 'ADMIN'
+
+  const [editForm, setEditForm] = useState({
+    drawingNumber: '',
+    transmittalNo: '',
+    inspectionDate: '',
+    inspectedQty: '',
+    approvedQty: '',
+    rejectedQty: '',
+    holdQty: '',
+    inspectedWeight: '',
+    remarks: '',
+  })
 
   // Create inspection form
   const [createForm, setCreateForm] = useState({
@@ -173,10 +203,55 @@ export default function QualityInspectionPage() {
       fetchInspections()
       fetchPendingInspections()
       fetchCompletedInspections()
+      fetchPendingDeliveryNoteRequests()
+      fetchDeliveryNotes()
       fetchTemplates()
       fetchJobOrderItems()
     }
   }, [status, router])
+
+  useEffect(() => {
+    if (!selectedInspection) return
+    setEditForm(buildDefaultInspectionForm(selectedInspection))
+    setEditError(null)
+    setEditSuccess(null)
+  }, [selectedInspection])
+
+  const toDateTimeLocal = (value?: string | null) => {
+    if (!value) return ''
+    const date = new Date(value)
+    if (Number.isNaN(date.getTime())) return ''
+    const pad = (n: number) => n.toString().padStart(2, '0')
+    const yyyy = date.getFullYear()
+    const mm = pad(date.getMonth() + 1)
+    const dd = pad(date.getDate())
+    const hh = pad(date.getHours())
+    const mi = pad(date.getMinutes())
+    return `${yyyy}-${mm}-${dd}T${hh}:${mi}`
+  }
+
+  const toNumberString = (value?: number | null) =>
+    value === null || value === undefined ? '' : value.toString()
+
+  const buildDefaultInspectionForm = (inspection: QualityInspection) => {
+    const defaultDrawing = inspection.drawingNumber || inspection.jobOrderItem.jobOrder.drawingRef || ''
+    const inspectedQty = inspection.inspectedQty ?? inspection.jobOrderItem.quantity ?? null
+    const unitWeight = inspection.jobOrderItem.unitWeight ?? null
+    const computedWeight =
+      unitWeight !== null && inspectedQty !== null ? unitWeight * inspectedQty : null
+
+    return {
+      drawingNumber: defaultDrawing,
+      transmittalNo: inspection.transmittalNo || '',
+      inspectionDate: toDateTimeLocal(inspection.inspectionDate),
+      inspectedQty: toNumberString(inspectedQty),
+      approvedQty: toNumberString(inspection.approvedQty),
+      rejectedQty: toNumberString(inspection.rejectedQty),
+      holdQty: toNumberString(inspection.holdQty),
+      inspectedWeight: toNumberString(inspection.inspectedWeight ?? computedWeight),
+      remarks: inspection.remarks || '',
+    }
+  }
 
   const fetchInspections = async () => {
     try {
@@ -216,6 +291,30 @@ export default function QualityInspectionPage() {
     }
   }
 
+  const fetchPendingDeliveryNoteRequests = async () => {
+    try {
+      const res = await fetch('/api/delivery-notes/requests?status=PENDING')
+      if (res.ok) {
+        const data = await res.json()
+        setPendingDnRequests(data)
+      }
+    } catch (error) {
+      console.error('Error fetching delivery note requests:', error)
+    }
+  }
+
+  const fetchDeliveryNotes = async () => {
+    try {
+      const res = await fetch('/api/delivery-notes')
+      if (res.ok) {
+        const data = await res.json()
+        setDeliveryNotesCount(Array.isArray(data) ? data.length : 0)
+      }
+    } catch (error) {
+      console.error('Error fetching delivery notes:', error)
+    }
+  }
+
   const requestDeliveryNotes = async () => {
     if (selectedInspectionIds.length === 0) return
 
@@ -234,6 +333,7 @@ export default function QualityInspectionPage() {
       setSelectedInspectionIds([])
       setPageSuccess(data.message || 'Delivery note requests created')
       setTimeout(() => setPageSuccess(null), 4000)
+      fetchPendingDeliveryNoteRequests()
     } catch (error: any) {
       setPageError(error.message || 'Failed to request delivery notes')
     }
@@ -373,6 +473,7 @@ export default function QualityInspectionPage() {
 
   const updateStepStatus = async (stepId: string, status: string, remarks?: string, approvedQty?: string, failedQty?: string, holdQty?: string) => {
     try {
+      const previousStatus = selectedInspection ? getInspectionStatus(selectedInspection) : null
       const payload: any = { status, remarks }
       if (approvedQty && !isNaN(parseFloat(approvedQty))) {
         payload.approvedQty = parseFloat(approvedQty)
@@ -393,6 +494,10 @@ export default function QualityInspectionPage() {
         if (selectedInspection) {
           const updated = await fetch(`/api/quality-inspection/${selectedInspection.id}`).then(r => r.json())
           setSelectedInspection(updated)
+          const nextStatus = getInspectionStatus(updated)
+          if (previousStatus !== 'APPROVED' && nextStatus === 'APPROVED') {
+            await requestDeliveryNotesForInspection(updated.id)
+          }
         }
       }
     } catch (error) {
@@ -400,8 +505,67 @@ export default function QualityInspectionPage() {
     }
   }
 
+  const requestDeliveryNotesForInspection = async (inspectionId: string) => {
+    try {
+      const res = await fetch('/api/delivery-notes/requests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ inspectionIds: [inspectionId] })
+      })
+      const data = await res.json().catch(() => null)
+      if (res.ok && data?.created > 0) {
+        setPageSuccess('Delivery note request created automatically.')
+        setTimeout(() => setPageSuccess(null), 4000)
+      }
+    } catch (error) {
+      console.error('Failed to auto-request delivery notes:', error)
+    }
+  }
+
+  const saveInspectionHeader = async () => {
+    if (!selectedInspection) return
+    try {
+      setEditSaving(true)
+      setEditError(null)
+
+      const res = await fetch(`/api/quality-inspection/${selectedInspection.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          drawingNumber: editForm.drawingNumber.trim(),
+          transmittalNo: editForm.transmittalNo.trim(),
+          inspectionDate: editForm.inspectionDate || null,
+          inspectedQty: editForm.inspectedQty,
+          approvedQty: editForm.approvedQty,
+          rejectedQty: editForm.rejectedQty,
+          holdQty: editForm.holdQty,
+          inspectedWeight: editForm.inspectedWeight,
+          remarks: editForm.remarks.trim(),
+        }),
+      })
+
+      if (res.ok) {
+        const updated = await res.json()
+        setSelectedInspection((prev) => prev ? { ...prev, ...updated } : prev)
+        setEditSuccess('Inspection details updated.')
+        setTimeout(() => setEditSuccess(null), 4000)
+      } else {
+        const data = await res.json().catch(() => null)
+        setEditError(data?.error || 'Failed to update inspection.')
+      }
+    } catch (error) {
+      setEditError('Failed to update inspection.')
+    } finally {
+      setEditSaving(false)
+    }
+  }
+
   const deleteInspection = async (inspectionId: string) => {
     try {
+      if (!isAdmin) {
+        setPageError('Only admins can delete inspections.')
+        return
+      }
       const res = await fetch(`/api/quality-inspection/${inspectionId}`, {
         method: 'DELETE',
       })
@@ -528,6 +692,10 @@ export default function QualityInspectionPage() {
     ...filteredCompletedInspections.map((inspection) => ({ kind: 'production' as const, inspection })),
   ]
 
+  const approvedInspections = inspections.filter(
+    (inspection) => getInspectionStatus(inspection) === 'APPROVED'
+  )
+
   if (loading) {
     return <div className="p-8">Loading...</div>
   }
@@ -642,7 +810,47 @@ export default function QualityInspectionPage() {
           </div>
         </div>
 
-        {inspections.some(inspection => getInspectionStatus(inspection) === 'APPROVED') && (
+        {/* Workflow Timeline */}
+        <div className="mb-6 bg-white border border-slate-200 rounded-lg p-4 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="text-sm font-semibold text-slate-900">Production → QC → Store</h3>
+              <p className="text-xs text-slate-600">Auto DN requests on approval</p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => router.push('/store/delivery-notes')}
+              className="border-slate-300 text-slate-700 hover:bg-slate-50"
+            >
+              Open Delivery Notes
+            </Button>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-3 text-sm">
+            <div className="rounded-lg border border-slate-200 p-3 bg-slate-50">
+              <p className="text-xs text-slate-500">Production Pending</p>
+              <p className="text-lg font-semibold text-slate-900">{pendingInspections.length}</p>
+              <p className="text-xs text-slate-500">Awaiting QC</p>
+            </div>
+            <div className="rounded-lg border border-emerald-200 p-3 bg-emerald-50">
+              <p className="text-xs text-emerald-700">QC Approved</p>
+              <p className="text-lg font-semibold text-emerald-900">{approvedInspections.length}</p>
+              <p className="text-xs text-emerald-700">Ready for DN</p>
+            </div>
+            <div className="rounded-lg border border-amber-200 p-3 bg-amber-50">
+              <p className="text-xs text-amber-700">DN Requests</p>
+              <p className="text-lg font-semibold text-amber-900">{pendingDnRequests.length}</p>
+              <p className="text-xs text-amber-700">Waiting on Store</p>
+            </div>
+            <div className="rounded-lg border border-slate-200 p-3 bg-slate-50">
+              <p className="text-xs text-slate-500">Delivery Notes Issued</p>
+              <p className="text-lg font-semibold text-slate-900">{deliveryNotesCount}</p>
+              <p className="text-xs text-slate-500">Completed</p>
+            </div>
+          </div>
+        </div>
+
+        {approvedInspections.length > 0 && (
           <div className="mb-6 bg-emerald-50 border border-emerald-200 rounded-lg p-4 shadow-sm">
             <div className="flex items-start justify-between">
               <div className="flex items-start gap-3">
@@ -650,9 +858,7 @@ export default function QualityInspectionPage() {
                 <div>
                   <h3 className="font-semibold text-emerald-900 mb-2">Approved Inspections Ready for Delivery Notes</h3>
                   <div className="space-y-2">
-                    {inspections
-                      .filter(inspection => getInspectionStatus(inspection) === 'APPROVED')
-                      .map((inspection) => {
+                    {approvedInspections.map((inspection) => {
                         const jobOrder = inspection.jobOrderItem.jobOrder
                         const approvedQty = getApprovedQty(inspection)
                         const totalQty = inspection.jobOrderItem.quantity ?? 0
@@ -1103,20 +1309,39 @@ export default function QualityInspectionPage() {
                   </div>
                 </div>
                 
-                <div className="px-6 pb-4 pt-2 border-t bg-gray-50 rounded-b-lg">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="text-red-600 hover:bg-red-50 w-full"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setDeleteConfirm(inspection.id);
-                    }}
-                  >
-                    <XCircle className="w-3 h-3 mr-1" />
-                    Delete Inspection
-                  </Button>
-                </div>
+                {(derivedStatus === 'APPROVED' || isAdmin) && (
+                  <div className="px-6 pb-4 pt-2 border-t bg-gray-50 rounded-b-lg">
+                    <div className="flex gap-2">
+                      {derivedStatus === 'APPROVED' && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="border-emerald-300 text-emerald-700 hover:bg-emerald-50"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            router.push(`/store/delivery-notes?jobOrderId=${inspection.jobOrderItem.jobOrder.id}&openForm=1`)
+                          }}
+                        >
+                          Prepare DN
+                        </Button>
+                      )}
+                      {isAdmin && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-red-600 hover:bg-red-50"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDeleteConfirm(inspection.id);
+                          }}
+                        >
+                          <XCircle className="w-3 h-3 mr-1" />
+                          Delete Inspection
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
               )
             }
@@ -1248,6 +1473,166 @@ export default function QualityInspectionPage() {
                     </div>
                   </div>
 
+                  {/* QC Header Fields */}
+                  <div className="bg-white rounded-lg p-3 border">
+                    <h4 className="font-semibold text-sm mb-3">QC Record</h4>
+                    {isAdmin ? (
+                      <div className="space-y-3">
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <Label className="text-xs text-slate-500 font-semibold">Drawing No.</Label>
+                            <Input
+                              value={editForm.drawingNumber}
+                              onChange={(e) => setEditForm({ ...editForm, drawingNumber: e.target.value })}
+                              placeholder="Drawing number"
+                              className="text-xs h-8"
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-xs text-slate-500 font-semibold">Transmittal No.</Label>
+                            <Input
+                              value={editForm.transmittalNo}
+                              onChange={(e) => setEditForm({ ...editForm, transmittalNo: e.target.value })}
+                              placeholder="Transmittal number"
+                              className="text-xs h-8"
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-xs text-slate-500 font-semibold">Inspection Date</Label>
+                            <Input
+                              type="datetime-local"
+                              value={editForm.inspectionDate}
+                              onChange={(e) => setEditForm({ ...editForm, inspectionDate: e.target.value })}
+                              className="text-xs h-8"
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-xs text-slate-500 font-semibold">Inspected Qty</Label>
+                            <Input
+                              type="number"
+                              value={editForm.inspectedQty}
+                              onChange={(e) => setEditForm({ ...editForm, inspectedQty: e.target.value })}
+                              placeholder="0"
+                              className="text-xs h-8"
+                            />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-4 gap-3">
+                          <div>
+                            <Label className="text-xs text-green-600 font-semibold">Approved Qty</Label>
+                            <Input
+                              type="number"
+                              value={editForm.approvedQty}
+                              onChange={(e) => setEditForm({ ...editForm, approvedQty: e.target.value })}
+                              placeholder="0"
+                              className="text-xs h-8"
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-xs text-red-600 font-semibold">Rejected Qty</Label>
+                            <Input
+                              type="number"
+                              value={editForm.rejectedQty}
+                              onChange={(e) => setEditForm({ ...editForm, rejectedQty: e.target.value })}
+                              placeholder="0"
+                              className="text-xs h-8"
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-xs text-yellow-600 font-semibold">Hold Qty</Label>
+                            <Input
+                              type="number"
+                              value={editForm.holdQty}
+                              onChange={(e) => setEditForm({ ...editForm, holdQty: e.target.value })}
+                              placeholder="0"
+                              className="text-xs h-8"
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-xs text-slate-500 font-semibold">Weight</Label>
+                            <Input
+                              type="number"
+                              value={editForm.inspectedWeight}
+                              onChange={(e) => setEditForm({ ...editForm, inspectedWeight: e.target.value })}
+                              placeholder="0"
+                              className="text-xs h-8"
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <Label className="text-xs text-slate-500 font-semibold">Remarks</Label>
+                          <Textarea
+                            value={editForm.remarks}
+                            onChange={(e) => setEditForm({ ...editForm, remarks: e.target.value })}
+                            placeholder="Remarks"
+                            rows={2}
+                            className="text-xs"
+                          />
+                        </div>
+
+                        {editError && (
+                          <div className="text-xs text-red-700 bg-red-50 border border-red-200 rounded px-3 py-2">
+                            {editError}
+                          </div>
+                        )}
+                        {editSuccess && (
+                          <div className="text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded px-3 py-2">
+                            {editSuccess}
+                          </div>
+                        )}
+
+                        <div className="flex justify-end">
+                          <Button
+                            size="sm"
+                            onClick={saveInspectionHeader}
+                            disabled={editSaving}
+                          >
+                            {editSaving ? 'Saving...' : 'Save QC Details'}
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-2 gap-3 text-xs text-slate-700">
+                        <div>
+                          <span className="text-slate-500">Drawing No.:</span>
+                          <p className="font-medium">{selectedInspection.drawingNumber || selectedInspection.jobOrderItem.jobOrder.drawingRef || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <span className="text-slate-500">Transmittal No.:</span>
+                          <p className="font-medium">{selectedInspection.transmittalNo || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <span className="text-slate-500">Inspection Date:</span>
+                          <p className="font-medium">{selectedInspection.inspectionDate ? new Date(selectedInspection.inspectionDate).toLocaleString() : 'N/A'}</p>
+                        </div>
+                        <div>
+                          <span className="text-slate-500">Inspected Qty:</span>
+                          <p className="font-medium">{selectedInspection.inspectedQty ?? 'N/A'}</p>
+                        </div>
+                        <div>
+                          <span className="text-slate-500">Approved Qty:</span>
+                          <p className="font-medium">{selectedInspection.approvedQty ?? 'N/A'}</p>
+                        </div>
+                        <div>
+                          <span className="text-slate-500">Rejected Qty:</span>
+                          <p className="font-medium">{selectedInspection.rejectedQty ?? 'N/A'}</p>
+                        </div>
+                        <div>
+                          <span className="text-slate-500">Hold Qty:</span>
+                          <p className="font-medium">{selectedInspection.holdQty ?? 'N/A'}</p>
+                        </div>
+                        <div>
+                          <span className="text-slate-500">Weight:</span>
+                          <p className="font-medium">{selectedInspection.inspectedWeight ?? 'N/A'}</p>
+                        </div>
+                        <div className="col-span-2">
+                          <span className="text-slate-500">Remarks:</span>
+                          <p className="font-medium">{selectedInspection.remarks || 'N/A'}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
                   {/* Inspection Steps */}
                   <div>
                     <h4 className="font-semibold text-sm mb-3">Inspection Steps</h4>
@@ -1361,28 +1746,30 @@ export default function QualityInspectionPage() {
         </Dialog>
 
         {/* Delete Confirmation Dialog */}
-        <Dialog open={!!deleteConfirm} onOpenChange={() => setDeleteConfirm(null)}>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>Delete Quality Inspection?</DialogTitle>
-            </DialogHeader>
-            <p className="text-sm text-gray-600">
-              Are you sure you want to delete this quality inspection? This action cannot be undone.
-            </p>
-            <div className="flex gap-2 justify-end mt-4">
-              <Button variant="outline" onClick={() => setDeleteConfirm(null)}>
-                Cancel
-              </Button>
-              <Button
-                variant="outline"
-                className="text-red-600"
-                onClick={() => deleteConfirm && deleteInspection(deleteConfirm)}
-              >
-                Delete
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+        {isAdmin && (
+          <Dialog open={!!deleteConfirm} onOpenChange={() => setDeleteConfirm(null)}>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>Delete Quality Inspection?</DialogTitle>
+              </DialogHeader>
+              <p className="text-sm text-gray-600">
+                Are you sure you want to delete this quality inspection? This action cannot be undone.
+              </p>
+              <div className="flex gap-2 justify-end mt-4">
+                <Button variant="outline" onClick={() => setDeleteConfirm(null)}>
+                  Cancel
+                </Button>
+                <Button
+                  variant="outline"
+                  className="text-red-600"
+                  onClick={() => deleteConfirm && deleteInspection(deleteConfirm)}
+                >
+                  Delete
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
 
         {/* Complete Production Inspection Dialog */}
         <Dialog
@@ -1568,6 +1955,11 @@ export default function QualityInspectionPage() {
               </div>
             )}
           </DialogContent>
+        </Dialog>
+      </div>
+    </div>
+  )
+}
         </Dialog>
       </div>
     </div>

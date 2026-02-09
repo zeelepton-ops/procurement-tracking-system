@@ -16,11 +16,13 @@ export async function GET(req: NextRequest) {
           workDescription: true,
           quantity: true,
           unit: true,
+          unitWeight: true,
           jobOrder: {
             select: {
               id: true,
               jobNumber: true,
               clientName: true,
+              drawingRef: true,
             }
           }
         }
@@ -45,7 +47,12 @@ export async function POST(req: NextRequest) {
   // Validate job order item
   const jobOrderItem = await prisma.jobOrderItem.findUnique({
     where: { id: jobOrderItemId },
-    select: { id: true }
+    select: {
+      id: true,
+      quantity: true,
+      unitWeight: true,
+      jobOrder: { select: { drawingRef: true } }
+    }
   });
   if (!jobOrderItem) {
     return NextResponse.json({ error: 'Job order item not found' }, { status: 400 });
@@ -56,12 +63,22 @@ export async function POST(req: NextRequest) {
   if (!itp) return NextResponse.json({ error: 'ITP Template not found' }, { status: 404 });
   
   // Create inspection and steps
+  const inspectedQty = jobOrderItem.quantity ?? null
+  const inspectedWeight =
+    jobOrderItem.unitWeight !== null && inspectedQty !== null
+      ? jobOrderItem.unitWeight * inspectedQty
+      : null
+
   const inspection = await prisma.qualityInspection.create({
     data: {
       jobOrderItemId,
       itpTemplateId,
       isCritical: isCritical || false,
       createdBy,
+      drawingNumber: jobOrderItem.jobOrder?.drawingRef || null,
+      inspectionDate: new Date(),
+      inspectedQty,
+      inspectedWeight,
       steps: {
         create: itp.steps.map((stepName: string) => ({ stepName }))
       }
@@ -74,11 +91,13 @@ export async function POST(req: NextRequest) {
           workDescription: true,
           quantity: true,
           unit: true,
+          unitWeight: true,
           jobOrder: {
             select: {
               id: true,
               jobNumber: true,
               clientName: true,
+              drawingRef: true,
             }
           }
         }
@@ -108,11 +127,13 @@ export async function PATCH(req: NextRequest) {
           workDescription: true,
           quantity: true,
           unit: true,
+          unitWeight: true,
           jobOrder: {
             select: {
               id: true,
               jobNumber: true,
               clientName: true,
+              drawingRef: true,
             }
           }
         }

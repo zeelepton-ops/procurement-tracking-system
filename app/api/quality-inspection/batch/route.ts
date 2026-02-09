@@ -50,12 +50,20 @@ export async function POST(request: NextRequest) {
     // Create inspections for each job order item
     const inspections = await Promise.all(
       jobOrder.items.map(async (item) => {
+        const inspectedQty = item.quantity ?? null
+        const unitWeight = (item as any).unitWeight ?? null
+        const inspectedWeight =
+          unitWeight !== null && inspectedQty !== null ? unitWeight * inspectedQty : null
         const inspection = await prisma.qualityInspection.create({
           data: {
             jobOrderItemId: item.id,
             itpTemplateId,
             isCritical,
             createdBy: userEmail,
+            drawingNumber: jobOrder.drawingRef || null,
+            inspectionDate: new Date(),
+            inspectedQty,
+            inspectedWeight,
             steps: {
               create: template.steps.map((stepName) => ({
                 stepName,

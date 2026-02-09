@@ -188,6 +188,15 @@ model QualityInspection {
   itpTemplate    ITPTemplate  @relation(fields: [itpTemplateId], references: [id])
   isCritical     Boolean  @default(false)
   status         String   @default("PENDING") // PENDING, IN_PROGRESS, APPROVED, REJECTED, HOLD
+  drawingNumber  String?
+  transmittalNo  String?
+  inspectedQty   Float?
+  approvedQty    Float?
+  rejectedQty    Float?
+  holdQty        Float?
+  inspectedWeight Float?
+  inspectionDate DateTime?
+  remarks        String?  @db.Text
   createdBy      String
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
