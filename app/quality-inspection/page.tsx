@@ -509,6 +509,25 @@ export default function QualityInspectionPage() {
     return matchesSearch && matchesStatus
   })
 
+  const filteredCompletedInspections = completedInspections.filter((inspection) => {
+    const jobNumber = inspection.productionRelease?.jobOrderItem?.jobOrder?.jobNumber || ''
+    const workDescription = inspection.productionRelease?.jobOrderItem?.workDescription || ''
+    const clientName = inspection.productionRelease?.jobOrderItem?.jobOrder?.clientName || ''
+    const matchesSearch =
+      jobNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      workDescription.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      clientName.toLowerCase().includes(searchTerm.toLowerCase())
+    const resultStatus = inspection.result || 'PENDING'
+    const matchesStatus = statusFilter === 'ALL' || resultStatus === statusFilter
+
+    return matchesSearch && matchesStatus
+  })
+
+  const mergedInspections = [
+    ...filteredInspections.map((inspection) => ({ kind: 'quality' as const, inspection })),
+    ...filteredCompletedInspections.map((inspection) => ({ kind: 'production' as const, inspection })),
+  ]
+
   if (loading) {
     return <div className="p-8">Loading...</div>
   }
@@ -588,54 +607,6 @@ export default function QualityInspectionPage() {
               >
                 <X className="w-5 h-5" />
               </button>
-            </div>
-          </div>
-        )}
-
-        {completedInspections.length > 0 && (
-          <div className="mb-6 bg-white border border-slate-200 rounded-lg p-4 shadow-sm">
-            <div className="flex items-start justify-between">
-              <div className="flex items-start gap-3">
-                <CheckCircle2 className="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" />
-                <div>
-                  <h3 className="font-semibold text-slate-900 mb-2">Completed Production Inspections</h3>
-                  <div className="space-y-2">
-                    {completedInspections.map((inspection) => {
-                      const jobNumber = inspection.productionRelease?.jobOrderItem?.jobOrder?.jobNumber || 'N/A'
-                      const workDescription = inspection.productionRelease?.jobOrderItem?.workDescription || 'N/A'
-                      const drawingNumber = inspection.productionRelease?.drawingNumber || 'N/A'
-                      const unit = inspection.productionRelease?.jobOrderItem?.unit || ''
-                      const releaseQty = inspection.productionRelease?.releaseQty || 0
-                      const inspectedAt = inspection.inspectionTimestampFormatted || 'N/A'
-
-                      return (
-                        <div key={inspection.id} className="flex items-center justify-between bg-slate-50 rounded p-2 text-sm">
-                          <div className="text-gray-700">
-                            <div className="font-semibold text-gray-900">{jobNumber} - {workDescription}</div>
-                            <div className="text-xs text-gray-600 mt-1 flex flex-wrap gap-x-3 gap-y-1">
-                              <span><span className="font-semibold">Drawing:</span> {drawingNumber}</span>
-                              <span><span className="font-semibold">Qty:</span> {releaseQty} {unit}</span>
-                              <span><span className="font-semibold">Inspected:</span> {inspectedAt}</span>
-                              <span>
-                                <span className="font-semibold">Approved:</span> {inspection.approvedQty ?? 0}
-                              </span>
-                              <span>
-                                <span className="font-semibold">Rejected:</span> {inspection.rejectedQty ?? 0}
-                              </span>
-                              <span>
-                                <span className="font-semibold">Hold:</span> {inspection.holdQty ?? 0}
-                              </span>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            {getStatusBadge(inspection.result || 'PENDING')}
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         )}
@@ -1066,93 +1037,151 @@ export default function QualityInspectionPage() {
 
         {/* Inspections Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredInspections.map(inspection => {
-            const derivedStatus = getInspectionStatus(inspection)
-            const isSelectable = derivedStatus === 'APPROVED'
-            const isSelected = selectedInspectionIds.includes(inspection.id)
+          {mergedInspections.map((entry) => {
+            if (entry.kind === 'quality') {
+              const inspection = entry.inspection
+              const derivedStatus = getInspectionStatus(inspection)
+              const isSelectable = derivedStatus === 'APPROVED'
+              const isSelected = selectedInspectionIds.includes(inspection.id)
 
-            return (
-            <div
-              key={inspection.id}
-              className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow"
-            >
-              <div 
-                className="p-6 cursor-pointer"
-                onClick={() => setSelectedInspection(inspection)}
+              return (
+              <div
+                key={inspection.id}
+                className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow"
               >
-                <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <h3 className="font-semibold text-lg text-gray-900">
-                      {inspection.jobOrderItem.jobOrder.jobNumber}
-                    </h3>
-                    <p className="text-sm text-gray-600">{inspection.jobOrderItem.jobOrder.clientName}</p>
+                <div 
+                  className="p-6 cursor-pointer"
+                  onClick={() => setSelectedInspection(inspection)}
+                >
+                  <div className="flex items-start justify-between mb-4">
+                    <div>
+                      <h3 className="font-semibold text-lg text-gray-900">
+                        {inspection.jobOrderItem.jobOrder.jobNumber}
+                      </h3>
+                      <p className="text-sm text-gray-600">{inspection.jobOrderItem.jobOrder.clientName}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {isSelectable && (
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={(e) => {
+                            e.stopPropagation()
+                            setSelectedInspectionIds((prev) =>
+                              prev.includes(inspection.id)
+                                ? prev.filter((id) => id !== inspection.id)
+                                : [...prev, inspection.id]
+                            )
+                          }}
+                        />
+                      )}
+                      {getStatusBadge(derivedStatus)}
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    {isSelectable && (
-                      <input
-                        type="checkbox"
-                        checked={isSelected}
-                        onChange={(e) => {
-                          e.stopPropagation()
-                          setSelectedInspectionIds((prev) =>
-                            prev.includes(inspection.id)
-                              ? prev.filter((id) => id !== inspection.id)
-                              : [...prev, inspection.id]
-                          )
-                        }}
-                      />
-                    )}
-                    {getStatusBadge(derivedStatus)}
+                  
+                  <div className="space-y-2 text-sm">
+                    <div>
+                      <span className="text-gray-500">Work:</span>
+                      <p className="text-gray-900 line-clamp-2">{inspection.jobOrderItem.workDescription}</p>
+                    </div>
+                    <div>
+                      <span className="text-gray-500">Qty:</span>
+                      <p className="text-gray-900">
+                        {inspection.jobOrderItem.quantity ?? 0} {inspection.jobOrderItem.unit}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-gray-500">ITP Template:</span>
+                      <p className="text-gray-900">{inspection.itpTemplate.name}</p>
+                    </div>
+                    <div className="flex items-center justify-between pt-2 border-t">
+                      <span className="text-gray-500">Steps: {inspection.steps.length}</span>
+                      {inspection.isCritical && (
+                        <Badge className="bg-red-100 text-red-700">Critical</Badge>
+                      )}
+                    </div>
                   </div>
                 </div>
                 
-                <div className="space-y-2 text-sm">
-                  <div>
-                    <span className="text-gray-500">Work:</span>
-                    <p className="text-gray-900 line-clamp-2">{inspection.jobOrderItem.workDescription}</p>
+                <div className="px-6 pb-4 pt-2 border-t bg-gray-50 rounded-b-lg">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="text-red-600 hover:bg-red-50 w-full"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setDeleteConfirm(inspection.id);
+                    }}
+                  >
+                    <XCircle className="w-3 h-3 mr-1" />
+                    Delete Inspection
+                  </Button>
+                </div>
+              </div>
+              )
+            }
+
+            const inspection = entry.inspection
+            const jobNumber = inspection.productionRelease?.jobOrderItem?.jobOrder?.jobNumber || 'N/A'
+            const workDescription = inspection.productionRelease?.jobOrderItem?.workDescription || 'N/A'
+            const clientName = inspection.productionRelease?.jobOrderItem?.jobOrder?.clientName || 'N/A'
+            const drawingNumber = inspection.productionRelease?.drawingNumber || 'N/A'
+            const unit = inspection.productionRelease?.jobOrderItem?.unit || ''
+            const releaseQty = inspection.productionRelease?.releaseQty || 0
+            const inspectedAt = inspection.inspectionTimestampFormatted || 'N/A'
+
+            return (
+              <div
+                key={`production-${inspection.id}`}
+                className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow"
+              >
+                <div className="p-6">
+                  <div className="flex items-start justify-between mb-4">
+                    <div>
+                      <p className="text-sm text-gray-500">Production Inspection</p>
+                      <h3 className="font-semibold text-lg text-gray-900">{workDescription}</h3>
+                      <p className="text-sm text-gray-600">{jobNumber} • {clientName}</p>
+                    </div>
+                    {getStatusBadge(inspection.result || 'PENDING')}
                   </div>
-                  <div>
-                    <span className="text-gray-500">Qty:</span>
-                    <p className="text-gray-900">
-                      {inspection.jobOrderItem.quantity ?? 0} {inspection.jobOrderItem.unit}
-                    </p>
-                  </div>
-                  <div>
-                    <span className="text-gray-500">ITP Template:</span>
-                    <p className="text-gray-900">{inspection.itpTemplate.name}</p>
-                  </div>
-                  <div className="flex items-center justify-between pt-2 border-t">
-                    <span className="text-gray-500">Steps: {inspection.steps.length}</span>
-                    {inspection.isCritical && (
-                      <Badge className="bg-red-100 text-red-700">Critical</Badge>
-                    )}
+
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between text-gray-600">
+                      <span>Drawing</span>
+                      <span className="font-medium text-gray-900">{drawingNumber}</span>
+                    </div>
+                    <div className="flex justify-between text-gray-600">
+                      <span>Qty</span>
+                      <span className="font-medium text-gray-900">{releaseQty} {unit}</span>
+                    </div>
+                    <div className="flex justify-between text-gray-600">
+                      <span>Inspected</span>
+                      <span className="font-medium text-gray-900">{inspectedAt}</span>
+                    </div>
+                    <div className="flex justify-between text-gray-600">
+                      <span>Approved</span>
+                      <span className="font-medium text-gray-900">{inspection.approvedQty ?? 0}</span>
+                    </div>
+                    <div className="flex justify-between text-gray-600">
+                      <span>Rejected</span>
+                      <span className="font-medium text-gray-900">{inspection.rejectedQty ?? 0}</span>
+                    </div>
+                    <div className="flex justify-between text-gray-600">
+                      <span>Hold</span>
+                      <span className="font-medium text-gray-900">{inspection.holdQty ?? 0}</span>
+                    </div>
                   </div>
                 </div>
               </div>
-              
-              <div className="px-6 pb-4 pt-2 border-t bg-gray-50 rounded-b-lg">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="text-red-600 hover:bg-red-50 w-full"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setDeleteConfirm(inspection.id);
-                  }}
-                >
-                  <XCircle className="w-3 h-3 mr-1" />
-                  Delete Inspection
-                </Button>
-              </div>
-            </div>
-          )})}
+            )
+          })}
         </div>
 
-        {filteredInspections.length === 0 && (
+        {mergedInspections.length === 0 && (
           <div className="text-center py-12 bg-white rounded-lg shadow">
             <ClipboardCheck className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500 text-lg">No quality inspections found</p>
-            <p className="text-gray-400 text-sm">Create your first inspection to get started</p>
+            <p className="text-gray-500 text-lg">No inspections found</p>
+            <p className="text-gray-400 text-sm">Create your first inspection or complete production inspections to get started</p>
           </div>
         )}
 
