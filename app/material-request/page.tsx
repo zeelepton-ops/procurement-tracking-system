@@ -38,6 +38,12 @@ interface Asset {
   status?: string
 }
 
+interface Supplier {
+  id: string
+  name: string
+  tradingName?: string | null
+}
+
 interface MaterialRequest {
   id: string
   requestNumber: string
@@ -79,6 +85,7 @@ export default function MaterialRequestPage() {
   const [jobOrders, setJobOrders] = useState<JobOrder[]>([])
   const [assets, setAssets] = useState<Asset[]>([])
   const [inventory, setInventory] = useState<InventoryItem[]>([])
+  const [suppliers, setSuppliers] = useState<Supplier[]>([])
   const [materialRequests, setMaterialRequests] = useState<MaterialRequest[]>([])
   const [loading, setLoading] = useState(false)
   const [importing, setImporting] = useState(false)
@@ -149,6 +156,7 @@ export default function MaterialRequestPage() {
     fetchJobOrders()
     fetchAssets()
     fetchInventory()
+    fetchSuppliers()
     fetchMaterialRequests()
   }, [])
 
@@ -301,6 +309,20 @@ export default function MaterialRequestPage() {
       setInventory(data)
     } catch (error) {
       console.error('Failed to fetch inventory:', error)
+    }
+  }
+
+  const fetchSuppliers = async () => {
+    try {
+      const res = await fetch('/api/suppliers')
+      const data = await res.json()
+      if (Array.isArray(data)) {
+        setSuppliers(data)
+      } else {
+        setSuppliers([])
+      }
+    } catch (error) {
+      console.error('Failed to fetch suppliers:', error)
     }
   }
 
@@ -571,6 +593,77 @@ export default function MaterialRequestPage() {
     setItems(prev => prev.map((it, i) => i === index ? { ...it, jobOrderId: jobOrderId || '', reasonForRequest: label ?? it.reasonForRequest, _linkedByJobSuggestion: true } : it))
   }
 
+  const requestItems = materialRequests.flatMap((req) =>
+    req.items && req.items.length > 0
+      ? req.items.map((item) => ({
+          itemName: item.itemName,
+          description: item.description,
+          unit: item.unit,
+          preferredSupplier: item.preferredSupplier || req.preferredSupplier || '',
+        }))
+      : [{
+          itemName: req.itemName,
+          description: req.description,
+          unit: req.unit,
+          preferredSupplier: req.preferredSupplier || '',
+        }]
+  )
+
+  const itemNameSuggestions = Array.from(new Map(
+    [
+      ...inventory.map((item) => [
+        item.itemName.toLowerCase(),
+        { label: item.itemName, meta: `Inventory • ${item.unit} • Stock ${item.currentStock}`, type: 'inventory' }
+      ] as const),
+      ...requestItems.map((item) => [
+        item.itemName.toLowerCase(),
+        { label: item.itemName, meta: item.description || '', type: 'request' }
+      ] as const),
+    ]
+  ).values())
+
+  const descriptionSuggestions = Array.from(new Map(
+    requestItems
+      .filter((item) => item.description)
+      .map((item) => [
+        item.description.toLowerCase(),
+        { label: item.description, meta: item.itemName, type: 'request' }
+      ] as const)
+  ).values())
+
+  const supplierSuggestions = Array.from(new Map(
+    suppliers
+      .map((supplier) => [
+        (supplier.name || supplier.tradingName || '').toLowerCase(),
+        { label: supplier.name || supplier.tradingName || '', meta: supplier.tradingName || '', type: 'supplier' }
+      ] as const)
+      .filter((entry) => entry[0])
+  ).values())
+
+  const applyItemNameSuggestion = (index: number, itemName: string) => {
+    setItems((prev) => prev.map((it, i) => {
+      if (i !== index) return it
+      const next = { ...it, itemName }
+      const inventoryItem = inventory.find((inv) => inv.itemName.toLowerCase() === itemName.toLowerCase())
+      const requestItem = requestItems.find((req) => req.itemName.toLowerCase() === itemName.toLowerCase())
+
+      if (inventoryItem) {
+        if (!next.unit || next.unit === 'Nos') next.unit = inventoryItem.unit
+        if (!next.stockQty || next.stockQty === '0') next.stockQty = String(inventoryItem.currentStock)
+      }
+
+      if (!next.description && requestItem?.description) {
+        next.description = requestItem.description
+      }
+
+      if (!next.preferredSupplier && requestItem?.preferredSupplier) {
+        next.preferredSupplier = requestItem.preferredSupplier
+      }
+
+      return next
+    }))
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4">
       <div className="max-w-7xl mx-auto">
@@ -711,20 +804,28 @@ export default function MaterialRequestPage() {
                   </div>
                   {items.map((item, idx) => (
                     <div key={idx} className="grid grid-cols-[1.125fr_3fr_minmax(72px,0.5fr)_0.4fr_1.5fr_minmax(84px,0.6fr)_1.2fr_1.25fr_0.6fr_0.5fr] gap-0.5 w-full">
-                      <Input
-                        value={item.itemName}
-                        onChange={(e) => updateItemField(idx, 'itemName', e.target.value)}
-                        placeholder="Item"
-                        className="h-7 text-[11px]"
-                        required
-                      />
-                      <Input
-                        value={item.description}
-                        onChange={(e) => updateItemField(idx, 'description', e.target.value)}
-                        placeholder="Description/Specs"
-                        className="h-7 text-[11px]"
-                        required
-                      />
+                      <ErrorBoundary>
+                        <Autocomplete
+                          value={item.itemName}
+                          onChange={(val) => updateItemField(idx, 'itemName', val)}
+                          onSelect={(s) => applyItemNameSuggestion(idx, s.label)}
+                          suggestions={itemNameSuggestions}
+                          placeholder="Item"
+                          inputClassName="h-7 text-[11px]"
+                          className="w-full"
+                        />
+                      </ErrorBoundary>
+                      <ErrorBoundary>
+                        <Autocomplete
+                          value={item.description}
+                          onChange={(val) => updateItemField(idx, 'description', val)}
+                          onSelect={(s) => updateItemField(idx, 'description', s.label)}
+                          suggestions={descriptionSuggestions}
+                          placeholder="Description/Specs"
+                          inputClassName="h-7 text-[11px]"
+                          className="w-full"
+                        />
+                      </ErrorBoundary>
                       <Input
                         type="number"
                         value={item.quantity}
@@ -794,12 +895,17 @@ export default function MaterialRequestPage() {
                         onChange={(e) => updateItemField(idx, 'requiredDate', e.target.value)}
                         className="h-7 text-[11px]"
                       />
-                      <Input
-                        value={item.preferredSupplier}
-                        onChange={(e) => updateItemField(idx, 'preferredSupplier', e.target.value)}
-                        placeholder="Supplier"
-                        className="h-7 text-[11px]"
-                      />
+                      <ErrorBoundary>
+                        <Autocomplete
+                          value={item.preferredSupplier}
+                          onChange={(val) => updateItemField(idx, 'preferredSupplier', val)}
+                          onSelect={(s) => updateItemField(idx, 'preferredSupplier', s.label)}
+                          suggestions={supplierSuggestions}
+                          placeholder="Supplier"
+                          inputClassName="h-7 text-[11px]"
+                          className="w-full"
+                        />
+                      </ErrorBoundary>
                       <Input
                         type="number"
                         value={item.stockQty}
@@ -1105,18 +1211,28 @@ export default function MaterialRequestPage() {
                   </div>
                   {items.map((item, idx) => (
                     <div key={idx} className="grid grid-cols-[1.125fr_3fr_minmax(72px,0.5fr)_0.4fr_1.5fr_minmax(84px,0.6fr)_minmax(75px,0.65fr)_1.2fr_1.25fr_0.6fr_0.5fr] gap-0.5 w-full">
-                      <Input
-                        value={item.itemName}
-                        onChange={(e) => updateItemField(idx, 'itemName', e.target.value)}
-                        placeholder="Item"
-                        className="h-7 text-[11px]"
-                      />
-                      <Input
-                        value={item.description}
-                        onChange={(e) => updateItemField(idx, 'description', e.target.value)}
-                        placeholder="Description/Specs"
-                        className="h-7 text-[11px]"
-                      />
+                      <ErrorBoundary>
+                        <Autocomplete
+                          value={item.itemName}
+                          onChange={(val) => updateItemField(idx, 'itemName', val)}
+                          onSelect={(s) => applyItemNameSuggestion(idx, s.label)}
+                          suggestions={itemNameSuggestions}
+                          placeholder="Item"
+                          inputClassName="h-7 text-[11px]"
+                          className="w-full"
+                        />
+                      </ErrorBoundary>
+                      <ErrorBoundary>
+                        <Autocomplete
+                          value={item.description}
+                          onChange={(val) => updateItemField(idx, 'description', val)}
+                          onSelect={(s) => updateItemField(idx, 'description', s.label)}
+                          suggestions={descriptionSuggestions}
+                          placeholder="Description/Specs"
+                          inputClassName="h-7 text-[11px]"
+                          className="w-full"
+                        />
+                      </ErrorBoundary>
                       <Input
                         type="number"
                         value={item.quantity}
@@ -1170,12 +1286,17 @@ export default function MaterialRequestPage() {
                         onChange={(e) => updateItemField(idx, 'requiredDate', e.target.value)}
                         className="h-7 text-[11px]"
                       />
-                      <Input
-                        value={item.preferredSupplier}
-                        onChange={(e) => updateItemField(idx, 'preferredSupplier', e.target.value)}
-                        placeholder="Supplier"
-                        className="h-7 text-[11px]"
-                      />
+                      <ErrorBoundary>
+                        <Autocomplete
+                          value={item.preferredSupplier}
+                          onChange={(val) => updateItemField(idx, 'preferredSupplier', val)}
+                          onSelect={(s) => updateItemField(idx, 'preferredSupplier', s.label)}
+                          suggestions={supplierSuggestions}
+                          placeholder="Supplier"
+                          inputClassName="h-7 text-[11px]"
+                          className="w-full"
+                        />
+                      </ErrorBoundary>
                       <Input
                         type="number"
                         value={item.stockQty}

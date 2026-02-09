@@ -137,6 +137,20 @@ export default function QualityInspectionPage() {
   const [editSaving, setEditSaving] = useState(false)
   const [editError, setEditError] = useState<string | null>(null)
   const [editSuccess, setEditSuccess] = useState<string | null>(null)
+  const [showEditProductionDialog, setShowEditProductionDialog] = useState(false)
+  const [selectedProductionInspection, setSelectedProductionInspection] = useState<any>(null)
+  const [productionEditSaving, setProductionEditSaving] = useState(false)
+  const [productionEditError, setProductionEditError] = useState<string | null>(null)
+  const [productionEditForm, setProductionEditForm] = useState({
+    result: '' as 'APPROVED' | 'REJECTED' | 'HOLD' | '',
+    remarks: '',
+    inspectedBy: '',
+    inspectionTimestamp: '',
+    inspectedQty: '',
+    approvedQty: '',
+    rejectedQty: '',
+    holdQty: '',
+  })
 
   const isAdmin = session?.user?.role === 'ADMIN'
 
@@ -217,6 +231,12 @@ export default function QualityInspectionPage() {
     setEditSuccess(null)
   }, [selectedInspection])
 
+  useEffect(() => {
+    if (!selectedProductionInspection) return
+    setProductionEditForm(buildProductionEditForm(selectedProductionInspection))
+    setProductionEditError(null)
+  }, [selectedProductionInspection])
+
   const toDateTimeLocal = (value?: string | null) => {
     if (!value) return ''
     const date = new Date(value)
@@ -252,6 +272,17 @@ export default function QualityInspectionPage() {
       remarks: inspection.remarks || '',
     }
   }
+
+  const buildProductionEditForm = (inspection: any) => ({
+    result: inspection.result || '',
+    remarks: inspection.remarks || '',
+    inspectedBy: inspection.inspectedBy || '',
+    inspectionTimestamp: toDateTimeLocal(inspection.inspectionTimestamp),
+    inspectedQty: toNumberString(inspection.inspectedQty),
+    approvedQty: toNumberString(inspection.approvedQty),
+    rejectedQty: toNumberString(inspection.rejectedQty),
+    holdQty: toNumberString(inspection.holdQty),
+  })
 
   const fetchInspections = async () => {
     try {
@@ -560,6 +591,62 @@ export default function QualityInspectionPage() {
     }
   }
 
+  const saveProductionInspection = async () => {
+    if (!selectedProductionInspection) return
+    try {
+      setProductionEditSaving(true)
+      setProductionEditError(null)
+
+      const res = await fetch(`/api/production-inspections/${selectedProductionInspection.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          result: productionEditForm.result,
+          remarks: productionEditForm.remarks.trim(),
+          inspectedBy: productionEditForm.inspectedBy.trim(),
+          inspectionTimestamp: productionEditForm.inspectionTimestamp || null,
+          inspectedQty: productionEditForm.inspectedQty,
+          approvedQty: productionEditForm.approvedQty,
+          rejectedQty: productionEditForm.rejectedQty,
+          holdQty: productionEditForm.holdQty,
+        }),
+      })
+
+      if (res.ok) {
+        await fetchCompletedInspections()
+        setShowEditProductionDialog(false)
+        setSelectedProductionInspection(null)
+      } else {
+        const data = await res.json().catch(() => null)
+        setProductionEditError(data?.error || 'Failed to update production inspection.')
+      }
+    } catch (error) {
+      setProductionEditError('Failed to update production inspection.')
+    } finally {
+      setProductionEditSaving(false)
+    }
+  }
+
+  const deleteProductionInspection = async (inspectionId: string) => {
+    try {
+      if (!isAdmin) {
+        setPageError('Only admins can delete production inspections.')
+        return
+      }
+      const res = await fetch(`/api/production-inspections/${inspectionId}`, {
+        method: 'DELETE',
+      })
+      if (res.ok) {
+        await fetchCompletedInspections()
+      } else {
+        const data = await res.json().catch(() => null)
+        setPageError(data?.error || 'Failed to delete production inspection.')
+      }
+    } catch (error) {
+      setPageError('Failed to delete production inspection.')
+    }
+  }
+
   const deleteInspection = async (inspectionId: string) => {
     try {
       if (!isAdmin) {
@@ -695,6 +782,29 @@ export default function QualityInspectionPage() {
   const approvedInspections = inspections.filter(
     (inspection) => getInspectionStatus(inspection) === 'APPROVED'
   )
+
+  const groupedInspections = Object.values(
+    mergedInspections.reduce((acc, entry) => {
+      const isQuality = entry.kind === 'quality'
+      const inspection = entry.inspection as any
+      const jobOrder = isQuality
+        ? inspection.jobOrderItem?.jobOrder
+        : inspection.productionRelease?.jobOrderItem?.jobOrder
+      const jobOrderId = jobOrder?.id || jobOrder?.jobNumber || 'unknown'
+
+      if (!acc[jobOrderId]) {
+        acc[jobOrderId] = {
+          jobOrderId: jobOrder?.id || null,
+          jobNumber: jobOrder?.jobNumber || 'N/A',
+          clientName: jobOrder?.clientName || 'N/A',
+          items: [] as typeof mergedInspections,
+        }
+      }
+
+      acc[jobOrderId].items.push(entry)
+      return acc
+    }, {} as Record<string, { jobOrderId: string | null; jobNumber: string; clientName: string; items: typeof mergedInspections }>)
+  ).sort((a, b) => a.jobNumber.localeCompare(b.jobNumber))
 
   if (loading) {
     return <div className="p-8">Loading...</div>
@@ -1241,168 +1351,132 @@ export default function QualityInspectionPage() {
           </Select>
         </div>
 
-        {/* Inspections Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {mergedInspections.map((entry) => {
-            if (entry.kind === 'quality') {
-              const inspection = entry.inspection
-              const derivedStatus = getInspectionStatus(inspection)
-              const isSelectable = derivedStatus === 'APPROVED'
-              const isSelected = selectedInspectionIds.includes(inspection.id)
-
-              return (
-              <div
-                key={inspection.id}
-                className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow"
-              >
-                <div 
-                  className="p-6 cursor-pointer"
-                  onClick={() => setSelectedInspection(inspection)}
-                >
-                  <div className="flex items-start justify-between mb-4">
-                    <div>
-                      <h3 className="font-semibold text-lg text-gray-900">
-                        {inspection.jobOrderItem.jobOrder.jobNumber}
-                      </h3>
-                      <p className="text-sm text-gray-600">{inspection.jobOrderItem.jobOrder.clientName}</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {isSelectable && (
-                        <input
-                          type="checkbox"
-                          checked={isSelected}
-                          onChange={(e) => {
-                            e.stopPropagation()
-                            setSelectedInspectionIds((prev) =>
-                              prev.includes(inspection.id)
-                                ? prev.filter((id) => id !== inspection.id)
-                                : [...prev, inspection.id]
-                            )
-                          }}
-                        />
-                      )}
-                      {getStatusBadge(derivedStatus)}
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2 text-sm">
-                    <div>
-                      <span className="text-gray-500">Work:</span>
-                      <p className="text-gray-900 line-clamp-2">{inspection.jobOrderItem.workDescription}</p>
-                    </div>
-                    <div>
-                      <span className="text-gray-500">Qty:</span>
-                      <p className="text-gray-900">
-                        {inspection.jobOrderItem.quantity ?? 0} {inspection.jobOrderItem.unit}
-                      </p>
-                    </div>
-                    <div>
-                      <span className="text-gray-500">ITP Template:</span>
-                      <p className="text-gray-900">{inspection.itpTemplate.name}</p>
-                    </div>
-                    <div className="flex items-center justify-between pt-2 border-t">
-                      <span className="text-gray-500">Steps: {inspection.steps.length}</span>
-                      {inspection.isCritical && (
-                        <Badge className="bg-red-100 text-red-700">Critical</Badge>
-                      )}
-                    </div>
-                  </div>
+        {/* Inspections List */}
+        <div className="space-y-4">
+          {groupedInspections.map((group) => (
+            <div key={group.jobNumber} className="bg-white rounded-lg shadow border">
+              <div className="px-4 py-3 border-b bg-slate-50 flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-slate-900">{group.jobNumber}</p>
+                  <p className="text-xs text-slate-600">{group.clientName}</p>
                 </div>
-                
-                {(derivedStatus === 'APPROVED' || isAdmin) && (
-                  <div className="px-6 pb-4 pt-2 border-t bg-gray-50 rounded-b-lg">
-                    <div className="flex gap-2">
-                      {derivedStatus === 'APPROVED' && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="border-emerald-300 text-emerald-700 hover:bg-emerald-50"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            router.push(`/store/delivery-notes?jobOrderId=${inspection.jobOrderItem.jobOrder.id}&openForm=1`)
-                          }}
-                        >
-                          Prepare DN
-                        </Button>
-                      )}
-                      {isAdmin && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="text-red-600 hover:bg-red-50"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setDeleteConfirm(inspection.id);
-                          }}
-                        >
-                          <XCircle className="w-3 h-3 mr-1" />
-                          Delete Inspection
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                )}
+                <div className="text-xs text-slate-600">{group.items.length} inspections</div>
               </div>
-              )
-            }
+              <div className="divide-y">
+                {group.items.map((entry) => {
+                  if (entry.kind === 'quality') {
+                    const inspection = entry.inspection
+                    const derivedStatus = getInspectionStatus(inspection)
+                    const isSelectable = derivedStatus === 'APPROVED'
+                    const isSelected = selectedInspectionIds.includes(inspection.id)
 
-            const inspection = entry.inspection
-            const jobNumber = inspection.productionRelease?.jobOrderItem?.jobOrder?.jobNumber || 'N/A'
-            const workDescription = inspection.productionRelease?.jobOrderItem?.workDescription || 'N/A'
-            const clientName = inspection.productionRelease?.jobOrderItem?.jobOrder?.clientName || 'N/A'
-            const drawingNumber = inspection.productionRelease?.drawingNumber || 'N/A'
-            const unit = inspection.productionRelease?.jobOrderItem?.unit || ''
-            const releaseQty = inspection.productionRelease?.releaseQty || 0
-            const inspectedAt = inspection.inspectionTimestampFormatted || 'N/A'
+                    return (
+                      <div key={inspection.id} className="px-4 py-3 flex items-center justify-between gap-4">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-slate-900 truncate">{inspection.jobOrderItem.workDescription}</p>
+                          <div className="text-xs text-slate-500 flex flex-wrap gap-x-3 gap-y-1 mt-1">
+                            <span>Type: QC</span>
+                            <span>Qty: {inspection.jobOrderItem.quantity ?? 0} {inspection.jobOrderItem.unit}</span>
+                            <span>ITP: {inspection.itpTemplate.name}</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {isSelectable && (
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() =>
+                                setSelectedInspectionIds((prev) =>
+                                  prev.includes(inspection.id)
+                                    ? prev.filter((id) => id !== inspection.id)
+                                    : [...prev, inspection.id]
+                                )
+                              }
+                            />
+                          )}
+                          {getStatusBadge(derivedStatus)}
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setSelectedInspection(inspection)}
+                          >
+                            View
+                          </Button>
+                          {derivedStatus === 'APPROVED' && group.jobOrderId && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="border-emerald-300 text-emerald-700 hover:bg-emerald-50"
+                              onClick={() => router.push(`/store/delivery-notes?jobOrderId=${group.jobOrderId}&openForm=1`)}
+                            >
+                              Prepare DN
+                            </Button>
+                          )}
+                          {isAdmin && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-red-600 hover:bg-red-50"
+                              onClick={() => setDeleteConfirm(inspection.id)}
+                            >
+                              Delete
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  }
 
-            return (
-              <div
-                key={`production-${inspection.id}`}
-                className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow"
-              >
-                <div className="p-6">
-                  <div className="flex items-start justify-between mb-4">
-                    <div>
-                      <p className="text-sm text-gray-500">Production Inspection</p>
-                      <h3 className="font-semibold text-lg text-gray-900">{workDescription}</h3>
-                      <p className="text-sm text-gray-600">{jobNumber} • {clientName}</p>
-                    </div>
-                    {getStatusBadge(inspection.result || 'PENDING')}
-                  </div>
+                  const inspection = entry.inspection as any
+                  const workDescription = inspection.productionRelease?.jobOrderItem?.workDescription || 'N/A'
+                  const unit = inspection.productionRelease?.jobOrderItem?.unit || ''
+                  const releaseQty = inspection.productionRelease?.releaseQty || 0
+                  const inspectedAt = inspection.inspectionTimestampFormatted || 'N/A'
 
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between text-gray-600">
-                      <span>Drawing</span>
-                      <span className="font-medium text-gray-900">{drawingNumber}</span>
+                  return (
+                    <div key={`production-${inspection.id}`} className="px-4 py-3 flex items-center justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-slate-900 truncate">{workDescription}</p>
+                        <div className="text-xs text-slate-500 flex flex-wrap gap-x-3 gap-y-1 mt-1">
+                          <span>Type: Production</span>
+                          <span>Qty: {releaseQty} {unit}</span>
+                          <span>Inspected: {inspectedAt}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {getStatusBadge(inspection.result || 'PENDING')}
+                        {isAdmin && (
+                          <>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                setSelectedProductionInspection(inspection)
+                                setShowEditProductionDialog(true)
+                              }}
+                            >
+                              Edit
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-red-600 hover:bg-red-50"
+                              onClick={() => deleteProductionInspection(inspection.id)}
+                            >
+                              Delete
+                            </Button>
+                          </>
+                        )}
+                      </div>
                     </div>
-                    <div className="flex justify-between text-gray-600">
-                      <span>Qty</span>
-                      <span className="font-medium text-gray-900">{releaseQty} {unit}</span>
-                    </div>
-                    <div className="flex justify-between text-gray-600">
-                      <span>Inspected</span>
-                      <span className="font-medium text-gray-900">{inspectedAt}</span>
-                    </div>
-                    <div className="flex justify-between text-gray-600">
-                      <span>Approved</span>
-                      <span className="font-medium text-gray-900">{inspection.approvedQty ?? 0}</span>
-                    </div>
-                    <div className="flex justify-between text-gray-600">
-                      <span>Rejected</span>
-                      <span className="font-medium text-gray-900">{inspection.rejectedQty ?? 0}</span>
-                    </div>
-                    <div className="flex justify-between text-gray-600">
-                      <span>Hold</span>
-                      <span className="font-medium text-gray-900">{inspection.holdQty ?? 0}</span>
-                    </div>
-                  </div>
-                </div>
+                  )
+                })}
               </div>
-            )
-          })}
+            </div>
+          ))}
         </div>
 
-        {mergedInspections.length === 0 && (
+        {groupedInspections.length === 0 && (
           <div className="text-center py-12 bg-white rounded-lg shadow">
             <ClipboardCheck className="w-16 h-16 text-gray-300 mx-auto mb-4" />
             <p className="text-gray-500 text-lg">No inspections found</p>
@@ -1636,9 +1710,10 @@ export default function QualityInspectionPage() {
                   {/* Inspection Steps */}
                   <div>
                     <h4 className="font-semibold text-sm mb-3">Inspection Steps</h4>
-                    <div className="grid grid-cols-3 gap-2">
-                      {selectedInspection.steps.map((step, index) => (
-                        <div key={step.id} className="border rounded-lg p-2 bg-white shadow-sm">
+                    <div className="overflow-x-auto pb-2">
+                      <div className="grid grid-flow-col auto-cols-[260px] gap-2 min-w-[1200px] w-fit">
+                        {selectedInspection.steps.map((step, index) => (
+                          <div key={step.id} className="border rounded-lg p-2 bg-white shadow-sm">
                           {/* Step Info and Status */}
                           <div className="flex items-start justify-between mb-2">
                             <div className="flex-1">
@@ -1735,8 +1810,9 @@ export default function QualityInspectionPage() {
                               By {step.inspectedBy}
                             </p>
                           )}
-                        </div>
-                      ))}
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1956,6 +2032,158 @@ export default function QualityInspectionPage() {
             )}
           </DialogContent>
         </Dialog>
+
+        {/* Edit Production Inspection Dialog */}
+        {isAdmin && (
+          <Dialog
+            open={showEditProductionDialog}
+            onOpenChange={(open) => {
+              setShowEditProductionDialog(open)
+              if (!open) {
+                setSelectedProductionInspection(null)
+                setProductionEditError(null)
+              }
+            }}
+          >
+            <DialogContent className="max-w-2xl">
+              <DialogHeader className="bg-gradient-to-r from-slate-50 to-slate-100 -mx-6 -mt-6 px-6 pt-6 pb-4 border-b border-slate-200 rounded-t-lg">
+                <DialogTitle className="text-xl font-bold text-slate-900">Edit Production Inspection</DialogTitle>
+              </DialogHeader>
+
+              {selectedProductionInspection && (
+                <div className="space-y-4 mt-4">
+                  <div>
+                    <Label className="font-semibold text-slate-900">Result</Label>
+                    <div className="grid grid-cols-3 gap-2 mt-2">
+                      {['APPROVED', 'REJECTED', 'HOLD'].map((result) => (
+                        <button
+                          key={result}
+                          onClick={() => setProductionEditForm({ ...productionEditForm, result: result as any })}
+                          className={`p-3 rounded-lg border-2 transition-all ${
+                            productionEditForm.result === result
+                              ? 'border-green-500 bg-green-50'
+                              : result === 'APPROVED'
+                              ? 'border-green-200 bg-green-50/50 hover:border-green-300'
+                              : result === 'REJECTED'
+                              ? 'border-red-200 bg-red-50/50 hover:border-red-300'
+                              : 'border-yellow-200 bg-yellow-50/50 hover:border-yellow-300'
+                          }`}
+                        >
+                          <span className={`font-semibold text-sm ${
+                            result === 'APPROVED'
+                              ? 'text-green-700'
+                              : result === 'REJECTED'
+                              ? 'text-red-700'
+                              : 'text-yellow-700'
+                          }`}>
+                            {result}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label className="font-semibold text-slate-900">Inspection Date</Label>
+                      <Input
+                        type="datetime-local"
+                        value={productionEditForm.inspectionTimestamp}
+                        onChange={(e) => setProductionEditForm({ ...productionEditForm, inspectionTimestamp: e.target.value })}
+                        className="border-slate-300"
+                      />
+                    </div>
+                    <div>
+                      <Label className="font-semibold text-slate-900">Inspected By</Label>
+                      <Input
+                        value={productionEditForm.inspectedBy}
+                        onChange={(e) => setProductionEditForm({ ...productionEditForm, inspectedBy: e.target.value })}
+                        placeholder="Inspector name"
+                        className="border-slate-300"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label className="font-semibold text-slate-900">Inspected Qty</Label>
+                      <Input
+                        type="number"
+                        value={productionEditForm.inspectedQty}
+                        onChange={(e) => setProductionEditForm({ ...productionEditForm, inspectedQty: e.target.value })}
+                        placeholder="0"
+                        className="border-slate-300"
+                      />
+                    </div>
+                    <div>
+                      <Label className="font-semibold text-slate-900">Approved Qty</Label>
+                      <Input
+                        type="number"
+                        value={productionEditForm.approvedQty}
+                        onChange={(e) => setProductionEditForm({ ...productionEditForm, approvedQty: e.target.value })}
+                        placeholder="0"
+                        className="border-slate-300"
+                      />
+                    </div>
+                    <div>
+                      <Label className="font-semibold text-slate-900">Rejected Qty</Label>
+                      <Input
+                        type="number"
+                        value={productionEditForm.rejectedQty}
+                        onChange={(e) => setProductionEditForm({ ...productionEditForm, rejectedQty: e.target.value })}
+                        placeholder="0"
+                        className="border-slate-300"
+                      />
+                    </div>
+                    <div>
+                      <Label className="font-semibold text-slate-900">Hold Qty</Label>
+                      <Input
+                        type="number"
+                        value={productionEditForm.holdQty}
+                        onChange={(e) => setProductionEditForm({ ...productionEditForm, holdQty: e.target.value })}
+                        placeholder="0"
+                        className="border-slate-300"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label className="font-semibold text-slate-900">Remarks</Label>
+                    <Textarea
+                      value={productionEditForm.remarks}
+                      onChange={(e) => setProductionEditForm({ ...productionEditForm, remarks: e.target.value })}
+                      placeholder="Remarks"
+                      rows={3}
+                      className="border-slate-300"
+                    />
+                  </div>
+
+                  {productionEditError && (
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">
+                      {productionEditError}
+                    </div>
+                  )}
+
+                  <div className="flex justify-end gap-2 pt-4">
+                    <Button
+                      variant="outline"
+                      onClick={() => setShowEditProductionDialog(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={saveProductionInspection}
+                      disabled={productionEditSaving || !productionEditForm.result}
+                      className="bg-slate-900 hover:bg-slate-800"
+                    >
+                      {productionEditSaving ? 'Saving...' : 'Save Changes'}
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
     </div>
   )
