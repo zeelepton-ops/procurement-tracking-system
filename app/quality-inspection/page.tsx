@@ -730,6 +730,44 @@ export default function QualityInspectionPage() {
   const getApprovedQty = (inspection: QualityInspection) =>
     inspection.steps.reduce((sum, step) => sum + (step.approvedQty || 0), 0)
 
+  const parseStepNumber = (value: string | number | null | undefined) => {
+    if (value === null || value === undefined || value === '') return 0
+    const parsed = typeof value === 'number' ? value : parseFloat(value)
+    return Number.isNaN(parsed) ? 0 : parsed
+  }
+
+  const getStepStatusFromQty = (approved: number, failed: number, hold: number) => {
+    if (failed > 0) return 'FAILED'
+    if (hold > 0) return 'HOLD'
+    if (approved > 0) return 'APPROVED'
+    return 'PENDING'
+  }
+
+  const saveStepTable = async () => {
+    if (!selectedInspection) return
+    try {
+      const updates = selectedInspection.steps.map((step) => {
+        const approved = stepApprovedQty[step.id] ?? step.approvedQty?.toString() ?? ''
+        const failed = stepFailedQty[step.id] ?? step.failedQty?.toString() ?? ''
+        const hold = stepHoldQty[step.id] ?? step.holdQty?.toString() ?? ''
+        const remarks = (stepRemarks[step.id] ?? step.remarks ?? '').trim()
+        const status = getStepStatusFromQty(
+          parseStepNumber(approved),
+          parseStepNumber(failed),
+          parseStepNumber(hold)
+        )
+        return updateStepStatus(step.id, status, remarks, approved, failed, hold)
+      })
+
+      await Promise.all(updates)
+      await fetchInspections()
+      const updated = await fetch(`/api/quality-inspection/${selectedInspection.id}`).then(r => r.json())
+      setSelectedInspection(updated)
+    } catch (error) {
+      console.error('Failed to save step table:', error)
+    }
+  }
+
   const getStatusBadge = (status: string) => {
     const variants: Record<string, { color: string; icon: any }> = {
       PENDING: { color: 'bg-gray-100 text-gray-700', icon: Clock },
@@ -1497,6 +1535,53 @@ export default function QualityInspectionPage() {
                 </DialogHeader>
                 
                 <div className="space-y-4">
+                  {/* Inspection Overview */}
+                  <div className="bg-white rounded-lg border p-3">
+                    <h4 className="font-semibold text-sm mb-2">Inspection Overview</h4>
+                    <div className="grid grid-cols-4 gap-3 text-xs">
+                      <div>
+                        <span className="text-slate-500">Job No.</span>
+                        <p className="font-medium text-slate-900">{selectedInspection.jobOrderItem.jobOrder.jobNumber}</p>
+                      </div>
+                      <div>
+                        <span className="text-slate-500">Client</span>
+                        <p className="font-medium text-slate-900">{selectedInspection.jobOrderItem.jobOrder.clientName}</p>
+                      </div>
+                      <div className="col-span-2">
+                        <span className="text-slate-500">Work Description</span>
+                        <p className="font-medium text-slate-900">{selectedInspection.jobOrderItem.workDescription}</p>
+                      </div>
+                      <div>
+                        <span className="text-slate-500">Line Item Description</span>
+                        <p className="font-medium text-slate-900">{selectedInspection.jobOrderItem.workDescription}</p>
+                      </div>
+                      <div>
+                        <span className="text-slate-500">Total Qty</span>
+                        <p className="font-medium text-slate-900">
+                          {selectedInspection.jobOrderItem.quantity ?? '-'} {selectedInspection.jobOrderItem.unit || ''}
+                        </p>
+                      </div>
+                      <div>
+                        <span className="text-slate-500">Inspection Qty Released</span>
+                        <p className="font-medium text-slate-900">
+                          {selectedInspection.inspectedQty ?? selectedInspection.jobOrderItem.quantity ?? '-'} {selectedInspection.jobOrderItem.unit || ''}
+                        </p>
+                      </div>
+                      <div>
+                        <span className="text-slate-500">Transmittal No.</span>
+                        <p className="font-medium text-slate-900">{selectedInspection.transmittalNo || 'N/A'}</p>
+                      </div>
+                      <div>
+                        <span className="text-slate-500">Drawing No.</span>
+                        <p className="font-medium text-slate-900">{selectedInspection.drawingNumber || selectedInspection.jobOrderItem.jobOrder.drawingRef || 'N/A'}</p>
+                      </div>
+                      <div>
+                        <span className="text-slate-500">Inspection Date</span>
+                        <p className="font-medium text-slate-900">{selectedInspection.inspectionDate ? new Date(selectedInspection.inspectionDate).toLocaleString() : 'N/A'}</p>
+                      </div>
+                    </div>
+                  </div>
+
                   {/* Summary Stats */}
                   {inspectionSummary && (
                     <div className="grid grid-cols-4 gap-2 p-3 bg-slate-50 rounded-lg border">
@@ -1710,37 +1795,22 @@ export default function QualityInspectionPage() {
                   {/* Inspection Steps */}
                   <div>
                     <h4 className="font-semibold text-sm mb-3">Inspection Steps</h4>
-                    <div className="overflow-x-auto pb-2">
-                      <div className="grid grid-flow-col auto-cols-[260px] gap-2 min-w-[1200px] w-fit">
+                    <div className="overflow-x-auto border rounded-lg">
+                      <div className="min-w-[1000px]">
+                        <div className="grid grid-cols-[2fr_0.8fr_0.8fr_0.8fr_2fr] gap-0 border-b bg-slate-50 text-xs font-semibold text-slate-600">
+                          <div className="px-2 py-2">Step</div>
+                          <div className="px-2 py-2">Approved Qty</div>
+                          <div className="px-2 py-2">Rejected Qty</div>
+                          <div className="px-2 py-2">Hold Qty</div>
+                          <div className="px-2 py-2">Remarks</div>
+                        </div>
                         {selectedInspection.steps.map((step, index) => (
-                          <div key={step.id} className="border rounded-lg p-2 bg-white shadow-sm">
-                          {/* Step Info and Status */}
-                          <div className="flex items-start justify-between mb-2">
-                            <div className="flex-1">
-                              <span className="font-semibold text-xs line-clamp-2">Step {index + 1}: {step.stepName}</span>
-                              <p className="text-xs text-slate-500">Response</p>
+                          <div key={step.id} className="grid grid-cols-[2fr_0.8fr_0.8fr_0.8fr_2fr] gap-0 border-b text-xs">
+                            <div className="px-2 py-2">
+                              <div className="font-semibold text-slate-900">{index + 1}. {step.stepName}</div>
+                              <div className="text-[11px] text-slate-500">{step.status || 'PENDING'}</div>
                             </div>
-                            <div className="flex-shrink-0">
-                              {getStatusBadge(step.status)}
-                            </div>
-                          </div>
-
-                          {/* Remarks */}
-                          <div className="mb-2">
-                            <Label className="text-xs text-slate-500 font-semibold">Comment</Label>
-                            <Textarea
-                              value={stepRemarks[step.id] ?? step.remarks ?? ''}
-                              onChange={(e) => setStepRemarks(prev => ({ ...prev, [step.id]: e.target.value }))}
-                              placeholder="Remarks..."
-                              rows={2}
-                              className="text-xs"
-                            />
-                          </div>
-
-                          {/* Quantity Fields - Compact */}
-                          <div className="space-y-1 mb-2">
-                            <div>
-                              <Label className="text-xs text-green-600 font-semibold">Approved</Label>
+                            <div className="px-2 py-1">
                               <Input
                                 type="number"
                                 placeholder="0"
@@ -1750,8 +1820,7 @@ export default function QualityInspectionPage() {
                                 className="text-xs h-7"
                               />
                             </div>
-                            <div>
-                              <Label className="text-xs text-red-600 font-semibold">Failed</Label>
+                            <div className="px-2 py-1">
                               <Input
                                 type="number"
                                 placeholder="0"
@@ -1761,8 +1830,7 @@ export default function QualityInspectionPage() {
                                 className="text-xs h-7"
                               />
                             </div>
-                            <div>
-                              <Label className="text-xs text-yellow-600 font-semibold">Hold</Label>
+                            <div className="px-2 py-1">
                               <Input
                                 type="number"
                                 placeholder="0"
@@ -1772,47 +1840,44 @@ export default function QualityInspectionPage() {
                                 className="text-xs h-7"
                               />
                             </div>
-                          </div>
-
-                          {/* Action Buttons - Stacked */}
-                          <div className="space-y-1">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="text-green-600 h-7 px-1 text-xs w-full"
-                              onClick={() => updateStepStatus(step.id, 'APPROVED', (stepRemarks[step.id] ?? step.remarks ?? '').trim(), stepApprovedQty[step.id] ?? step.approvedQty?.toString() ?? '', stepFailedQty[step.id] ?? step.failedQty?.toString() ?? '', stepHoldQty[step.id] ?? step.holdQty?.toString() ?? '')}
-                            >
-                              <CheckCircle2 className="w-3 h-3 mr-1" />
-                              Approve
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="text-red-600 h-7 px-1 text-xs w-full"
-                              onClick={() => updateStepStatus(step.id, 'FAILED', (stepRemarks[step.id] ?? step.remarks ?? '').trim(), stepApprovedQty[step.id] ?? step.approvedQty?.toString() ?? '', stepFailedQty[step.id] ?? step.failedQty?.toString() ?? '', stepHoldQty[step.id] ?? step.holdQty?.toString() ?? '')}
-                            >
-                              <XCircle className="w-3 h-3 mr-1" />
-                              Fail
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="text-yellow-600 h-7 px-1 text-xs w-full"
-                              onClick={() => updateStepStatus(step.id, 'HOLD', (stepRemarks[step.id] ?? step.remarks ?? '').trim(), stepApprovedQty[step.id] ?? step.approvedQty?.toString() ?? '', stepFailedQty[step.id] ?? step.failedQty?.toString() ?? '', stepHoldQty[step.id] ?? step.holdQty?.toString() ?? '')}
-                            >
-                              <AlertCircle className="w-3 h-3 mr-1" />
-                              Hold
-                            </Button>
-                          </div>
-
-                          {step.inspectedBy && (
-                            <p className="text-xs text-gray-500 mt-2 pt-1 border-t line-clamp-2">
-                              By {step.inspectedBy}
-                            </p>
-                          )}
+                            <div className="px-2 py-1">
+                              <Input
+                                value={stepRemarks[step.id] ?? step.remarks ?? ''}
+                                onChange={(e) => setStepRemarks(prev => ({ ...prev, [step.id]: e.target.value }))}
+                                placeholder="Remarks"
+                                className="text-xs h-7"
+                              />
+                            </div>
                           </div>
                         ))}
+                        <div className="grid grid-cols-[2fr_0.8fr_0.8fr_0.8fr_2fr] gap-0 bg-slate-50 text-xs font-semibold text-slate-700">
+                          <div className="px-2 py-2">Net Summary</div>
+                          <div className="px-2 py-2">
+                            {selectedInspection.steps.reduce((sum, step) => {
+                              const approved = stepApprovedQty[step.id] ?? step.approvedQty ?? 0
+                              return sum + parseStepNumber(approved)
+                            }, 0)}
+                          </div>
+                          <div className="px-2 py-2">
+                            {selectedInspection.steps.reduce((sum, step) => {
+                              const failed = stepFailedQty[step.id] ?? step.failedQty ?? 0
+                              return sum + parseStepNumber(failed)
+                            }, 0)}
+                          </div>
+                          <div className="px-2 py-2">
+                            {selectedInspection.steps.reduce((sum, step) => {
+                              const hold = stepHoldQty[step.id] ?? step.holdQty ?? 0
+                              return sum + parseStepNumber(hold)
+                            }, 0)}
+                          </div>
+                          <div className="px-2 py-2 text-slate-500">Totals</div>
+                        </div>
                       </div>
+                    </div>
+                    <div className="flex justify-end mt-3">
+                      <Button size="sm" onClick={saveStepTable}>
+                        Save Step Updates
+                      </Button>
                     </div>
                   </div>
                 </div>
