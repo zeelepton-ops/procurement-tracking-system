@@ -714,9 +714,11 @@ export default function QualityInspectionPage() {
                               variant="outline"
                               className="ml-2"
                               onClick={() => {
-                                setSelectedPendingInspection(inspection)
-                                setShowCompleteInspectionDialog(true)
-                                setCompleteForm({ result: '' as 'APPROVED' | 'REJECTED' | 'HOLD', remarks: '', inspectedBy: session?.user?.name || '', inspectedQty: '', approvedQty: '', rejectedQty: '', holdQty: '' })
+                                if (inspection.qualityInspectionId) {
+                                  openInspectionDetails(inspection.qualityInspectionId)
+                                } else {
+                                  setPageError('No quality inspection record found for this production release.')
+                                }
                               }}
                             >
                               Complete

@@ -136,6 +136,7 @@ model ProductionRelease {
   
   // Relations
   inspections        ProductionInspection[]
+  qualityInspections QualityInspection[]
   
   @@index([jobOrderItemId])
   @@index([status])
@@ -185,6 +186,8 @@ model QualityInspection {
   id             String   @id @default(cuid())
   jobOrderItemId String
   jobOrderItem   JobOrderItem @relation(fields: [jobOrderItemId], references: [id], onDelete: Cascade)
+  productionReleaseId String?
+  productionRelease   ProductionRelease? @relation(fields: [productionReleaseId], references: [id], onDelete: SetNull)
   itpTemplateId  String
   itpTemplate    ITPTemplate  @relation(fields: [itpTemplateId], references: [id])
   isCritical     Boolean  @default(false)
@@ -203,6 +206,8 @@ model QualityInspection {
   updatedAt      DateTime @updatedAt
   steps          QualityStep[]
   deliveryNoteRequests DeliveryNoteRequest[]
+
+  @@index([productionReleaseId])
 }
 
 // Each step in the ITP for a QualityInspection

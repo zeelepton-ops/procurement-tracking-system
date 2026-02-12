@@ -28,6 +28,11 @@ export async function GET(req: Request) {
               orderBy: { requestTimestamp: 'desc' },
               take: 1, // latest inspection
             },
+            qualityInspections: {
+              orderBy: { createdAt: 'desc' },
+              take: 1,
+              select: { id: true }
+            }
           },
         },
       },
@@ -37,6 +42,7 @@ export async function GET(req: Request) {
     // Transform to include formatted data
     const formatted = pendingInspections.map(inspection => ({
       ...inspection,
+      qualityInspectionId: inspection.productionRelease?.qualityInspections?.[0]?.id || null,
       productionRelease: {
         ...inspection.productionRelease,
         // Add formatted dates

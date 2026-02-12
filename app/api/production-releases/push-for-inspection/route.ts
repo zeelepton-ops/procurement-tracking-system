@@ -53,6 +53,7 @@ export async function POST(request: Request) {
       prisma.qualityInspection.create({
         data: {
           jobOrderItemId: release.jobOrderItemId,
+          productionReleaseId: release.id,
           itpTemplateId: template.id,
           isCritical: false,
           status: 'PENDING',
