@@ -259,7 +259,7 @@ export default function QualityInspectionDetailPage() {
       .join(', ')
   }
 
-  const applyPastedDrawingRows = (text: string) => {
+  const applyPastedDrawingRows = (text: string, insertIndex: number) => {
     if (!text) return false
     const rows = text
       .split(/\r?\n/)
@@ -280,7 +280,16 @@ export default function QualityInspectionDetailPage() {
       .filter((entry) => entry.drawingNo || entry.qty || entry.unit)
 
     if (nextEntries.length === 0) return false
-    setDrawingEntries((prev) => [...prev, ...nextEntries])
+    setDrawingEntries((prev) => {
+      const clampedIndex = Math.max(0, Math.min(insertIndex, prev.length - 1))
+      const target = prev[clampedIndex]
+      const targetEmpty = !target?.drawingNo && !target?.qty && !target?.unit
+      const replacement = targetEmpty ? [nextEntries[0]] : []
+      const remainder = targetEmpty ? nextEntries.slice(1) : nextEntries
+      const before = prev.slice(0, clampedIndex)
+      const after = prev.slice(clampedIndex + (targetEmpty ? 1 : 0))
+      return [...before, ...replacement, ...remainder, ...after]
+    })
     return true
   }
 
@@ -742,9 +751,8 @@ export default function QualityInspectionDetailPage() {
                             )
                           }
                           onPaste={(e) => {
-                            if (index !== 0) return
                             const text = e.clipboardData.getData('text')
-                            if (applyPastedDrawingRows(text)) {
+                            if (applyPastedDrawingRows(text, index)) {
                               e.preventDefault()
                             }
                           }}
