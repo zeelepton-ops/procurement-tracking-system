@@ -54,13 +54,14 @@ export default function ProductionPage() {
   const [error, setError] = useState<string | null>(null)
   const [editingRelease, setEditingRelease] = useState<ProductionRelease | null>(null)
   const [useMultipleDrawings, setUseMultipleDrawings] = useState(false)
-  const [releaseLines, setReleaseLines] = useState<Array<{ drawingNumber: string; releaseQty: number }>>([
-    { drawingNumber: '', releaseQty: 0 }
+  const [releaseLines, setReleaseLines] = useState<Array<{ drawingNumber: string; transmittalNo: string; releaseQty: number }>>([
+    { drawingNumber: '', transmittalNo: '', releaseQty: 0 }
   ])
 
   const [formData, setFormData] = useState({
     jobOrderItemId: '',
     drawingNumber: '',
+    transmittalNo: '',
     releaseQty: 0,
     itpTemplateId: '',
     productionStartDate: '',
@@ -72,6 +73,7 @@ export default function ProductionPage() {
     id: '',
     jobOrderItemId: '',
     drawingNumber: '',
+    transmittalNo: '',
     releaseQty: 0,
     itpTemplateId: '',
     productionStartDate: '',
@@ -166,7 +168,7 @@ export default function ProductionPage() {
     const remainingQty = calculateRemainingQty(formData.jobOrderItemId)
     const lines = useMultipleDrawings
       ? releaseLines.filter(l => l.releaseQty > 0)
-      : [{ drawingNumber: formData.drawingNumber, releaseQty: formData.releaseQty }]
+      : [{ drawingNumber: formData.drawingNumber, transmittalNo: formData.transmittalNo, releaseQty: formData.releaseQty }]
 
     if (lines.length === 0) {
       setError('Please add at least one drawing with quantity')
@@ -204,10 +206,11 @@ export default function ProductionPage() {
       setSuccess('Production release created successfully!')
       setShowCreateModal(false)
       setUseMultipleDrawings(false)
-      setReleaseLines([{ drawingNumber: '', releaseQty: 0 }])
+      setReleaseLines([{ drawingNumber: '', transmittalNo: '', releaseQty: 0 }])
       setFormData({
         jobOrderItemId: '',
         drawingNumber: '',
+        transmittalNo: '',
         releaseQty: 0,
         itpTemplateId: '',
         productionStartDate: '',
@@ -227,6 +230,7 @@ export default function ProductionPage() {
       id: release.id,
       jobOrderItemId: release.jobOrderItemId,
       drawingNumber: release.drawingNumber || '',
+      transmittalNo: release.transmittalNo || '',
       releaseQty: release.releaseQty,
       itpTemplateId: release.itpTemplateId || '',
       productionStartDate: release.productionStartDate ? new Date(release.productionStartDate).toISOString().slice(0, 16) : '',
@@ -525,7 +529,9 @@ export default function ProductionPage() {
                           <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-700 mb-3">
                             <div className="flex flex-wrap items-center gap-3">
                               <span><span className="font-semibold">Drawing:</span> {release.drawingNumber || 'N/A'}</span>
-                              <span><span className="font-semibold">Transmittal:</span> N/A</span>
+                              {release.transmittalNo && (
+                                <span><span className="font-semibold">Transmittal:</span> {release.transmittalNo}</span>
+                              )}
                               <span>
                                 <span className="font-semibold">Qty:</span> {release.releaseQty} {item.unit}
                                 {release.releaseWeight && ` • ${release.releaseWeight.toFixed(2)} kg`}
@@ -599,7 +605,7 @@ export default function ProductionPage() {
         {/* Create Release Modal */}
         {showCreateModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-2">
-            <Card className="w-full max-w-xs bg-white border-slate-200 max-h-[85vh] overflow-y-auto">
+            <Card className="w-full max-w-lg bg-white border-slate-200 max-h-[85vh] overflow-y-auto">
               <CardHeader className="pb-2 border-b border-slate-200">
                 <CardTitle className="text-base font-semibold text-slate-900">Create Production Release</CardTitle>
                 <CardDescription className="text-slate-600 mt-0.5 text-xs">Add a new release for the selected item</CardDescription>
@@ -635,7 +641,7 @@ export default function ProductionPage() {
                   {useMultipleDrawings ? (
                     <div className="space-y-2">
                       {releaseLines.map((line, idx) => (
-                        <div key={idx} className="grid grid-cols-3 gap-2">
+                        <div key={idx} className="grid grid-cols-4 gap-2">
                           <div className="col-span-2">
                             <Label className="text-slate-900 text-xs font-semibold">Drawing Number</Label>
                             <Input
@@ -646,6 +652,19 @@ export default function ProductionPage() {
                                 setReleaseLines(next)
                               }}
                               placeholder="DRW-001"
+                              className="bg-white border-slate-300 text-slate-900 focus:ring-primary-500 focus:border-transparent"
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-slate-900 text-xs font-semibold">Transmittal</Label>
+                            <Input
+                              value={line.transmittalNo}
+                              onChange={(e) => {
+                                const next = [...releaseLines]
+                                next[idx] = { ...next[idx], transmittalNo: e.target.value }
+                                setReleaseLines(next)
+                              }}
+                              placeholder="TR-001"
                               className="bg-white border-slate-300 text-slate-900 focus:ring-primary-500 focus:border-transparent"
                             />
                           </div>
@@ -670,7 +689,7 @@ export default function ProductionPage() {
                           type="button"
                           variant="outline"
                           className="border-slate-300 text-slate-700 hover:bg-slate-50"
-                          onClick={() => setReleaseLines([...releaseLines, { drawingNumber: '', releaseQty: 0 }])}
+                          onClick={() => setReleaseLines([...releaseLines, { drawingNumber: '', transmittalNo: '', releaseQty: 0 }])}
                         >
                           Add Drawing
                         </Button>
@@ -695,6 +714,16 @@ export default function ProductionPage() {
                           value={formData.drawingNumber}
                           onChange={(e) => setFormData({ ...formData, drawingNumber: e.target.value })}
                           placeholder="DRW-001"
+                          className="bg-white border-slate-300 text-slate-900 focus:ring-primary-500 focus:border-transparent"
+                        />
+                      </div>
+
+                      <div>
+                        <Label className="text-slate-900 text-xs font-semibold">Transmittal No.</Label>
+                        <Input
+                          value={formData.transmittalNo}
+                          onChange={(e) => setFormData({ ...formData, transmittalNo: e.target.value })}
+                          placeholder="TR-001"
                           className="bg-white border-slate-300 text-slate-900 focus:ring-primary-500 focus:border-transparent"
                         />
                       </div>
@@ -789,7 +818,7 @@ export default function ProductionPage() {
         {/* Edit Release Modal */}
         {showEditModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-2">
-            <Card className="w-full max-w-xs bg-white border-slate-200 max-h-[85vh] overflow-y-auto">
+            <Card className="w-full max-w-lg bg-white border-slate-200 max-h-[85vh] overflow-y-auto">
               <CardHeader className="pb-2 border-b border-slate-200">
                 <CardTitle className="text-base font-semibold text-slate-900">Edit Production Release</CardTitle>
                 <CardDescription className="text-slate-600 mt-0.5 text-xs">Update drawing and quantity</CardDescription>
@@ -802,6 +831,16 @@ export default function ProductionPage() {
                       value={editFormData.drawingNumber}
                       onChange={(e) => setEditFormData({ ...editFormData, drawingNumber: e.target.value })}
                       placeholder="DRW-001"
+                      className="bg-white border-slate-300 text-slate-900 focus:ring-primary-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  <div>
+                    <Label className="text-slate-900 text-xs font-semibold">Transmittal No.</Label>
+                    <Input
+                      value={editFormData.transmittalNo}
+                      onChange={(e) => setEditFormData({ ...editFormData, transmittalNo: e.target.value })}
+                      placeholder="TR-001"
                       className="bg-white border-slate-300 text-slate-900 focus:ring-primary-500 focus:border-transparent"
                     />
                   </div>

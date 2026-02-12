@@ -3,6 +3,7 @@ export interface ProductionRelease {
   id: string
   jobOrderItemId: string
   drawingNumber?: string
+  transmittalNo?: string
   releaseQty: number
   releaseWeight?: number
   status: 'PLANNING' | 'IN_PRODUCTION' | 'PENDING_INSPECTION' | 'APPROVED' | 'REWORK' | 'REJECTED'
@@ -55,6 +56,7 @@ export interface ProductionInspection {
 export interface CreateReleaseRequest {
   jobOrderItemId: string
   drawingNumber?: string
+  transmittalNo?: string
   releaseQty: number
   itpTemplateId?: string
   productionStartDate?: Date

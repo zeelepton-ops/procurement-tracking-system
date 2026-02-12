@@ -107,6 +107,7 @@ model ProductionRelease {
   jobOrderItem       JobOrderItem  @relation(fields: [jobOrderItemId], references: [id], onDelete: Cascade)
   
   drawingNumber      String?
+  transmittalNo      String?
   releaseQty         Float
   releaseWeight      Float?        // Theoretical weight based on unit weight
   status             String        @default("PLANNING") // PLANNING, IN_PRODUCTION, PENDING_INSPECTION, APPROVED, REWORK, REJECTED

@@ -61,7 +61,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { jobOrderItemId, drawingNumber, releaseQty, releaseItems, itpTemplateId, productionStartDate, productionEndDate, actualCompletionDate, createdBy } = body
+    const { jobOrderItemId, drawingNumber, transmittalNo, releaseQty, releaseItems, itpTemplateId, productionStartDate, productionEndDate, actualCompletionDate, createdBy } = body
 
     // Validate input
     if (!jobOrderItemId || !createdBy) {
@@ -89,9 +89,10 @@ export async function POST(request: Request) {
           .filter((it: any) => Number(it.releaseQty) > 0)
           .map((it: any) => ({
             drawingNumber: it.drawingNumber || null,
+            transmittalNo: it.transmittalNo || null,
             releaseQty: Number(it.releaseQty)
           }))
-      : [{ drawingNumber: drawingNumber || null, releaseQty: Number(releaseQty) }]
+      : [{ drawingNumber: drawingNumber || null, transmittalNo: transmittalNo || null, releaseQty: Number(releaseQty) }]
 
     const totalRequested = items.reduce((sum: number, it: any) => sum + (it.releaseQty || 0), 0)
     if (!totalRequested || totalRequested <= 0) {
@@ -113,6 +114,7 @@ export async function POST(request: Request) {
             jobOrderItemId,
             drawingNumber: item.drawingNumber || undefined,
             releaseQty: item.releaseQty,
+            transmittalNo: item.transmittalNo || undefined,
             releaseWeight: relWeight,
             itpTemplateId,
             productionStartDate: productionStartDate ? new Date(productionStartDate) : undefined,
@@ -149,7 +151,7 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
   try {
     const body = await request.json()
-    const { id, drawingNumber, releaseQty, itpTemplateId, productionStartDate, productionEndDate, actualCompletionDate } = body
+    const { id, drawingNumber, transmittalNo, releaseQty, itpTemplateId, productionStartDate, productionEndDate, actualCompletionDate } = body
 
     if (!id || !releaseQty) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
@@ -182,6 +184,7 @@ export async function PUT(request: Request) {
       where: { id },
       data: {
         drawingNumber: drawingNumber || null,
+        transmittalNo: transmittalNo || null,
         releaseQty,
         releaseWeight,
         itpTemplateId: itpTemplateId || null,
