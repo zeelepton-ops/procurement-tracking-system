@@ -451,20 +451,18 @@ function DeliveryNotesContent() {
 
     if (drawingLines.length > 0) {
       const parsed = drawingLines.map((line) => parseDrawingLine(line))
-      const totalQty = parsed.reduce((sum, entry) => sum + (parseFloat(entry.qty) || 0), 0)
       const unitLabel = parsed.find((entry) => entry.unit)?.unit || unit
       const lines = parsed.map((entry) => {
         const qtyLabel = entry.qty ? normalizeQtyInput(entry.qty) : ''
-        const unitSuffix = unitLabel ? ` ${unitLabel}` : ''
-        return `${entry.drawingNo} | Qty ${qtyLabel}${unitSuffix}`.trim()
+        const entryUnit = entry.unit || unitLabel
+        const unitSuffix = entryUnit ? ` ${entryUnit}` : ''
+        return `${entry.drawingNo} ${qtyLabel}${unitSuffix};`.trim()
       })
-      lines.push(`Total - ${formatQty(totalQty)}${unitLabel ? ` ${unitLabel}` : ''}`)
-      lines.push('-'.repeat(68))
       return lines.join('\n')
     }
 
     const fallbackDrawing = inspection.jobOrderItem?.jobOrder?.jobNumber || 'N/A'
-    return `${fallbackDrawing} | Qty ${approvedQty}${unit ? ` ${unit}` : ''}`.trim()
+    return `${fallbackDrawing} ${formatQty(approvedQty)}${unit ? ` ${unit}` : ''};`.trim()
   }
 
   const applyInspectionToLineItems = (items: typeof formData.lineItems, inspection: ReadyInspection) => {

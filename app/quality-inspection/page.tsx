@@ -22,7 +22,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { ClipboardCheck, Plus, Search, Camera, CheckCircle2, XCircle, Clock, AlertCircle, Bell, X } from 'lucide-react'
+import { ClipboardCheck, Plus, Search, Camera, CheckCircle2, XCircle, Clock, AlertCircle } from 'lucide-react'
 import { ProductionInspection, ProductionRelease } from '@/types/production'
 
 interface QualityInspection {
@@ -570,8 +570,22 @@ export default function QualityInspectionPage() {
     return matchesSearch && matchesStatus
   })
 
+  const filteredPendingInspections = pendingInspections.filter((inspection) => {
+    const jobNumber = inspection.productionRelease?.jobOrderItem?.jobOrder?.jobNumber || ''
+    const workDescription = inspection.productionRelease?.jobOrderItem?.workDescription || ''
+    const clientName = inspection.productionRelease?.jobOrderItem?.jobOrder?.clientName || ''
+    const matchesSearch =
+      jobNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      workDescription.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      clientName.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesStatus = statusFilter === 'ALL' || statusFilter === 'PENDING'
+
+    return matchesSearch && matchesStatus
+  })
+
   const mergedInspections = [
     ...filteredInspections.map((inspection) => ({ kind: 'quality' as const, inspection })),
+    ...filteredPendingInspections.map((inspection) => ({ kind: 'pending' as const, inspection })),
     ...filteredCompletedInspections.map((inspection) => ({ kind: 'production' as const, inspection })),
   ]
 
@@ -609,84 +623,6 @@ export default function QualityInspectionPage() {
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-7xl mx-auto">
-        {/* Pending Inspections Banner */}
-        {pendingInspections.length > 0 && (
-          <div className="mb-6 bg-primary-50 border border-primary-200 rounded-lg p-4 shadow-sm">
-            <div className="flex items-start justify-between">
-              <div className="flex items-start gap-3">
-                <Bell className="w-5 h-5 text-primary-600 mt-0.5 flex-shrink-0" />
-                <div>
-                  <h3 className="font-semibold text-primary-900 mb-2">
-                    {pendingInspections.length} Pending Production {pendingInspections.length === 1 ? 'Inspection' : 'Inspections'}
-                  </h3>
-                  <div className="space-y-2">
-                    {pendingInspections.map((inspection) => {
-                      const jobNumber = inspection.productionRelease?.jobOrderItem?.jobOrder?.jobNumber || 'N/A'
-                      const workDescription = inspection.productionRelease?.jobOrderItem?.workDescription || 'N/A'
-                      const drawingNumber = inspection.productionRelease?.drawingNumber || 'N/A'
-                      const unit = inspection.productionRelease?.jobOrderItem?.unit || ''
-                      const totalQty = inspection.productionRelease?.jobOrderItem?.quantity
-                      const releaseQty = inspection.productionRelease?.releaseQty || 0
-                      const balanceQty = typeof totalQty === 'number' ? totalQty - releaseQty : null
-                      const unitWeight = inspection.productionRelease?.jobOrderItem?.unitWeight
-                      const balanceWeight = typeof balanceQty === 'number' && typeof unitWeight === 'number'
-                        ? balanceQty * unitWeight
-                        : null
-
-                      return (
-                        <div key={inspection.id} className="flex items-center justify-between bg-white rounded p-2 text-sm">
-                          <div className="text-gray-700">
-                            <div className="font-semibold text-gray-900">{jobNumber} - {workDescription}</div>
-                            <div className="text-xs text-gray-600 mt-1 flex flex-wrap gap-x-3 gap-y-1">
-                              <span><span className="font-semibold">Drawing:</span> {drawingNumber}</span>
-                              <span><span className="font-semibold">Qty:</span> {releaseQty} {unit}</span>
-                              <span>
-                                <span className="font-semibold">Balance:</span>{' '}
-                                {typeof balanceQty === 'number' ? `${balanceQty} ${unit}` : 'N/A'}
-                                {balanceWeight !== null && ` • ${balanceWeight.toFixed(2)} kg`}
-                              </span>
-                            </div>
-                          </div>
-                          <div className="flex gap-2">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="ml-2"
-                              onClick={() => {
-                                if (inspection.qualityInspectionId) {
-                                  openInspectionDetails(inspection.qualityInspectionId)
-                                } else {
-                                  setPageError('No quality inspection record found for this production release.')
-                                }
-                              }}
-                            >
-                              Complete
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="border-red-300 text-red-600 hover:bg-red-50"
-                              onClick={() => deletePendingInspection(inspection.id)}
-                            >
-                              Delete
-                            </Button>
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
-                </div>
-              </div>
-              <button
-                onClick={() => setPendingInspections([])}
-                className="text-primary-400 hover:text-primary-600 transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-        )}
-
         {/* Workflow Handoff */}
         <div className="mb-6 bg-white border border-slate-200 rounded-lg p-4 shadow-sm">
           <div className="flex flex-col gap-3">
@@ -1240,6 +1176,62 @@ export default function QualityInspectionPage() {
                               variant="outline"
                               className="text-red-600 hover:bg-red-50"
                               onClick={() => setDeleteConfirm(inspection.id)}
+                            >
+                              Delete
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  }
+
+                  if (entry.kind === 'pending') {
+                    const inspection = entry.inspection as any
+                    const workDescription = inspection.productionRelease?.jobOrderItem?.workDescription || 'N/A'
+                    const unit = inspection.productionRelease?.jobOrderItem?.unit || ''
+                    const releaseQty = inspection.productionRelease?.releaseQty || 0
+                    const drawingNumber = inspection.productionRelease?.drawingNumber || 'N/A'
+                    const transmittalNo = inspection.productionRelease?.transmittalNo || 'N/A'
+
+                    return (
+                      <div
+                        key={`pending-${inspection.id}`}
+                        className="px-4 py-3 flex items-center justify-between gap-4 bg-amber-50"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm font-semibold text-amber-900 truncate">{workDescription}</p>
+                            <Badge className="bg-amber-200 text-amber-900">New</Badge>
+                          </div>
+                          <div className="text-xs text-amber-700 flex flex-wrap gap-x-3 gap-y-1 mt-1">
+                            <span>Type: Production</span>
+                            <span>Qty: {releaseQty} {unit}</span>
+                            <span>Drawing: {drawingNumber}</span>
+                            <span>Transmittal: {transmittalNo}</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge className="bg-amber-100 text-amber-800">Pending</Badge>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-7 px-2 text-[11px]"
+                            onClick={() => {
+                              if (inspection.qualityInspectionId) {
+                                openInspectionDetails(inspection.qualityInspectionId)
+                              } else {
+                                setPageError('No quality inspection record found for this production release.')
+                              }
+                            }}
+                          >
+                            Complete
+                          </Button>
+                          {isAdmin && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-red-600 hover:bg-red-50"
+                              onClick={() => deletePendingInspection(inspection.id)}
                             >
                               Delete
                             </Button>
