@@ -120,16 +120,12 @@ export default function QualityInspectionPage() {
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('ALL')
-  const [selectedPendingInspection, setSelectedPendingInspection] = useState<any>(null)
   const [showCreateDialog, setShowCreateDialog] = useState(false)
   const [showTemplateDialog, setShowTemplateDialog] = useState(false)
-  const [showCompleteInspectionDialog, setShowCompleteInspectionDialog] = useState(false)
   const [createSaving, setCreateSaving] = useState(false)
   const [createError, setCreateError] = useState<string | null>(null)
   const [templateSaving, setTemplateSaving] = useState(false)
   const [templateError, setTemplateError] = useState<string | null>(null)
-  const [completeSaving, setCompleteSaving] = useState(false)
-  const [completeError, setCompleteError] = useState<string | null>(null)
   const [pageSuccess, setPageSuccess] = useState<string | null>(null)
   const [pageError, setPageError] = useState<string | null>(null)
   const [selectedInspectionIds, setSelectedInspectionIds] = useState<string[]>([])
@@ -155,17 +151,6 @@ export default function QualityInspectionPage() {
     jobOrderId: '',
     itpTemplateId: '',
     isCritical: false,
-  })
-
-  // Complete inspection form
-  const [completeForm, setCompleteForm] = useState({
-    result: '' as 'APPROVED' | 'REJECTED' | 'HOLD',
-    remarks: '',
-    inspectedBy: '',
-    inspectedQty: '',
-    approvedQty: '',
-    rejectedQty: '',
-    holdQty: '',
   })
 
   // Template form
@@ -520,56 +505,6 @@ export default function QualityInspectionPage() {
       }
     } catch (error) {
       console.error('Error deleting inspection:', error)
-    }
-  }
-
-  const completeProductionInspection = async () => {
-    try {
-      setCompleteError(null)
-      if (!selectedPendingInspection || !completeForm.result) {
-        setCompleteError('Please select a result (APPROVED, REJECTED, or HOLD).')
-        return
-      }
-
-      setCompleteSaving(true)
-      const res = await fetch('/api/production-releases/complete-inspection', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          productionReleaseId: selectedPendingInspection.productionReleaseId,
-          result: completeForm.result,
-          remarks: completeForm.remarks,
-          inspectedBy: completeForm.inspectedBy || (session?.user?.name || 'System'),
-          inspectedQty: completeForm.inspectedQty ? parseFloat(completeForm.inspectedQty) : undefined,
-          approvedQty: completeForm.approvedQty ? parseFloat(completeForm.approvedQty) : undefined,
-          rejectedQty: completeForm.rejectedQty ? parseFloat(completeForm.rejectedQty) : undefined,
-          holdQty: completeForm.holdQty ? parseFloat(completeForm.holdQty) : undefined,
-        }),
-      })
-
-      const data = await res.json().catch(() => null)
-
-      if (res.ok) {
-        // Reset form and close dialog
-        setShowCompleteInspectionDialog(false)
-        setSelectedPendingInspection(null)
-        setCompleteForm({ result: '' as 'APPROVED' | 'REJECTED' | 'HOLD', remarks: '', inspectedBy: '', inspectedQty: '', approvedQty: '', rejectedQty: '', holdQty: '' })
-
-        setPageSuccess(data?.message || 'Inspection completed successfully.')
-        setTimeout(() => setPageSuccess(null), 4000)
-
-        // Refresh both lists
-        await fetchPendingInspections()
-        await fetchInspections()
-        await fetchCompletedInspections()
-      } else {
-        setCompleteError(data?.error || 'Failed to complete inspection. Please try again.')
-      }
-    } catch (error) {
-      console.error('Error completing inspection:', error)
-      setCompleteError('Failed to complete inspection. Please try again.')
-    } finally {
-      setCompleteSaving(false)
     }
   }
 
@@ -1368,192 +1303,6 @@ export default function QualityInspectionPage() {
             </DialogContent>
           </Dialog>
         )}
-
-        {/* Complete Production Inspection Dialog */}
-        <Dialog
-          open={showCompleteInspectionDialog}
-          onOpenChange={(open) => {
-            setShowCompleteInspectionDialog(open)
-            if (!open) {
-              setSelectedPendingInspection(null)
-              setCompleteForm({ result: '' as 'APPROVED' | 'REJECTED' | 'HOLD', remarks: '', inspectedBy: '', inspectedQty: '', approvedQty: '', rejectedQty: '', holdQty: '' })
-              setCompleteError(null)
-            }
-          }}
-        >
-          <DialogContent className="max-w-2xl">
-            <DialogHeader className="bg-gradient-to-r from-green-50 to-emerald-50 -mx-6 -mt-6 px-6 pt-6 pb-4 border-b border-green-100 rounded-t-lg">
-              <DialogTitle className="text-xl font-bold text-green-900 flex items-center gap-2">
-                <CheckCircle2 className="w-5 h-5 text-green-600" />
-                Complete Production Inspection
-              </DialogTitle>
-            </DialogHeader>
-
-            {selectedPendingInspection && (
-              <div className="space-y-5 mt-4">
-                {/* Production Details */}
-                <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
-                  <h4 className="font-semibold text-sm text-slate-900 mb-3">Production Details</h4>
-                  <div className="grid grid-cols-2 gap-3 text-sm">
-                    <div>
-                      <p className="text-slate-600">Job Order</p>
-                      <p className="font-semibold text-slate-900">
-                        {selectedPendingInspection.productionRelease?.jobOrderItem?.jobOrder?.jobNumber}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-slate-600">Item Description</p>
-                      <p className="font-semibold text-slate-900">
-                        {selectedPendingInspection.productionRelease?.jobOrderItem?.workDescription}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-slate-600">Release Quantity</p>
-                      <p className="font-semibold text-slate-900">
-                        {selectedPendingInspection.productionRelease?.releaseQty}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-slate-600">Drawing Number</p>
-                      <p className="font-semibold text-slate-900">
-                        {selectedPendingInspection.productionRelease?.drawingNumber || 'N/A'}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Inspection Result */}
-                <div className="space-y-3">
-                  <div>
-                    <Label className="font-semibold text-slate-900">Inspection Result *</Label>
-                    <div className="grid grid-cols-3 gap-2 mt-2">
-                      {['APPROVED', 'REJECTED', 'HOLD'].map((result) => (
-                        <button
-                          key={result}
-                          onClick={() => setCompleteForm({ ...completeForm, result: result as any })}
-                          className={`p-3 rounded-lg border-2 transition-all ${
-                            completeForm.result === result
-                              ? 'border-green-500 bg-green-50'
-                              : result === 'APPROVED'
-                              ? 'border-green-200 bg-green-50/50 hover:border-green-300'
-                              : result === 'REJECTED'
-                              ? 'border-red-200 bg-red-50/50 hover:border-red-300'
-                              : 'border-yellow-200 bg-yellow-50/50 hover:border-yellow-300'
-                          }`}
-                        >
-                          <span className={`font-semibold text-sm ${
-                            result === 'APPROVED'
-                              ? 'text-green-700'
-                              : result === 'REJECTED'
-                              ? 'text-red-700'
-                              : 'text-yellow-700'
-                          }`}>
-                            {result}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Quantity Fields */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <Label className="font-semibold text-slate-900">Inspected Quantity</Label>
-                      <Input
-                        type="number"
-                        value={completeForm.inspectedQty}
-                        onChange={(e) => setCompleteForm({ ...completeForm, inspectedQty: e.target.value })}
-                        placeholder="0"
-                        min="0"
-                        className="border-slate-300"
-                      />
-                    </div>
-                    <div>
-                      <Label className="font-semibold text-slate-900">Approved Quantity</Label>
-                      <Input
-                        type="number"
-                        value={completeForm.approvedQty}
-                        onChange={(e) => setCompleteForm({ ...completeForm, approvedQty: e.target.value })}
-                        placeholder="0"
-                        min="0"
-                        className="border-slate-300"
-                      />
-                    </div>
-                    <div>
-                      <Label className="font-semibold text-slate-900">Rejected Quantity</Label>
-                      <Input
-                        type="number"
-                        value={completeForm.rejectedQty}
-                        onChange={(e) => setCompleteForm({ ...completeForm, rejectedQty: e.target.value })}
-                        placeholder="0"
-                        min="0"
-                        className="border-slate-300"
-                      />
-                    </div>
-                    <div>
-                      <Label className="font-semibold text-slate-900">Hold Quantity</Label>
-                      <Input
-                        type="number"
-                        value={completeForm.holdQty}
-                        onChange={(e) => setCompleteForm({ ...completeForm, holdQty: e.target.value })}
-                        placeholder="0"
-                        min="0"
-                        className="border-slate-300"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Remarks */}
-                  <div>
-                    <Label className="font-semibold text-slate-900">Remarks</Label>
-                    <Textarea
-                      value={completeForm.remarks}
-                      onChange={(e) => setCompleteForm({ ...completeForm, remarks: e.target.value })}
-                      placeholder="Enter inspection remarks or notes..."
-                      rows={3}
-                      className="border-slate-300"
-                    />
-                  </div>
-
-                  {/* Inspected By */}
-                  <div>
-                    <Label className="font-semibold text-slate-900">Inspected By</Label>
-                    <Input
-                      value={completeForm.inspectedBy}
-                      onChange={(e) => setCompleteForm({ ...completeForm, inspectedBy: e.target.value })}
-                      placeholder={session?.user?.name || 'Your Name'}
-                      className="border-slate-300"
-                    />
-                  </div>
-                </div>
-
-                {/* Error Message */}
-                {completeError && (
-                  <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">
-                    {completeError}
-                  </div>
-                )}
-
-                {/* Buttons */}
-                <div className="flex justify-end gap-2 pt-4">
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowCompleteInspectionDialog(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    onClick={completeProductionInspection}
-                    disabled={completeSaving || !completeForm.result}
-                    className="bg-green-600 hover:bg-green-700"
-                  >
-                    {completeSaving ? 'Submitting...' : 'Submit Inspection'}
-                  </Button>
-                </div>
-              </div>
-            )}
-          </DialogContent>
-        </Dialog>
 
         {/* Edit Production Inspection Dialog */}
         {isAdmin && (
