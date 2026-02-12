@@ -87,6 +87,9 @@ interface ReadyInspection {
   status: string
   createdAt: string
   jobOrderItemId: string
+  drawingNumber?: string | null
+  transmittalNo?: string | null
+  inspectedQty?: number | null
   jobOrderItem: {
     workDescription: string
     quantity?: number | null
@@ -121,6 +124,7 @@ function DeliveryNotesContent() {
   const [dnRequests, setDnRequests] = useState<DeliveryNoteRequest[]>([])
   const [readyInspections, setReadyInspections] = useState<ReadyInspection[]>([])
   const [readyLoading, setReadyLoading] = useState(false)
+  const [pendingInspectionApply, setPendingInspectionApply] = useState<ReadyInspection | null>(null)
 
   const [formData, setFormData] = useState({
     deliveryNoteNumber: '',
@@ -364,6 +368,24 @@ function DeliveryNotesContent() {
   const getApprovedQty = (inspection: ReadyInspection) =>
     (inspection.steps || []).reduce((sum, step) => sum + (step.approvedQty || 0), 0)
 
+  const normalizeDrawingText = (value?: string | null) =>
+    value
+      ? value
+          .split(/\r?\n/)
+          .map((line) => line.trim())
+          .filter(Boolean)
+          .join('; ')
+      : ''
+
+  const getInspectionBrief = (inspection: ReadyInspection) => {
+    const drawing = normalizeDrawingText(inspection.drawingNumber) || 'N/A'
+    const transmittal = inspection.transmittalNo || 'N/A'
+    const approvedQty = getApprovedQty(inspection)
+    const unit = inspection.jobOrderItem?.unit || ''
+    const inspectedQty = inspection.inspectedQty ?? approvedQty
+    return `Drawing: ${drawing} • Transmittal: ${transmittal} • Qty: ${inspectedQty} ${unit}`
+  }
+
   const fetchReadyInspections = async () => {
     setReadyLoading(true)
     try {
@@ -398,6 +420,44 @@ function DeliveryNotesContent() {
     setEditingId(null)
     handleJobOrderChange(jobOrderId)
   }
+
+  const applyInspectionToLineItems = (inspection: ReadyInspection) => {
+    const approvedQty = getApprovedQty(inspection)
+    const unit = inspection.jobOrderItem?.unit || ''
+    const drawing = normalizeDrawingText(inspection.drawingNumber) ||
+      inspection.jobOrderItem?.jobOrder?.jobNumber || 'N/A'
+    const subDescription = `${drawing} | Qty ${approvedQty} ${unit}`.trim()
+
+    setFormData((prev) => {
+      const items = prev.lineItems.map((item) => {
+        if (item.jobOrderItemId !== inspection.jobOrderItemId) return item
+        const firstSub = item.subItems[0]
+        const nextSub = {
+          ...(firstSub || { id: `sub-${Math.random()}` }),
+          subDescription,
+          unit: unit || firstSub?.unit || '',
+          deliveredQuantity: approvedQty,
+        }
+        return { ...item, subItems: [nextSub, ...item.subItems.slice(1)] }
+      })
+      return { ...prev, lineItems: items }
+    })
+  }
+
+  const copyInspectionToSubDescription = (inspection: ReadyInspection) => {
+    startDeliveryNoteFromInspection(inspection)
+    setPendingInspectionApply(inspection)
+  }
+
+  useEffect(() => {
+    if (!pendingInspectionApply) return
+    const jobOrderId = pendingInspectionApply.jobOrderItem?.jobOrder?.id
+    if (!jobOrderId) return
+    if (formData.jobOrderId !== jobOrderId) return
+    if (formData.lineItems.length === 0) return
+    applyInspectionToLineItems(pendingInspectionApply)
+    setPendingInspectionApply(null)
+  }, [pendingInspectionApply, formData.jobOrderId, formData.lineItems.length])
 
   const markRequestCompleted = async (id: string) => {
     try {
@@ -989,8 +1049,13 @@ function DeliveryNotesContent() {
                           <div className="font-semibold text-emerald-900">{jobOrder?.jobNumber || 'N/A'}</div>
                           <div className="text-[11px] text-emerald-700">{jobOrder?.clientName || 'N/A'}</div>
                         </div>
-                        <div className="col-span-5 truncate text-emerald-800">
-                          {inspection.jobOrderItem?.workDescription || 'N/A'}
+                        <div className="col-span-5">
+                          <div className="truncate text-emerald-800">
+                            {inspection.jobOrderItem?.workDescription || 'N/A'}
+                          </div>
+                          <div className="text-[11px] text-emerald-700 mt-0.5 truncate">
+                            {getInspectionBrief(inspection)}
+                          </div>
                         </div>
                         <div className="col-span-2 text-emerald-700">
                           Approved: {approvedQty} / {totalQty} {unit}
@@ -1002,10 +1067,10 @@ function DeliveryNotesContent() {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => startDeliveryNoteFromInspection(inspection)}
+                            onClick={() => copyInspectionToSubDescription(inspection)}
                             className="h-7 text-[11px] text-emerald-700 hover:text-emerald-800 hover:bg-emerald-100 border-emerald-300"
                           >
-                            Start
+                            Copy to Sub
                           </Button>
                         </div>
                       </div>
