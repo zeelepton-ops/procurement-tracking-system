@@ -120,7 +120,6 @@ export default function QualityInspectionPage() {
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('ALL')
-  const [selectedInspection, setSelectedInspection] = useState<QualityInspection | null>(null)
   const [selectedPendingInspection, setSelectedPendingInspection] = useState<any>(null)
   const [showCreateDialog, setShowCreateDialog] = useState(false)
   const [showTemplateDialog, setShowTemplateDialog] = useState(false)
@@ -134,9 +133,6 @@ export default function QualityInspectionPage() {
   const [pageSuccess, setPageSuccess] = useState<string | null>(null)
   const [pageError, setPageError] = useState<string | null>(null)
   const [selectedInspectionIds, setSelectedInspectionIds] = useState<string[]>([])
-  const [editSaving, setEditSaving] = useState(false)
-  const [editError, setEditError] = useState<string | null>(null)
-  const [editSuccess, setEditSuccess] = useState<string | null>(null)
   const [showEditProductionDialog, setShowEditProductionDialog] = useState(false)
   const [selectedProductionInspection, setSelectedProductionInspection] = useState<any>(null)
   const [productionEditSaving, setProductionEditSaving] = useState(false)
@@ -153,18 +149,6 @@ export default function QualityInspectionPage() {
   })
 
   const isAdmin = session?.user?.role === 'ADMIN'
-
-  const [editForm, setEditForm] = useState({
-    drawingNumber: '',
-    transmittalNo: '',
-    inspectionDate: '',
-    inspectedQty: '',
-    approvedQty: '',
-    rejectedQty: '',
-    holdQty: '',
-    inspectedWeight: '',
-    remarks: '',
-  })
 
   // Create inspection form
   const [createForm, setCreateForm] = useState({
@@ -190,25 +174,9 @@ export default function QualityInspectionPage() {
     steps: '',
     isDefault: false,
   })
-  const [stepRemarks, setStepRemarks] = useState<Record<string, string>>({})
-  const [stepApprovedQty, setStepApprovedQty] = useState<Record<string, string>>({})
-  const [stepFailedQty, setStepFailedQty] = useState<Record<string, string>>({})
-  const [stepHoldQty, setStepHoldQty] = useState<Record<string, string>>({})
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
 
   const selectedJobOrder = jobOrders.find(j => j.id === createForm.jobOrderId) || null
-
-  // Calculate summary stats for selected inspection
-  const inspectionSummary = selectedInspection ? {
-    totalSteps: selectedInspection.steps.length,
-    approved: selectedInspection.steps.filter(s => s.status === 'APPROVED').length,
-    failed: selectedInspection.steps.filter(s => s.status === 'FAILED').length,
-    hold: selectedInspection.steps.filter(s => s.status === 'HOLD').length,
-    pending: selectedInspection.steps.filter(s => s.status === 'PENDING').length,
-    totalApprovedQty: selectedInspection.steps.reduce((sum, s) => sum + (s.approvedQty || 0), 0),
-    totalFailedQty: selectedInspection.steps.reduce((sum, s) => sum + (s.failedQty || 0), 0),
-    totalHoldQty: selectedInspection.steps.reduce((sum, s) => sum + (s.holdQty || 0), 0),
-  } : null
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -223,13 +191,6 @@ export default function QualityInspectionPage() {
       fetchJobOrderItems()
     }
   }, [status, router])
-
-  useEffect(() => {
-    if (!selectedInspection) return
-    setEditForm(buildDefaultInspectionForm(selectedInspection))
-    setEditError(null)
-    setEditSuccess(null)
-  }, [selectedInspection])
 
   useEffect(() => {
     if (!selectedProductionInspection) return
@@ -252,26 +213,6 @@ export default function QualityInspectionPage() {
 
   const toNumberString = (value?: number | null) =>
     value === null || value === undefined ? '' : value.toString()
-
-  const buildDefaultInspectionForm = (inspection: QualityInspection) => {
-    const defaultDrawing = inspection.drawingNumber || inspection.jobOrderItem.jobOrder.drawingRef || ''
-    const inspectedQty = inspection.inspectedQty ?? inspection.jobOrderItem.quantity ?? null
-    const unitWeight = inspection.jobOrderItem.unitWeight ?? null
-    const computedWeight =
-      unitWeight !== null && inspectedQty !== null ? unitWeight * inspectedQty : null
-
-    return {
-      drawingNumber: defaultDrawing,
-      transmittalNo: inspection.transmittalNo || '',
-      inspectionDate: toDateTimeLocal(inspection.inspectionDate),
-      inspectedQty: toNumberString(inspectedQty),
-      approvedQty: toNumberString(inspection.approvedQty),
-      rejectedQty: toNumberString(inspection.rejectedQty),
-      holdQty: toNumberString(inspection.holdQty),
-      inspectedWeight: toNumberString(inspection.inspectedWeight ?? computedWeight),
-      remarks: inspection.remarks || '',
-    }
-  }
 
   const buildProductionEditForm = (inspection: any) => ({
     result: inspection.result || '',
@@ -391,10 +332,7 @@ export default function QualityInspectionPage() {
 
   const openInspectionDetails = (inspectionId: string) => {
     const url = `/quality-inspection/${inspectionId}`
-    const win = window.open(url, '_blank', 'noopener,noreferrer')
-    if (!win) {
-      router.push(url)
-    }
+    window.open(url, '_blank', 'noopener,noreferrer')
   }
 
   const deletePendingInspection = async (inspectionId: string) => {
@@ -510,94 +448,6 @@ export default function QualityInspectionPage() {
     }
   }
 
-  const updateStepStatus = async (stepId: string, status: string, remarks?: string, approvedQty?: string, failedQty?: string, holdQty?: string) => {
-    try {
-      const previousStatus = selectedInspection ? getInspectionStatus(selectedInspection) : null
-      const payload: any = { status, remarks }
-      if (approvedQty && !isNaN(parseFloat(approvedQty))) {
-        payload.approvedQty = parseFloat(approvedQty)
-      }
-      if (failedQty && !isNaN(parseFloat(failedQty))) {
-        payload.failedQty = parseFloat(failedQty)
-      }
-      if (holdQty && !isNaN(parseFloat(holdQty))) {
-        payload.holdQty = parseFloat(holdQty)
-      }
-      const res = await fetch(`/api/quality-inspection/steps/${stepId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      })
-      if (res.ok) {
-        fetchInspections()
-        if (selectedInspection) {
-          const updated = await fetch(`/api/quality-inspection/${selectedInspection.id}`).then(r => r.json())
-          setSelectedInspection(updated)
-          const nextStatus = getInspectionStatus(updated)
-          if (previousStatus !== 'APPROVED' && nextStatus === 'APPROVED') {
-            await requestDeliveryNotesForInspection(updated.id)
-          }
-        }
-      }
-    } catch (error) {
-      console.error('Error updating step:', error)
-    }
-  }
-
-  const requestDeliveryNotesForInspection = async (inspectionId: string) => {
-    try {
-      const res = await fetch('/api/delivery-notes/requests', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ inspectionIds: [inspectionId] })
-      })
-      const data = await res.json().catch(() => null)
-      if (res.ok && data?.created > 0) {
-        setPageSuccess('Delivery note request created automatically.')
-        setTimeout(() => setPageSuccess(null), 4000)
-      }
-    } catch (error) {
-      console.error('Failed to auto-request delivery notes:', error)
-    }
-  }
-
-  const saveInspectionHeader = async () => {
-    if (!selectedInspection) return
-    try {
-      setEditSaving(true)
-      setEditError(null)
-
-      const res = await fetch(`/api/quality-inspection/${selectedInspection.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          drawingNumber: editForm.drawingNumber.trim(),
-          transmittalNo: editForm.transmittalNo.trim(),
-          inspectionDate: editForm.inspectionDate || null,
-          inspectedQty: editForm.inspectedQty,
-          approvedQty: editForm.approvedQty,
-          rejectedQty: editForm.rejectedQty,
-          holdQty: editForm.holdQty,
-          inspectedWeight: editForm.inspectedWeight,
-          remarks: editForm.remarks.trim(),
-        }),
-      })
-
-      if (res.ok) {
-        const updated = await res.json()
-        setSelectedInspection((prev) => prev ? { ...prev, ...updated } : prev)
-        setEditSuccess('Inspection details updated.')
-        setTimeout(() => setEditSuccess(null), 4000)
-      } else {
-        const data = await res.json().catch(() => null)
-        setEditError(data?.error || 'Failed to update inspection.')
-      }
-    } catch (error) {
-      setEditError('Failed to update inspection.')
-    } finally {
-      setEditSaving(false)
-    }
-  }
 
   const saveProductionInspection = async () => {
     if (!selectedProductionInspection) return
@@ -665,7 +515,6 @@ export default function QualityInspectionPage() {
         method: 'DELETE',
       })
       if (res.ok) {
-        setSelectedInspection(null)
         setDeleteConfirm(null)
         fetchInspections()
       }
@@ -737,44 +586,6 @@ export default function QualityInspectionPage() {
 
   const getApprovedQty = (inspection: QualityInspection) =>
     inspection.steps.reduce((sum, step) => sum + (step.approvedQty || 0), 0)
-
-  const parseStepNumber = (value: string | number | null | undefined) => {
-    if (value === null || value === undefined || value === '') return 0
-    const parsed = typeof value === 'number' ? value : parseFloat(value)
-    return Number.isNaN(parsed) ? 0 : parsed
-  }
-
-  const getStepStatusFromQty = (approved: number, failed: number, hold: number) => {
-    if (failed > 0) return 'FAILED'
-    if (hold > 0) return 'HOLD'
-    if (approved > 0) return 'APPROVED'
-    return 'PENDING'
-  }
-
-  const saveStepTable = async () => {
-    if (!selectedInspection) return
-    try {
-      const updates = selectedInspection.steps.map((step) => {
-        const approved = stepApprovedQty[step.id] ?? step.approvedQty?.toString() ?? ''
-        const failed = stepFailedQty[step.id] ?? step.failedQty?.toString() ?? ''
-        const hold = stepHoldQty[step.id] ?? step.holdQty?.toString() ?? ''
-        const remarks = (stepRemarks[step.id] ?? step.remarks ?? '').trim()
-        const status = getStepStatusFromQty(
-          parseStepNumber(approved),
-          parseStepNumber(failed),
-          parseStepNumber(hold)
-        )
-        return updateStepStatus(step.id, status, remarks, approved, failed, hold)
-      })
-
-      await Promise.all(updates)
-      await fetchInspections()
-      const updated = await fetch(`/api/quality-inspection/${selectedInspection.id}`).then(r => r.json())
-      setSelectedInspection(updated)
-    } catch (error) {
-      console.error('Failed to save step table:', error)
-    }
-  }
 
   const getStatusBadge = (status: string) => {
     const variants: Record<string, { color: string; icon: any }> = {
@@ -1529,370 +1340,6 @@ export default function QualityInspectionPage() {
             <p className="text-gray-400 text-sm">Create your first inspection or complete production inspections to get started</p>
           </div>
         )}
-
-        {/* Inspection Details Dialog */}
-        <Dialog open={!!selectedInspection} onOpenChange={() => setSelectedInspection(null)}>
-          <DialogContent className="w-[98vw] max-w-[98vw] h-[95vh] max-h-[95vh] overflow-y-auto p-4">
-            {selectedInspection && (
-              <>
-                <DialogHeader>
-                  <DialogTitle className="flex items-center justify-between text-base">
-                    <span>Quality Inspection Details</span>
-                    {getStatusBadge(getInspectionStatus(selectedInspection))}
-                  </DialogTitle>
-                </DialogHeader>
-                
-                <div className="space-y-4">
-                  {/* Inspection Overview */}
-                  <div className="bg-white rounded-lg border p-3">
-                    <h4 className="font-semibold text-sm mb-2">Inspection Overview</h4>
-                    <div className="grid grid-cols-4 gap-3 text-xs">
-                      <div>
-                        <span className="text-slate-500">Job No.</span>
-                        <p className="font-medium text-slate-900">{selectedInspection.jobOrderItem.jobOrder.jobNumber}</p>
-                      </div>
-                      <div>
-                        <span className="text-slate-500">Client</span>
-                        <p className="font-medium text-slate-900">{selectedInspection.jobOrderItem.jobOrder.clientName}</p>
-                      </div>
-                      <div className="col-span-2">
-                        <span className="text-slate-500">Work Description</span>
-                        <p className="font-medium text-slate-900">{selectedInspection.jobOrderItem.workDescription}</p>
-                      </div>
-                      <div>
-                        <span className="text-slate-500">Line Item Description</span>
-                        <p className="font-medium text-slate-900">{selectedInspection.jobOrderItem.workDescription}</p>
-                      </div>
-                      <div>
-                        <span className="text-slate-500">Total Qty</span>
-                        <p className="font-medium text-slate-900">
-                          {selectedInspection.jobOrderItem.quantity ?? '-'} {selectedInspection.jobOrderItem.unit || ''}
-                        </p>
-                      </div>
-                      <div>
-                        <span className="text-slate-500">Inspection Qty Released</span>
-                        <p className="font-medium text-slate-900">
-                          {selectedInspection.inspectedQty ?? selectedInspection.jobOrderItem.quantity ?? '-'} {selectedInspection.jobOrderItem.unit || ''}
-                        </p>
-                      </div>
-                      <div>
-                        <span className="text-slate-500">Transmittal No.</span>
-                        <p className="font-medium text-slate-900">{selectedInspection.transmittalNo || 'N/A'}</p>
-                      </div>
-                      <div>
-                        <span className="text-slate-500">Drawing No.</span>
-                        <p className="font-medium text-slate-900">{selectedInspection.drawingNumber || selectedInspection.jobOrderItem.jobOrder.drawingRef || 'N/A'}</p>
-                      </div>
-                      <div>
-                        <span className="text-slate-500">Inspection Date</span>
-                        <p className="font-medium text-slate-900">{selectedInspection.inspectionDate ? new Date(selectedInspection.inspectionDate).toLocaleString() : 'N/A'}</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Summary Stats */}
-                  {inspectionSummary && (
-                    <div className="grid grid-cols-4 gap-2 p-3 bg-slate-50 rounded-lg border">
-                      <div className="text-center">
-                        <p className="text-xs text-slate-500">Steps</p>
-                        <p className="text-xl font-bold text-slate-900">{inspectionSummary.totalSteps}</p>
-                      </div>
-                      <div className="text-center">
-                        <p className="text-xs text-green-600 font-semibold">Approved</p>
-                        <p className="text-xl font-bold text-green-700">{inspectionSummary.approved}</p>
-                        <p className="text-xs text-green-600">Qty: {inspectionSummary.totalApprovedQty}</p>
-                      </div>
-                      <div className="text-center">
-                        <p className="text-xs text-red-600 font-semibold">Failed</p>
-                        <p className="text-xl font-bold text-red-700">{inspectionSummary.failed}</p>
-                        <p className="text-xs text-red-600">Qty: {inspectionSummary.totalFailedQty}</p>
-                      </div>
-                      <div className="text-center">
-                        <p className="text-xs text-yellow-600 font-semibold">Hold</p>
-                        <p className="text-xl font-bold text-yellow-700">{inspectionSummary.hold}</p>
-                        <p className="text-xs text-yellow-600">Qty: {inspectionSummary.totalHoldQty}</p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Job Info */}
-                  <div className="bg-gray-50 rounded-lg p-3">
-                    <h4 className="font-semibold text-sm mb-2">Job Information</h4>
-                    <div className="grid grid-cols-4 gap-2 text-xs">
-                      <div>
-                        <span className="text-gray-500">Job Number:</span>
-                        <p className="font-medium text-sm">{selectedInspection.jobOrderItem.jobOrder.jobNumber}</p>
-                      </div>
-                      <div>
-                        <span className="text-gray-500">Client:</span>
-                        <p className="font-medium text-sm">{selectedInspection.jobOrderItem.jobOrder.clientName}</p>
-                      </div>
-                      <div className="col-span-2">
-                        <span className="text-gray-500">Work Description:</span>
-                        <p className="font-medium text-sm">{selectedInspection.jobOrderItem.workDescription}</p>
-                      </div>
-                      <div>
-                        <span className="text-gray-500">Inspection Qty:</span>
-                        <p className="font-medium text-sm">
-                          {selectedInspection.jobOrderItem.quantity ?? '-'} {selectedInspection.jobOrderItem.unit || ''}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* QC Header Fields */}
-                  <div className="bg-white rounded-lg p-3 border">
-                    <h4 className="font-semibold text-sm mb-3">QC Record</h4>
-                    {isAdmin ? (
-                      <div className="space-y-3">
-                        <div className="grid grid-cols-2 gap-3">
-                          <div>
-                            <Label className="text-xs text-slate-500 font-semibold">Drawing No.</Label>
-                            <Input
-                              value={editForm.drawingNumber}
-                              onChange={(e) => setEditForm({ ...editForm, drawingNumber: e.target.value })}
-                              placeholder="Drawing number"
-                              className="text-xs h-8"
-                            />
-                          </div>
-                          <div>
-                            <Label className="text-xs text-slate-500 font-semibold">Transmittal No.</Label>
-                            <Input
-                              value={editForm.transmittalNo}
-                              onChange={(e) => setEditForm({ ...editForm, transmittalNo: e.target.value })}
-                              placeholder="Transmittal number"
-                              className="text-xs h-8"
-                            />
-                          </div>
-                          <div>
-                            <Label className="text-xs text-slate-500 font-semibold">Inspection Date</Label>
-                            <Input
-                              type="datetime-local"
-                              value={editForm.inspectionDate}
-                              onChange={(e) => setEditForm({ ...editForm, inspectionDate: e.target.value })}
-                              className="text-xs h-8"
-                            />
-                          </div>
-                          <div>
-                            <Label className="text-xs text-slate-500 font-semibold">Inspected Qty</Label>
-                            <Input
-                              type="number"
-                              value={editForm.inspectedQty}
-                              onChange={(e) => setEditForm({ ...editForm, inspectedQty: e.target.value })}
-                              placeholder="0"
-                              className="text-xs h-8"
-                            />
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-4 gap-3">
-                          <div>
-                            <Label className="text-xs text-green-600 font-semibold">Approved Qty</Label>
-                            <Input
-                              type="number"
-                              value={editForm.approvedQty}
-                              onChange={(e) => setEditForm({ ...editForm, approvedQty: e.target.value })}
-                              placeholder="0"
-                              className="text-xs h-8"
-                            />
-                          </div>
-                          <div>
-                            <Label className="text-xs text-red-600 font-semibold">Rejected Qty</Label>
-                            <Input
-                              type="number"
-                              value={editForm.rejectedQty}
-                              onChange={(e) => setEditForm({ ...editForm, rejectedQty: e.target.value })}
-                              placeholder="0"
-                              className="text-xs h-8"
-                            />
-                          </div>
-                          <div>
-                            <Label className="text-xs text-yellow-600 font-semibold">Hold Qty</Label>
-                            <Input
-                              type="number"
-                              value={editForm.holdQty}
-                              onChange={(e) => setEditForm({ ...editForm, holdQty: e.target.value })}
-                              placeholder="0"
-                              className="text-xs h-8"
-                            />
-                          </div>
-                          <div>
-                            <Label className="text-xs text-slate-500 font-semibold">Weight</Label>
-                            <Input
-                              type="number"
-                              value={editForm.inspectedWeight}
-                              onChange={(e) => setEditForm({ ...editForm, inspectedWeight: e.target.value })}
-                              placeholder="0"
-                              className="text-xs h-8"
-                            />
-                          </div>
-                        </div>
-                        <div>
-                          <Label className="text-xs text-slate-500 font-semibold">Remarks</Label>
-                          <Textarea
-                            value={editForm.remarks}
-                            onChange={(e) => setEditForm({ ...editForm, remarks: e.target.value })}
-                            placeholder="Remarks"
-                            rows={2}
-                            className="text-xs"
-                          />
-                        </div>
-
-                        {editError && (
-                          <div className="text-xs text-red-700 bg-red-50 border border-red-200 rounded px-3 py-2">
-                            {editError}
-                          </div>
-                        )}
-                        {editSuccess && (
-                          <div className="text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded px-3 py-2">
-                            {editSuccess}
-                          </div>
-                        )}
-
-                        <div className="flex justify-end">
-                          <Button
-                            size="sm"
-                            onClick={saveInspectionHeader}
-                            disabled={editSaving}
-                          >
-                            {editSaving ? 'Saving...' : 'Save QC Details'}
-                          </Button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-2 gap-3 text-xs text-slate-700">
-                        <div>
-                          <span className="text-slate-500">Drawing No.:</span>
-                          <p className="font-medium">{selectedInspection.drawingNumber || selectedInspection.jobOrderItem.jobOrder.drawingRef || 'N/A'}</p>
-                        </div>
-                        <div>
-                          <span className="text-slate-500">Transmittal No.:</span>
-                          <p className="font-medium">{selectedInspection.transmittalNo || 'N/A'}</p>
-                        </div>
-                        <div>
-                          <span className="text-slate-500">Inspection Date:</span>
-                          <p className="font-medium">{selectedInspection.inspectionDate ? new Date(selectedInspection.inspectionDate).toLocaleString() : 'N/A'}</p>
-                        </div>
-                        <div>
-                          <span className="text-slate-500">Inspected Qty:</span>
-                          <p className="font-medium">{selectedInspection.inspectedQty ?? 'N/A'}</p>
-                        </div>
-                        <div>
-                          <span className="text-slate-500">Approved Qty:</span>
-                          <p className="font-medium">{selectedInspection.approvedQty ?? 'N/A'}</p>
-                        </div>
-                        <div>
-                          <span className="text-slate-500">Rejected Qty:</span>
-                          <p className="font-medium">{selectedInspection.rejectedQty ?? 'N/A'}</p>
-                        </div>
-                        <div>
-                          <span className="text-slate-500">Hold Qty:</span>
-                          <p className="font-medium">{selectedInspection.holdQty ?? 'N/A'}</p>
-                        </div>
-                        <div>
-                          <span className="text-slate-500">Weight:</span>
-                          <p className="font-medium">{selectedInspection.inspectedWeight ?? 'N/A'}</p>
-                        </div>
-                        <div className="col-span-2">
-                          <span className="text-slate-500">Remarks:</span>
-                          <p className="font-medium">{selectedInspection.remarks || 'N/A'}</p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Inspection Steps */}
-                  <div>
-                    <h4 className="font-semibold text-sm mb-3">Inspection Steps</h4>
-                    <div className="overflow-x-auto border rounded-lg">
-                      <div className="min-w-[1000px]">
-                        <div className="grid grid-cols-[2fr_0.8fr_0.8fr_0.8fr_2fr] gap-0 border-b bg-slate-50 text-xs font-semibold text-slate-600">
-                          <div className="px-2 py-2">Step</div>
-                          <div className="px-2 py-2">Approved Qty</div>
-                          <div className="px-2 py-2">Rejected Qty</div>
-                          <div className="px-2 py-2">Hold Qty</div>
-                          <div className="px-2 py-2">Remarks</div>
-                        </div>
-                        {selectedInspection.steps.map((step, index) => (
-                          <div key={step.id} className="grid grid-cols-[2fr_0.8fr_0.8fr_0.8fr_2fr] gap-0 border-b text-xs">
-                            <div className="px-2 py-2">
-                              <div className="font-semibold text-slate-900">{index + 1}. {step.stepName}</div>
-                              <div className="text-[11px] text-slate-500">{step.status || 'PENDING'}</div>
-                            </div>
-                            <div className="px-2 py-1">
-                              <Input
-                                type="number"
-                                placeholder="0"
-                                value={stepApprovedQty[step.id] ?? step.approvedQty ?? ''}
-                                onChange={(e) => setStepApprovedQty(prev => ({ ...prev, [step.id]: e.target.value }))}
-                                min="0"
-                                className="text-xs h-7"
-                              />
-                            </div>
-                            <div className="px-2 py-1">
-                              <Input
-                                type="number"
-                                placeholder="0"
-                                value={stepFailedQty[step.id] ?? step.failedQty ?? ''}
-                                onChange={(e) => setStepFailedQty(prev => ({ ...prev, [step.id]: e.target.value }))}
-                                min="0"
-                                className="text-xs h-7"
-                              />
-                            </div>
-                            <div className="px-2 py-1">
-                              <Input
-                                type="number"
-                                placeholder="0"
-                                value={stepHoldQty[step.id] ?? step.holdQty ?? ''}
-                                onChange={(e) => setStepHoldQty(prev => ({ ...prev, [step.id]: e.target.value }))}
-                                min="0"
-                                className="text-xs h-7"
-                              />
-                            </div>
-                            <div className="px-2 py-1">
-                              <Input
-                                value={stepRemarks[step.id] ?? step.remarks ?? ''}
-                                onChange={(e) => setStepRemarks(prev => ({ ...prev, [step.id]: e.target.value }))}
-                                placeholder="Remarks"
-                                className="text-xs h-7"
-                              />
-                            </div>
-                          </div>
-                        ))}
-                        <div className="grid grid-cols-[2fr_0.8fr_0.8fr_0.8fr_2fr] gap-0 bg-slate-50 text-xs font-semibold text-slate-700">
-                          <div className="px-2 py-2">Net Summary</div>
-                          <div className="px-2 py-2">
-                            {selectedInspection.steps.reduce((sum, step) => {
-                              const approved = stepApprovedQty[step.id] ?? step.approvedQty ?? 0
-                              return sum + parseStepNumber(approved)
-                            }, 0)}
-                          </div>
-                          <div className="px-2 py-2">
-                            {selectedInspection.steps.reduce((sum, step) => {
-                              const failed = stepFailedQty[step.id] ?? step.failedQty ?? 0
-                              return sum + parseStepNumber(failed)
-                            }, 0)}
-                          </div>
-                          <div className="px-2 py-2">
-                            {selectedInspection.steps.reduce((sum, step) => {
-                              const hold = stepHoldQty[step.id] ?? step.holdQty ?? 0
-                              return sum + parseStepNumber(hold)
-                            }, 0)}
-                          </div>
-                          <div className="px-2 py-2 text-slate-500">Totals</div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex justify-end mt-3">
-                      <Button size="sm" onClick={saveStepTable}>
-                        Save Step Updates
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </>
-            )}
-          </DialogContent>
-        </Dialog>
 
         {/* Delete Confirmation Dialog */}
         {isAdmin && (

@@ -149,6 +149,11 @@ export default function QualityInspectionDetailPage() {
   const [editSaving, setEditSaving] = useState(false)
   const [editError, setEditError] = useState<string | null>(null)
   const [editSuccess, setEditSuccess] = useState<string | null>(null)
+  const [stepValidationError, setStepValidationError] = useState<string | null>(null)
+  const [approvedOverride, setApprovedOverride] = useState(false)
+  const [rejectedOverride, setRejectedOverride] = useState(false)
+  const [holdOverride, setHoldOverride] = useState(false)
+  const [drawingEntries, setDrawingEntries] = useState<Array<{ id: string; drawingNo: string; qty: string; unit: string }>>([])
 
   const [editForm, setEditForm] = useState({
     drawingNumber: '',
@@ -195,21 +200,106 @@ export default function QualityInspectionDetailPage() {
     setEditForm(buildDefaultInspectionForm(inspection))
     setEditError(null)
     setEditSuccess(null)
+    setApprovedOverride(false)
+    setRejectedOverride(false)
+    setHoldOverride(false)
+    const parsedEntries = parseDrawingEntries(inspection.drawingNumber || '')
+    setDrawingEntries(parsedEntries)
   }, [inspection])
+  const normalizeQtyInput = (value: string) => {
+    if (!value) return ''
+    const parsed = Number(value)
+    if (Number.isNaN(parsed)) return ''
+    const rounded = Math.round(parsed * 10000) / 10000
+    const fixed = rounded.toFixed(4)
+    return fixed.replace(/\.?(0+)$/, '')
+  }
+
+  const parseDrawingEntries = (value: string) => {
+    if (!value) return []
+    const lines = value.split('\n').map((line) => line.trim()).filter(Boolean)
+    const entries = lines.map((line) => {
+      const parts = line.split('|').map((part) => part.trim())
+      const drawingNo = parts[0] || ''
+      const qtyPart = parts.find((part) => part.toLowerCase().startsWith('qty')) || ''
+      const unitPart = parts.find((part) => part.toLowerCase().startsWith('unit')) || ''
+      const qty = qtyPart.replace(/qty\s*[:=]?\s*/i, '')
+      const unit = unitPart.replace(/unit\s*[:=]?\s*/i, '')
+      return { id: crypto.randomUUID(), drawingNo, qty: normalizeQtyInput(qty), unit }
+    })
+    return entries.filter((entry) => entry.drawingNo || entry.qty || entry.unit)
+  }
+
+  const buildDrawingNumberValue = () => {
+    if (drawingEntries.length === 0) return editForm.drawingNumber.trim()
+    return drawingEntries
+      .filter((entry) => entry.drawingNo || entry.qty || entry.unit)
+      .map((entry) => {
+        const parts = [entry.drawingNo || 'N/A']
+        if (entry.qty) parts.push(`Qty ${normalizeQtyInput(entry.qty)}`)
+        if (entry.unit) parts.push(`Unit ${entry.unit}`)
+        return parts.join(' | ')
+      })
+      .join('\n')
+  }
+
 
   const inspectionSummary = useMemo(() => {
     if (!inspection) return null
+    const approvedValues = inspection.steps.map((step) =>
+      parseStepNumber(stepApprovedQty[step.id] ?? step.approvedQty ?? 0)
+    )
+    const rejectedValues = inspection.steps.map((step) =>
+      parseStepNumber(stepFailedQty[step.id] ?? step.failedQty ?? 0)
+    )
+    const holdValues = inspection.steps.map((step) =>
+      parseStepNumber(stepHoldQty[step.id] ?? step.holdQty ?? 0)
+    )
+
+    const minApproved = approvedValues.length > 0 ? Math.min(...approvedValues) : 0
+    const totalRejected = rejectedValues.reduce((sum, v) => sum + v, 0)
+    const totalHold = holdValues.reduce((sum, v) => sum + v, 0)
+
     return {
       totalSteps: inspection.steps.length,
       approved: inspection.steps.filter(s => s.status === 'APPROVED').length,
       failed: inspection.steps.filter(s => s.status === 'FAILED').length,
       hold: inspection.steps.filter(s => s.status === 'HOLD').length,
       pending: inspection.steps.filter(s => s.status === 'PENDING').length,
-      totalApprovedQty: inspection.steps.reduce((sum, s) => sum + (s.approvedQty || 0), 0),
-      totalFailedQty: inspection.steps.reduce((sum, s) => sum + (s.failedQty || 0), 0),
-      totalHoldQty: inspection.steps.reduce((sum, s) => sum + (s.holdQty || 0), 0),
+      finalApprovedQty: minApproved,
+      totalRejectedQty: totalRejected,
+      totalHoldQty: totalHold,
     }
-  }, [inspection])
+  }, [inspection, stepApprovedQty, stepFailedQty, stepHoldQty])
+
+  const autoApprovedQty = inspectionSummary ? inspectionSummary.finalApprovedQty : 0
+  const autoRejectedQty = inspectionSummary ? inspectionSummary.totalRejectedQty : 0
+  const autoHoldQty = inspectionSummary ? inspectionSummary.totalHoldQty : 0
+
+  useEffect(() => {
+    if (!inspection || !inspectionSummary) return
+
+    if (!approvedOverride) {
+      const nextApproved = autoApprovedQty.toString()
+      if (editForm.approvedQty !== nextApproved) {
+        setEditForm((prev) => ({ ...prev, approvedQty: nextApproved }))
+      }
+    }
+
+    if (!rejectedOverride) {
+      const nextRejected = autoRejectedQty.toString()
+      if (editForm.rejectedQty !== nextRejected) {
+        setEditForm((prev) => ({ ...prev, rejectedQty: nextRejected }))
+      }
+    }
+
+    if (!holdOverride) {
+      const nextHold = autoHoldQty.toString()
+      if (editForm.holdQty !== nextHold) {
+        setEditForm((prev) => ({ ...prev, holdQty: nextHold }))
+      }
+    }
+  }, [inspection, inspectionSummary, autoApprovedQty, autoRejectedQty, autoHoldQty, approvedOverride, rejectedOverride, holdOverride, editForm.approvedQty, editForm.rejectedQty, editForm.holdQty])
 
   const requestDeliveryNotesForInspection = async (id: string) => {
     try {
@@ -265,14 +355,14 @@ export default function QualityInspectionDetailPage() {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          drawingNumber: editForm.drawingNumber.trim(),
+          drawingNumber: buildDrawingNumberValue(),
           transmittalNo: editForm.transmittalNo.trim(),
           inspectionDate: editForm.inspectionDate || null,
-          inspectedQty: editForm.inspectedQty,
-          approvedQty: editForm.approvedQty,
-          rejectedQty: editForm.rejectedQty,
-          holdQty: editForm.holdQty,
-          inspectedWeight: editForm.inspectedWeight,
+          inspectedQty: normalizeQtyInput(editForm.inspectedQty),
+          approvedQty: approvedOverride ? editForm.approvedQty : autoApprovedQty.toString(),
+          rejectedQty: rejectedOverride ? editForm.rejectedQty : autoRejectedQty.toString(),
+          holdQty: holdOverride ? editForm.holdQty : autoHoldQty.toString(),
+          inspectedWeight: normalizeQtyInput(editForm.inspectedWeight),
           remarks: editForm.remarks.trim(),
         }),
       })
@@ -296,20 +386,68 @@ export default function QualityInspectionDetailPage() {
   const saveStepTable = async () => {
     if (!inspection) return
     try {
+      const inspectedQtyLimit = parseStepNumber(
+        inspection.inspectedQty ?? inspection.jobOrderItem.quantity ?? 0
+      )
+
+      let validationMessage: string | null = null
+      let minApproved: number | null = null
+      let totalRejected = 0
+      let totalHold = 0
+
       const updates = inspection.steps.map((step) => {
         const approved = stepApprovedQty[step.id] ?? step.approvedQty?.toString() ?? ''
         const failed = stepFailedQty[step.id] ?? step.failedQty?.toString() ?? ''
         const hold = stepHoldQty[step.id] ?? step.holdQty?.toString() ?? ''
         const remarks = (stepRemarks[step.id] ?? step.remarks ?? '').trim()
-        const status = getStepStatusFromQty(
-          parseStepNumber(approved),
-          parseStepNumber(failed),
-          parseStepNumber(hold)
-        )
+
+        const approvedValue = parseStepNumber(approved)
+        const failedValue = parseStepNumber(failed)
+        const holdValue = parseStepNumber(hold)
+
+        if (
+          approvedValue > inspectedQtyLimit ||
+          failedValue > inspectedQtyLimit ||
+          holdValue > inspectedQtyLimit
+        ) {
+          validationMessage = `Step "${step.stepName}" values cannot exceed inspected qty (${inspectedQtyLimit}).`
+        }
+
+        minApproved = minApproved === null ? approvedValue : Math.min(minApproved, approvedValue)
+        totalRejected += failedValue
+        totalHold += holdValue
+
+        const status = getStepStatusFromQty(approvedValue, failedValue, holdValue)
         return updateStepStatus(step.id, status, remarks, approved, failed, hold)
       })
 
+      if (validationMessage) {
+        setStepValidationError(validationMessage)
+        return
+      }
+
+      setStepValidationError(null)
+
       await Promise.all(updates)
+
+      if (isAdmin) {
+        const approvedQty = minApproved ?? 0
+        const headerRes = await fetch(`/api/quality-inspection/${inspection.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            approvedQty,
+            rejectedQty: totalRejected,
+            holdQty: totalHold,
+          })
+        })
+        if (!headerRes.ok) {
+          const data = await headerRes.json().catch(() => null)
+          setStepValidationError(data?.error || 'Failed to update inspection totals.')
+          return
+        }
+      }
+
       await fetchInspection()
     } catch (error) {
       console.error('Failed to save step table:', error)
@@ -362,10 +500,6 @@ export default function QualityInspectionDetailPage() {
                 <p className="font-medium text-slate-900">{inspection.jobOrderItem.workDescription}</p>
               </div>
               <div>
-                <span className="text-slate-500">Line Item Description</span>
-                <p className="font-medium text-slate-900">{inspection.jobOrderItem.workDescription}</p>
-              </div>
-              <div>
                 <span className="text-slate-500">Total Qty</span>
                 <p className="font-medium text-slate-900">
                   {inspection.jobOrderItem.quantity ?? '-'} {inspection.jobOrderItem.unit || ''}
@@ -401,12 +535,12 @@ export default function QualityInspectionDetailPage() {
               <div className="text-center">
                 <p className="text-xs text-green-600 font-semibold">Approved</p>
                 <p className="text-xl font-bold text-green-700">{inspectionSummary.approved}</p>
-                <p className="text-xs text-green-600">Qty: {inspectionSummary.totalApprovedQty}</p>
+                <p className="text-xs text-green-600">Qty: {inspectionSummary.finalApprovedQty}</p>
               </div>
               <div className="text-center">
                 <p className="text-xs text-red-600 font-semibold">Failed</p>
                 <p className="text-xl font-bold text-red-700">{inspectionSummary.failed}</p>
-                <p className="text-xs text-red-600">Qty: {inspectionSummary.totalFailedQty}</p>
+                <p className="text-xs text-red-600">Qty: {inspectionSummary.totalRejectedQty}</p>
               </div>
               <div className="text-center">
                 <p className="text-xs text-yellow-600 font-semibold">Hold</p>
@@ -415,30 +549,6 @@ export default function QualityInspectionDetailPage() {
               </div>
             </div>
           )}
-
-          <div className="bg-gray-50 rounded-lg p-3">
-            <h4 className="font-semibold text-sm mb-2">Job Information</h4>
-            <div className="grid grid-cols-4 gap-2 text-xs">
-              <div>
-                <span className="text-gray-500">Job Number:</span>
-                <p className="font-medium text-sm">{inspection.jobOrderItem.jobOrder.jobNumber}</p>
-              </div>
-              <div>
-                <span className="text-gray-500">Client:</span>
-                <p className="font-medium text-sm">{inspection.jobOrderItem.jobOrder.clientName}</p>
-              </div>
-              <div className="col-span-2">
-                <span className="text-gray-500">Work Description:</span>
-                <p className="font-medium text-sm">{inspection.jobOrderItem.workDescription}</p>
-              </div>
-              <div>
-                <span className="text-gray-500">Inspection Qty:</span>
-                <p className="font-medium text-sm">
-                  {inspection.jobOrderItem.quantity ?? '-'} {inspection.jobOrderItem.unit || ''}
-                </p>
-              </div>
-            </div>
-          </div>
 
           <div className="bg-white rounded-lg p-3 border">
             <h4 className="font-semibold text-sm mb-3">QC Record</h4>
@@ -449,10 +559,28 @@ export default function QualityInspectionDetailPage() {
                     <Label className="text-xs text-slate-500 font-semibold">Drawing No.</Label>
                     <Input
                       value={editForm.drawingNumber}
-                      onChange={(e) => setEditForm({ ...editForm, drawingNumber: e.target.value })}
+                      onChange={(e) => {
+                        setDrawingEntries([])
+                        setEditForm({ ...editForm, drawingNumber: e.target.value })
+                      }}
                       placeholder="Drawing number"
                       className="text-xs h-8"
                     />
+                    <div className="mt-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          setDrawingEntries((prev) => [
+                            ...prev,
+                            { id: crypto.randomUUID(), drawingNo: '', qty: '', unit: inspection.jobOrderItem.unit || '' }
+                          ])
+                        }
+                      >
+                        Add Drawing Entry
+                      </Button>
+                    </div>
                   </div>
                   <div>
                     <Label className="text-xs text-slate-500 font-semibold">Transmittal No.</Label>
@@ -477,19 +605,79 @@ export default function QualityInspectionDetailPage() {
                     <Input
                       type="number"
                       value={editForm.inspectedQty}
-                      onChange={(e) => setEditForm({ ...editForm, inspectedQty: e.target.value })}
+                      onChange={(e) => setEditForm({ ...editForm, inspectedQty: normalizeQtyInput(e.target.value) })}
                       placeholder="0"
                       className="text-xs h-8"
                     />
                   </div>
                 </div>
+                {drawingEntries.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="grid grid-cols-12 gap-2 text-[11px] text-slate-500 font-semibold">
+                      <div className="col-span-6">Drawing No.</div>
+                      <div className="col-span-3">Qty</div>
+                      <div className="col-span-3">Unit</div>
+                    </div>
+                    {drawingEntries.map((entry) => (
+                      <div key={entry.id} className="grid grid-cols-12 gap-2">
+                        <Input
+                          value={entry.drawingNo}
+                          onChange={(e) =>
+                            setDrawingEntries((prev) =>
+                              prev.map((row) => row.id === entry.id ? { ...row, drawingNo: e.target.value } : row)
+                            )
+                          }
+                          placeholder="Drawing number"
+                          className="col-span-6 text-xs h-8"
+                        />
+                        <Input
+                          type="number"
+                          value={entry.qty}
+                          onChange={(e) =>
+                            setDrawingEntries((prev) =>
+                              prev.map((row) => row.id === entry.id ? { ...row, qty: normalizeQtyInput(e.target.value) } : row)
+                            )
+                          }
+                          placeholder="0"
+                          className="col-span-3 text-xs h-8"
+                        />
+                        <Input
+                          value={entry.unit}
+                          onChange={(e) =>
+                            setDrawingEntries((prev) =>
+                              prev.map((row) => row.id === entry.id ? { ...row, unit: e.target.value } : row)
+                            )
+                          }
+                          placeholder="Unit"
+                          className="col-span-3 text-xs h-8"
+                        />
+                        <div className="col-span-12 flex justify-end">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="text-red-600"
+                            onClick={() =>
+                              setDrawingEntries((prev) => prev.filter((row) => row.id !== entry.id))
+                            }
+                          >
+                            Remove
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
                 <div className="grid grid-cols-4 gap-3">
                   <div>
                     <Label className="text-xs text-green-600 font-semibold">Approved Qty</Label>
                     <Input
                       type="number"
                       value={editForm.approvedQty}
-                      onChange={(e) => setEditForm({ ...editForm, approvedQty: e.target.value })}
+                      onChange={(e) => {
+                        setApprovedOverride(true)
+                        setEditForm({ ...editForm, approvedQty: normalizeQtyInput(e.target.value) })
+                      }}
                       placeholder="0"
                       className="text-xs h-8"
                     />
@@ -499,7 +687,10 @@ export default function QualityInspectionDetailPage() {
                     <Input
                       type="number"
                       value={editForm.rejectedQty}
-                      onChange={(e) => setEditForm({ ...editForm, rejectedQty: e.target.value })}
+                      onChange={(e) => {
+                        setRejectedOverride(true)
+                        setEditForm({ ...editForm, rejectedQty: normalizeQtyInput(e.target.value) })
+                      }}
                       placeholder="0"
                       className="text-xs h-8"
                     />
@@ -509,7 +700,10 @@ export default function QualityInspectionDetailPage() {
                     <Input
                       type="number"
                       value={editForm.holdQty}
-                      onChange={(e) => setEditForm({ ...editForm, holdQty: e.target.value })}
+                      onChange={(e) => {
+                        setHoldOverride(true)
+                        setEditForm({ ...editForm, holdQty: normalizeQtyInput(e.target.value) })
+                      }}
                       placeholder="0"
                       className="text-xs h-8"
                     />
@@ -519,7 +713,7 @@ export default function QualityInspectionDetailPage() {
                     <Input
                       type="number"
                       value={editForm.inspectedWeight}
-                      onChange={(e) => setEditForm({ ...editForm, inspectedWeight: e.target.value })}
+                      onChange={(e) => setEditForm({ ...editForm, inspectedWeight: normalizeQtyInput(e.target.value) })}
                       placeholder="0"
                       className="text-xs h-8"
                     />
@@ -621,7 +815,7 @@ export default function QualityInspectionDetailPage() {
                         type="number"
                         placeholder="0"
                         value={stepApprovedQty[step.id] ?? step.approvedQty ?? ''}
-                        onChange={(e) => setStepApprovedQty(prev => ({ ...prev, [step.id]: e.target.value }))}
+                        onChange={(e) => setStepApprovedQty(prev => ({ ...prev, [step.id]: normalizeQtyInput(e.target.value) }))}
                         min="0"
                         className="text-xs h-7"
                       />
@@ -631,7 +825,7 @@ export default function QualityInspectionDetailPage() {
                         type="number"
                         placeholder="0"
                         value={stepFailedQty[step.id] ?? step.failedQty ?? ''}
-                        onChange={(e) => setStepFailedQty(prev => ({ ...prev, [step.id]: e.target.value }))}
+                        onChange={(e) => setStepFailedQty(prev => ({ ...prev, [step.id]: normalizeQtyInput(e.target.value) }))}
                         min="0"
                         className="text-xs h-7"
                       />
@@ -641,7 +835,7 @@ export default function QualityInspectionDetailPage() {
                         type="number"
                         placeholder="0"
                         value={stepHoldQty[step.id] ?? step.holdQty ?? ''}
-                        onChange={(e) => setStepHoldQty(prev => ({ ...prev, [step.id]: e.target.value }))}
+                        onChange={(e) => setStepHoldQty(prev => ({ ...prev, [step.id]: normalizeQtyInput(e.target.value) }))}
                         min="0"
                         className="text-xs h-7"
                       />
@@ -659,22 +853,13 @@ export default function QualityInspectionDetailPage() {
                 <div className="grid grid-cols-[2fr_0.8fr_0.8fr_0.8fr_2fr] gap-0 bg-slate-50 text-xs font-semibold text-slate-700">
                   <div className="px-2 py-2">Net Summary</div>
                   <div className="px-2 py-2">
-                    {inspection.steps.reduce((sum, step) => {
-                      const approved = stepApprovedQty[step.id] ?? step.approvedQty ?? 0
-                      return sum + parseStepNumber(approved)
-                    }, 0)}
+                    {inspectionSummary?.finalApprovedQty ?? 0}
                   </div>
                   <div className="px-2 py-2">
-                    {inspection.steps.reduce((sum, step) => {
-                      const failed = stepFailedQty[step.id] ?? step.failedQty ?? 0
-                      return sum + parseStepNumber(failed)
-                    }, 0)}
+                    {inspectionSummary?.totalRejectedQty ?? 0}
                   </div>
                   <div className="px-2 py-2">
-                    {inspection.steps.reduce((sum, step) => {
-                      const hold = stepHoldQty[step.id] ?? step.holdQty ?? 0
-                      return sum + parseStepNumber(hold)
-                    }, 0)}
+                    {inspectionSummary?.totalHoldQty ?? 0}
                   </div>
                   <div className="px-2 py-2 text-slate-500">Totals</div>
                 </div>
@@ -685,6 +870,11 @@ export default function QualityInspectionDetailPage() {
                 Save Step Updates
               </Button>
             </div>
+            {stepValidationError && (
+              <div className="mt-2 text-xs text-red-700 bg-red-50 border border-red-200 rounded px-3 py-2">
+                {stepValidationError}
+              </div>
+            )}
           </div>
         </div>
       </div>
