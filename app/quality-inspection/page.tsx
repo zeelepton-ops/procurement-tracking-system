@@ -523,20 +523,23 @@ export default function QualityInspectionPage() {
   const getApprovedQty = (inspection: QualityInspection) =>
     inspection.steps.reduce((sum, step) => sum + (step.approvedQty || 0), 0)
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string, approvedPercent?: number) => {
     const variants: Record<string, { color: string; icon: any }> = {
       PENDING: { color: 'bg-gray-100 text-gray-700', icon: Clock },
       IN_PROGRESS: { color: 'bg-primary-100 text-primary-700', icon: AlertCircle },
-      APPROVED: { color: 'bg-green-100 text-green-700', icon: CheckCircle2 },
+      APPROVED: { color: 'bg-slate-900 text-white', icon: CheckCircle2 },
       REJECTED: { color: 'bg-red-100 text-red-700', icon: XCircle },
       FAILED: { color: 'bg-red-100 text-red-700', icon: XCircle },
       HOLD: { color: 'bg-yellow-100 text-yellow-700', icon: AlertCircle },
     }
     const { color, icon: Icon } = variants[status] || variants.PENDING
+    const label = status === 'APPROVED' && typeof approvedPercent === 'number'
+      ? `APPROVED ${approvedPercent.toFixed(1)}%`
+      : status
     return (
       <Badge className={`${color} flex items-center gap-1`}>
         <Icon className="w-3 h-3" />
-        {status}
+        {label}
       </Badge>
     )
   }
