@@ -614,11 +614,11 @@ export default function MaterialRequestPage() {
     ...inventory.map((item) => [
       item.itemName.toLowerCase(),
       { label: item.itemName, meta: `Inventory • ${item.unit} • Stock ${item.currentStock}`, type: 'inventory' }
-    ]),
+    ] as [string, Suggestion]),
     ...requestItems.map((item) => [
       item.itemName.toLowerCase(),
       { label: item.itemName, meta: item.description || '', type: 'request' }
-    ])
+    ] as [string, Suggestion])
   ]
 
   const itemNameSuggestions: Suggestion[] = Array.from(new Map(itemNameEntries).values())
@@ -628,7 +628,7 @@ export default function MaterialRequestPage() {
     .map((item) => [
       item.description.toLowerCase(),
       { label: item.description, meta: item.itemName, type: 'request' }
-    ])
+    ] as [string, Suggestion])
 
   const descriptionSuggestions: Suggestion[] = Array.from(new Map(descriptionEntries).values())
 
@@ -636,7 +636,7 @@ export default function MaterialRequestPage() {
     .map((supplier) => [
       (supplier.name || supplier.tradingName || '').toLowerCase(),
       { label: supplier.name || supplier.tradingName || '', meta: supplier.tradingName || '', type: 'supplier' }
-    ])
+    ] as [string, Suggestion])
     .filter((entry) => entry[0])
 
   const supplierSuggestions: Suggestion[] = Array.from(new Map(supplierEntries).values())
