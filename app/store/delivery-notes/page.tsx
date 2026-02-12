@@ -420,12 +420,33 @@ function DeliveryNotesContent() {
     handleJobOrderChange(jobOrderId)
   }
 
+  const formatDrawingLine = (line: string) => {
+    const parts = line.split('|').map((part) => part.trim()).filter(Boolean)
+    const drawingNo = parts[0] || 'N/A'
+    const qtyPart = parts.find((part) => part.toLowerCase().startsWith('qty')) || ''
+    const unitPart = parts.find((part) => part.toLowerCase().startsWith('unit')) || ''
+    const qty = qtyPart.replace(/qty\s*[:=]?\s*/i, '').trim()
+    const unit = unitPart.replace(/unit\s*[:=]?\s*/i, '').trim()
+    const segments = [drawingNo]
+    if (qty) segments.push(`Qty ${qty}`)
+    if (unit) segments.push(`Unit ${unit}`)
+    return segments.join(' | ')
+  }
+
   const buildInspectionSubDescription = (inspection: ReadyInspection) => {
     const approvedQty = getApprovedQty(inspection)
     const unit = inspection.jobOrderItem?.unit || ''
-    const drawing = normalizeDrawingText(inspection.drawingNumber) ||
-      inspection.jobOrderItem?.jobOrder?.jobNumber || 'N/A'
-    return `${drawing} | Qty ${approvedQty} ${unit}`.trim()
+    const drawingLines = (inspection.drawingNumber || '')
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean)
+
+    if (drawingLines.length > 0) {
+      return drawingLines.map((line) => formatDrawingLine(line)).join('; ')
+    }
+
+    const fallbackDrawing = inspection.jobOrderItem?.jobOrder?.jobNumber || 'N/A'
+    return `${fallbackDrawing} | Qty ${approvedQty}${unit ? ` | Unit ${unit}` : ''}`.trim()
   }
 
   const applyInspectionToLineItems = (items: typeof formData.lineItems, inspection: ReadyInspection) => {
