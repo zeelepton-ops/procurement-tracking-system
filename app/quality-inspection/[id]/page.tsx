@@ -259,6 +259,31 @@ export default function QualityInspectionDetailPage() {
       .join(', ')
   }
 
+  const applyPastedDrawingRows = (text: string) => {
+    if (!text) return false
+    const rows = text
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean)
+
+    if (rows.length <= 1 && !rows[0]?.includes('\t')) return false
+
+    const nextEntries = rows
+      .map((row) => row.split('\t').map((cell) => cell.trim()))
+      .filter((cols) => cols.length > 0)
+      .map((cols) => ({
+        id: crypto.randomUUID(),
+        drawingNo: cols[0] || '',
+        qty: cols[1] ? normalizeQtyInput(cols[1]) : '',
+        unit: cols[2] || inspection?.jobOrderItem.unit || ''
+      }))
+      .filter((entry) => entry.drawingNo || entry.qty || entry.unit)
+
+    if (nextEntries.length === 0) return false
+    setDrawingEntries(nextEntries)
+    return true
+  }
+
   const buildDrawingNumberValue = () => {
     if (drawingEntries.length === 0) return editForm.drawingNumber.trim()
     return drawingEntries
@@ -707,7 +732,7 @@ export default function QualityInspectionDetailPage() {
                       <div className="col-span-3">Unit</div>
                       <div className="col-span-1"></div>
                     </div>
-                    {drawingEntries.map((entry) => (
+                    {drawingEntries.map((entry, index) => (
                       <div key={entry.id} className="grid grid-cols-12 gap-1">
                         <Input
                           value={entry.drawingNo}
@@ -716,6 +741,13 @@ export default function QualityInspectionDetailPage() {
                               prev.map((row) => row.id === entry.id ? { ...row, drawingNo: e.target.value } : row)
                             )
                           }
+                          onPaste={(e) => {
+                            if (index !== 0) return
+                            const text = e.clipboardData.getData('text')
+                            if (applyPastedDrawingRows(text)) {
+                              e.preventDefault()
+                            }
+                          }}
                           placeholder="Drawing number"
                           className="col-span-6 text-xs h-8"
                         />
