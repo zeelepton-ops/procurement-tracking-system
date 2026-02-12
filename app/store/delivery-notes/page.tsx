@@ -376,6 +376,17 @@ function DeliveryNotesContent() {
           .join('; ')
       : ''
 
+  const normalizeQtyInput = (value: string) => {
+    if (!value) return ''
+    const parsed = Number(value)
+    if (Number.isNaN(parsed)) return ''
+    const rounded = Math.round(parsed * 10000) / 10000
+    const fixed = rounded.toFixed(4)
+    return fixed.replace(/\.?(0+)$/, '')
+  }
+
+  const formatQty = (value: number) => normalizeQtyInput(value.toString())
+
   const getInspectionBrief = (inspection: ReadyInspection) => {
     const drawing = normalizeDrawingText(inspection.drawingNumber) || 'N/A'
     const transmittal = inspection.transmittalNo || 'N/A'
