@@ -420,17 +420,14 @@ function DeliveryNotesContent() {
     handleJobOrderChange(jobOrderId)
   }
 
-  const formatDrawingLine = (line: string) => {
+  const parseDrawingLine = (line: string) => {
     const parts = line.split('|').map((part) => part.trim()).filter(Boolean)
     const drawingNo = parts[0] || 'N/A'
     const qtyPart = parts.find((part) => part.toLowerCase().startsWith('qty')) || ''
     const unitPart = parts.find((part) => part.toLowerCase().startsWith('unit')) || ''
     const qty = qtyPart.replace(/qty\s*[:=]?\s*/i, '').trim()
     const unit = unitPart.replace(/unit\s*[:=]?\s*/i, '').trim()
-    const segments = [drawingNo]
-    if (qty) segments.push(`Qty ${qty}`)
-    if (unit) segments.push(`Unit ${unit}`)
-    return segments.join(' | ')
+    return { drawingNo, qty, unit }
   }
 
   const buildInspectionSubDescription = (inspection: ReadyInspection) => {
@@ -442,11 +439,21 @@ function DeliveryNotesContent() {
       .filter(Boolean)
 
     if (drawingLines.length > 0) {
-      return drawingLines.map((line) => formatDrawingLine(line)).join('; ')
+      const parsed = drawingLines.map((line) => parseDrawingLine(line))
+      const totalQty = parsed.reduce((sum, entry) => sum + (parseFloat(entry.qty) || 0), 0)
+      const unitLabel = parsed.find((entry) => entry.unit)?.unit || unit
+      const lines = parsed.map((entry) => {
+        const qtyLabel = entry.qty ? normalizeQtyInput(entry.qty) : ''
+        const unitSuffix = unitLabel ? ` ${unitLabel}` : ''
+        return `${entry.drawingNo} | Qty ${qtyLabel}${unitSuffix}`.trim()
+      })
+      lines.push(`Total - ${formatQty(totalQty)}${unitLabel ? ` ${unitLabel}` : ''}`)
+      lines.push('-'.repeat(68))
+      return lines.join('\n')
     }
 
     const fallbackDrawing = inspection.jobOrderItem?.jobOrder?.jobNumber || 'N/A'
-    return `${fallbackDrawing} | Qty ${approvedQty}${unit ? ` | Unit ${unit}` : ''}`.trim()
+    return `${fallbackDrawing} | Qty ${approvedQty}${unit ? ` ${unit}` : ''}`.trim()
   }
 
   const applyInspectionToLineItems = (items: typeof formData.lineItems, inspection: ReadyInspection) => {

@@ -821,23 +821,23 @@ export default function QualityInspectionPage() {
             <div className="flex gap-2">
               <Button
                 variant="outline"
-                className="border-slate-300 text-slate-700 hover:bg-slate-50"
+                className="h-7 px-2 text-[11px] border-slate-300 text-slate-700 hover:bg-slate-50"
                 onClick={() => setSelectedInspectionIds([])}
               >
                 Clear
               </Button>
               <Button
                 variant="outline"
-                className="border-emerald-300 text-emerald-700 hover:bg-emerald-50"
+                className="h-7 px-2 text-[11px] border-emerald-300 text-emerald-700 hover:bg-emerald-50"
                 onClick={prepareDeliveryNoteFromSelection}
               >
-                Prepare Delivery Note
+                Prepare DN
               </Button>
               <Button
-                className="bg-primary-600 hover:bg-primary-700 text-white"
+                className="h-7 px-2 text-[11px] bg-primary-600 hover:bg-primary-700 text-white"
                 onClick={requestDeliveryNotes}
               >
-                Request Delivery Note
+                Request DN
               </Button>
             </div>
           </div>
@@ -1191,10 +1191,12 @@ export default function QualityInspectionPage() {
                             <span>Type: QC</span>
                             <span>Release Qty: {baseQty} {inspection.jobOrderItem.unit}</span>
                             <span>ITP: {inspection.itpTemplate.name}</span>
-                            <span className="text-emerald-700">Approved: {approvedQty}</span>
-                            <span className="text-red-700">Rejected: {rejectedQty}</span>
-                            <span className="text-amber-700">Hold: {holdQty}</span>
-                            <span className="text-amber-800">Approved %: {approvedPercent.toFixed(1)}%</span>
+                          </div>
+                          <div className="text-xs text-slate-600 mt-1 flex flex-wrap gap-x-3 gap-y-1">
+                            <span>Approved: {approvedQty}</span>
+                            <span>Rejected: {rejectedQty}</span>
+                            <span>Hold: {holdQty}</span>
+                            <span>Approved %: {approvedPercent.toFixed(1)}%</span>
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
@@ -1211,10 +1213,11 @@ export default function QualityInspectionPage() {
                               }
                             />
                           )}
-                          {getStatusBadge(derivedStatus)}
+                          {getStatusBadge(derivedStatus, approvedPercent)}
                           <Button
                             size="sm"
                             variant="outline"
+                            className="h-7 px-2 text-[11px]"
                             onClick={() => openInspectionDetails(inspection.id)}
                           >
                             View
@@ -1223,7 +1226,7 @@ export default function QualityInspectionPage() {
                             <Button
                               size="sm"
                               variant="outline"
-                              className="border-emerald-300 text-emerald-700 hover:bg-emerald-50"
+                              className="h-7 px-2 text-[11px] border-emerald-300 text-emerald-700 hover:bg-emerald-50"
                               onClick={() => router.push(`/store/delivery-notes?jobOrderId=${group.jobOrderId}&openForm=1`)}
                             >
                               Prepare DN
