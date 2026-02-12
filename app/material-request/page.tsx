@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Select } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import dynamic from 'next/dynamic'
+import type { Suggestion } from '@/components/ui/autocomplete'
 const Autocomplete = dynamic(() => import('@/components/ui/autocomplete').then(m => m.default), { ssr: false, loading: () => null })
 import { useSession } from 'next-auth/react'
 
@@ -609,36 +610,36 @@ export default function MaterialRequestPage() {
         }]
   )
 
-  const itemNameSuggestions = Array.from(new Map(
-    [
-      ...inventory.map((item) => [
-        item.itemName.toLowerCase(),
-        { label: item.itemName, meta: `Inventory • ${item.unit} • Stock ${item.currentStock}`, type: 'inventory' }
-      ] as const),
-      ...requestItems.map((item) => [
-        item.itemName.toLowerCase(),
-        { label: item.itemName, meta: item.description || '', type: 'request' }
-      ] as const),
-    ]
-  ).values())
+  const itemNameEntries: Array<[string, Suggestion]> = [
+    ...inventory.map((item) => [
+      item.itemName.toLowerCase(),
+      { label: item.itemName, meta: `Inventory • ${item.unit} • Stock ${item.currentStock}`, type: 'inventory' }
+    ]),
+    ...requestItems.map((item) => [
+      item.itemName.toLowerCase(),
+      { label: item.itemName, meta: item.description || '', type: 'request' }
+    ])
+  ]
 
-  const descriptionSuggestions = Array.from(new Map(
-    requestItems
-      .filter((item) => item.description)
-      .map((item) => [
-        item.description.toLowerCase(),
-        { label: item.description, meta: item.itemName, type: 'request' }
-      ] as const)
-  ).values())
+  const itemNameSuggestions: Suggestion[] = Array.from(new Map(itemNameEntries).values())
 
-  const supplierSuggestions = Array.from(new Map(
-    suppliers
-      .map((supplier) => [
-        (supplier.name || supplier.tradingName || '').toLowerCase(),
-        { label: supplier.name || supplier.tradingName || '', meta: supplier.tradingName || '', type: 'supplier' }
-      ] as const)
-      .filter((entry) => entry[0])
-  ).values())
+  const descriptionEntries: Array<[string, Suggestion]> = requestItems
+    .filter((item) => item.description)
+    .map((item) => [
+      item.description.toLowerCase(),
+      { label: item.description, meta: item.itemName, type: 'request' }
+    ])
+
+  const descriptionSuggestions: Suggestion[] = Array.from(new Map(descriptionEntries).values())
+
+  const supplierEntries: Array<[string, Suggestion]> = suppliers
+    .map((supplier) => [
+      (supplier.name || supplier.tradingName || '').toLowerCase(),
+      { label: supplier.name || supplier.tradingName || '', meta: supplier.tradingName || '', type: 'supplier' }
+    ])
+    .filter((entry) => entry[0])
+
+  const supplierSuggestions: Suggestion[] = Array.from(new Map(supplierEntries).values())
 
   const applyItemNameSuggestion = (index: number, itemName: string) => {
     setItems((prev) => prev.map((it, i) => {
