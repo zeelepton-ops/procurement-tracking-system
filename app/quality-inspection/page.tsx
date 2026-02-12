@@ -1196,7 +1196,6 @@ export default function QualityInspectionPage() {
                             <span>Approved: {approvedQty}</span>
                             <span>Rejected: {rejectedQty}</span>
                             <span>Hold: {holdQty}</span>
-                            <span>Approved %: {approvedPercent.toFixed(1)}%</span>
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
