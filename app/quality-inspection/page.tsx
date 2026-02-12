@@ -389,6 +389,14 @@ export default function QualityInspectionPage() {
     router.push(`/store/delivery-notes?jobOrderId=${jobOrderIds[0]}&openForm=1`)
   }
 
+  const openInspectionDetails = (inspectionId: string) => {
+    const url = `/quality-inspection/${inspectionId}`
+    const win = window.open(url, '_blank', 'noopener,noreferrer')
+    if (!win) {
+      router.push(url)
+    }
+  }
+
   const deletePendingInspection = async (inspectionId: string) => {
     try {
       const res = await fetch(`/api/production-releases/pending-inspections?id=${inspectionId}`, {
@@ -1436,7 +1444,7 @@ export default function QualityInspectionPage() {
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => setSelectedInspection(inspection)}
+                            onClick={() => openInspectionDetails(inspection.id)}
                           >
                             View
                           </Button>
