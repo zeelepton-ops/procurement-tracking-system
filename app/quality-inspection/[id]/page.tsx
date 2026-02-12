@@ -232,6 +232,33 @@ export default function QualityInspectionDetailPage() {
     return entries.filter((entry) => entry.drawingNo || entry.qty || entry.unit)
   }
 
+  const parseDrawingSummary = (value: string) => {
+    if (!value) return []
+    const lines = value.split('\n').map((line) => line.trim()).filter(Boolean)
+    return lines.map((line) => {
+      const parts = line.split('|').map((part) => part.trim())
+      const drawingNo = parts[0] || ''
+      const qtyPart = parts.find((part) => part.toLowerCase().startsWith('qty')) || ''
+      const unitPart = parts.find((part) => part.toLowerCase().startsWith('unit')) || ''
+      const qty = qtyPart.replace(/qty\s*[:=]?\s*/i, '')
+      const unit = unitPart.replace(/unit\s*[:=]?\s*/i, '')
+      return { drawingNo, qty: qty.trim(), unit: unit.trim() }
+    }).filter((entry) => entry.drawingNo || entry.qty || entry.unit)
+  }
+
+  const formatDrawingSummary = (value: string, fallback: string) => {
+    const entries = parseDrawingSummary(value)
+    if (entries.length === 0) return fallback || 'N/A'
+    return entries
+      .map((entry) => {
+        const qtyPart = entry.qty ? normalizeQtyInput(entry.qty) : ''
+        const unitPart = entry.unit ? entry.unit : ''
+        const suffix = qtyPart ? ` (${qtyPart}${unitPart ? ` ${unitPart}` : ''})` : ''
+        return `${entry.drawingNo || 'N/A'}${suffix}`
+      })
+      .join(', ')
+  }
+
   const buildDrawingNumberValue = () => {
     if (drawingEntries.length === 0) return editForm.drawingNumber.trim()
     return drawingEntries
@@ -483,24 +510,32 @@ export default function QualityInspectionDetailPage() {
     )
   }
 
+  const totalQty = inspection.jobOrderItem.quantity ?? 0
+  const inspectedQtyValue = inspection.inspectedQty ?? totalQty
+  const balanceQty = Math.max(0, totalQty - inspectedQtyValue)
+  const drawingSummary = formatDrawingSummary(
+    inspection.drawingNumber || '',
+    inspection.jobOrderItem.jobOrder.drawingRef || 'N/A'
+  )
+
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto space-y-4">
+    <div className="min-h-screen bg-gray-50 p-4">
+      <div className="max-w-7xl mx-auto space-y-3">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={() => router.push('/quality-inspection')}>
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back
             </Button>
-            <h1 className="text-xl font-semibold text-slate-900">Quality Inspection Details</h1>
+            <h1 className="text-lg font-semibold text-slate-900">Quality Inspection Details</h1>
           </div>
           {getStatusBadge(getInspectionStatus(inspection))}
         </div>
 
-        <div className="space-y-4">
-          <div className="bg-white rounded-lg border p-3">
-            <h4 className="font-semibold text-sm mb-2">Inspection Overview</h4>
-            <div className="grid grid-cols-4 gap-3 text-xs">
+        <div className="space-y-3">
+          <div className="bg-white rounded-lg border p-2">
+            <h4 className="font-semibold text-sm mb-1">Inspection Overview</h4>
+            <div className="grid grid-cols-5 gap-2 text-xs">
               <div>
                 <span className="text-slate-500">Job No.</span>
                 <p className="font-medium text-slate-900">{inspection.jobOrderItem.jobOrder.jobNumber}</p>
@@ -522,16 +557,22 @@ export default function QualityInspectionDetailPage() {
               <div>
                 <span className="text-slate-500">Inspection Qty Released</span>
                 <p className="font-medium text-slate-900">
-                  {inspection.inspectedQty ?? inspection.jobOrderItem.quantity ?? '-'} {inspection.jobOrderItem.unit || ''}
+                  {inspectedQtyValue} {inspection.jobOrderItem.unit || ''}
+                </p>
+              </div>
+              <div>
+                <span className="text-slate-500">Balance Inspection Qty</span>
+                <p className="font-medium text-slate-900">
+                  {balanceQty} {inspection.jobOrderItem.unit || ''}
                 </p>
               </div>
               <div>
                 <span className="text-slate-500">Transmittal No.</span>
                 <p className="font-medium text-slate-900">{inspection.transmittalNo || 'N/A'}</p>
               </div>
-              <div>
+              <div className="col-span-2">
                 <span className="text-slate-500">Drawing No.</span>
-                <p className="font-medium text-slate-900">{inspection.drawingNumber || inspection.jobOrderItem.jobOrder.drawingRef || 'N/A'}</p>
+                <p className="font-medium text-slate-900 leading-5">{drawingSummary}</p>
               </div>
               <div>
                 <span className="text-slate-500">Inspection Date</span>
@@ -541,7 +582,7 @@ export default function QualityInspectionDetailPage() {
           </div>
 
           {inspectionSummary && (
-            <div className="grid grid-cols-4 gap-2 p-3 bg-slate-50 rounded-lg border">
+            <div className="grid grid-cols-4 gap-2 p-2 bg-slate-50 rounded-lg border">
               <div className="text-center">
                 <p className="text-xs text-slate-500">Steps</p>
                 <p className="text-xl font-bold text-slate-900">{inspectionSummary.totalSteps}</p>
@@ -564,11 +605,11 @@ export default function QualityInspectionDetailPage() {
             </div>
           )}
 
-          <div className="bg-white rounded-lg p-3 border">
-            <h4 className="font-semibold text-sm mb-3">QC Record</h4>
+          <div className="bg-white rounded-lg p-2 border">
+            <h4 className="font-semibold text-sm mb-2">QC Record</h4>
             {isAdmin ? (
-              <div className="space-y-3">
-                <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <div className="grid grid-cols-2 gap-2">
                   <div>
                     <Label className="text-xs text-slate-500 font-semibold">Drawing No.</Label>
                     {drawingEntries.length === 0 ? (
@@ -582,7 +623,7 @@ export default function QualityInspectionDetailPage() {
                           placeholder="Drawing number"
                           className="text-xs h-8"
                         />
-                        <div className="mt-2">
+                        <div className="mt-1">
                           <Button
                             type="button"
                             variant="outline"
@@ -633,7 +674,7 @@ export default function QualityInspectionDetailPage() {
                   </div>
                 </div>
                 {drawingEntries.length > 0 && (
-                  <div className="space-y-2">
+                  <div className="space-y-1">
                     <div className="flex items-center justify-between">
                       <div className="text-[11px] text-slate-500 font-semibold">Drawing Entries</div>
                       <div className="flex gap-2">
@@ -660,13 +701,14 @@ export default function QualityInspectionDetailPage() {
                         </Button>
                       </div>
                     </div>
-                    <div className="grid grid-cols-12 gap-2 text-[11px] text-slate-500 font-semibold">
+                    <div className="grid grid-cols-12 gap-1 text-[11px] text-slate-500 font-semibold">
                       <div className="col-span-6">Drawing No.</div>
-                      <div className="col-span-3">Qty</div>
+                      <div className="col-span-2">Qty</div>
                       <div className="col-span-3">Unit</div>
+                      <div className="col-span-1"></div>
                     </div>
                     {drawingEntries.map((entry) => (
-                      <div key={entry.id} className="grid grid-cols-12 gap-2">
+                      <div key={entry.id} className="grid grid-cols-12 gap-1">
                         <Input
                           value={entry.drawingNo}
                           onChange={(e) =>
@@ -686,7 +728,7 @@ export default function QualityInspectionDetailPage() {
                             )
                           }
                           placeholder="0"
-                          className="col-span-3 text-xs h-8"
+                          className="col-span-2 text-xs h-8"
                         />
                         <Input
                           value={entry.unit}
@@ -698,24 +740,22 @@ export default function QualityInspectionDetailPage() {
                           placeholder="Unit"
                           className="col-span-3 text-xs h-8"
                         />
-                        <div className="col-span-12 flex justify-end">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            className="text-red-600"
-                            onClick={() =>
-                              setDrawingEntries((prev) => prev.filter((row) => row.id !== entry.id))
-                            }
-                          >
-                            Remove
-                          </Button>
-                        </div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="col-span-1 text-red-600 h-8"
+                          onClick={() =>
+                            setDrawingEntries((prev) => prev.filter((row) => row.id !== entry.id))
+                          }
+                        >
+                          Remove
+                        </Button>
                       </div>
                     ))}
                   </div>
                 )}
-                <div className="grid grid-cols-4 gap-3">
+                <div className="grid grid-cols-4 gap-2">
                   <div>
                     <Label className="text-xs text-green-600 font-semibold">Approved Qty</Label>
                     <Input
@@ -799,10 +839,10 @@ export default function QualityInspectionDetailPage() {
                 </div>
               </div>
             ) : (
-              <div className="grid grid-cols-2 gap-3 text-xs text-slate-700">
+              <div className="grid grid-cols-2 gap-2 text-xs text-slate-700">
                 <div>
                   <span className="text-slate-500">Drawing No.:</span>
-                  <p className="font-medium">{inspection.drawingNumber || inspection.jobOrderItem.jobOrder.drawingRef || 'N/A'}</p>
+                  <p className="font-medium">{drawingSummary}</p>
                 </div>
                 <div>
                   <span className="text-slate-500">Transmittal No.:</span>
@@ -841,7 +881,7 @@ export default function QualityInspectionDetailPage() {
           </div>
 
           <div>
-            <h4 className="font-semibold text-sm mb-3">Inspection Steps</h4>
+            <h4 className="font-semibold text-sm mb-2">Inspection Steps</h4>
             <div className="overflow-x-auto border rounded-lg">
               <div className="min-w-[1000px]">
                 <div className="grid grid-cols-[2fr_0.8fr_0.8fr_0.8fr_2fr] gap-0 border-b bg-slate-50 text-xs font-semibold text-slate-600">
@@ -912,7 +952,7 @@ export default function QualityInspectionDetailPage() {
                 </div>
               </div>
             </div>
-            <div className="flex justify-end mt-3">
+            <div className="flex justify-end mt-2">
               <Button size="sm" onClick={saveStepTable}>
                 Save Step Updates
               </Button>
