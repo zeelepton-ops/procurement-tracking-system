@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const session = await getServerSession();
   const body = await req.json();
-  const { jobOrderItemId, itpTemplateId, isCritical } = body;
+  const { jobOrderItemId, itpTemplateId, isCritical, inspectedQty } = body;
   const createdBy = session?.user?.email || 'system';
   
   if (!jobOrderItemId || !itpTemplateId) {
@@ -63,10 +63,27 @@ export async function POST(req: NextRequest) {
   if (!itp) return NextResponse.json({ error: 'ITP Template not found' }, { status: 404 });
   
   // Create inspection and steps
-  const inspectedQty = jobOrderItem.quantity ?? null
+  const parsedInspectedQty = inspectedQty !== undefined && inspectedQty !== null && inspectedQty !== ''
+    ? Number(inspectedQty)
+    : null
+
+  if (parsedInspectedQty !== null && (Number.isNaN(parsedInspectedQty) || parsedInspectedQty <= 0)) {
+    return NextResponse.json({ error: 'Inspection qty must be a positive number' }, { status: 400 });
+  }
+
+  if (
+    parsedInspectedQty !== null &&
+    jobOrderItem.quantity !== null &&
+    jobOrderItem.quantity !== undefined &&
+    parsedInspectedQty > jobOrderItem.quantity
+  ) {
+    return NextResponse.json({ error: 'Inspection qty cannot exceed item quantity' }, { status: 400 });
+  }
+
+  const inspectedQtyValue = parsedInspectedQty !== null ? parsedInspectedQty : (jobOrderItem.quantity ?? null)
   const inspectedWeight =
-    jobOrderItem.unitWeight !== null && inspectedQty !== null
-      ? jobOrderItem.unitWeight * inspectedQty
+    jobOrderItem.unitWeight !== null && inspectedQtyValue !== null
+      ? jobOrderItem.unitWeight * inspectedQtyValue
       : null
 
   const inspection = await prisma.qualityInspection.create({
@@ -77,7 +94,7 @@ export async function POST(req: NextRequest) {
       createdBy,
       drawingNumber: jobOrderItem.jobOrder?.drawingRef || null,
       inspectionDate: new Date(),
-      inspectedQty,
+      inspectedQty: inspectedQtyValue,
       inspectedWeight,
       steps: {
         create: itp.steps.map((stepName: string) => ({ stepName }))

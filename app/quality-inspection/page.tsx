@@ -150,6 +150,7 @@ export default function QualityInspectionPage() {
   const [createForm, setCreateForm] = useState({
     jobOrderId: '',
     itpTemplateId: '',
+    inspectedQty: '',
     isCritical: false,
   })
 
@@ -388,7 +389,7 @@ export default function QualityInspectionPage() {
       })
       if (res.ok) {
         setShowCreateDialog(false)
-        setCreateForm({ jobOrderId: '', itpTemplateId: '', isCritical: false })
+        setCreateForm({ jobOrderId: '', itpTemplateId: '', inspectedQty: '', isCritical: false })
         fetchInspections()
       } else {
         const data = await res.json().catch(() => null)
@@ -1036,7 +1037,7 @@ export default function QualityInspectionPage() {
                     </div>
                   )}
 
-                  <div className="space-y-2">
+                    <div className="space-y-2">
                     <Label className="font-semibold text-slate-900">Select ITP Template *</Label>
                     <Select
                       value={createForm.itpTemplateId}
@@ -1060,6 +1061,19 @@ export default function QualityInspectionPage() {
                       </p>
                     )}
                   </div>
+
+                    <div className="space-y-2">
+                      <Label className="font-semibold text-slate-900">Inspection Qty</Label>
+                      <Input
+                        type="number"
+                        min="0"
+                        value={createForm.inspectedQty}
+                        onChange={(e) => setCreateForm({ ...createForm, inspectedQty: e.target.value })}
+                        placeholder="Leave blank to use full quantity"
+                        className="border-slate-300 focus:border-green-500 focus:ring-green-500"
+                      />
+                      <p className="text-xs text-slate-500">Applied to all items for this job order.</p>
+                    </div>
 
                   <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4 space-y-3">
                     <div className="flex items-center gap-3">
@@ -1161,6 +1175,11 @@ export default function QualityInspectionPage() {
                   if (entry.kind === 'quality') {
                     const inspection = entry.inspection
                     const derivedStatus = getInspectionStatus(inspection)
+                    const baseQty = inspection.inspectedQty ?? inspection.jobOrderItem.quantity ?? 0
+                    const approvedQty = inspection.approvedQty ?? 0
+                    const rejectedQty = inspection.rejectedQty ?? 0
+                    const holdQty = inspection.holdQty ?? 0
+                    const approvedPercent = baseQty > 0 ? (approvedQty / baseQty) * 100 : 0
                     const isSelectable = derivedStatus === 'APPROVED'
                     const isSelected = selectedInspectionIds.includes(inspection.id)
 
@@ -1170,8 +1189,12 @@ export default function QualityInspectionPage() {
                           <p className="text-sm font-semibold text-slate-900 truncate">{inspection.jobOrderItem.workDescription}</p>
                           <div className="text-xs text-slate-500 flex flex-wrap gap-x-3 gap-y-1 mt-1">
                             <span>Type: QC</span>
-                            <span>Qty: {inspection.jobOrderItem.quantity ?? 0} {inspection.jobOrderItem.unit}</span>
+                            <span>Release Qty: {baseQty} {inspection.jobOrderItem.unit}</span>
                             <span>ITP: {inspection.itpTemplate.name}</span>
+                            <span className="text-emerald-700">Approved: {approvedQty}</span>
+                            <span className="text-red-700">Rejected: {rejectedQty}</span>
+                            <span className="text-amber-700">Hold: {holdQty}</span>
+                            <span className="text-amber-800">Approved %: {approvedPercent.toFixed(1)}%</span>
                           </div>
                         </div>
                         <div className="flex items-center gap-2">

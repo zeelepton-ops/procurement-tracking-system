@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { jobOrderId, itpTemplateId, isCritical } = await request.json()
+    const { jobOrderId, itpTemplateId, isCritical, inspectedQty } = await request.json()
 
     // Validate inputs
     if (!jobOrderId || !itpTemplateId) {
@@ -47,13 +47,30 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'ITP template not found' }, { status: 404 })
     }
 
+    const parsedInspectedQty = inspectedQty !== undefined && inspectedQty !== null && inspectedQty !== ''
+      ? Number(inspectedQty)
+      : null
+
+    if (parsedInspectedQty !== null && (Number.isNaN(parsedInspectedQty) || parsedInspectedQty <= 0)) {
+      return NextResponse.json({ error: 'Inspection qty must be a positive number' }, { status: 400 })
+    }
+
+    if (parsedInspectedQty !== null) {
+      const exceeds = jobOrder.items.some(item =>
+        item.quantity !== null && item.quantity !== undefined && parsedInspectedQty > item.quantity
+      )
+      if (exceeds) {
+        return NextResponse.json({ error: 'Inspection qty cannot exceed item quantity' }, { status: 400 })
+      }
+    }
+
     // Create inspections for each job order item
     const inspections = await Promise.all(
       jobOrder.items.map(async (item) => {
-        const inspectedQty = item.quantity ?? null
+        const inspectedQtyValue = parsedInspectedQty !== null ? parsedInspectedQty : (item.quantity ?? null)
         const unitWeight = (item as any).unitWeight ?? null
         const inspectedWeight =
-          unitWeight !== null && inspectedQty !== null ? unitWeight * inspectedQty : null
+          unitWeight !== null && inspectedQtyValue !== null ? unitWeight * inspectedQtyValue : null
         const inspection = await prisma.qualityInspection.create({
           data: {
             jobOrderItemId: item.id,
@@ -62,7 +79,7 @@ export async function POST(request: NextRequest) {
             createdBy: userEmail,
             drawingNumber: jobOrder.drawingRef || null,
             inspectionDate: new Date(),
-            inspectedQty,
+            inspectedQty: inspectedQtyValue,
             inspectedWeight,
             steps: {
               create: template.steps.map((stepName) => ({
