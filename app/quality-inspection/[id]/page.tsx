@@ -280,7 +280,7 @@ export default function QualityInspectionDetailPage() {
       .filter((entry) => entry.drawingNo || entry.qty || entry.unit)
 
     if (nextEntries.length === 0) return false
-    setDrawingEntries(nextEntries)
+    setDrawingEntries((prev) => [...prev, ...nextEntries])
     return true
   }
 
