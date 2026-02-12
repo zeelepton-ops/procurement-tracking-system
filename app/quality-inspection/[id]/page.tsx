@@ -215,6 +215,8 @@ export default function QualityInspectionDetailPage() {
     return fixed.replace(/\.?(0+)$/, '')
   }
 
+  const formatQty = (value: number) => normalizeQtyInput(value.toString())
+
   const parseDrawingEntries = (value: string) => {
     if (!value) return []
     const lines = value.split('\n').map((line) => line.trim()).filter(Boolean)
@@ -275,31 +277,39 @@ export default function QualityInspectionDetailPage() {
   const autoApprovedQty = inspectionSummary ? inspectionSummary.finalApprovedQty : 0
   const autoRejectedQty = inspectionSummary ? inspectionSummary.totalRejectedQty : 0
   const autoHoldQty = inspectionSummary ? inspectionSummary.totalHoldQty : 0
+  const effectiveApprovedQty = approvedOverride ? parseStepNumber(editForm.approvedQty) : autoApprovedQty
+  const effectiveRejectedQty = rejectedOverride ? parseStepNumber(editForm.rejectedQty) : autoRejectedQty
+  const effectiveHoldQty = holdOverride ? parseStepNumber(editForm.holdQty) : autoHoldQty
+  const effectiveInspectedQty = effectiveApprovedQty + effectiveRejectedQty + effectiveHoldQty
 
   useEffect(() => {
     if (!inspection || !inspectionSummary) return
 
     if (!approvedOverride) {
-      const nextApproved = autoApprovedQty.toString()
+      const nextApproved = formatQty(autoApprovedQty)
       if (editForm.approvedQty !== nextApproved) {
         setEditForm((prev) => ({ ...prev, approvedQty: nextApproved }))
       }
     }
 
     if (!rejectedOverride) {
-      const nextRejected = autoRejectedQty.toString()
+      const nextRejected = formatQty(autoRejectedQty)
       if (editForm.rejectedQty !== nextRejected) {
         setEditForm((prev) => ({ ...prev, rejectedQty: nextRejected }))
       }
     }
 
     if (!holdOverride) {
-      const nextHold = autoHoldQty.toString()
+      const nextHold = formatQty(autoHoldQty)
       if (editForm.holdQty !== nextHold) {
         setEditForm((prev) => ({ ...prev, holdQty: nextHold }))
       }
     }
-  }, [inspection, inspectionSummary, autoApprovedQty, autoRejectedQty, autoHoldQty, approvedOverride, rejectedOverride, holdOverride, editForm.approvedQty, editForm.rejectedQty, editForm.holdQty])
+    const nextInspected = formatQty(effectiveInspectedQty)
+    if (editForm.inspectedQty !== nextInspected) {
+      setEditForm((prev) => ({ ...prev, inspectedQty: nextInspected }))
+    }
+  }, [inspection, inspectionSummary, autoApprovedQty, autoRejectedQty, autoHoldQty, approvedOverride, rejectedOverride, holdOverride, editForm.approvedQty, editForm.rejectedQty, editForm.holdQty, editForm.inspectedQty, effectiveInspectedQty])
 
   const requestDeliveryNotesForInspection = async (id: string) => {
     try {
@@ -358,10 +368,10 @@ export default function QualityInspectionDetailPage() {
           drawingNumber: buildDrawingNumberValue(),
           transmittalNo: editForm.transmittalNo.trim(),
           inspectionDate: editForm.inspectionDate || null,
-          inspectedQty: normalizeQtyInput(editForm.inspectedQty),
-          approvedQty: approvedOverride ? editForm.approvedQty : autoApprovedQty.toString(),
-          rejectedQty: rejectedOverride ? editForm.rejectedQty : autoRejectedQty.toString(),
-          holdQty: holdOverride ? editForm.holdQty : autoHoldQty.toString(),
+          inspectedQty: formatQty(effectiveInspectedQty),
+          approvedQty: approvedOverride ? editForm.approvedQty : formatQty(autoApprovedQty),
+          rejectedQty: rejectedOverride ? editForm.rejectedQty : formatQty(autoRejectedQty),
+          holdQty: holdOverride ? editForm.holdQty : formatQty(autoHoldQty),
           inspectedWeight: normalizeQtyInput(editForm.inspectedWeight),
           remarks: editForm.remarks.trim(),
         }),
@@ -431,14 +441,18 @@ export default function QualityInspectionDetailPage() {
       await Promise.all(updates)
 
       if (isAdmin) {
-        const approvedQty = minApproved ?? 0
+        const approvedQty = approvedOverride ? parseStepNumber(editForm.approvedQty) : (minApproved ?? 0)
+        const rejectedQty = rejectedOverride ? parseStepNumber(editForm.rejectedQty) : totalRejected
+        const holdQty = holdOverride ? parseStepNumber(editForm.holdQty) : totalHold
+        const inspectedQty = approvedQty + rejectedQty + holdQty
         const headerRes = await fetch(`/api/quality-inspection/${inspection.id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            approvedQty,
-            rejectedQty: totalRejected,
-            holdQty: totalHold,
+            inspectedQty: formatQty(inspectedQty),
+            approvedQty: formatQty(approvedQty),
+            rejectedQty: formatQty(rejectedQty),
+            holdQty: formatQty(holdQty),
           })
         })
         if (!headerRes.ok) {
@@ -557,30 +571,36 @@ export default function QualityInspectionDetailPage() {
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <Label className="text-xs text-slate-500 font-semibold">Drawing No.</Label>
-                    <Input
-                      value={editForm.drawingNumber}
-                      onChange={(e) => {
-                        setDrawingEntries([])
-                        setEditForm({ ...editForm, drawingNumber: e.target.value })
-                      }}
-                      placeholder="Drawing number"
-                      className="text-xs h-8"
-                    />
-                    <div className="mt-2">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() =>
-                          setDrawingEntries((prev) => [
-                            ...prev,
-                            { id: crypto.randomUUID(), drawingNo: '', qty: '', unit: inspection.jobOrderItem.unit || '' }
-                          ])
-                        }
-                      >
-                        Add Drawing Entry
-                      </Button>
-                    </div>
+                    {drawingEntries.length === 0 ? (
+                      <>
+                        <Input
+                          value={editForm.drawingNumber}
+                          onChange={(e) => {
+                            setDrawingEntries([])
+                            setEditForm({ ...editForm, drawingNumber: e.target.value })
+                          }}
+                          placeholder="Drawing number"
+                          className="text-xs h-8"
+                        />
+                        <div className="mt-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() =>
+                              setDrawingEntries((prev) => [
+                                ...prev,
+                                { id: crypto.randomUUID(), drawingNo: '', qty: '', unit: inspection.jobOrderItem.unit || '' }
+                              ])
+                            }
+                          >
+                            Add Drawing Entry
+                          </Button>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="text-[11px] text-slate-500">Using multiple drawing entries below.</div>
+                    )}
                   </div>
                   <div>
                     <Label className="text-xs text-slate-500 font-semibold">Transmittal No.</Label>
@@ -605,14 +625,41 @@ export default function QualityInspectionDetailPage() {
                     <Input
                       type="number"
                       value={editForm.inspectedQty}
-                      onChange={(e) => setEditForm({ ...editForm, inspectedQty: normalizeQtyInput(e.target.value) })}
                       placeholder="0"
                       className="text-xs h-8"
+                      disabled
                     />
+                    <p className="text-[11px] text-slate-500 mt-1">Auto = Approved + Rejected + Hold</p>
                   </div>
                 </div>
                 {drawingEntries.length > 0 && (
                   <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="text-[11px] text-slate-500 font-semibold">Drawing Entries</div>
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            setDrawingEntries((prev) => [
+                              ...prev,
+                              { id: crypto.randomUUID(), drawingNo: '', qty: '', unit: inspection.jobOrderItem.unit || '' }
+                            ])
+                          }
+                        >
+                          Add Entry
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setDrawingEntries([])}
+                        >
+                          Use Single Drawing
+                        </Button>
+                      </div>
+                    </div>
                     <div className="grid grid-cols-12 gap-2 text-[11px] text-slate-500 font-semibold">
                       <div className="col-span-6">Drawing No.</div>
                       <div className="col-span-3">Qty</div>

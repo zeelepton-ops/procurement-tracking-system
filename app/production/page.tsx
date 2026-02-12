@@ -340,6 +340,13 @@ export default function ProductionPage() {
     return icons[status]
   }
 
+  const formatDateTime = (value?: Date) => {
+    if (!value) return 'N/A'
+    const date = new Date(value)
+    if (Number.isNaN(date.getTime())) return 'N/A'
+    return date.toLocaleString()
+  }
+
   const selectedJob = jobOrders.find(jo => jo.id === selectedJobOrder)
 
   return (
@@ -468,6 +475,16 @@ export default function ProductionPage() {
             {selectedJob.items?.map(item => {
               const remainingQty = calculateRemainingQty(item.id)
               const itemReleases = releases.filter(r => r.jobOrderItemId === item.id)
+              const totalQty = item.quantity || 0
+              const sortedReleases = [...itemReleases].sort((a, b) =>
+                new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+              )
+              let runningReleased = 0
+              const balanceByReleaseId = new Map<string, number>()
+              sortedReleases.forEach((release) => {
+                runningReleased += release.releaseQty
+                balanceByReleaseId.set(release.id, totalQty - runningReleased)
+              })
 
               return (
                 <Card key={item.id} className="shadow-md hover:shadow-lg transition-shadow">
@@ -488,16 +505,20 @@ export default function ProductionPage() {
                   </CardHeader>
 
                   {/* Releases for this item */}
-                  {itemReleases.length > 0 ? (
+                  {sortedReleases.length > 0 ? (
                     <CardContent className="space-y-3 pt-4">
-                      {itemReleases.map(release => (
+                      {sortedReleases.map(release => {
+                        const balanceQty = balanceByReleaseId.get(release.id) ?? remainingQty
+                        return (
                         <div key={release.id} className="bg-slate-50 rounded-lg p-4 border border-slate-200 hover:border-primary-300 transition-colors">
-                          <div className="flex items-center justify-between mb-3">
+                          <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
                             <div className="flex items-center gap-2">
                               {getStatusIcon(release.status)}
                               <span className={`px-3 py-1 rounded-full text-xs font-bold ${getStatusColor(release.status)}`}>
                                 {release.status.replace(/_/g, ' ')}
                               </span>
+                              <span className="text-xs text-slate-500">Released {formatDateTime(release.createdAt)}</span>
+                              <span className="text-xs text-slate-500">By {release.createdBy || 'System'}</span>
                             </div>
                             <div className="text-sm font-medium text-slate-700">
                               Release: <span className="text-primary-700">{release.releaseQty} {item.unit}</span>
@@ -510,15 +531,15 @@ export default function ProductionPage() {
                               <span className="font-semibold">Drawing:</span> {release.drawingNumber || 'N/A'}
                             </div>
                             <div>
-                              <span className="font-semibold">Job No.:</span> {selectedJob?.jobNumber || release.jobOrderItem?.jobOrder?.jobNumber || 'N/A'}
+                              <span className="font-semibold">Transmittal:</span> N/A
                             </div>
                             <div>
                               <span className="font-semibold">Qty:</span> {release.releaseQty} {item.unit}
                               {release.releaseWeight && ` • ${release.releaseWeight.toFixed(2)} kg`}
                             </div>
                             <div>
-                              <span className="font-semibold">Balance:</span> {remainingQty} {item.unit}
-                              {item.unitWeight && ` • ${(remainingQty * item.unitWeight).toFixed(2)} kg`}
+                              <span className="font-semibold">Balance:</span> {balanceQty} {item.unit}
+                              {item.unitWeight && ` • ${(balanceQty * item.unitWeight).toFixed(2)} kg`}
                             </div>
                           </div>
 
@@ -534,43 +555,41 @@ export default function ProductionPage() {
                           )}
 
                           {/* Action Buttons */}
-                          <div className="space-y-2">
+                          <div className="flex flex-wrap items-center gap-2">
                             {release.status === 'IN_PRODUCTION' || release.status === 'PLANNING' ? (
                               <Button
                                 onClick={() => handlePushForInspection(release.id)}
-                                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium"
+                                className="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium"
                               >
                                 Push for Inspection
                               </Button>
                             ) : release.status === 'REWORK' ? (
                               <Button
                                 onClick={() => handlePushForInspection(release.id)}
-                                className="w-full bg-orange-600 hover:bg-orange-700 text-white text-sm font-medium"
+                                className="bg-orange-600 hover:bg-orange-700 text-white text-sm font-medium"
                               >
                                 Re-inspect ({release.inspectionCount} attempts)
                               </Button>
                             ) : null}
-                            <div className="flex gap-2">
-                              <Button
-                                variant="outline"
-                                className="flex-1 border-slate-300 text-slate-700 hover:bg-slate-50"
-                                onClick={() => handleEditRelease(release)}
-                                disabled={!!release.inspections && release.inspections.length > 0}
-                              >
-                                Edit
-                              </Button>
-                              <Button
-                                variant="outline"
-                                className="flex-1 border-red-300 text-red-600 hover:bg-red-50"
-                                onClick={() => handleDeleteRelease(release.id)}
-                                disabled={!!release.inspections && release.inspections.length > 0}
-                              >
-                                Delete
-                              </Button>
-                            </div>
+                            <Button
+                              variant="outline"
+                              className="border-slate-300 text-slate-700 hover:bg-slate-50"
+                              onClick={() => handleEditRelease(release)}
+                              disabled={!!release.inspections && release.inspections.length > 0}
+                            >
+                              Edit
+                            </Button>
+                            <Button
+                              variant="outline"
+                              className="border-red-300 text-red-600 hover:bg-red-50"
+                              onClick={() => handleDeleteRelease(release.id)}
+                              disabled={!!release.inspections && release.inspections.length > 0}
+                            >
+                              Delete
+                            </Button>
                           </div>
                         </div>
-                      ))}
+                      )})}
                     </CardContent>
                   ) : (
                     <CardContent>
