@@ -124,7 +124,6 @@ function DeliveryNotesContent() {
   const [dnRequests, setDnRequests] = useState<DeliveryNoteRequest[]>([])
   const [readyInspections, setReadyInspections] = useState<ReadyInspection[]>([])
   const [readyLoading, setReadyLoading] = useState(false)
-  const [pendingInspectionApply, setPendingInspectionApply] = useState<ReadyInspection | null>(null)
 
   const [formData, setFormData] = useState({
     deliveryNoteNumber: '',
@@ -421,43 +420,44 @@ function DeliveryNotesContent() {
     handleJobOrderChange(jobOrderId)
   }
 
-  const applyInspectionToLineItems = (inspection: ReadyInspection) => {
+  const buildInspectionSubDescription = (inspection: ReadyInspection) => {
     const approvedQty = getApprovedQty(inspection)
     const unit = inspection.jobOrderItem?.unit || ''
     const drawing = normalizeDrawingText(inspection.drawingNumber) ||
       inspection.jobOrderItem?.jobOrder?.jobNumber || 'N/A'
-    const subDescription = `${drawing} | Qty ${approvedQty} ${unit}`.trim()
+    return `${drawing} | Qty ${approvedQty} ${unit}`.trim()
+  }
 
-    setFormData((prev) => {
-      const items = prev.lineItems.map((item) => {
-        if (item.jobOrderItemId !== inspection.jobOrderItemId) return item
-        const firstSub = item.subItems[0]
-        const nextSub = {
-          ...(firstSub || { id: `sub-${Math.random()}` }),
-          subDescription,
-          unit: unit || firstSub?.unit || '',
-          deliveredQuantity: approvedQty,
-        }
-        return { ...item, subItems: [nextSub, ...item.subItems.slice(1)] }
-      })
-      return { ...prev, lineItems: items }
+  const applyInspectionToLineItems = (items: typeof formData.lineItems, inspection: ReadyInspection) => {
+    const approvedQty = getApprovedQty(inspection)
+    const unit = inspection.jobOrderItem?.unit || ''
+    const subDescription = buildInspectionSubDescription(inspection)
+
+    return items.map((item) => {
+      if (item.jobOrderItemId !== inspection.jobOrderItemId) return item
+      const firstSub = item.subItems[0]
+      const nextSub = {
+        ...(firstSub || { id: `sub-${Math.random()}` }),
+        subDescription,
+        unit: unit || firstSub?.unit || '',
+        deliveredQuantity: approvedQty,
+      }
+      return { ...item, subItems: [nextSub, ...item.subItems.slice(1)] }
     })
   }
 
   const copyInspectionToSubDescription = (inspection: ReadyInspection) => {
-    startDeliveryNoteFromInspection(inspection)
-    setPendingInspectionApply(inspection)
-  }
+    const jobOrderId = inspection.jobOrderItem?.jobOrder?.id
+    if (!jobOrderId) {
+      setError('Job order not found for this inspection.')
+      setTimeout(() => setError(null), 3000)
+      return
+    }
 
-  useEffect(() => {
-    if (!pendingInspectionApply) return
-    const jobOrderId = pendingInspectionApply.jobOrderItem?.jobOrder?.id
-    if (!jobOrderId) return
-    if (formData.jobOrderId !== jobOrderId) return
-    if (formData.lineItems.length === 0) return
-    applyInspectionToLineItems(pendingInspectionApply)
-    setPendingInspectionApply(null)
-  }, [pendingInspectionApply, formData.jobOrderId, formData.lineItems.length])
+    setShowForm(true)
+    setEditingId(null)
+    handleJobOrderChange(jobOrderId, inspection)
+  }
 
   const markRequestCompleted = async (id: string) => {
     try {
@@ -548,7 +548,7 @@ function DeliveryNotesContent() {
     }
   }
 
-  const handleJobOrderChange = async (jobOrderId: string) => {
+  const handleJobOrderChange = async (jobOrderId: string, inspection?: ReadyInspection) => {
     setFormData(prev => ({ ...prev, jobOrderId }))
     
     // Auto-fill from selected job order
@@ -603,6 +603,10 @@ function DeliveryNotesContent() {
         }
       })
 
+      const nextLineItems = inspection
+        ? applyInspectionToLineItems(lineItems, inspection)
+        : lineItems
+
       setFormData(prev => ({
         ...prev,
         jobSalesOrder: selectedJobOrder.jobNumber,
@@ -611,7 +615,7 @@ function DeliveryNotesContent() {
         refPoNumber: selectedJobOrder.lpoContractNo || '', // Pull from Job Order LPO/Contract No
         country: 'Qatar', // Default to Qatar
         shipmentType: 'Land', // Default to Land
-        lineItems: lineItems // Populate line items from job order
+        lineItems: nextLineItems // Populate line items from job order
       }))
     }
   }
