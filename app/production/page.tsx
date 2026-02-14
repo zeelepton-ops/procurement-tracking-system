@@ -157,6 +157,62 @@ export default function ProductionPage() {
     return jobOrder?.items?.find(item => item.id === itemId)
   }
 
+  const normalizeQtyInput = (value: string) => {
+    if (!value) return ''
+    const parsed = Number(value)
+    if (Number.isNaN(parsed)) return ''
+    const rounded = Math.round(parsed * 10000) / 10000
+    const fixed = rounded.toFixed(4)
+    return fixed.replace(/\.?(0+)$/, '')
+  }
+
+  const parseQtyNumber = (value: string) => {
+    const normalized = normalizeQtyInput(value)
+    return normalized ? Number(normalized) : 0
+  }
+
+  const applyPastedReleaseRows = (text: string, insertIndex: number) => {
+    if (!text) return false
+    const rows = text
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean)
+
+    if (rows.length <= 1 && !rows[0]?.includes('\t')) return false
+
+    const itemUnit = getSelectedJobOrderItem(formData.jobOrderItemId)?.unit || ''
+    const nextEntries = rows
+      .map((row) => row.split('\t').map((cell) => cell.trim()))
+      .filter((cols) => cols.length > 0)
+      .map((cols) => {
+        const drawingNumber = cols[0] || ''
+        const qty = cols[1] || ''
+        const third = cols[2] || ''
+        const transmittalNo = third && (!itemUnit || third.toLowerCase() !== itemUnit.toLowerCase())
+          ? third
+          : ''
+        return {
+          drawingNumber,
+          transmittalNo,
+          releaseQty: parseQtyNumber(qty)
+        }
+      })
+      .filter((entry) => entry.drawingNumber || entry.transmittalNo || entry.releaseQty)
+
+    if (nextEntries.length === 0) return false
+    setReleaseLines((prev) => {
+      const clampedIndex = Math.max(0, Math.min(insertIndex, prev.length - 1))
+      const target = prev[clampedIndex]
+      const targetEmpty = !target?.drawingNumber && !target?.transmittalNo && !target?.releaseQty
+      const replacement = targetEmpty ? [nextEntries[0]] : []
+      const remainder = targetEmpty ? nextEntries.slice(1) : nextEntries
+      const before = prev.slice(0, clampedIndex)
+      const after = prev.slice(clampedIndex + (targetEmpty ? 1 : 0))
+      return [...before, ...replacement, ...remainder, ...after]
+    })
+    return true
+  }
+
   const handleCreateRelease = async (e: React.FormEvent) => {
     e.preventDefault()
     
@@ -192,7 +248,7 @@ export default function ProductionPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
-          releaseQty: parseFloat(formData.releaseQty.toString()),
+          releaseQty: parseQtyNumber(formData.releaseQty.toString()),
           releaseItems: useMultipleDrawings ? lines : undefined,
           createdBy: session?.user?.email || session?.user?.name || 'System'
         })
@@ -262,7 +318,7 @@ export default function ProductionPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...editFormData,
-          releaseQty: parseFloat(editFormData.releaseQty.toString())
+          releaseQty: parseQtyNumber(editFormData.releaseQty.toString())
         })
       })
 
@@ -651,9 +707,20 @@ export default function ProductionPage() {
                                 next[idx] = { ...next[idx], drawingNumber: e.target.value }
                                 setReleaseLines(next)
                               }}
+                              onPaste={(e) => {
+                                const text = e.clipboardData.getData('text')
+                                if (applyPastedReleaseRows(text, idx)) {
+                                  e.preventDefault()
+                                }
+                              }}
                               placeholder="DRW-001"
                               className="bg-white border-slate-300 text-slate-900 focus:ring-primary-500 focus:border-transparent"
                             />
+                            {idx === 0 && (
+                              <p className="text-[11px] text-slate-500 mt-1">
+                                Paste rows here (Drawing, Qty, optional Transmittal).
+                              </p>
+                            )}
                           </div>
                           <div>
                             <Label className="text-slate-900 text-xs font-semibold">Transmittal</Label>
@@ -675,7 +742,7 @@ export default function ProductionPage() {
                               value={line.releaseQty}
                               onChange={(e) => {
                                 const next = [...releaseLines]
-                                next[idx] = { ...next[idx], releaseQty: parseFloat(e.target.value) || 0 }
+                                next[idx] = { ...next[idx], releaseQty: parseQtyNumber(e.target.value) }
                                 setReleaseLines(next)
                               }}
                               placeholder="0"
@@ -734,7 +801,7 @@ export default function ProductionPage() {
                         <Input
                           type="number"
                           value={formData.releaseQty}
-                          onChange={(e) => setFormData({ ...formData, releaseQty: parseFloat(e.target.value) || 0 })}
+                          onChange={(e) => setFormData({ ...formData, releaseQty: parseQtyNumber(e.target.value) })}
                           placeholder="0"
                           className="bg-white border-slate-300 text-slate-900 focus:ring-primary-500 focus:border-transparent"
                         />
@@ -850,7 +917,7 @@ export default function ProductionPage() {
                     <Input
                       type="number"
                       value={editFormData.releaseQty}
-                      onChange={(e) => setEditFormData({ ...editFormData, releaseQty: parseFloat(e.target.value) || 0 })}
+                      onChange={(e) => setEditFormData({ ...editFormData, releaseQty: parseQtyNumber(e.target.value) })}
                       placeholder="0"
                       className="bg-white border-slate-300 text-slate-900 focus:ring-primary-500 focus:border-transparent"
                     />
