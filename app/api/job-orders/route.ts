@@ -423,10 +423,31 @@ export async function PUT(request: Request) {
     const body = await request.json()
     const { id, items, ...updateData } = body
 
-  // Coerce numeric fields if present
-  if (updateData.discount !== undefined) updateData.discount = parseFloat(updateData.discount) || 0
-  if (updateData.roundOff !== undefined) updateData.roundOff = parseFloat(updateData.roundOff) || 0
-  if (updateData.finalTotal !== undefined) updateData.finalTotal = updateData.finalTotal === null ? null : Number(updateData.finalTotal)
+    // Coerce numeric fields if present
+    if (updateData.discount !== undefined) updateData.discount = parseFloat(updateData.discount) || 0
+    if (updateData.roundOff !== undefined) updateData.roundOff = parseFloat(updateData.roundOff) || 0
+    if (updateData.finalTotal !== undefined) updateData.finalTotal = updateData.finalTotal === null ? null : Number(updateData.finalTotal)
+    updateData.lpoIssueDate = updateData.lpoIssueDate ? updateData.lpoIssueDate : null
+
+    const safeItems = Array.isArray(items)
+      ? items
+          .filter((item: any) => item?.workDescription)
+          .map((item: any) => {
+            const quantity = item.quantity === null || item.quantity === undefined || item.quantity === '' ? null : Number(item.quantity)
+            const unitPrice = item.unitPrice === null || item.unitPrice === undefined || item.unitPrice === '' ? null : Number(item.unitPrice)
+            const totalPrice = item.totalPrice === null || item.totalPrice === undefined || item.totalPrice === '' ? null : Number(item.totalPrice)
+            const unitWeight = item.unitWeight === null || item.unitWeight === undefined || item.unitWeight === '' ? null : Number(item.unitWeight)
+            const computedTotal = quantity != null && unitPrice != null ? quantity * unitPrice : null
+            return {
+              workDescription: item.workDescription,
+              quantity: Number.isFinite(quantity) ? quantity : null,
+              unit: item.unit || 'Nos',
+              unitPrice: Number.isFinite(unitPrice) ? unitPrice : null,
+              totalPrice: Number.isFinite(totalPrice) ? totalPrice : computedTotal,
+              unitWeight: Number.isFinite(unitWeight) ? unitWeight : null
+            }
+          })
+      : []
 
 
     const existingJobOrder = await prisma.jobOrder.findUnique({
@@ -474,15 +495,8 @@ export async function PUT(request: Request) {
             scopeOfWorks: updateData.scopeOfWorks && updateData.scopeOfWorks.length > 0 ? JSON.stringify(updateData.scopeOfWorks) : null,
             lastEditedBy: userEmail,
             lastEditedAt: new Date(),
-            items: items && items.length > 0 ? {
-              create: items.map((item: any) => ({
-                workDescription: item.workDescription,
-                quantity: parseFloat(item.quantity),
-                unit: item.unit,
-                unitPrice: parseFloat(item.unitPrice),
-                totalPrice: parseFloat(item.totalPrice),
-                unitWeight: item.unitWeight ? parseFloat(item.unitWeight) : null
-              }))
+            items: safeItems.length > 0 ? {
+              create: safeItems
             } : undefined
           },
           include: {
@@ -506,12 +520,12 @@ export async function PUT(request: Request) {
               lastEditedBy: userEmail,
               lastEditedAt: new Date(),
               items: items && items.length > 0 ? {
-                create: items.map((item: any) => ({
+                create: safeItems.map((item: any) => ({
                   workDescription: item.workDescription,
-                  quantity: Number(item.quantity) || 0,
+                  quantity: item.quantity ?? 0,
                   unit: item.unit || 'Nos',
-                  unitPrice: Number(item.unitPrice) || 0,
-                  totalPrice: Number(item.totalPrice) || ((Number(item.quantity) || 0) * (Number(item.unitPrice) || 0))
+                  unitPrice: item.unitPrice ?? 0,
+                  totalPrice: item.totalPrice ?? ((item.quantity ?? 0) * (item.unitPrice ?? 0))
                 }))
               } : undefined
             },
