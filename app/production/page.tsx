@@ -510,6 +510,9 @@ export default function ProductionPage() {
     return date.toLocaleString()
   }
 
+  const formatQty = (value: number) =>
+    value.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 4 })
+
   const selectedJob = jobOrders.find(jo => jo.id === selectedJobOrder)
   const reportRows = selectedJob
     ? releases
@@ -787,7 +790,7 @@ export default function ProductionPage() {
               const itemReleases = releases.filter(r => r.jobOrderItemId === item.id)
               const totalQty = item.quantity || 0
               const sortedReleases = [...itemReleases].sort((a, b) =>
-                new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+                new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
               )
               let runningReleased = 0
               const balanceByReleaseId = new Map<string, number>()
@@ -820,30 +823,30 @@ export default function ProductionPage() {
                       {sortedReleases.map(release => {
                         const balanceQty = balanceByReleaseId.get(release.id) ?? remainingQty
                         return (
-                        <div key={release.id} className="bg-slate-50 rounded-lg p-4 border border-slate-200 hover:border-primary-300 transition-colors">
-                          <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                        <div key={release.id} className="bg-slate-50 rounded-md p-2 border border-slate-200 hover:border-primary-300 transition-colors">
+                          <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
                             <div className="flex items-center gap-2">
                               {getStatusIcon(release.status)}
                               <span className={`px-3 py-1 rounded-full text-xs font-bold ${getStatusColor(release.status)}`}>
                                 {release.status.replace(/_/g, ' ')}
                               </span>
-                              <span className="text-xs text-slate-500">Released {formatDateTime(release.createdAt)}</span>
-                              <span className="text-xs text-slate-500">By {release.createdBy || 'System'}</span>
+                              <span className="text-[11px] text-slate-500">Released {formatDateTime(release.createdAt)}</span>
+                              <span className="text-[11px] text-slate-500">By {release.createdBy || 'System'}</span>
                             </div>
                           </div>
 
-                          <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-700 mb-3">
-                            <div className="flex flex-wrap items-center gap-3">
+                          <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-700 mb-2">
+                            <div className="flex flex-wrap items-center gap-2">
                               <span><span className="font-semibold">Drawing:</span> {release.drawingNumber || 'N/A'}</span>
                               {release.transmittalNo && (
                                 <span><span className="font-semibold">Transmittal:</span> {release.transmittalNo}</span>
                               )}
                               <span>
-                                <span className="font-semibold">Qty:</span> {release.releaseQty} {item.unit}
+                                <span className="font-semibold">Qty:</span> {formatQty(release.releaseQty)} {item.unit}
                                 {release.releaseWeight && ` • ${release.releaseWeight.toFixed(2)} kg`}
                               </span>
                               <span>
-                                <span className="font-semibold">Balance:</span> {balanceQty} {item.unit}
+                                <span className="font-semibold">Balance:</span> {formatQty(balanceQty)} {item.unit}
                                 {item.unitWeight && ` • ${(balanceQty * item.unitWeight).toFixed(2)} kg`}
                               </span>
                             </div>

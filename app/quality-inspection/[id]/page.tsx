@@ -153,7 +153,7 @@ export default function QualityInspectionDetailPage() {
   const [approvedOverride, setApprovedOverride] = useState(false)
   const [rejectedOverride, setRejectedOverride] = useState(false)
   const [holdOverride, setHoldOverride] = useState(false)
-  const [drawingEntries, setDrawingEntries] = useState<Array<{ id: string; drawingNo: string; qty: string; unit: string }>>([])
+  const [drawingEntries, setDrawingEntries] = useState<Array<{ id: string; drawingNo: string; qty: string; unit: string; rffNo: string }>>([])
 
   const [editForm, setEditForm] = useState({
     drawingNumber: '',
@@ -225,11 +225,13 @@ export default function QualityInspectionDetailPage() {
       const drawingNo = parts[0] || ''
       const qtyPart = parts.find((part) => part.toLowerCase().startsWith('qty')) || ''
       const unitPart = parts.find((part) => part.toLowerCase().startsWith('unit')) || ''
+      const rffPart = parts.find((part) => part.toLowerCase().startsWith('rff')) || ''
       const qty = qtyPart.replace(/qty\s*[:=]?\s*/i, '')
       const unit = unitPart.replace(/unit\s*[:=]?\s*/i, '')
-      return { id: crypto.randomUUID(), drawingNo, qty: normalizeQtyInput(qty), unit }
+      const rffNo = rffPart.replace(/rff\s*no\.?\s*[:=]?\s*/i, '').replace(/rff\s*[:=]?\s*/i, '').trim()
+      return { id: crypto.randomUUID(), drawingNo, qty: normalizeQtyInput(qty), unit, rffNo }
     })
-    return entries.filter((entry) => entry.drawingNo || entry.qty || entry.unit)
+    return entries.filter((entry) => entry.drawingNo || entry.qty || entry.unit || entry.rffNo)
   }
 
   const parseDrawingSummary = (value: string) => {
@@ -240,10 +242,12 @@ export default function QualityInspectionDetailPage() {
       const drawingNo = parts[0] || ''
       const qtyPart = parts.find((part) => part.toLowerCase().startsWith('qty')) || ''
       const unitPart = parts.find((part) => part.toLowerCase().startsWith('unit')) || ''
+      const rffPart = parts.find((part) => part.toLowerCase().startsWith('rff')) || ''
       const qty = qtyPart.replace(/qty\s*[:=]?\s*/i, '')
       const unit = unitPart.replace(/unit\s*[:=]?\s*/i, '')
-      return { drawingNo, qty: qty.trim(), unit: unit.trim() }
-    }).filter((entry) => entry.drawingNo || entry.qty || entry.unit)
+      const rffNo = rffPart.replace(/rff\s*no\.?\s*[:=]?\s*/i, '').replace(/rff\s*[:=]?\s*/i, '').trim()
+      return { drawingNo, qty: qty.trim(), unit: unit.trim(), rffNo }
+    }).filter((entry) => entry.drawingNo || entry.qty || entry.unit || entry.rffNo)
   }
 
   const formatDrawingSummary = (value: string, fallback: string) => {
@@ -253,8 +257,9 @@ export default function QualityInspectionDetailPage() {
       .map((entry) => {
         const qtyPart = entry.qty ? normalizeQtyInput(entry.qty) : ''
         const unitPart = entry.unit ? entry.unit : ''
+        const rffPart = entry.rffNo ? ` RFF ${entry.rffNo}` : ''
         const suffix = qtyPart ? ` (${qtyPart}${unitPart ? ` ${unitPart}` : ''})` : ''
-        return `${entry.drawingNo || 'N/A'}${suffix}`
+        return `${entry.drawingNo || 'N/A'}${suffix}${rffPart}`
       })
       .join(', ')
   }
@@ -275,9 +280,10 @@ export default function QualityInspectionDetailPage() {
         id: crypto.randomUUID(),
         drawingNo: cols[0] || '',
         qty: cols[1] ? normalizeQtyInput(cols[1]) : '',
-        unit: cols[2] || inspection?.jobOrderItem.unit || ''
+        unit: cols[2] || inspection?.jobOrderItem.unit || '',
+        rffNo: cols[3] || ''
       }))
-      .filter((entry) => entry.drawingNo || entry.qty || entry.unit)
+      .filter((entry) => entry.drawingNo || entry.qty || entry.unit || entry.rffNo)
 
     if (nextEntries.length === 0) return false
     setDrawingEntries((prev) => {
@@ -296,11 +302,12 @@ export default function QualityInspectionDetailPage() {
   const buildDrawingNumberValue = () => {
     if (drawingEntries.length === 0) return editForm.drawingNumber.trim()
     return drawingEntries
-      .filter((entry) => entry.drawingNo || entry.qty || entry.unit)
+      .filter((entry) => entry.drawingNo || entry.qty || entry.unit || entry.rffNo)
       .map((entry) => {
         const parts = [entry.drawingNo || 'N/A']
         if (entry.qty) parts.push(`Qty ${normalizeQtyInput(entry.qty)}`)
         if (entry.unit) parts.push(`Unit ${entry.unit}`)
+        if (entry.rffNo) parts.push(`RFF ${entry.rffNo}`)
         return parts.join(' | ')
       })
       .join('\n')
@@ -719,7 +726,7 @@ export default function QualityInspectionDetailPage() {
                           onClick={() =>
                             setDrawingEntries((prev) => [
                               ...prev,
-                              { id: crypto.randomUUID(), drawingNo: '', qty: '', unit: inspection.jobOrderItem.unit || '' }
+                              { id: crypto.randomUUID(), drawingNo: '', qty: '', unit: inspection.jobOrderItem.unit || '', rffNo: '' }
                             ])
                           }
                         >
@@ -735,10 +742,12 @@ export default function QualityInspectionDetailPage() {
                         </Button>
                       </div>
                     </div>
+                    <div className="text-[11px] text-slate-500">Same RFF + Qty indicates repeated drawing release.</div>
                     <div className="grid grid-cols-12 gap-1 text-[11px] text-slate-500 font-semibold">
-                      <div className="col-span-6">Drawing No.</div>
+                      <div className="col-span-5">Drawing No.</div>
                       <div className="col-span-2">Qty</div>
-                      <div className="col-span-3">Unit</div>
+                      <div className="col-span-2">Unit</div>
+                      <div className="col-span-2">RFF No.</div>
                       <div className="col-span-1"></div>
                     </div>
                     {drawingEntries.map((entry, index) => (
@@ -757,7 +766,7 @@ export default function QualityInspectionDetailPage() {
                             }
                           }}
                           placeholder="Drawing number"
-                          className="col-span-6 text-xs h-8"
+                          className="col-span-5 text-xs h-8"
                         />
                         <Input
                           type="number"
@@ -778,7 +787,17 @@ export default function QualityInspectionDetailPage() {
                             )
                           }
                           placeholder="Unit"
-                          className="col-span-3 text-xs h-8"
+                          className="col-span-2 text-xs h-8"
+                        />
+                        <Input
+                          value={entry.rffNo}
+                          onChange={(e) =>
+                            setDrawingEntries((prev) =>
+                              prev.map((row) => row.id === entry.id ? { ...row, rffNo: e.target.value } : row)
+                            )
+                          }
+                          placeholder="RFF"
+                          className="col-span-2 text-xs h-8"
                         />
                         <Button
                           type="button"
