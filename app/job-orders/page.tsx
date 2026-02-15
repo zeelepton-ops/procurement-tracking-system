@@ -2071,7 +2071,7 @@ export default function JobOrdersPage() {
                         variant="outline"
                         size="sm"
                         onClick={addEditWorkItem}
-                        className="h-7 text-xs"
+                        className="h-8 text-xs"
                       >
                         <Plus className="h-3 w-3 mr-1" />
                         Add Item
@@ -2079,32 +2079,20 @@ export default function JobOrdersPage() {
                     </div>
                     
                     {/* Header row - shown once */}
-                    <div className="grid grid-cols-12 gap-2 mb-2 px-3">
-                      <div className="col-span-4">
-                        <Label className="text-xs font-semibold text-slate-600">Work Description *</Label>
-                      </div>
-                      <div className="col-span-2">
-                        <Label className="text-xs font-semibold text-slate-600">Quantity</Label>
-                      </div>
-                      <div className="col-span-1">
-                        <Label className="text-xs font-semibold text-slate-600">Unit *</Label>
-                      </div>
-                      <div className="col-span-1">
-                        <Label className="text-xs font-semibold text-slate-600">Unit Price</Label>
-                      </div>
-                      <div className="col-span-1">
-                        <Label className="text-xs font-semibold text-slate-600">Total</Label>
-                      </div>
-                      <div className="col-span-1">
-                        <Label className="text-xs font-semibold text-slate-600">Unit Wt (kg)</Label>
-                      </div>
-                      <div className="col-span-2"></div>
+                    <div className="grid grid-cols-[minmax(260px,2fr)_110px_80px_120px_120px_110px_40px] gap-3 bg-slate-100 border border-slate-200 rounded-md px-3 py-2 text-[11px] font-semibold text-slate-600 uppercase tracking-wide">
+                      <div>Work Description</div>
+                      <div className="text-right">Quantity</div>
+                      <div>Unit</div>
+                      <div className="text-right">Unit Price</div>
+                      <div className="text-right">Total</div>
+                      <div className="text-right">Unit Wt</div>
+                      <div></div>
                     </div>
 
                     <div className="space-y-2">
                       {editWorkItems.map((item, index) => (
-                        <div key={index} className="grid grid-cols-12 gap-2 items-center bg-slate-50 p-3 rounded">
-                          <div className="col-span-4">
+                        <div key={index} className="grid grid-cols-[minmax(260px,2fr)_110px_80px_120px_120px_110px_40px] gap-3 items-center bg-white border border-slate-200 rounded-md px-3 py-2">
+                          <div>
                             <Input
                               value={item.workDescription}
                               onChange={(e) => updateEditWorkItem(index, 'workDescription', e.target.value)}
@@ -2113,7 +2101,7 @@ export default function JobOrdersPage() {
                               className="h-8 text-xs"
                             />
                           </div>
-                          <div className="col-span-2">
+                          <div>
                             <Input
                               type="number"
                               value={item.quantity == null ? '' : String(item.quantity)}
@@ -2123,7 +2111,7 @@ export default function JobOrdersPage() {
                               className="h-8 text-xs text-right tabular-nums"
                             />
                           </div>
-                          <div className="col-span-1">
+                          <div>
                             <Input
                               value={item.unit}
                               onChange={(e) => updateEditWorkItem(index, 'unit', e.target.value)}
@@ -2132,7 +2120,7 @@ export default function JobOrdersPage() {
                               className="h-8 text-xs"
                             />
                           </div>
-                          <div className="col-span-1">
+                          <div>
                             <Input
                               type="text"
                               value={getCurrencyDraft(editCurrencyDrafts, `edit-unitPrice-${index}`, item.unitPrice)}
@@ -2151,7 +2139,7 @@ export default function JobOrdersPage() {
                               className="h-8 text-xs text-right tabular-nums"
                             />
                           </div>
-                          <div className="col-span-1">
+                          <div>
                             <Input
                               type="text"
                               value={getCurrencyDraft(editCurrencyDrafts, `edit-totalPrice-${index}`, item.totalPrice)}
@@ -2170,7 +2158,7 @@ export default function JobOrdersPage() {
                               className="h-8 text-xs text-right tabular-nums"
                             />
                           </div>
-                          <div className="col-span-1">
+                          <div>
                             <Input
                               type="number"
                               step="0.0001"
@@ -2181,7 +2169,7 @@ export default function JobOrdersPage() {
                               className="h-8 text-xs text-right tabular-nums"
                             />
                           </div>
-                          <div className="col-span-2 flex items-center justify-end">
+                          <div className="flex items-center justify-center">
                             {editWorkItems.length > 1 && (
                               <Button
                                 type="button"
@@ -2194,15 +2182,6 @@ export default function JobOrdersPage() {
                               </Button>
                             )}
                           </div>
-                          {item.totalPrice != null ? (
-                            <div className="col-span-12 text-xs text-slate-600">
-                              Total: {formatCurrency(item.totalPrice)} QAR
-                            </div>
-                          ) : (item.unitPrice != null && (
-                            <div className="col-span-12 text-xs text-slate-600">
-                              Total: 0.00 QAR
-                            </div>
-                          ))}
                         </div>
                       ))}
                     </div>
