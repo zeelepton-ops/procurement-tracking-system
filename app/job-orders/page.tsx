@@ -116,6 +116,7 @@ export default function JobOrdersPage() {
   const [workItems, setWorkItems] = useState<JobOrderItem[]>([
     { workDescription: '', quantity: 0, unit: 'Nos', unitPrice: 0, totalPrice: 0 }
   ])
+  const [currencyDrafts, setCurrencyDrafts] = useState<Record<string, string>>({})
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState<string | null>(null)
@@ -157,6 +158,9 @@ export default function JobOrdersPage() {
   const [editWorkItems, setEditWorkItems] = useState<JobOrderItem[]>([
     { workDescription: '', quantity: 0, unit: 'Nos', unitPrice: 0, totalPrice: 0 }
   ])
+  const [editCurrencyDrafts, setEditCurrencyDrafts] = useState<Record<string, string>>({})
+  const [roundOffDraft, setRoundOffDraft] = useState('')
+  const [editRoundOffDraft, setEditRoundOffDraft] = useState('')
 
   useEffect(() => {
     fetchJobOrders()
@@ -319,7 +323,7 @@ export default function JobOrdersPage() {
 
   const formatCurrency = (value: number | null | undefined) => {
     if (value == null || Number.isNaN(value)) return ''
-    return value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    return value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })
   }
 
   const parseCurrencyInput = (value: string) => {
@@ -328,6 +332,12 @@ export default function JobOrdersPage() {
     const parsed = Number(normalized)
     return Number.isNaN(parsed) ? null : parsed
   }
+
+  const getCurrencyDraft = (
+    drafts: Record<string, string>,
+    key: string,
+    fallback: number | null | undefined
+  ) => (drafts[key] !== undefined ? drafts[key] : fallback == null ? '' : formatCurrency(fallback))
 
   const updateWorkItem = (index: number, field: keyof JobOrderItem, value: any) => {
     const updated = [...workItems]
@@ -1194,9 +1204,9 @@ export default function JobOrdersPage() {
                             type="number"
                             value={item.quantity == null ? '' : String(item.quantity)}
                             onChange={(e) => updateWorkItem(index, 'quantity', e.target.value === '' ? null : parseFloat(e.target.value))}
-                            step="0.01"
+                            step="0.0001"
                             inputMode="decimal"
-                            className="h-8 text-xs"
+                            className="h-8 text-xs text-right tabular-nums"
                           />
                         </div>
                         <div className="col-span-1">
@@ -1211,27 +1221,50 @@ export default function JobOrdersPage() {
                         <div className="col-span-1">
                           <Input
                             type="text"
-                            value={item.unitPrice == null ? '' : formatCurrency(item.unitPrice)}
-                            onChange={(e) => updateWorkItem(index, 'unitPrice', parseCurrencyInput(e.target.value))}
-                            className="h-8 text-xs"
+                            value={getCurrencyDraft(currencyDrafts, `unitPrice-${index}`, item.unitPrice)}
+                            onChange={(e) => {
+                              const nextValue = e.target.value
+                              setCurrencyDrafts((prev) => ({ ...prev, [`unitPrice-${index}`]: nextValue }))
+                              updateWorkItem(index, 'unitPrice', parseCurrencyInput(nextValue))
+                            }}
+                            onBlur={(e) => {
+                              const parsed = parseCurrencyInput(e.currentTarget.value)
+                              setCurrencyDrafts((prev) => ({
+                                ...prev,
+                                [`unitPrice-${index}`]: parsed == null ? '' : formatCurrency(parsed)
+                              }))
+                            }}
+                            className="h-8 text-xs text-right tabular-nums"
                           />
                         </div>
                         <div className="col-span-1">
                           <Input
                             type="text"
-                            value={item.totalPrice == null ? '' : formatCurrency(item.totalPrice)}
-                            onChange={(e) => updateWorkItem(index, 'totalPrice', parseCurrencyInput(e.target.value))}
-                            className="h-8 text-xs"
+                            value={getCurrencyDraft(currencyDrafts, `totalPrice-${index}`, item.totalPrice)}
+                            onChange={(e) => {
+                              const nextValue = e.target.value
+                              setCurrencyDrafts((prev) => ({ ...prev, [`totalPrice-${index}`]: nextValue }))
+                              updateWorkItem(index, 'totalPrice', parseCurrencyInput(nextValue))
+                            }}
+                            onBlur={(e) => {
+                              const parsed = parseCurrencyInput(e.currentTarget.value)
+                              setCurrencyDrafts((prev) => ({
+                                ...prev,
+                                [`totalPrice-${index}`]: parsed == null ? '' : formatCurrency(parsed)
+                              }))
+                            }}
+                            className="h-8 text-xs text-right tabular-nums"
                           />
                         </div>
                         <div className="col-span-1">
                           <Input
                             type="number"
-                            step="0.01"
+                            step="0.0001"
                             value={item.unitWeight == null ? '' : String(item.unitWeight)}
                             onChange={(e) => updateWorkItem(index, 'unitWeight', e.target.value === '' ? null : parseFloat(e.target.value))}
                             placeholder="0.00"
-                            className="h-8 text-xs"
+                            inputMode="decimal"
+                            className="h-8 text-xs text-right tabular-nums"
                           />
                         </div>
                         <div className="col-span-2 flex items-center justify-end">
@@ -1264,19 +1297,34 @@ export default function JobOrdersPage() {
                     <Label className="text-xs">Discount (amount)</Label>
                     <Input
                       type="number"
-                      step="0.01"
+                      step="0.0001"
                       value={(formData as any).discount || ''}
                       onChange={(e) => setFormData({ ...formData, discount: parseFloat(e.target.value) || 0 })}
-                      className="h-8 text-xs"
+                      inputMode="decimal"
+                      className="h-8 text-xs text-right tabular-nums"
                     />
                   </div>
                   <div className="md:col-span-1">
                     <Label className="text-xs">Round Off (adjustment)</Label>
                     <Input
                       type="text"
-                      value={(formData as any).roundOff == null ? '' : formatCurrency((formData as any).roundOff)}
-                      onChange={(e) => setFormData({ ...formData, roundOff: parseCurrencyInput(e.target.value) || 0 })}
-                      className="h-8 text-xs"
+                      value={
+                        roundOffDraft !== ''
+                          ? roundOffDraft
+                          : (formData as any).roundOff == null
+                          ? ''
+                          : formatCurrency((formData as any).roundOff)
+                      }
+                      onChange={(e) => {
+                        const nextValue = e.target.value
+                        setRoundOffDraft(nextValue)
+                        setFormData({ ...formData, roundOff: parseCurrencyInput(nextValue) ?? 0 })
+                      }}
+                      onBlur={(e) => {
+                        const parsed = parseCurrencyInput(e.currentTarget.value)
+                        setRoundOffDraft(parsed == null ? '' : formatCurrency(parsed))
+                      }}
+                      className="h-8 text-xs text-right tabular-nums"
                     />
                   </div>
                   <div className="md:col-span-1 text-xs text-slate-600">
@@ -1284,10 +1332,11 @@ export default function JobOrdersPage() {
                     {workItems.some(it => !it.quantity || it.quantity <= 0) ? (
                       <Input
                         type="number"
-                        step="0.01"
-                        value={finalTotalOverride !== null ? String(finalTotalOverride) : (workItems.reduce((s, it) => s + (it.totalPrice || 0), 0) - ((formData as any).discount || 0) + ((formData as any).roundOff || 0)).toFixed(2)}
+                        step="0.0001"
+                        value={finalTotalOverride !== null ? String(finalTotalOverride) : (workItems.reduce((s, it) => s + (it.totalPrice || 0), 0) - ((formData as any).discount || 0) + ((formData as any).roundOff || 0)).toFixed(4)}
                         onChange={(e) => setFinalTotalOverride(e.target.value === '' ? null : parseFloat(e.target.value))}
-                        className="mt-1 h-8 text-xs"
+                        inputMode="decimal"
+                        className="mt-1 h-8 text-xs text-right tabular-nums"
                       />
                     ) : (
                       <div className="font-bold text-blue-600">
@@ -1629,27 +1678,27 @@ export default function JobOrdersPage() {
                             </td>
                             <td className="p-2 text-right whitespace-nowrap">{item.quantity && item.quantity > 0 ? item.quantity : '—'}</td>
                             <td className="p-2 whitespace-nowrap">{item.unit}</td>
-                            <td className="p-2 text-right whitespace-nowrap">{item.unitPrice != null ? item.unitPrice.toFixed(2) + ' QAR' : '—'}</td>
-                            <td className="p-2 text-right whitespace-nowrap font-semibold">{item.totalPrice != null ? item.totalPrice.toFixed(2) + ' QAR' : (item.unitPrice != null ? '0.00 QAR' : '—')}</td>
+                            <td className="p-2 text-right whitespace-nowrap">{item.unitPrice != null ? `${formatCurrency(item.unitPrice)} QAR` : '—'}</td>
+                            <td className="p-2 text-right whitespace-nowrap font-semibold">{item.totalPrice != null ? `${formatCurrency(item.totalPrice)} QAR` : (item.unitPrice != null ? '0.00 QAR' : '—')}</td>
                           </tr>
                         ))}
                       </tbody>
                       <tfoot className="bg-slate-50 border-t-2">
                         <tr>
                           <td colSpan={4} className="p-2 text-right">Subtotal:</td>
-                          <td className="p-2 text-right font-semibold">{(Array.isArray(selectedJob.items) ? selectedJob.items.reduce((sum, item) => sum + (item.totalPrice ?? 0), 0) : 0).toFixed(2)} QAR</td>
+                          <td className="p-2 text-right font-semibold">{formatCurrency(Array.isArray(selectedJob.items) ? selectedJob.items.reduce((sum, item) => sum + (item.totalPrice ?? 0), 0) : 0)} QAR</td>
                         </tr>
                         <tr>
                           <td colSpan={4} className="p-2 text-right">Discount:</td>
-                          <td className="p-2 text-right text-red-600">-{(selectedJob as any).discount?.toFixed ? (selectedJob as any).discount.toFixed(2) : ((selectedJob as any).discount || 0).toFixed(2)} QAR</td>
+                          <td className="p-2 text-right text-red-600">-{formatCurrency((selectedJob as any).discount || 0)} QAR</td>
                         </tr>
                         <tr>
                           <td colSpan={4} className="p-2 text-right">Round Off:</td>
-                          <td className="p-2 text-right">{(selectedJob as any).roundOff?.toFixed ? (selectedJob as any).roundOff.toFixed(2) : ((selectedJob as any).roundOff || 0).toFixed(2)} QAR</td>
+                          <td className="p-2 text-right">{formatCurrency((selectedJob as any).roundOff || 0)} QAR</td>
                         </tr>
                         <tr>
                           <td colSpan={4} className="p-2 text-right font-bold">Final Total:</td>
-                          <td className="p-2 text-right font-bold text-primary-600">{((selectedJob as any).finalTotal !== undefined && (selectedJob as any).finalTotal !== null ? (selectedJob as any).finalTotal : ((Array.isArray(selectedJob.items) ? selectedJob.items.reduce((sum, item) => sum + (item.totalPrice ?? 0), 0) : 0) - ((selectedJob as any).discount || 0) + ((selectedJob as any).roundOff || 0))).toFixed(2)} QAR</td>
+                          <td className="p-2 text-right font-bold text-primary-600">{formatCurrency((selectedJob as any).finalTotal !== undefined && (selectedJob as any).finalTotal !== null ? (selectedJob as any).finalTotal : ((Array.isArray(selectedJob.items) ? selectedJob.items.reduce((sum, item) => sum + (item.totalPrice ?? 0), 0) : 0) - ((selectedJob as any).discount || 0) + ((selectedJob as any).roundOff || 0)))} QAR</td>
                         </tr>
                       </tfoot>
                     </table>
@@ -1740,7 +1789,7 @@ export default function JobOrdersPage() {
 
         {editingJob && (
           <div className="fixed inset-0 bg-black/50 flex items-start justify-center p-4 z-50 overflow-y-auto" onClick={() => setEditingJob(null)}>
-            <div className="w-full max-w-5xl my-8" onClick={(e) => e.stopPropagation()}>
+            <div className="w-full max-w-6xl my-8" onClick={(e) => e.stopPropagation()}>
               <Card className="w-full bg-white shadow-2xl max-h-[95vh] flex flex-col">
                 <CardHeader className="bg-primary-50 py-3 flex-shrink-0 border-b border-primary-100">
                   <div className="flex items-center justify-between">
@@ -2067,11 +2116,11 @@ export default function JobOrdersPage() {
                           <div className="col-span-2">
                             <Input
                               type="number"
-                              value={item.quantity || ''}
-                              onChange={(e) => updateEditWorkItem(index, 'quantity', parseFloat(e.target.value) || 0)}
-                              step="0.01"
+                              value={item.quantity == null ? '' : String(item.quantity)}
+                              onChange={(e) => updateEditWorkItem(index, 'quantity', e.target.value === '' ? null : parseFloat(e.target.value))}
+                              step="0.0001"
                               inputMode="decimal"
-                              className="h-8 text-xs"
+                              className="h-8 text-xs text-right tabular-nums"
                             />
                           </div>
                           <div className="col-span-1">
@@ -2086,27 +2135,50 @@ export default function JobOrdersPage() {
                           <div className="col-span-1">
                             <Input
                               type="text"
-                              value={item.unitPrice == null ? '' : formatCurrency(item.unitPrice)}
-                              onChange={(e) => updateEditWorkItem(index, 'unitPrice', parseCurrencyInput(e.target.value))}
-                              className="h-8 text-xs"
+                              value={getCurrencyDraft(editCurrencyDrafts, `edit-unitPrice-${index}`, item.unitPrice)}
+                              onChange={(e) => {
+                                const nextValue = e.target.value
+                                setEditCurrencyDrafts((prev) => ({ ...prev, [`edit-unitPrice-${index}`]: nextValue }))
+                                updateEditWorkItem(index, 'unitPrice', parseCurrencyInput(nextValue))
+                              }}
+                              onBlur={(e) => {
+                                const parsed = parseCurrencyInput(e.currentTarget.value)
+                                setEditCurrencyDrafts((prev) => ({
+                                  ...prev,
+                                  [`edit-unitPrice-${index}`]: parsed == null ? '' : formatCurrency(parsed)
+                                }))
+                              }}
+                              className="h-8 text-xs text-right tabular-nums"
                             />
                           </div>
                           <div className="col-span-1">
                             <Input
                               type="text"
-                              value={item.totalPrice == null ? '' : formatCurrency(item.totalPrice)}
-                              onChange={(e) => updateEditWorkItem(index, 'totalPrice', parseCurrencyInput(e.target.value))}
-                              className="h-8 text-xs"
+                              value={getCurrencyDraft(editCurrencyDrafts, `edit-totalPrice-${index}`, item.totalPrice)}
+                              onChange={(e) => {
+                                const nextValue = e.target.value
+                                setEditCurrencyDrafts((prev) => ({ ...prev, [`edit-totalPrice-${index}`]: nextValue }))
+                                updateEditWorkItem(index, 'totalPrice', parseCurrencyInput(nextValue))
+                              }}
+                              onBlur={(e) => {
+                                const parsed = parseCurrencyInput(e.currentTarget.value)
+                                setEditCurrencyDrafts((prev) => ({
+                                  ...prev,
+                                  [`edit-totalPrice-${index}`]: parsed == null ? '' : formatCurrency(parsed)
+                                }))
+                              }}
+                              className="h-8 text-xs text-right tabular-nums"
                             />
                           </div>
                           <div className="col-span-1">
                             <Input
                               type="number"
-                              step="0.01"
-                              value={item.unitWeight || ''}
-                              onChange={(e) => updateEditWorkItem(index, 'unitWeight', parseFloat(e.target.value) || 0)}
+                              step="0.0001"
+                              value={item.unitWeight == null ? '' : String(item.unitWeight)}
+                              onChange={(e) => updateEditWorkItem(index, 'unitWeight', e.target.value === '' ? null : parseFloat(e.target.value))}
                               placeholder="0.00"
-                              className="h-8 text-xs"
+                              inputMode="decimal"
+                              className="h-8 text-xs text-right tabular-nums"
                             />
                           </div>
                           <div className="col-span-2 flex items-center justify-end">
@@ -2148,19 +2220,34 @@ export default function JobOrdersPage() {
                       <Label className="text-xs">Discount (amount)</Label>
                       <Input
                         type="number"
-                        step="0.01"
+                        step="0.0001"
                         value={(editFormData as any).discount || ''}
                         onChange={(e) => setEditFormData({ ...editFormData, discount: parseFloat(e.target.value) || 0 })}
-                        className="h-8 text-xs"
+                        inputMode="decimal"
+                        className="h-8 text-xs text-right tabular-nums"
                       />
                     </div>
                     <div className="md:col-span-1">
                       <Label className="text-xs">Round Off (adjustment)</Label>
                       <Input
                         type="text"
-                        value={(editFormData as any).roundOff == null ? '' : formatCurrency((editFormData as any).roundOff)}
-                        onChange={(e) => setEditFormData({ ...editFormData, roundOff: parseCurrencyInput(e.target.value) || 0 })}
-                        className="h-8 text-xs"
+                        value={
+                          editRoundOffDraft !== ''
+                            ? editRoundOffDraft
+                            : (editFormData as any).roundOff == null
+                            ? ''
+                            : formatCurrency((editFormData as any).roundOff)
+                        }
+                        onChange={(e) => {
+                          const nextValue = e.target.value
+                          setEditRoundOffDraft(nextValue)
+                          setEditFormData({ ...editFormData, roundOff: parseCurrencyInput(nextValue) ?? 0 })
+                        }}
+                        onBlur={(e) => {
+                          const parsed = parseCurrencyInput(e.currentTarget.value)
+                          setEditRoundOffDraft(parsed == null ? '' : formatCurrency(parsed))
+                        }}
+                        className="h-8 text-xs text-right tabular-nums"
                       />
                     </div>
                     <div className="md:col-span-1 text-xs text-slate-600">
@@ -2168,10 +2255,11 @@ export default function JobOrdersPage() {
                       {editWorkItems.some(it => !it.quantity || it.quantity <= 0) ? (
                         <Input
                           type="number"
-                          step="0.01"
-                          value={editFinalTotalOverride !== null ? String(editFinalTotalOverride) : (editWorkItems.reduce((s, it) => s + (it.totalPrice || 0), 0) - ((editFormData as any).discount || 0) + ((editFormData as any).roundOff || 0)).toFixed(2)}
+                          step="0.0001"
+                          value={editFinalTotalOverride !== null ? String(editFinalTotalOverride) : (editWorkItems.reduce((s, it) => s + (it.totalPrice || 0), 0) - ((editFormData as any).discount || 0) + ((editFormData as any).roundOff || 0)).toFixed(4)}
                           onChange={(e) => setEditFinalTotalOverride(e.target.value === '' ? null : parseFloat(e.target.value))}
-                          className="mt-1 h-8 text-xs"
+                          inputMode="decimal"
+                          className="mt-1 h-8 text-xs text-right tabular-nums"
                         />
                       ) : (
                         <div className="font-bold text-blue-600">
