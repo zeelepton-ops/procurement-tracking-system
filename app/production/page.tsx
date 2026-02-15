@@ -57,6 +57,10 @@ export default function ProductionPage() {
   const [releaseLines, setReleaseLines] = useState<Array<{ drawingNumber: string; transmittalNo: string; releaseQty: number }>>([
     { drawingNumber: '', transmittalNo: '', releaseQty: 0 }
   ])
+  const [reportStatus, setReportStatus] = useState('ALL')
+  const [reportTransmittal, setReportTransmittal] = useState('')
+  const [reportDateFrom, setReportDateFrom] = useState('')
+  const [reportDateTo, setReportDateTo] = useState('')
 
   const [formData, setFormData] = useState({
     jobOrderItemId: '',
@@ -169,6 +173,105 @@ export default function ProductionPage() {
   const parseQtyNumber = (value: string) => {
     const normalized = normalizeQtyInput(value)
     return normalized ? Number(normalized) : 0
+  }
+
+  const buildReleaseLinesSummary = (lines: typeof releaseLines) => {
+    const unit = getSelectedJobOrderItem(formData.jobOrderItemId)?.unit || ''
+    const summaryItems = lines
+      .filter((line) => line.drawingNumber || line.releaseQty || line.transmittalNo)
+      .map((line) => {
+        const qtyLabel = line.releaseQty ? normalizeQtyInput(line.releaseQty.toString()) : ''
+        const unitLabel = unit ? ` ${unit}` : ''
+        const qtyPart = qtyLabel ? ` (${qtyLabel}${unitLabel})` : ''
+        return `${line.drawingNumber || 'N/A'}${qtyPart}`
+      })
+      .filter(Boolean)
+
+    return summaryItems.join(', ')
+  }
+
+  const formatPrintDate = (value?: Date) => {
+    if (!value) return 'N/A'
+    const date = new Date(value)
+    if (Number.isNaN(date.getTime())) return 'N/A'
+    return date.toLocaleString()
+  }
+
+  const printReleaseReport = (rows: Array<{
+    jobNumber: string
+    workDescription: string
+    drawingNumber: string
+    transmittalNo: string
+    releaseQty: number
+    unit: string
+    releaseWeight?: number
+    status: string
+    createdAt?: Date
+  }>) => {
+    if (!rows.length) {
+      setError('No releases found for the selected filters.')
+      setTimeout(() => setError(null), 3000)
+      return
+    }
+
+    const jobNumber = rows[0]?.jobNumber || 'N/A'
+    const printWindow = window.open('', '_blank', 'noopener,noreferrer')
+    if (!printWindow) return
+    const html = `
+      <html>
+        <head>
+          <title>Production Releases - ${jobNumber}</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 24px; color: #0f172a; }
+            h1 { font-size: 18px; margin: 0 0 6px; }
+            .meta { font-size: 12px; color: #475569; margin-bottom: 16px; }
+            table { width: 100%; border-collapse: collapse; font-size: 12px; }
+            th, td { border: 1px solid #e2e8f0; padding: 6px 8px; text-align: left; }
+            th { background: #f1f5f9; font-weight: 600; }
+            .right { text-align: right; }
+          </style>
+        </head>
+        <body>
+          <h1>Production Releases - ${jobNumber}</h1>
+          <div class="meta">Printed: ${new Date().toLocaleString()}</div>
+          <table>
+            <thead>
+              <tr>
+                <th>Timestamp</th>
+                <th>Drawing</th>
+                <th>Transmittal</th>
+                <th>Item</th>
+                <th class="right">Qty</th>
+                <th class="right">Weight</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows
+                .map(
+                  (row) => `
+                    <tr>
+                      <td>${formatPrintDate(row.createdAt)}</td>
+                      <td>${row.drawingNumber || 'N/A'}</td>
+                      <td>${row.transmittalNo || 'N/A'}</td>
+                      <td>${row.workDescription}</td>
+                      <td class="right">${row.releaseQty} ${row.unit}</td>
+                      <td class="right">${typeof row.releaseWeight === 'number' ? row.releaseWeight.toFixed(2) : '-'}</td>
+                      <td>${row.status.replace(/_/g, ' ')}</td>
+                    </tr>
+                  `
+                )
+                .join('')}
+            </tbody>
+          </table>
+        </body>
+      </html>
+    `
+    printWindow.document.open()
+    printWindow.document.write(html)
+    printWindow.document.close()
+    printWindow.focus()
+    printWindow.print()
   }
 
   const applyPastedReleaseRows = (text: string, insertIndex: number) => {
@@ -408,6 +511,44 @@ export default function ProductionPage() {
   }
 
   const selectedJob = jobOrders.find(jo => jo.id === selectedJobOrder)
+  const reportRows = selectedJob
+    ? releases
+        .filter((release) => selectedJob.items?.some((item) => item.id === release.jobOrderItemId))
+        .map((release) => {
+          const item = selectedJob.items?.find((row) => row.id === release.jobOrderItemId)
+          return {
+            jobNumber: selectedJob.jobNumber,
+            workDescription: item?.workDescription || 'N/A',
+            drawingNumber: release.drawingNumber || 'N/A',
+            transmittalNo: release.transmittalNo || 'N/A',
+            releaseQty: release.releaseQty,
+            unit: item?.unit || '',
+            releaseWeight: release.releaseWeight,
+            status: release.status,
+            createdAt: release.createdAt
+          }
+        })
+        .filter((row) => (reportStatus === 'ALL' ? true : row.status === reportStatus))
+        .filter((row) =>
+          reportTransmittal.trim()
+            ? row.transmittalNo.toLowerCase().includes(reportTransmittal.trim().toLowerCase())
+            : true
+        )
+        .filter((row) => {
+          if (!reportDateFrom && !reportDateTo) return true
+          const created = row.createdAt ? new Date(row.createdAt) : null
+          if (!created) return false
+          const from = reportDateFrom ? new Date(reportDateFrom) : null
+          const to = reportDateTo ? new Date(reportDateTo) : null
+          if (from && created < from) return false
+          if (to) {
+            const end = new Date(to)
+            end.setHours(23, 59, 59, 999)
+            if (created > end) return false
+          }
+          return true
+        })
+    : []
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -488,6 +629,115 @@ export default function ProductionPage() {
                 Go to Delivery Notes
               </Button>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Release Report */}
+        <Card className="shadow-md">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-slate-900 flex items-center gap-2 text-lg">
+              <TrendingUp className="w-5 h-5 text-primary-600" />
+              Release Report
+            </CardTitle>
+            <CardDescription className="text-slate-600 text-sm">
+              View, filter, and print released drawings for the selected job order.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {!selectedJob && (
+              <div className="text-sm text-slate-600 bg-slate-50 border border-slate-200 rounded-md px-3 py-2">
+                Select a job order to view release details.
+              </div>
+            )}
+            {selectedJob && (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                  <div>
+                    <Label className="text-xs font-semibold text-slate-900">Status</Label>
+                    <select
+                      value={reportStatus}
+                      onChange={(e) => setReportStatus(e.target.value)}
+                      className="w-full mt-1 p-2 border border-slate-300 rounded-md text-sm"
+                    >
+                      <option value="ALL">All</option>
+                      <option value="PLANNING">Planning</option>
+                      <option value="IN_PRODUCTION">In Production</option>
+                      <option value="PENDING_INSPECTION">Pending Inspection</option>
+                      <option value="APPROVED">Approved</option>
+                      <option value="REWORK">Rework</option>
+                      <option value="REJECTED">Rejected</option>
+                    </select>
+                  </div>
+                  <div>
+                    <Label className="text-xs font-semibold text-slate-900">Transmittal</Label>
+                    <Input
+                      value={reportTransmittal}
+                      onChange={(e) => setReportTransmittal(e.target.value)}
+                      placeholder="TR-001"
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs font-semibold text-slate-900">Date From</Label>
+                    <Input
+                      type="date"
+                      value={reportDateFrom}
+                      onChange={(e) => setReportDateFrom(e.target.value)}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs font-semibold text-slate-900">Date To</Label>
+                    <Input
+                      type="date"
+                      value={reportDateTo}
+                      onChange={(e) => setReportDateTo(e.target.value)}
+                      className="mt-1"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between text-xs text-slate-600">
+                  <span>{reportRows.length} releases</span>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="border-slate-300 text-slate-700 hover:bg-slate-50"
+                    onClick={() => printReleaseReport(reportRows)}
+                  >
+                    Print Report
+                  </Button>
+                </div>
+
+                <div className="border border-slate-200 rounded-lg overflow-hidden">
+                  <div className="grid grid-cols-7 gap-2 bg-slate-50 text-xs font-semibold text-slate-600 px-3 py-2">
+                    <div>Timestamp</div>
+                    <div>Drawing</div>
+                    <div>Transmittal</div>
+                    <div>Item</div>
+                    <div className="text-right">Qty</div>
+                    <div className="text-right">Weight</div>
+                    <div>Status</div>
+                  </div>
+                  <div className="divide-y">
+                    {reportRows.map((row, idx) => (
+                      <div key={`${row.drawingNumber}-${idx}`} className="grid grid-cols-7 gap-2 px-3 py-2 text-xs text-slate-700">
+                        <div>{formatDateTime(row.createdAt)}</div>
+                        <div className="truncate" title={row.drawingNumber}>{row.drawingNumber}</div>
+                        <div className="truncate" title={row.transmittalNo}>{row.transmittalNo}</div>
+                        <div className="truncate" title={row.workDescription}>{row.workDescription}</div>
+                        <div className="text-right">{row.releaseQty} {row.unit}</div>
+                        <div className="text-right">{typeof row.releaseWeight === 'number' ? row.releaseWeight.toFixed(2) : '-'}</div>
+                        <div>{row.status.replace(/_/g, ' ')}</div>
+                      </div>
+                    ))}
+                    {reportRows.length === 0 && (
+                      <div className="px-3 py-4 text-xs text-slate-500">No releases match the selected filters.</div>
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
 
@@ -771,6 +1021,12 @@ export default function ProductionPage() {
                           </Button>
                         )}
                       </div>
+                      {buildReleaseLinesSummary(releaseLines) && (
+                        <div className="text-[11px] text-slate-600 bg-slate-50 border border-slate-200 rounded-md px-2 py-2">
+                          <span className="font-semibold text-slate-700">Summary:</span>{' '}
+                          {buildReleaseLinesSummary(releaseLines)}
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <>
