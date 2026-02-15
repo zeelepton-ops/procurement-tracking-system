@@ -4,6 +4,12 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { canEditOrDelete } from '@/lib/permissions'
 
+const parseDateValue = (value: any) => {
+  if (!value) return null
+  const date = new Date(value)
+  return Number.isNaN(date.getTime()) ? null : date
+}
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
@@ -330,6 +336,7 @@ export async function POST(request: Request) {
             clientContactPerson: body.clientContactPerson || null,
             clientContactPhone: body.clientContactPhone || null,
             lpoContractNo: body.lpoContractNo || null,
+            lpoIssueDate: parseDateValue(body.lpoIssueDate),
             priority: body.priority || 'MEDIUM',
             foreman: body.foreman || null,
             workScope: body.workScope || productName,
@@ -365,6 +372,7 @@ export async function POST(request: Request) {
           contactPerson: body.contactPerson || null,
           phone: body.phone || null,          clientContactPerson: body.clientContactPerson || null,
           clientContactPhone: body.clientContactPhone || null,          lpoContractNo: body.lpoContractNo || null,
+          lpoIssueDate: parseDateValue(body.lpoIssueDate),
           priority: body.priority || 'MEDIUM',
           foreman: body.foreman || null,
           workScope: body.workScope || productName,
@@ -427,7 +435,7 @@ export async function PUT(request: Request) {
     if (updateData.discount !== undefined) updateData.discount = parseFloat(updateData.discount) || 0
     if (updateData.roundOff !== undefined) updateData.roundOff = parseFloat(updateData.roundOff) || 0
     if (updateData.finalTotal !== undefined) updateData.finalTotal = updateData.finalTotal === null ? null : Number(updateData.finalTotal)
-    updateData.lpoIssueDate = updateData.lpoIssueDate ? updateData.lpoIssueDate : null
+    updateData.lpoIssueDate = parseDateValue(updateData.lpoIssueDate)
 
     const safeItems = Array.isArray(items)
       ? items
