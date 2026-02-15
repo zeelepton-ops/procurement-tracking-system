@@ -339,6 +339,17 @@ export default function JobOrdersPage() {
     fallback: number | null | undefined
   ) => (drafts[key] !== undefined ? drafts[key] : fallback == null ? '' : formatCurrency(fallback))
 
+  const normalizeNumber = (value: number | null | undefined) =>
+    value == null || !Number.isFinite(value) ? null : value
+
+  const normalizeItem = (item: JobOrderItem) => ({
+    ...item,
+    quantity: normalizeNumber(item.quantity),
+    unitPrice: normalizeNumber(item.unitPrice),
+    totalPrice: normalizeNumber(item.totalPrice),
+    unitWeight: normalizeNumber(item.unitWeight ?? null)
+  })
+
   const updateWorkItem = (index: number, field: keyof JobOrderItem, value: any) => {
     const updated = [...workItems]
     updated[index] = { ...updated[index], [field]: value }
@@ -347,25 +358,25 @@ export default function JobOrdersPage() {
 
     // Normalize nulls and numbers
     if (field === 'totalPrice') {
-      cur.totalPrice = value == null ? null : Number(value)
+      cur.totalPrice = normalizeNumber(value == null ? null : Number(value))
       if (cur.unitPrice != null && cur.unitPrice > 0) {
-        cur.quantity = cur.totalPrice != null ? cur.totalPrice / cur.unitPrice : cur.quantity
+        cur.quantity = cur.totalPrice != null ? normalizeNumber(cur.totalPrice / cur.unitPrice) : cur.quantity
       } else if (cur.quantity != null && cur.quantity > 0) {
-        cur.unitPrice = cur.totalPrice != null ? cur.totalPrice / cur.quantity : cur.unitPrice
+        cur.unitPrice = cur.totalPrice != null ? normalizeNumber(cur.totalPrice / cur.quantity) : cur.unitPrice
       }
     } else if (field === 'unitPrice') {
-      cur.unitPrice = value == null ? null : Number(value)
+      cur.unitPrice = normalizeNumber(value == null ? null : Number(value))
       if (cur.quantity != null && cur.quantity > 0 && cur.unitPrice != null) {
-        cur.totalPrice = cur.quantity * cur.unitPrice
+        cur.totalPrice = normalizeNumber(cur.quantity * cur.unitPrice)
       } else if (cur.totalPrice != null && cur.unitPrice != null && cur.unitPrice > 0) {
-        cur.quantity = cur.totalPrice / cur.unitPrice
+        cur.quantity = normalizeNumber(cur.totalPrice / cur.unitPrice)
       }
     } else if (field === 'quantity') {
-      cur.quantity = value == null ? null : Number(value)
+      cur.quantity = normalizeNumber(value == null ? null : Number(value))
       if (cur.unitPrice != null && cur.unitPrice > 0 && cur.quantity != null) {
-        cur.totalPrice = cur.quantity * cur.unitPrice
+        cur.totalPrice = normalizeNumber(cur.quantity * cur.unitPrice)
       } else if (cur.totalPrice != null && cur.quantity != null && cur.quantity > 0) {
-        cur.unitPrice = cur.totalPrice / cur.quantity
+        cur.unitPrice = normalizeNumber(cur.totalPrice / cur.quantity)
       }
     }
 
@@ -388,25 +399,25 @@ export default function JobOrdersPage() {
     const cur = updated[index]
 
     if (field === 'totalPrice') {
-      cur.totalPrice = value == null ? null : Number(value)
+      cur.totalPrice = normalizeNumber(value == null ? null : Number(value))
       if (cur.unitPrice != null && cur.unitPrice > 0) {
-        cur.quantity = cur.totalPrice != null ? cur.totalPrice / cur.unitPrice : cur.quantity
+        cur.quantity = cur.totalPrice != null ? normalizeNumber(cur.totalPrice / cur.unitPrice) : cur.quantity
       } else if (cur.quantity != null && cur.quantity > 0) {
-        cur.unitPrice = cur.totalPrice != null ? cur.totalPrice / cur.quantity : cur.unitPrice
+        cur.unitPrice = cur.totalPrice != null ? normalizeNumber(cur.totalPrice / cur.quantity) : cur.unitPrice
       }
     } else if (field === 'unitPrice') {
-      cur.unitPrice = value == null ? null : Number(value)
+      cur.unitPrice = normalizeNumber(value == null ? null : Number(value))
       if (cur.quantity != null && cur.quantity > 0 && cur.unitPrice != null) {
-        cur.totalPrice = cur.quantity * cur.unitPrice
+        cur.totalPrice = normalizeNumber(cur.quantity * cur.unitPrice)
       } else if (cur.totalPrice != null && cur.unitPrice != null && cur.unitPrice > 0) {
-        cur.quantity = cur.totalPrice / cur.unitPrice
+        cur.quantity = normalizeNumber(cur.totalPrice / cur.unitPrice)
       }
     } else if (field === 'quantity') {
-      cur.quantity = value == null ? null : Number(value)
+      cur.quantity = normalizeNumber(value == null ? null : Number(value))
       if (cur.unitPrice != null && cur.unitPrice > 0 && cur.quantity != null) {
-        cur.totalPrice = cur.quantity * cur.unitPrice
+        cur.totalPrice = normalizeNumber(cur.quantity * cur.unitPrice)
       } else if (cur.totalPrice != null && cur.quantity != null && cur.quantity > 0) {
-        cur.unitPrice = cur.totalPrice / cur.quantity
+        cur.unitPrice = normalizeNumber(cur.totalPrice / cur.quantity)
       }
     }
 
@@ -545,7 +556,8 @@ export default function JobOrdersPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
-          items: workItems.filter(item => item.workDescription),
+          lpoIssueDate: formData.lpoIssueDate || null,
+          items: workItems.filter(item => item.workDescription).map(normalizeItem),
           finalTotal: finalTotalOverride !== null ? finalTotalOverride : undefined
         })
       })
@@ -729,7 +741,8 @@ export default function JobOrdersPage() {
         body: JSON.stringify({
           id: editingJob.id,
           ...editFormData,
-          items: editWorkItems.filter(item => item.workDescription),
+          lpoIssueDate: editFormData.lpoIssueDate || null,
+          items: editWorkItems.filter(item => item.workDescription).map(normalizeItem),
           finalTotal: editFinalTotalOverride !== null ? editFinalTotalOverride : undefined
         })
       })
