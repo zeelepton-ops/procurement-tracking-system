@@ -784,7 +784,7 @@ export default function ProductionPage() {
 
         {/* Job Order Items & Releases */}
         {selectedJob && (
-          <div className="space-y-4">
+          <div className="space-y-2">
             {selectedJob.items?.map(item => {
               const remainingQty = calculateRemainingQty(item.id)
               const itemReleases = releases.filter(r => r.jobOrderItemId === item.id)
@@ -800,109 +800,92 @@ export default function ProductionPage() {
               })
 
               return (
-                <Card key={item.id} className="shadow-md hover:shadow-lg transition-shadow">
-                  <CardHeader className="pb-3 bg-gradient-to-r from-primary-50 to-transparent border-b border-slate-200">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <CardTitle className="text-slate-900 text-lg">{item.workDescription}</CardTitle>
-                        <CardDescription className="text-slate-600 text-sm mt-1">
-                          Order Qty: <span className="font-semibold">{item.quantity} {item.unit}</span>
-                          {item.unitWeight && ` • Unit Wt: ${item.unitWeight} kg`}
+                <Card key={item.id} className="shadow-sm border border-slate-200">
+                  <CardHeader className="px-3 py-2 bg-white border-b border-slate-200">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <CardTitle className="text-slate-900 text-sm truncate">{item.workDescription}</CardTitle>
+                        <CardDescription className="text-slate-500 text-[11px] mt-0.5">
+                          Order Qty: <span className="font-semibold">{formatQty(item.quantity || 0)} {item.unit}</span>
+                          {item.unitWeight && ` • Unit Wt: ${formatQty(item.unitWeight)} kg`}
                         </CardDescription>
                       </div>
-                      <div className="text-right bg-primary-100 rounded-lg px-3 py-2">
-                        <div className="text-2xl font-bold text-primary-700">{remainingQty}</div>
-                        <div className="text-primary-600 text-xs font-medium">Remaining</div>
+                      <div className="text-right bg-slate-50 rounded-md px-2 py-1 border border-slate-200">
+                        <div className="text-sm font-semibold text-slate-900">{formatQty(remainingQty)} {item.unit}</div>
+                        <div className="text-[10px] text-slate-500 font-medium">Remaining</div>
                       </div>
                     </div>
                   </CardHeader>
 
                   {/* Releases for this item */}
                   {sortedReleases.length > 0 ? (
-                    <CardContent className="space-y-3 pt-4">
-                      {sortedReleases.map(release => {
-                        const balanceQty = balanceByReleaseId.get(release.id) ?? remainingQty
-                        return (
-                        <div key={release.id} className="bg-slate-50 rounded-md p-2 border border-slate-200 hover:border-primary-300 transition-colors">
-                          <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
-                            <div className="flex items-center gap-2">
-                              {getStatusIcon(release.status)}
-                              <span className={`px-3 py-1 rounded-full text-xs font-bold ${getStatusColor(release.status)}`}>
-                                {release.status.replace(/_/g, ' ')}
-                              </span>
-                              <span className="text-[11px] text-slate-500">Released {formatDateTime(release.createdAt)}</span>
-                              <span className="text-[11px] text-slate-500">By {release.createdBy || 'System'}</span>
-                            </div>
-                          </div>
-
-                          <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-700 mb-2">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <span><span className="font-semibold">Drawing:</span> {release.drawingNumber || 'N/A'}</span>
-                              {release.transmittalNo && (
-                                <span><span className="font-semibold">Transmittal:</span> {release.transmittalNo}</span>
-                              )}
-                              <span>
-                                <span className="font-semibold">Qty:</span> {formatQty(release.releaseQty)} {item.unit}
-                                {release.releaseWeight && ` • ${release.releaseWeight.toFixed(2)} kg`}
-                              </span>
-                              <span>
-                                <span className="font-semibold">Balance:</span> {formatQty(balanceQty)} {item.unit}
-                                {item.unitWeight && ` • ${(balanceQty * item.unitWeight).toFixed(2)} kg`}
-                              </span>
-                            </div>
-                            <div className="flex flex-wrap items-center gap-2">
-                              {release.status === 'IN_PRODUCTION' || release.status === 'PLANNING' ? (
+                    <CardContent className="p-0">
+                      <div className="divide-y">
+                        {sortedReleases.map(release => {
+                          const balanceQty = balanceByReleaseId.get(release.id) ?? remainingQty
+                          return (
+                            <div key={release.id} className="px-3 py-2 flex items-center justify-between gap-3">
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-2">
+                                  {getStatusIcon(release.status)}
+                                  <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold ${getStatusColor(release.status)}`}>
+                                    {release.status.replace(/_/g, ' ')}
+                                  </span>
+                                  <span className="text-[11px] text-slate-500">{formatDateTime(release.createdAt)}</span>
+                                  <span className="text-[11px] text-slate-500">{release.createdBy || 'System'}</span>
+                                </div>
+                                <div className="text-[11px] text-slate-600 flex flex-wrap gap-x-2 gap-y-1 mt-1">
+                                  <span>Drawing: {release.drawingNumber || 'N/A'}</span>
+                                  {release.transmittalNo && <span>Transmittal: {release.transmittalNo}</span>}
+                                  <span>Qty: {formatQty(release.releaseQty)} {item.unit}</span>
+                                  <span>Balance: {formatQty(balanceQty)} {item.unit}</span>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                {release.status === 'IN_PRODUCTION' || release.status === 'PLANNING' ? (
+                                  <Button
+                                    size="sm"
+                                    onClick={() => handlePushForInspection(release.id)}
+                                    className="h-7 px-2 text-[11px] bg-emerald-600 hover:bg-emerald-700 text-white"
+                                  >
+                                    Push
+                                  </Button>
+                                ) : release.status === 'REWORK' ? (
+                                  <Button
+                                    size="sm"
+                                    onClick={() => handlePushForInspection(release.id)}
+                                    className="h-7 px-2 text-[11px] bg-orange-600 hover:bg-orange-700 text-white"
+                                  >
+                                    Re-inspect
+                                  </Button>
+                                ) : null}
                                 <Button
-                                  onClick={() => handlePushForInspection(release.id)}
-                                  className="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium"
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-7 px-2 text-[11px]"
+                                  onClick={() => handleEditRelease(release)}
+                                  disabled={!!release.inspections && release.inspections.length > 0}
                                 >
-                                  Push for Inspection
+                                  Edit
                                 </Button>
-                              ) : release.status === 'REWORK' ? (
                                 <Button
-                                  onClick={() => handlePushForInspection(release.id)}
-                                  className="bg-orange-600 hover:bg-orange-700 text-white text-sm font-medium"
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-7 px-2 text-[11px] text-red-600 hover:bg-red-50"
+                                  onClick={() => handleDeleteRelease(release.id)}
+                                  disabled={!!release.inspections && release.inspections.length > 0}
                                 >
-                                  Re-inspect ({release.inspectionCount} attempts)
+                                  Delete
                                 </Button>
-                              ) : null}
-                              <Button
-                                variant="outline"
-                                className="border-slate-300 text-slate-700 hover:bg-slate-50"
-                                onClick={() => handleEditRelease(release)}
-                                disabled={!!release.inspections && release.inspections.length > 0}
-                              >
-                                Edit
-                              </Button>
-                              <Button
-                                variant="outline"
-                                className="border-red-300 text-red-600 hover:bg-red-50"
-                                onClick={() => handleDeleteRelease(release.id)}
-                                disabled={!!release.inspections && release.inspections.length > 0}
-                              >
-                                Delete
-                              </Button>
+                              </div>
                             </div>
-                          </div>
-
-                          {/* Latest Inspection Info */}
-                          {release.inspections && release.inspections.length > 0 && (
-                            <div className="bg-primary-50 rounded p-3 text-xs text-slate-700 border border-primary-200 mb-3">
-                              <div className="font-semibold mb-2 text-slate-900">Latest Inspection:</div>
-                              <div>Result: <span className="font-medium">{release.inspections[0].result || 'Pending'}</span></div>
-                              {release.inspections[0].remarks && (
-                                <div className="text-slate-700 mt-2">Remarks: {release.inspections[0].remarks}</div>
-                              )}
-                            </div>
-                          )}
-
-                          {/* Action Buttons moved inline with Qty/Balance */}
-                        </div>
-                      )})}
+                          )
+                        })}
+                      </div>
                     </CardContent>
                   ) : (
-                    <CardContent>
-                      <p className="text-slate-500 text-sm italic">No releases yet</p>
+                    <CardContent className="px-3 py-2">
+                      <p className="text-[11px] text-slate-500 italic">No releases yet</p>
                     </CardContent>
                   )}
                 </Card>
