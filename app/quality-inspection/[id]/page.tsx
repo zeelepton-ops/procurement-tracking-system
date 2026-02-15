@@ -672,7 +672,7 @@ export default function QualityInspectionDetailPage() {
                             onClick={() =>
                               setDrawingEntries((prev) => [
                                 ...prev,
-                                { id: crypto.randomUUID(), drawingNo: '', qty: '', unit: inspection.jobOrderItem.unit || '' }
+                                { id: crypto.randomUUID(), drawingNo: '', qty: '', unit: inspection.jobOrderItem.unit || '', rffNo: '' }
                               ])
                             }
                           >
