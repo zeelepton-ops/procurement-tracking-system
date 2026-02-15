@@ -117,6 +117,7 @@ export default function JobOrdersPage() {
     { workDescription: '', quantity: 0, unit: 'Nos', unitPrice: 0, totalPrice: 0 }
   ])
   const [currencyDrafts, setCurrencyDrafts] = useState<Record<string, string>>({})
+  const [quantityDrafts, setQuantityDrafts] = useState<Record<string, string>>({})
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState<string | null>(null)
@@ -159,6 +160,7 @@ export default function JobOrdersPage() {
     { workDescription: '', quantity: 0, unit: 'Nos', unitPrice: 0, totalPrice: 0 }
   ])
   const [editCurrencyDrafts, setEditCurrencyDrafts] = useState<Record<string, string>>({})
+  const [editQuantityDrafts, setEditQuantityDrafts] = useState<Record<string, string>>({})
   const [roundOffDraft, setRoundOffDraft] = useState('')
   const [editRoundOffDraft, setEditRoundOffDraft] = useState('')
 
@@ -333,11 +335,29 @@ export default function JobOrdersPage() {
     return Number.isNaN(parsed) ? null : parsed
   }
 
+  const parseDecimalInput = (value: string) => {
+    const normalized = value.replace(/,/g, '').trim()
+    if (!normalized || normalized === '.' || normalized === '-') return null
+    const parsed = Number(normalized)
+    return Number.isNaN(parsed) ? null : parsed
+  }
+
+  const formatDecimal = (value: number | null | undefined, decimals = 4) => {
+    if (value == null || Number.isNaN(value)) return ''
+    return value.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: decimals })
+  }
+
   const getCurrencyDraft = (
     drafts: Record<string, string>,
     key: string,
     fallback: number | null | undefined
   ) => (drafts[key] !== undefined ? drafts[key] : fallback == null ? '' : formatCurrency(fallback))
+
+  const getQuantityDraft = (
+    drafts: Record<string, string>,
+    key: string,
+    fallback: number | null | undefined
+  ) => (drafts[key] !== undefined ? drafts[key] : fallback == null ? '' : formatDecimal(fallback, 4))
 
   const normalizeNumber = (value: number | null | undefined) =>
     value == null || !Number.isFinite(value) ? null : value
@@ -1214,10 +1234,20 @@ export default function JobOrdersPage() {
                         </div>
                         <div className="col-span-2">
                           <Input
-                            type="number"
-                            value={item.quantity == null ? '' : String(item.quantity)}
-                            onChange={(e) => updateWorkItem(index, 'quantity', e.target.value === '' ? null : parseFloat(e.target.value))}
-                            step="0.0001"
+                            type="text"
+                            value={getQuantityDraft(quantityDrafts, `quantity-${index}`, item.quantity)}
+                            onChange={(e) => {
+                              const nextValue = e.target.value
+                              setQuantityDrafts((prev) => ({ ...prev, [`quantity-${index}`]: nextValue }))
+                              updateWorkItem(index, 'quantity', parseDecimalInput(nextValue))
+                            }}
+                            onBlur={(e) => {
+                              const parsed = parseDecimalInput(e.currentTarget.value)
+                              setQuantityDrafts((prev) => ({
+                                ...prev,
+                                [`quantity-${index}`]: parsed == null ? '' : formatDecimal(parsed, 4)
+                              }))
+                            }}
                             inputMode="decimal"
                             className="h-8 text-xs text-right tabular-nums"
                           />
@@ -2116,10 +2146,20 @@ export default function JobOrdersPage() {
                           </div>
                           <div>
                             <Input
-                              type="number"
-                              value={item.quantity == null ? '' : String(item.quantity)}
-                              onChange={(e) => updateEditWorkItem(index, 'quantity', e.target.value === '' ? null : parseFloat(e.target.value))}
-                              step="0.0001"
+                              type="text"
+                              value={getQuantityDraft(editQuantityDrafts, `edit-quantity-${index}`, item.quantity)}
+                              onChange={(e) => {
+                                const nextValue = e.target.value
+                                setEditQuantityDrafts((prev) => ({ ...prev, [`edit-quantity-${index}`]: nextValue }))
+                                updateEditWorkItem(index, 'quantity', parseDecimalInput(nextValue))
+                              }}
+                              onBlur={(e) => {
+                                const parsed = parseDecimalInput(e.currentTarget.value)
+                                setEditQuantityDrafts((prev) => ({
+                                  ...prev,
+                                  [`edit-quantity-${index}`]: parsed == null ? '' : formatDecimal(parsed, 4)
+                                }))
+                              }}
                               inputMode="decimal"
                               className="h-8 text-xs text-right tabular-nums"
                             />
