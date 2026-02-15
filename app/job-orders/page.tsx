@@ -317,6 +317,18 @@ export default function JobOrdersPage() {
     setWorkItems(workItems.filter((_, i) => i !== index))
   }
 
+  const formatCurrency = (value: number | null | undefined) => {
+    if (value == null || Number.isNaN(value)) return ''
+    return value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  }
+
+  const parseCurrencyInput = (value: string) => {
+    const normalized = value.replace(/,/g, '').trim()
+    if (!normalized) return null
+    const parsed = Number(normalized)
+    return Number.isNaN(parsed) ? null : parsed
+  }
+
   const updateWorkItem = (index: number, field: keyof JobOrderItem, value: any) => {
     const updated = [...workItems]
     updated[index] = { ...updated[index], [field]: value }
@@ -1182,6 +1194,8 @@ export default function JobOrdersPage() {
                             type="number"
                             value={item.quantity == null ? '' : String(item.quantity)}
                             onChange={(e) => updateWorkItem(index, 'quantity', e.target.value === '' ? null : parseFloat(e.target.value))}
+                            step="0.01"
+                            inputMode="decimal"
                             className="h-8 text-xs"
                           />
                         </div>
@@ -1196,19 +1210,17 @@ export default function JobOrdersPage() {
                         </div>
                         <div className="col-span-1">
                           <Input
-                            type="number"
-                            step="0.01"
-                            value={item.unitPrice == null ? '' : String(item.unitPrice)}
-                            onChange={(e) => updateWorkItem(index, 'unitPrice', e.target.value === '' ? null : parseFloat(e.target.value))}
+                            type="text"
+                            value={item.unitPrice == null ? '' : formatCurrency(item.unitPrice)}
+                            onChange={(e) => updateWorkItem(index, 'unitPrice', parseCurrencyInput(e.target.value))}
                             className="h-8 text-xs"
                           />
                         </div>
                         <div className="col-span-1">
                           <Input
-                            type="number"
-                            step="0.01"
-                            value={item.totalPrice == null ? '' : String(item.totalPrice)}
-                            onChange={(e) => updateWorkItem(index, 'totalPrice', e.target.value === '' ? null : parseFloat(e.target.value))}
+                            type="text"
+                            value={item.totalPrice == null ? '' : formatCurrency(item.totalPrice)}
+                            onChange={(e) => updateWorkItem(index, 'totalPrice', parseCurrencyInput(e.target.value))}
                             className="h-8 text-xs"
                           />
                         </div>
@@ -1245,7 +1257,7 @@ export default function JobOrdersPage() {
                   <div className="md:col-span-1 text-xs text-slate-600">
                     Subtotal
                     <div className="font-semibold text-slate-800">
-                      {workItems.reduce((s, it) => s + (it.totalPrice || 0), 0).toFixed(2)} QAR
+                      {formatCurrency(workItems.reduce((s, it) => s + (it.totalPrice || 0), 0))} QAR
                     </div>
                   </div>
                   <div className="md:col-span-1">
@@ -1261,10 +1273,9 @@ export default function JobOrdersPage() {
                   <div className="md:col-span-1">
                     <Label className="text-xs">Round Off (adjustment)</Label>
                     <Input
-                      type="number"
-                      step="0.01"
-                      value={(formData as any).roundOff || ''}
-                      onChange={(e) => setFormData({ ...formData, roundOff: parseFloat(e.target.value) || 0 })}
+                      type="text"
+                      value={(formData as any).roundOff == null ? '' : formatCurrency((formData as any).roundOff)}
+                      onChange={(e) => setFormData({ ...formData, roundOff: parseCurrencyInput(e.target.value) || 0 })}
                       className="h-8 text-xs"
                     />
                   </div>
@@ -1280,7 +1291,7 @@ export default function JobOrdersPage() {
                       />
                     ) : (
                       <div className="font-bold text-blue-600">
-                        {(workItems.reduce((s, it) => s + (it.totalPrice || 0), 0) - ((formData as any).discount || 0) + ((formData as any).roundOff || 0)).toFixed(2)} QAR
+                        {formatCurrency(workItems.reduce((s, it) => s + (it.totalPrice || 0), 0) - ((formData as any).discount || 0) + ((formData as any).roundOff || 0))} QAR
                       </div>
                     )}
                   </div>
@@ -2058,6 +2069,8 @@ export default function JobOrdersPage() {
                               type="number"
                               value={item.quantity || ''}
                               onChange={(e) => updateEditWorkItem(index, 'quantity', parseFloat(e.target.value) || 0)}
+                              step="0.01"
+                              inputMode="decimal"
                               className="h-8 text-xs"
                             />
                           </div>
@@ -2072,19 +2085,17 @@ export default function JobOrdersPage() {
                           </div>
                           <div className="col-span-1">
                             <Input
-                              type="number"
-                              step="0.01"
-                              value={item.unitPrice || ''}
-                              onChange={(e) => updateEditWorkItem(index, 'unitPrice', parseFloat(e.target.value) || 0)}
+                              type="text"
+                              value={item.unitPrice == null ? '' : formatCurrency(item.unitPrice)}
+                              onChange={(e) => updateEditWorkItem(index, 'unitPrice', parseCurrencyInput(e.target.value))}
                               className="h-8 text-xs"
                             />
                           </div>
                           <div className="col-span-1">
                             <Input
-                              type="number"
-                              step="0.01"
-                              value={item.totalPrice || ''}
-                              onChange={(e) => updateEditWorkItem(index, 'totalPrice', parseFloat(e.target.value) || 0)}
+                              type="text"
+                              value={item.totalPrice == null ? '' : formatCurrency(item.totalPrice)}
+                              onChange={(e) => updateEditWorkItem(index, 'totalPrice', parseCurrencyInput(e.target.value))}
                               className="h-8 text-xs"
                             />
                           </div>
@@ -2113,7 +2124,7 @@ export default function JobOrdersPage() {
                           </div>
                           {item.totalPrice != null ? (
                             <div className="col-span-12 text-xs text-slate-600">
-                              Total: {item.totalPrice.toFixed(2)} QAR
+                              Total: {formatCurrency(item.totalPrice)} QAR
                             </div>
                           ) : (item.unitPrice != null && (
                             <div className="col-span-12 text-xs text-slate-600">
@@ -2130,7 +2141,7 @@ export default function JobOrdersPage() {
                     <div className="md:col-span-1 text-xs text-slate-600">
                       Subtotal
                       <div className="font-semibold text-slate-800">
-                        {editWorkItems.reduce((s, it) => s + (it.totalPrice ?? 0), 0).toFixed(2)} QAR
+                        {formatCurrency(editWorkItems.reduce((s, it) => s + (it.totalPrice ?? 0), 0))} QAR
                       </div>
                     </div>
                     <div className="md:col-span-1">
@@ -2146,10 +2157,9 @@ export default function JobOrdersPage() {
                     <div className="md:col-span-1">
                       <Label className="text-xs">Round Off (adjustment)</Label>
                       <Input
-                        type="number"
-                        step="0.01"
-                        value={(editFormData as any).roundOff || ''}
-                        onChange={(e) => setEditFormData({ ...editFormData, roundOff: parseFloat(e.target.value) || 0 })}
+                        type="text"
+                        value={(editFormData as any).roundOff == null ? '' : formatCurrency((editFormData as any).roundOff)}
+                        onChange={(e) => setEditFormData({ ...editFormData, roundOff: parseCurrencyInput(e.target.value) || 0 })}
                         className="h-8 text-xs"
                       />
                     </div>
@@ -2165,7 +2175,7 @@ export default function JobOrdersPage() {
                         />
                       ) : (
                         <div className="font-bold text-blue-600">
-                          {(editWorkItems.reduce((s, it) => s + (it.totalPrice || 0), 0) - ((editFormData as any).discount || 0) + ((editFormData as any).roundOff || 0)).toFixed(2)} QAR
+                          {formatCurrency(editWorkItems.reduce((s, it) => s + (it.totalPrice || 0), 0) - ((editFormData as any).discount || 0) + ((editFormData as any).roundOff || 0))} QAR
                         </div>
                       )}
                     </div>
