@@ -592,7 +592,7 @@ export default function ProductionPage() {
 
         {/* Workflow Handoff */}
         <Card className="shadow-md">
-          <CardHeader className="pb-3">
+          <CardHeader className="pb-2">
             <CardTitle className="text-slate-900 flex items-center gap-2 text-lg">
               <Factory className="w-5 h-5 text-primary-600" />
               Department Workflow
@@ -601,18 +601,18 @@ export default function ProductionPage() {
               Keep production, quality, and store aligned
             </CardDescription>
           </CardHeader>
-          <CardContent className="flex flex-col gap-3">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm">
-              <div className="bg-slate-50 border border-slate-200 px-3 py-2">
-                <div className="text-slate-500 text-xs">Total Releases</div>
+          <CardContent className="flex flex-wrap items-center gap-3">
+            <div className="flex flex-wrap gap-2 text-xs">
+              <div className="bg-slate-50 border border-slate-200 px-2 py-1 rounded-md">
+                <div className="text-slate-500 text-[10px]">Total Releases</div>
                 <div className="text-slate-900 font-semibold">{totalReleases}</div>
               </div>
-              <div className="bg-slate-50 border border-slate-200 px-3 py-2">
-                <div className="text-slate-500 text-xs">Pending Inspection</div>
+              <div className="bg-slate-50 border border-slate-200 px-2 py-1 rounded-md">
+                <div className="text-slate-500 text-[10px]">Pending Inspection</div>
                 <div className="text-slate-900 font-semibold">{pendingInspectionCount}</div>
               </div>
-              <div className="bg-slate-50 border border-slate-200 px-3 py-2">
-                <div className="text-slate-500 text-xs">Rework</div>
+              <div className="bg-slate-50 border border-slate-200 px-2 py-1 rounded-md">
+                <div className="text-slate-500 text-[10px]">Rework</div>
                 <div className="text-slate-900 font-semibold">{reworkCount}</div>
               </div>
             </div>
@@ -620,14 +620,14 @@ export default function ProductionPage() {
               <Button
                 variant="outline"
                 onClick={() => router.push('/quality-inspection')}
-                className="border-slate-300 text-slate-700 hover:bg-slate-50"
+                className="border-slate-300 text-slate-700 hover:bg-slate-50 h-8 text-xs"
               >
                 Go to Quality Inspection
               </Button>
               <Button
                 variant="outline"
                 onClick={() => router.push('/store/delivery-notes')}
-                className="border-slate-300 text-slate-700 hover:bg-slate-50"
+                className="border-slate-300 text-slate-700 hover:bg-slate-50 h-8 text-xs"
               >
                 Go to Delivery Notes
               </Button>
@@ -637,30 +637,30 @@ export default function ProductionPage() {
 
         {/* Release Report */}
         <Card className="shadow-md">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-slate-900 flex items-center gap-2 text-lg">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-slate-900 flex items-center gap-2 text-base">
               <TrendingUp className="w-5 h-5 text-primary-600" />
               Release Report
             </CardTitle>
-            <CardDescription className="text-slate-600 text-sm">
+            <CardDescription className="text-slate-600 text-xs">
               View, filter, and print released drawings for the selected job order.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="space-y-2">
             {!selectedJob && (
-              <div className="text-sm text-slate-600 bg-slate-50 border border-slate-200 rounded-md px-3 py-2">
+              <div className="text-xs text-slate-600 bg-slate-50 border border-slate-200 rounded-md px-2 py-1">
                 Select a job order to view release details.
               </div>
             )}
             {selectedJob && (
               <>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                <div className="flex flex-wrap items-end gap-2">
                   <div>
-                    <Label className="text-xs font-semibold text-slate-900">Status</Label>
+                    <Label className="text-[11px] font-semibold text-slate-900">Status</Label>
                     <select
                       value={reportStatus}
                       onChange={(e) => setReportStatus(e.target.value)}
-                      className="w-full mt-1 p-2 border border-slate-300 rounded-md text-sm"
+                      className="w-full mt-1 h-8 px-2 border border-slate-300 rounded-md text-xs"
                     >
                       <option value="ALL">All</option>
                       <option value="PLANNING">Planning</option>
@@ -672,40 +672,40 @@ export default function ProductionPage() {
                     </select>
                   </div>
                   <div>
-                    <Label className="text-xs font-semibold text-slate-900">Transmittal</Label>
+                    <Label className="text-[11px] font-semibold text-slate-900">Transmittal</Label>
                     <Input
                       value={reportTransmittal}
                       onChange={(e) => setReportTransmittal(e.target.value)}
                       placeholder="TR-001"
-                      className="mt-1"
+                      className="mt-1 h-8 text-xs"
                     />
                   </div>
                   <div>
-                    <Label className="text-xs font-semibold text-slate-900">Date From</Label>
+                    <Label className="text-[11px] font-semibold text-slate-900">Date From</Label>
                     <Input
                       type="date"
                       value={reportDateFrom}
                       onChange={(e) => setReportDateFrom(e.target.value)}
-                      className="mt-1"
+                      className="mt-1 h-8 text-xs"
                     />
                   </div>
                   <div>
-                    <Label className="text-xs font-semibold text-slate-900">Date To</Label>
+                    <Label className="text-[11px] font-semibold text-slate-900">Date To</Label>
                     <Input
                       type="date"
                       value={reportDateTo}
                       onChange={(e) => setReportDateTo(e.target.value)}
-                      className="mt-1"
+                      className="mt-1 h-8 text-xs"
                     />
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between text-xs text-slate-600">
+                <div className="flex items-center justify-between text-[11px] text-slate-600">
                   <span>{reportRows.length} releases</span>
                   <Button
                     type="button"
                     variant="outline"
-                    className="border-slate-300 text-slate-700 hover:bg-slate-50"
+                    className="border-slate-300 text-slate-700 hover:bg-slate-50 h-7 px-2 text-[11px]"
                     onClick={() => printReleaseReport(reportRows)}
                   >
                     Print Report
@@ -713,7 +713,7 @@ export default function ProductionPage() {
                 </div>
 
                 <div className="border border-slate-200 rounded-lg overflow-hidden">
-                  <div className="grid grid-cols-7 gap-2 bg-slate-50 text-xs font-semibold text-slate-600 px-3 py-2">
+                  <div className="grid grid-cols-7 gap-2 bg-slate-50 text-[11px] font-semibold text-slate-600 px-2 py-1">
                     <div>Timestamp</div>
                     <div>Drawing</div>
                     <div>Transmittal</div>
@@ -724,7 +724,7 @@ export default function ProductionPage() {
                   </div>
                   <div className="divide-y">
                     {reportRows.map((row, idx) => (
-                      <div key={`${row.drawingNumber}-${idx}`} className="grid grid-cols-7 gap-2 px-3 py-2 text-xs text-slate-700">
+                      <div key={`${row.drawingNumber}-${idx}`} className="grid grid-cols-7 gap-2 px-2 py-1 text-[11px] text-slate-700">
                         <div>{formatDateTime(row.createdAt)}</div>
                         <div className="truncate" title={row.drawingNumber}>{row.drawingNumber}</div>
                         <div className="truncate" title={row.transmittalNo}>{row.transmittalNo}</div>
@@ -735,7 +735,7 @@ export default function ProductionPage() {
                       </div>
                     ))}
                     {reportRows.length === 0 && (
-                      <div className="px-3 py-4 text-xs text-slate-500">No releases match the selected filters.</div>
+                      <div className="px-2 py-3 text-[11px] text-slate-500">No releases match the selected filters.</div>
                     )}
                   </div>
                 </div>
@@ -746,17 +746,17 @@ export default function ProductionPage() {
 
         {/* Job Order Selection */}
         <Card className="shadow-md">
-          <CardHeader>
-            <CardTitle className="text-slate-900 flex items-center gap-2 text-lg">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-slate-900 flex items-center gap-2 text-base">
               <TrendingUp className="w-5 h-5 text-primary-600" />
               Select Job Order
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-0">
             <select
               value={selectedJobOrder}
               onChange={(e) => setSelectedJobOrder(e.target.value)}
-              className="w-full p-3 bg-white border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary-500 font-medium"
+              className="w-full h-9 px-2 bg-white border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
             >
               <option value="">-- Select a Job Order --</option>
               {jobOrders.map(jo => (

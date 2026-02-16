@@ -148,6 +148,7 @@ function DeliveryNotesContent() {
       description: string
       balanceQty: number
       totalQty: number  // From job order for reference
+      unit: string
       subItems: Array<{
         id: string
         subDescription: string
@@ -451,10 +452,9 @@ function DeliveryNotesContent() {
 
     if (drawingLines.length > 0) {
       const parsed = drawingLines.map((line) => parseDrawingLine(line))
-      const unitLabel = parsed.find((entry) => entry.unit)?.unit || unit
       const lines = parsed.map((entry) => {
         const qtyLabel = entry.qty ? normalizeQtyInput(entry.qty) : ''
-        const entryUnit = entry.unit || unitLabel
+        const entryUnit = unit
         const unitSuffix = entryUnit ? ` ${entryUnit}` : ''
         return `${entry.drawingNo} ${qtyLabel}${unitSuffix};`.trim()
       })
@@ -473,10 +473,11 @@ function DeliveryNotesContent() {
     return items.map((item) => {
       if (item.jobOrderItemId !== inspection.jobOrderItemId) return item
       const firstSub = item.subItems[0]
+      const unitValue = item.unit || unit
       const nextSub = {
         ...(firstSub || { id: `sub-${Math.random()}` }),
         subDescription,
-        unit: unit || firstSub?.unit || '',
+        unit: unitValue || firstSub?.unit || '',
         deliveredQuantity: approvedQty,
       }
       return { ...item, subItems: [nextSub, ...item.subItems.slice(1)] }
@@ -623,6 +624,7 @@ function DeliveryNotesContent() {
         const totalQty = item.quantity || 0
         const deliveredQty = previousDeliveries[item.id] || 0
         const balanceQty = totalQty - deliveredQty
+        const unit = item.unit || ''
 
         return {
           id: item.id || `temp-${Math.random()}`,
@@ -630,10 +632,11 @@ function DeliveryNotesContent() {
           description: item.workDescription || '',
           balanceQty: balanceQty,  // Balance = total - previously delivered
           totalQty: totalQty,
+          unit,
           subItems: [{
             id: `sub-${Math.random()}`,
             subDescription: '',
-            unit: item.unit || '',
+            unit,
             deliveredQuantity: 0,
             remarks: ''
           }]
@@ -677,7 +680,9 @@ function DeliveryNotesContent() {
   const handleSubItemChange = (lineIndex: number, subIndex: number, field: string, value: any) => {
     setFormData(prev => {
       const items = [...prev.lineItems]
-      items[lineIndex].subItems[subIndex] = { ...items[lineIndex].subItems[subIndex], [field]: value }
+      const lineUnit = items[lineIndex].unit
+      const nextValue = field === 'unit' ? lineUnit : value
+      items[lineIndex].subItems[subIndex] = { ...items[lineIndex].subItems[subIndex], [field]: nextValue }
       return { ...prev, lineItems: items }
     })
   }
@@ -685,10 +690,11 @@ function DeliveryNotesContent() {
   const addSubItem = (lineIndex: number) => {
     setFormData(prev => {
       const items = [...prev.lineItems]
+      const lineUnit = items[lineIndex].unit || ''
       items[lineIndex].subItems.push({
         id: `sub-${Math.random()}`,
         subDescription: '',
-        unit: '',
+        unit: lineUnit,
         deliveredQuantity: 0,
         remarks: ''
       })
@@ -769,13 +775,14 @@ function DeliveryNotesContent() {
         const normalizedSubItems = hasSubItems
           ? line.subItems.map((sub) => ({
               ...sub,
+              unit: line.unit || sub.unit || '',
               subDescription: sub.subDescription?.trim() ? sub.subDescription : line.description
             }))
           : [
               {
                 id: `sub-${Math.random()}`,
                 subDescription: line.description,
-                unit: '',
+                unit: line.unit || '',
                 deliveredQuantity: 0,
                 remarks: ''
               }
@@ -858,7 +865,8 @@ function DeliveryNotesContent() {
             jobOrder.items.forEach((item: any) => {
               jobOrderItems[item.id] = {
                 description: item.workDescription,
-                totalQty: item.quantity
+                totalQty: item.quantity,
+                unit: item.unit
               }
             })
           }
@@ -875,6 +883,7 @@ function DeliveryNotesContent() {
       const jobOrderItem = jobOrderItems[jobOrderItemId]
       const description = jobOrderItem?.description || firstItem?.itemDescription || ''
       const totalQty = jobOrderItem?.totalQty || firstItem?.quantity || 0
+      const unit = jobOrderItem?.unit || firstItem?.unit || ''
       
       return {
         id: firstItem?.id || `temp-${Math.random()}`,
@@ -882,10 +891,11 @@ function DeliveryNotesContent() {
         description: description,
         balanceQty: totalQty,  // Show total qty from job order
         totalQty: totalQty,
+        unit,
         subItems: items ? items.map(item => ({
           id: item.id,
           subDescription: item.itemDescription,
-          unit: item.unit,
+          unit: unit || item.unit,
           deliveredQuantity: item.deliveredQuantity,
           remarks: item.remarks
         })) : []
@@ -1517,10 +1527,10 @@ function DeliveryNotesContent() {
                                         <div className="w-24">
                                           <label className="text-[10px] text-slate-500 block mb-0.5">Unit</label>
                                           <Input
-                                            value={subItem.unit}
-                                            onChange={(e) => handleSubItemChange(lineIndex, subIndex, 'unit', e.target.value)}
+                                            value={item.unit || subItem.unit}
                                             placeholder="Unit"
                                             className="text-xs h-7"
+                                            readOnly
                                           />
                                         </div>
                                         <div className="w-24">

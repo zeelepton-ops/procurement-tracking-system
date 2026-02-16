@@ -625,28 +625,27 @@ export default function QualityInspectionPage() {
       <div className="max-w-7xl mx-auto">
         {/* Workflow Handoff */}
         <div className="mb-6 bg-white border border-slate-200 rounded-lg p-4 shadow-sm">
-          <div className="flex flex-col gap-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-sm font-semibold text-slate-900">Department Workflow</h3>
-                <p className="text-xs text-slate-600">Coordinate with Production and Store</p>
-              </div>
-              <div className="text-xs text-slate-600">
-                Pending: <span className="font-semibold text-slate-900">{pendingInspections.length}</span>
-              </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <div>
+              <h3 className="text-sm font-semibold text-slate-900">Department Workflow</h3>
+              <p className="text-xs text-slate-600">Coordinate with Production and Store</p>
+            </div>
+            <div className="bg-slate-50 border border-slate-200 px-2 py-1 rounded-md text-xs">
+              <div className="text-[10px] text-slate-500">Pending</div>
+              <div className="font-semibold text-slate-900">{pendingInspections.length}</div>
             </div>
             <div className="flex flex-wrap gap-2">
               <Button
                 variant="outline"
                 onClick={() => router.push('/production')}
-                className="border-slate-300 text-slate-700 hover:bg-slate-50"
+                className="border-slate-300 text-slate-700 hover:bg-slate-50 h-8 text-xs"
               >
                 Go to Production
               </Button>
               <Button
                 variant="outline"
                 onClick={() => router.push('/store/delivery-notes')}
-                className="border-slate-300 text-slate-700 hover:bg-slate-50"
+                className="border-slate-300 text-slate-700 hover:bg-slate-50 h-8 text-xs"
               >
                 Go to Delivery Notes
               </Button>

@@ -227,7 +227,7 @@ export default function QualityInspectionDetailPage() {
       const unitPart = parts.find((part) => part.toLowerCase().startsWith('unit')) || ''
       const rffPart = parts.find((part) => part.toLowerCase().startsWith('rff')) || ''
       const qty = qtyPart.replace(/qty\s*[:=]?\s*/i, '')
-      const unit = unitPart.replace(/unit\s*[:=]?\s*/i, '')
+      const unit = (inspection?.jobOrderItem.unit || unitPart.replace(/unit\s*[:=]?\s*/i, '')).trim()
       const rffNo = rffPart.replace(/rff\s*no\.?\s*[:=]?\s*/i, '').replace(/rff\s*[:=]?\s*/i, '').trim()
       return { id: crypto.randomUUID(), drawingNo, qty: normalizeQtyInput(qty), unit, rffNo }
     })
@@ -244,7 +244,7 @@ export default function QualityInspectionDetailPage() {
       const unitPart = parts.find((part) => part.toLowerCase().startsWith('unit')) || ''
       const rffPart = parts.find((part) => part.toLowerCase().startsWith('rff')) || ''
       const qty = qtyPart.replace(/qty\s*[:=]?\s*/i, '')
-      const unit = unitPart.replace(/unit\s*[:=]?\s*/i, '')
+      const unit = (inspection?.jobOrderItem.unit || unitPart.replace(/unit\s*[:=]?\s*/i, '')).trim()
       const rffNo = rffPart.replace(/rff\s*no\.?\s*[:=]?\s*/i, '').replace(/rff\s*[:=]?\s*/i, '').trim()
       return { drawingNo, qty: qty.trim(), unit: unit.trim(), rffNo }
     }).filter((entry) => entry.drawingNo || entry.qty || entry.unit || entry.rffNo)
@@ -256,7 +256,7 @@ export default function QualityInspectionDetailPage() {
     return entries
       .map((entry) => {
         const qtyPart = entry.qty ? normalizeQtyInput(entry.qty) : ''
-        const unitPart = entry.unit ? entry.unit : ''
+        const unitPart = (inspection?.jobOrderItem.unit || entry.unit || '').trim()
         const rffPart = entry.rffNo ? ` RFF ${entry.rffNo}` : ''
         const suffix = qtyPart ? ` (${qtyPart}${unitPart ? ` ${unitPart}` : ''})` : ''
         return `${entry.drawingNo || 'N/A'}${suffix}${rffPart}`
@@ -280,7 +280,7 @@ export default function QualityInspectionDetailPage() {
         id: crypto.randomUUID(),
         drawingNo: cols[0] || '',
         qty: cols[1] ? normalizeQtyInput(cols[1]) : '',
-        unit: cols[2] || inspection?.jobOrderItem.unit || '',
+        unit: inspection?.jobOrderItem.unit || cols[2] || '',
         rffNo: cols[3] || ''
       }))
       .filter((entry) => entry.drawingNo || entry.qty || entry.unit || entry.rffNo)
@@ -306,7 +306,8 @@ export default function QualityInspectionDetailPage() {
       .map((entry) => {
         const parts = [entry.drawingNo || 'N/A']
         if (entry.qty) parts.push(`Qty ${normalizeQtyInput(entry.qty)}`)
-        if (entry.unit) parts.push(`Unit ${entry.unit}`)
+        const unitValue = (inspection?.jobOrderItem.unit || entry.unit || '').trim()
+        if (unitValue) parts.push(`Unit ${unitValue}`)
         if (entry.rffNo) parts.push(`RFF ${entry.rffNo}`)
         return parts.join(' | ')
       })
@@ -780,14 +781,10 @@ export default function QualityInspectionDetailPage() {
                           className="col-span-2 text-xs h-8"
                         />
                         <Input
-                          value={entry.unit}
-                          onChange={(e) =>
-                            setDrawingEntries((prev) =>
-                              prev.map((row) => row.id === entry.id ? { ...row, unit: e.target.value } : row)
-                            )
-                          }
+                          value={inspection?.jobOrderItem.unit || entry.unit}
                           placeholder="Unit"
                           className="col-span-2 text-xs h-8"
+                          readOnly
                         />
                         <Input
                           value={entry.rffNo}
