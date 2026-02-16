@@ -604,15 +604,15 @@ export default function ProductionPage() {
                 </CardDescription>
               </div>
               <div className="flex flex-wrap items-center justify-end gap-2">
-                <div className="bg-slate-50 border border-slate-200 px-2 py-1 rounded-md text-xs h-16 flex flex-col justify-center">
+                <div className="bg-slate-50 border border-slate-200 px-2 py-1 rounded-md text-xs h-16 w-28 flex flex-col justify-center">
                   <div className="text-slate-500 text-[10px]">Total Releases</div>
                   <div className="text-slate-900 font-semibold">{totalReleases}</div>
                 </div>
-                <div className="bg-slate-50 border border-slate-200 px-2 py-1 rounded-md text-xs h-16 flex flex-col justify-center">
+                <div className="bg-slate-50 border border-slate-200 px-2 py-1 rounded-md text-xs h-16 w-28 flex flex-col justify-center">
                   <div className="text-slate-500 text-[10px]">Pending Inspection</div>
                   <div className="text-slate-900 font-semibold">{pendingInspectionCount}</div>
                 </div>
-                <div className="bg-slate-50 border border-slate-200 px-2 py-1 rounded-md text-xs h-16 flex flex-col justify-center">
+                <div className="bg-slate-50 border border-slate-200 px-2 py-1 rounded-md text-xs h-16 w-28 flex flex-col justify-center">
                   <div className="text-slate-500 text-[10px]">Rework</div>
                   <div className="text-slate-900 font-semibold">{reworkCount}</div>
                 </div>
