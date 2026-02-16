@@ -603,7 +603,7 @@ export default function ProductionPage() {
                   Keep Production, Quality & Store Aligned
                 </CardDescription>
               </div>
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="flex flex-wrap items-center justify-end gap-2">
                 <div className="bg-slate-50 border border-slate-200 px-2 py-1 rounded-md text-xs">
                   <div className="text-slate-500 text-[10px]">Total Releases</div>
                   <div className="text-slate-900 font-semibold">{totalReleases}</div>
@@ -616,7 +616,7 @@ export default function ProductionPage() {
                   <div className="text-slate-500 text-[10px]">Rework</div>
                   <div className="text-slate-900 font-semibold">{reworkCount}</div>
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-col gap-2 items-stretch">
                   <Button
                     variant="outline"
                     onClick={() => router.push('/quality-inspection')}
