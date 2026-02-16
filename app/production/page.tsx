@@ -593,46 +593,48 @@ export default function ProductionPage() {
         {/* Workflow Handoff */}
         <Card className="shadow-md">
           <CardHeader className="pb-2">
-            <CardTitle className="text-slate-900 flex items-center gap-2 text-lg">
-              <Factory className="w-5 h-5 text-primary-600" />
-              Department Workflow
-            </CardTitle>
-            <CardDescription className="text-slate-600 text-sm">
-              Keep production, quality, and store aligned
-            </CardDescription>
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+              <div>
+                <CardTitle className="text-slate-900 flex items-center gap-2 text-lg">
+                  <Factory className="w-5 h-5 text-primary-600" />
+                  Department Workflow
+                </CardTitle>
+                <CardDescription className="text-slate-600 text-sm">
+                  Keep Production, Quality & Store Aligned
+                </CardDescription>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="bg-slate-50 border border-slate-200 px-2 py-1 rounded-md text-xs">
+                  <div className="text-slate-500 text-[10px]">Total Releases</div>
+                  <div className="text-slate-900 font-semibold">{totalReleases}</div>
+                </div>
+                <div className="bg-slate-50 border border-slate-200 px-2 py-1 rounded-md text-xs">
+                  <div className="text-slate-500 text-[10px]">Pending Inspection</div>
+                  <div className="text-slate-900 font-semibold">{pendingInspectionCount}</div>
+                </div>
+                <div className="bg-slate-50 border border-slate-200 px-2 py-1 rounded-md text-xs">
+                  <div className="text-slate-500 text-[10px]">Rework</div>
+                  <div className="text-slate-900 font-semibold">{reworkCount}</div>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => router.push('/quality-inspection')}
+                    className="border-slate-300 text-slate-700 hover:bg-slate-50 h-8 text-xs"
+                  >
+                    Go to Quality Inspection
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => router.push('/store/delivery-notes')}
+                    className="border-slate-300 text-slate-700 hover:bg-slate-50 h-8 text-xs"
+                  >
+                    Go to Delivery Notes
+                  </Button>
+                </div>
+              </div>
+            </div>
           </CardHeader>
-          <CardContent className="flex flex-wrap items-center gap-3">
-            <div className="flex flex-wrap gap-2 text-xs">
-              <div className="bg-slate-50 border border-slate-200 px-2 py-1 rounded-md">
-                <div className="text-slate-500 text-[10px]">Total Releases</div>
-                <div className="text-slate-900 font-semibold">{totalReleases}</div>
-              </div>
-              <div className="bg-slate-50 border border-slate-200 px-2 py-1 rounded-md">
-                <div className="text-slate-500 text-[10px]">Pending Inspection</div>
-                <div className="text-slate-900 font-semibold">{pendingInspectionCount}</div>
-              </div>
-              <div className="bg-slate-50 border border-slate-200 px-2 py-1 rounded-md">
-                <div className="text-slate-500 text-[10px]">Rework</div>
-                <div className="text-slate-900 font-semibold">{reworkCount}</div>
-              </div>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <Button
-                variant="outline"
-                onClick={() => router.push('/quality-inspection')}
-                className="border-slate-300 text-slate-700 hover:bg-slate-50 h-8 text-xs"
-              >
-                Go to Quality Inspection
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => router.push('/store/delivery-notes')}
-                className="border-slate-300 text-slate-700 hover:bg-slate-50 h-8 text-xs"
-              >
-                Go to Delivery Notes
-              </Button>
-            </div>
-          </CardContent>
         </Card>
 
         {/* Release Report */}
