@@ -591,7 +591,7 @@ export default function ProductionPage() {
         )}
 
         {/* Workflow Handoff */}
-        <Card className="shadow-md">
+        <Card className="shadow-md bg-gradient-to-r from-slate-50 to-white">
           <CardHeader className="pb-2">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
               <div>
@@ -604,30 +604,30 @@ export default function ProductionPage() {
                 </CardDescription>
               </div>
               <div className="flex flex-wrap items-center justify-end gap-2">
-                <div className="bg-slate-50 border border-slate-200 px-2 py-1 rounded-md text-xs h-16 w-28 flex flex-col justify-center">
-                  <div className="text-slate-500 text-[10px]">Total Releases</div>
-                  <div className="text-slate-900 font-semibold">{totalReleases}</div>
+                <div className="bg-blue-50 border border-blue-200 px-2 py-1 rounded-md text-xs h-16 w-28 flex flex-col justify-center">
+                  <div className="text-blue-700 text-[10px]">Total Releases</div>
+                  <div className="text-blue-900 font-semibold">{totalReleases}</div>
                 </div>
-                <div className="bg-slate-50 border border-slate-200 px-2 py-1 rounded-md text-xs h-16 w-28 flex flex-col justify-center">
-                  <div className="text-slate-500 text-[10px]">Pending Inspection</div>
-                  <div className="text-slate-900 font-semibold">{pendingInspectionCount}</div>
+                <div className="bg-amber-50 border border-amber-200 px-2 py-1 rounded-md text-xs h-16 w-28 flex flex-col justify-center">
+                  <div className="text-amber-700 text-[10px]">Pending Inspection</div>
+                  <div className="text-amber-900 font-semibold">{pendingInspectionCount}</div>
                 </div>
-                <div className="bg-slate-50 border border-slate-200 px-2 py-1 rounded-md text-xs h-16 w-28 flex flex-col justify-center">
-                  <div className="text-slate-500 text-[10px]">Rework</div>
-                  <div className="text-slate-900 font-semibold">{reworkCount}</div>
+                <div className="bg-rose-50 border border-rose-200 px-2 py-1 rounded-md text-xs h-16 w-28 flex flex-col justify-center">
+                  <div className="text-rose-700 text-[10px]">Rework</div>
+                  <div className="text-rose-900 font-semibold">{reworkCount}</div>
                 </div>
                 <div className="flex flex-col gap-0 items-stretch">
                   <Button
                     variant="outline"
                     onClick={() => router.push('/quality-inspection')}
-                    className="border-slate-300 text-slate-700 hover:bg-slate-50 h-8 text-xs rounded-b-none"
+                    className="border-primary-200 text-primary-700 hover:bg-primary-50 h-8 text-xs rounded-b-none"
                   >
                     Go to Quality Inspection
                   </Button>
                   <Button
                     variant="outline"
                     onClick={() => router.push('/store/delivery-notes')}
-                    className="border-slate-300 text-slate-700 hover:bg-slate-50 h-8 text-xs rounded-t-none"
+                    className="border-emerald-200 text-emerald-700 hover:bg-emerald-50 h-8 text-xs rounded-t-none"
                   >
                     Go to Delivery Notes
                   </Button>
@@ -715,29 +715,29 @@ export default function ProductionPage() {
                 </div>
 
                 <div className="border border-slate-200 rounded-lg overflow-hidden">
-                  <div className="grid grid-cols-7 gap-2 bg-slate-50 text-[11px] font-semibold text-slate-600 px-2 py-1">
+                  <div className="grid grid-cols-8 gap-1 bg-slate-50 text-[11px] font-semibold text-slate-600 px-2 py-0.5">
                     <div>Timestamp</div>
                     <div>Drawing</div>
                     <div>Transmittal</div>
-                    <div>Item</div>
+                    <div className="col-span-2">Item</div>
                     <div className="text-right">Qty</div>
                     <div className="text-right">Weight</div>
                     <div>Status</div>
                   </div>
                   <div className="divide-y">
                     {reportRows.map((row, idx) => (
-                      <div key={`${row.drawingNumber}-${idx}`} className="grid grid-cols-7 gap-2 px-2 py-1 text-[11px] text-slate-700">
+                      <div key={`${row.drawingNumber}-${idx}`} className="grid grid-cols-8 gap-1 px-2 py-0.5 text-[11px] text-slate-700">
                         <div>{formatDateTime(row.createdAt)}</div>
-                        <div className="truncate" title={row.drawingNumber}>{row.drawingNumber}</div>
-                        <div className="truncate" title={row.transmittalNo}>{row.transmittalNo}</div>
-                        <div className="truncate" title={row.workDescription}>{row.workDescription}</div>
+                        <div className="line-clamp-2 break-words" title={row.drawingNumber}>{row.drawingNumber}</div>
+                        <div className="line-clamp-2 break-words" title={row.transmittalNo}>{row.transmittalNo}</div>
+                        <div className="col-span-2 line-clamp-2 break-words" title={row.workDescription}>{row.workDescription}</div>
                         <div className="text-right">{row.releaseQty} {row.unit}</div>
                         <div className="text-right">{typeof row.releaseWeight === 'number' ? row.releaseWeight.toFixed(2) : '-'}</div>
                         <div>{row.status.replace(/_/g, ' ')}</div>
                       </div>
                     ))}
                     {reportRows.length === 0 && (
-                      <div className="px-2 py-3 text-[11px] text-slate-500">No releases match the selected filters.</div>
+                      <div className="px-2 py-2 text-[11px] text-slate-500">No releases match the selected filters.</div>
                     )}
                   </div>
                 </div>
