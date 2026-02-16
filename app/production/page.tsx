@@ -197,10 +197,17 @@ export default function ProductionPage() {
     return date.toLocaleString()
   }
 
+  const getRffFromDrawing = (value?: string) => {
+    if (!value) return ''
+    const match = value.match(/rff\s*(?:no\.?|#|:)?\s*([A-Za-z0-9-]+)/i)
+    return match?.[1] || ''
+  }
+
   const printReleaseReport = (rows: Array<{
     jobNumber: string
     workDescription: string
     drawingNumber: string
+    rffNo: string
     transmittalNo: string
     releaseQty: number
     unit: string
@@ -239,6 +246,7 @@ export default function ProductionPage() {
               <tr>
                 <th>Timestamp</th>
                 <th>Drawing</th>
+                <th>RFF</th>
                 <th>Transmittal</th>
                 <th>Item</th>
                 <th class="right">Qty</th>
@@ -253,6 +261,7 @@ export default function ProductionPage() {
                     <tr>
                       <td>${formatPrintDate(row.createdAt)}</td>
                       <td>${row.drawingNumber || 'N/A'}</td>
+                      <td>${row.rffNo || '-'}</td>
                       <td>${row.transmittalNo || 'N/A'}</td>
                       <td>${row.workDescription}</td>
                       <td class="right">${row.releaseQty} ${row.unit}</td>
@@ -519,10 +528,12 @@ export default function ProductionPage() {
         .filter((release) => selectedJob.items?.some((item) => item.id === release.jobOrderItemId))
         .map((release) => {
           const item = selectedJob.items?.find((row) => row.id === release.jobOrderItemId)
+          const drawingValue = release.drawingNumber || 'N/A'
           return {
             jobNumber: selectedJob.jobNumber,
             workDescription: item?.workDescription || 'N/A',
-            drawingNumber: release.drawingNumber || 'N/A',
+            drawingNumber: drawingValue,
+            rffNo: getRffFromDrawing(drawingValue),
             transmittalNo: release.transmittalNo || 'N/A',
             releaseQty: release.releaseQty,
             unit: item?.unit || '',
@@ -718,6 +729,7 @@ export default function ProductionPage() {
                   <div className="grid grid-cols-8 gap-1 bg-slate-50 text-[11px] font-semibold text-slate-600 px-2 py-0.5">
                     <div>Timestamp</div>
                     <div>Drawing</div>
+                    <div>RFF</div>
                     <div>Transmittal</div>
                     <div className="col-span-2">Item</div>
                     <div className="text-right">Qty</div>
@@ -728,9 +740,10 @@ export default function ProductionPage() {
                     {reportRows.map((row, idx) => (
                       <div key={`${row.drawingNumber}-${idx}`} className="grid grid-cols-8 gap-1 px-2 py-0.5 text-[11px] text-slate-700">
                         <div>{formatDateTime(row.createdAt)}</div>
-                        <div className="line-clamp-2 break-words" title={row.drawingNumber}>{row.drawingNumber}</div>
-                        <div className="line-clamp-2 break-words" title={row.transmittalNo}>{row.transmittalNo}</div>
-                        <div className="col-span-2 line-clamp-2 break-words" title={row.workDescription}>{row.workDescription}</div>
+                        <div className="truncate" title={row.drawingNumber}>{row.drawingNumber}</div>
+                        <div className="truncate" title={row.rffNo}>{row.rffNo || '-'}</div>
+                        <div className="truncate" title={row.transmittalNo}>{row.transmittalNo}</div>
+                        <div className="col-span-2 truncate" title={row.workDescription}>{row.workDescription}</div>
                         <div className="text-right">{row.releaseQty} {row.unit}</div>
                         <div className="text-right">{typeof row.releaseWeight === 'number' ? row.releaseWeight.toFixed(2) : '-'}</div>
                         <div>{row.status.replace(/_/g, ' ')}</div>
