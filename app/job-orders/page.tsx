@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
+import { useSearchParams } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -101,6 +102,7 @@ const MANUFACTURING_CATEGORY = 'Manufacturing - Pipe Mill'
 
 export default function JobOrdersPage() {
   const { data: session } = useSession()
+  const searchParams = useSearchParams()
   const [jobOrders, setJobOrders] = useState<JobOrder[]>([])
   const [deletedJobOrders, setDeletedJobOrders] = useState<JobOrder[]>([])
   const [clients, setClients] = useState<any[]>([])
@@ -246,6 +248,21 @@ export default function JobOrdersPage() {
   const [editQuantityDrafts, setEditQuantityDrafts] = useState<Record<string, string>>({})
   const [roundOffDraft, setRoundOffDraft] = useState('')
   const [editRoundOffDraft, setEditRoundOffDraft] = useState('')
+
+  useEffect(() => {
+    const division = (searchParams.get('division') || '').toLowerCase()
+    if (division === 'workshop') {
+      setDivisionFilter('Workshop - Fabrication')
+      return
+    }
+    if (division === 'manufacturing') {
+      setDivisionFilter('Manufacturing - Pipe Mill')
+      return
+    }
+    if (division === 'all' || division === '') {
+      setDivisionFilter('ALL')
+    }
+  }, [searchParams])
 
   useEffect(() => {
     fetchJobOrders()

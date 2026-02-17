@@ -29,7 +29,16 @@ export default function Header() {
 
   const navItems = [
     { href: '/dashboard', label: 'Dashboard', icon: BarChart3 },
-    { href: '/job-orders', label: 'Job Orders', icon: Briefcase },
+    {
+      href: '/job-orders',
+      label: 'Job Orders',
+      icon: Briefcase,
+      children: [
+        { href: '/job-orders?division=all', label: 'All Job Orders', icon: Briefcase },
+        { href: '/job-orders?division=workshop', label: 'Workshop - Fabrication', icon: Briefcase },
+        { href: '/job-orders?division=manufacturing', label: 'Manufacturing - Pipe Mill', icon: Factory },
+      ]
+    },
     {
       href: '/quality-management',
       label: 'Execution',
@@ -88,7 +97,7 @@ export default function Header() {
           <nav className="flex gap-1 flex-1 justify-center items-center min-w-0">
             {navItems.map((item, idx) => {
               const Icon = item.icon
-              const isActive = pathname === item.href || (item.children && item.children.some((c: any) => pathname === c.href))
+              const isActive = pathname === item.href || (item.children && item.children.some((c: any) => pathname === c.href.split('?')[0]))
 
               if (item.children) {
                 return (
@@ -144,7 +153,7 @@ export default function Header() {
                         {item.children.map((child: any) => {
                           const ChildIcon = child.icon
                           return (
-                            <Link key={child.href} href={child.href} className={`block px-4 py-2.5 text-sm transition-colors ${pathname === child.href ? 'bg-primary-50 text-primary-700 font-medium' : 'text-slate-700 hover:bg-slate-50'}`}>
+                            <Link key={child.href} href={child.href} className={`block px-4 py-2.5 text-sm transition-colors ${pathname === child.href.split('?')[0] ? 'bg-primary-50 text-primary-700 font-medium' : 'text-slate-700 hover:bg-slate-50'}`}>
                               <div className="flex items-center gap-2">
                                 {ChildIcon ? <ChildIcon className="h-4 w-4" /> : null}
                                 <span>{child.label}</span>
