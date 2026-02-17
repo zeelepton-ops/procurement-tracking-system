@@ -95,7 +95,7 @@ const FINISH_TYPE_OPTIONS = [
   { value: 'HDG', label: 'Galvanized (HDG)' },
   { value: 'PGI', label: 'Pre-galvanized (PGI)' }
 ]
-const UNIT_OPTIONS = ['mm', 'LM', 'Kgs']
+const UNIT_OPTIONS = ['Nos', 'mm', 'LM', 'Kgs']
 const JO_CATEGORY_OPTIONS = ['Workshop - Fabrication', 'Manufacturing - Pipe Mill']
 const MANUFACTURING_CATEGORY = 'Manufacturing - Pipe Mill'
 
@@ -907,26 +907,7 @@ export default function JobOrdersPage() {
         <div className="mb-4 flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-slate-900 mb-0.5">Job Orders</h1>
-            <div className="flex items-center gap-3 mt-1">
-              <p className="text-slate-600 text-xs">Manage workshop and manufacturing job orders</p>
-              <div className="flex items-center gap-2">
-                <Label className="text-xs text-slate-600">Division</Label>
-                <select
-                  value={divisionFilter}
-                  onChange={(e) => {
-                    setDivisionFilter(e.target.value)
-                    setSelectedIds([])
-                    setPage(1)
-                  }}
-                  className="h-8 rounded-md border border-slate-300 bg-white px-2 text-xs focus:outline-none focus:ring-2 focus:ring-primary-500"
-                >
-                  <option value="ALL">All</option>
-                  {JO_CATEGORY_OPTIONS.map((option) => (
-                    <option key={option} value={option}>{option}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
+            <p className="text-slate-600 text-xs">Manage workshop and manufacturing job orders</p>
           </div>
           <Button 
             onClick={() => setShowForm(!showForm)}
@@ -945,6 +926,24 @@ export default function JobOrdersPage() {
               </>
             )}
           </Button>
+        </div>
+
+        <div className="mb-3 flex items-center gap-2">
+          <Label className="text-xs text-slate-600">Division</Label>
+          <select
+            value={divisionFilter}
+            onChange={(e) => {
+              setDivisionFilter(e.target.value)
+              setSelectedIds([])
+              setPage(1)
+            }}
+            className="h-8 rounded-md border border-slate-300 bg-white px-2 text-xs focus:outline-none focus:ring-2 focus:ring-primary-500"
+          >
+            <option value="ALL">All</option>
+            {JO_CATEGORY_OPTIONS.map((option) => (
+              <option key={option} value={option}>{option}</option>
+            ))}
+          </select>
         </div>
 
         {/* Filters */}
@@ -1335,15 +1334,15 @@ export default function JobOrdersPage() {
                     <div className="grid grid-cols-[repeat(21,minmax(0,1fr))] gap-2 mb-2 px-3">
                       <div className="col-span-2"><Label className="text-xs font-semibold text-slate-600">Type *</Label></div>
                       <div className="col-span-2"><Label className="text-xs font-semibold text-slate-600">Finish</Label></div>
-                      <div className="col-span-2"><Label className="text-xs font-semibold text-slate-600">Size</Label></div>
-                      <div className="col-span-2"><Label className="text-xs font-semibold text-slate-600">Size 2 (RHS)</Label></div>
-                      <div className="col-span-2"><Label className="text-xs font-semibold text-slate-600">Length</Label></div>
-                      <div className="col-span-2"><Label className="text-xs font-semibold text-slate-600">Thickness</Label></div>
+                      <div className="col-span-2"><Label className="text-xs font-semibold text-slate-600">Size (mm)</Label></div>
+                      <div className="col-span-2"><Label className="text-xs font-semibold text-slate-600">Size 2 (mm)</Label></div>
+                      <div className="col-span-2"><Label className="text-xs font-semibold text-slate-600">Length (mm)</Label></div>
+                      <div className="col-span-2"><Label className="text-xs font-semibold text-slate-600">Thickness (mm)</Label></div>
                       <div className="col-span-2"><Label className="text-xs font-semibold text-slate-600">Quantity</Label></div>
                       <div className="col-span-1"><Label className="text-xs font-semibold text-slate-600">Unit *</Label></div>
-                      <div className="col-span-2"><Label className="text-xs font-semibold text-slate-600">Unit Price</Label></div>
-                      <div className="col-span-2"><Label className="text-xs font-semibold text-slate-600">Total</Label></div>
-                      <div className="col-span-1"><Label className="text-xs font-semibold text-slate-600">Wt</Label></div>
+                      <div className="col-span-2"><Label className="text-xs font-semibold text-slate-600">Unit Price (QAR)</Label></div>
+                      <div className="col-span-2"><Label className="text-xs font-semibold text-slate-600">Total (QAR)</Label></div>
+                      <div className="col-span-1"><Label className="text-xs font-semibold text-slate-600">Wt (kg)</Label></div>
                       <div className="col-span-1"></div>
                     </div>
                   ) : (
@@ -1351,9 +1350,9 @@ export default function JobOrdersPage() {
                       <div className="col-span-4"><Label className="text-xs font-semibold text-slate-600">Work Description *</Label></div>
                       <div className="col-span-2"><Label className="text-xs font-semibold text-slate-600">Quantity</Label></div>
                       <div className="col-span-1"><Label className="text-xs font-semibold text-slate-600">Unit *</Label></div>
-                      <div className="col-span-2"><Label className="text-xs font-semibold text-slate-600">Unit Price</Label></div>
-                      <div className="col-span-2"><Label className="text-xs font-semibold text-slate-600">Total</Label></div>
-                      <div className="col-span-1"><Label className="text-xs font-semibold text-slate-600">Wt</Label></div>
+                      <div className="col-span-2"><Label className="text-xs font-semibold text-slate-600">Unit Price (QAR)</Label></div>
+                      <div className="col-span-2"><Label className="text-xs font-semibold text-slate-600">Total (QAR)</Label></div>
+                      <div className="col-span-1"><Label className="text-xs font-semibold text-slate-600">Wt (kg)</Label></div>
                     </div>
                   )}
 
@@ -2429,15 +2428,15 @@ export default function JobOrdersPage() {
                       <div className="grid grid-cols-[repeat(21,minmax(0,1fr))] gap-2 bg-slate-100 border border-slate-200 rounded-md px-3 py-2 text-[11px] font-semibold text-slate-600 uppercase tracking-wide">
                         <div className="col-span-2">Type</div>
                         <div className="col-span-2">Finish</div>
-                        <div className="col-span-2">Size</div>
-                        <div className="col-span-2">Size 2</div>
-                        <div className="col-span-2">Length</div>
-                        <div className="col-span-2">Thickness</div>
+                        <div className="col-span-2">Size (mm)</div>
+                        <div className="col-span-2">Size 2 (mm)</div>
+                        <div className="col-span-2">Length (mm)</div>
+                        <div className="col-span-2">Thickness (mm)</div>
                         <div className="col-span-2 text-right">Quantity</div>
                         <div className="col-span-1">Unit</div>
-                        <div className="col-span-2 text-right">Unit Price</div>
-                        <div className="col-span-2 text-right">Total</div>
-                        <div className="col-span-1 text-right">Wt</div>
+                        <div className="col-span-2 text-right">Unit Price (QAR)</div>
+                        <div className="col-span-2 text-right">Total (QAR)</div>
+                        <div className="col-span-1 text-right">Wt (kg)</div>
                         <div className="col-span-1"></div>
                       </div>
                     ) : (
@@ -2445,9 +2444,9 @@ export default function JobOrdersPage() {
                         <div className="col-span-4">Work Description</div>
                         <div className="col-span-2 text-right">Quantity</div>
                         <div className="col-span-1">Unit</div>
-                        <div className="col-span-2 text-right">Unit Price</div>
-                        <div className="col-span-2 text-right">Total</div>
-                        <div className="col-span-1 text-right">Wt</div>
+                        <div className="col-span-2 text-right">Unit Price (QAR)</div>
+                        <div className="col-span-2 text-right">Total (QAR)</div>
+                        <div className="col-span-1 text-right">Wt (kg)</div>
                       </div>
                     )}
 
