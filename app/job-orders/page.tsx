@@ -46,6 +46,7 @@ interface JobOrderItem {
   id?: string
   workDescription: string
   productType?: string
+  finishType?: string | null
   sizePrimary?: string | null
   sizeSecondary?: string | null
   length?: string | null
@@ -89,6 +90,11 @@ const MANUFACTURING_SCOPE_OF_WORKS_OPTIONS = [
 ]
 
 const PRODUCT_TYPE_OPTIONS = ['RHS', 'SHS', 'CHS', 'CP', 'MSP', 'HRC', 'SC']
+const FINISH_TYPE_OPTIONS = [
+  { value: 'MS', label: 'Without Galvanized (MS)' },
+  { value: 'HDG', label: 'Galvanized (HDG)' },
+  { value: 'PGI', label: 'Pre-galvanized (PGI)' }
+]
 const UNIT_OPTIONS = ['mm', 'LM', 'Kgs']
 const JO_CATEGORY_OPTIONS = ['Workshop - Fabrication', 'Manufacturing - Pipe Mill']
 const MANUFACTURING_CATEGORY = 'Manufacturing - Pipe Mill'
@@ -105,6 +111,7 @@ export default function JobOrdersPage() {
     search: '',
     priority: 'ALL'
   })
+  const [divisionFilter, setDivisionFilter] = useState<'ALL' | string>('ALL')
   // pagination
   const [page, setPage] = useState(1)
   const [perPage, setPerPage] = useState(20)
@@ -147,11 +154,13 @@ export default function JobOrdersPage() {
 
   const buildProductDescription = (item: JobOrderItem) => {
     const type = (item.productType || '').trim()
+    const finish = (item.finishType || '').trim()
     const sizeA = (item.sizePrimary || '').trim()
     const sizeB = (item.sizeSecondary || '').trim()
     const thickness = (item.thickness || '').trim()
     const length = (item.length || '').trim()
     const segments = [type]
+    if (finish) segments.push(`Finish:${finish}`)
     if (sizeA) segments.push(requiresSecondSize(type) && sizeB ? `${sizeA}x${sizeB}` : sizeA)
     if (thickness) segments.push(`T${thickness}`)
     if (requiresLength(type) && length) segments.push(`L${length}`)
@@ -161,18 +170,25 @@ export default function JobOrdersPage() {
   const parseProductDescription = (value?: string | null) => {
     const raw = (value || '').trim()
     if (!raw) {
-      return { productType: '', sizePrimary: '', sizeSecondary: '', thickness: '', length: '', workDescription: '' }
+      return { productType: '', finishType: '', sizePrimary: '', sizeSecondary: '', thickness: '', length: '', workDescription: '' }
     }
 
     const parts = raw.split('|').map((part) => part.trim()).filter(Boolean)
     const type = PRODUCT_TYPE_OPTIONS.includes(parts[0]) ? parts[0] : ''
-    const sizePart = parts[1] || ''
+    const finishPartWithPrefix = parts.find((part) => /^Finish:/i.test(part)) || ''
+    const finishPartRaw = parts.find((part) => ['MS', 'HDG', 'PGI'].includes(part.toUpperCase())) || ''
+    const finishType = finishPartWithPrefix
+      ? finishPartWithPrefix.replace(/^Finish:/i, '').trim().toUpperCase()
+      : finishPartRaw.toUpperCase()
+    const nonTypeParts = parts.slice(1).filter((part) => !/^Finish:/i.test(part) && !['MS', 'HDG', 'PGI'].includes(part.toUpperCase()))
+    const sizePart = nonTypeParts[0] || ''
     const [sizePrimary, sizeSecondary] = sizePart.includes('x') ? sizePart.split('x').map((s) => s.trim()) : [sizePart, '']
     const thicknessPart = parts.find((part) => /^T/i.test(part)) || ''
     const lengthPart = parts.find((part) => /^L/i.test(part)) || ''
 
     return {
       productType: type,
+      finishType: finishType || '',
       sizePrimary: sizePrimary || '',
       sizeSecondary: sizeSecondary || '',
       thickness: thicknessPart.replace(/^T/i, '').trim(),
@@ -181,7 +197,7 @@ export default function JobOrdersPage() {
     }
   }
   const [workItems, setWorkItems] = useState<JobOrderItem[]>([
-    { workDescription: '', productType: '', sizePrimary: '', sizeSecondary: '', length: '', thickness: '', quantity: 0, unit: 'LM', unitPrice: 0, totalPrice: 0 }
+    { workDescription: '', productType: '', finishType: '', sizePrimary: '', sizeSecondary: '', length: '', thickness: '', quantity: 0, unit: 'Nos', unitPrice: 0, totalPrice: 0 }
   ])
   const [currencyDrafts, setCurrencyDrafts] = useState<Record<string, string>>({})
   const [quantityDrafts, setQuantityDrafts] = useState<Record<string, string>>({})
@@ -224,7 +240,7 @@ export default function JobOrdersPage() {
     roundOff: 0
   })
   const [editWorkItems, setEditWorkItems] = useState<JobOrderItem[]>([
-    { workDescription: '', productType: '', sizePrimary: '', sizeSecondary: '', length: '', thickness: '', quantity: 0, unit: 'LM', unitPrice: 0, totalPrice: 0 }
+    { workDescription: '', productType: '', finishType: '', sizePrimary: '', sizeSecondary: '', length: '', thickness: '', quantity: 0, unit: 'Nos', unitPrice: 0, totalPrice: 0 }
   ])
   const [editCurrencyDrafts, setEditCurrencyDrafts] = useState<Record<string, string>>({})
   const [editQuantityDrafts, setEditQuantityDrafts] = useState<Record<string, string>>({})
@@ -285,8 +301,10 @@ export default function JobOrdersPage() {
     }
   }, [formData, workItems])
 
-  // server-side filtered/paginated orders
-  const filteredOrders = jobOrders
+  // server-side filtered/paginated orders + division filter in UI
+  const filteredOrders = divisionFilter === 'ALL'
+    ? jobOrders
+    : jobOrders.filter((job) => (job.workScope || JO_CATEGORY_OPTIONS[0]) === divisionFilter)
 
   const recentJobOrders = [...jobOrders]
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
@@ -384,7 +402,7 @@ export default function JobOrdersPage() {
 
   const addWorkItem = () => {
     const defaultUnit = formData.workScope === MANUFACTURING_CATEGORY ? 'LM' : 'Nos'
-    setWorkItems([...workItems, { workDescription: '', productType: '', sizePrimary: '', sizeSecondary: '', length: '', thickness: '', quantity: null, unit: defaultUnit, unitPrice: null, totalPrice: null }])
+    setWorkItems([...workItems, { workDescription: '', productType: '', finishType: '', sizePrimary: '', sizeSecondary: '', length: '', thickness: '', quantity: null, unit: defaultUnit, unitPrice: null, totalPrice: null }])
   }
 
   const removeWorkItem = (index: number) => {
@@ -445,7 +463,7 @@ export default function JobOrdersPage() {
 
     const cur = updated[index]
 
-    if (field === 'productType' || field === 'sizePrimary' || field === 'sizeSecondary' || field === 'length' || field === 'thickness') {
+    if (field === 'productType' || field === 'finishType' || field === 'sizePrimary' || field === 'sizeSecondary' || field === 'length' || field === 'thickness') {
       cur.workDescription = buildProductDescription(cur)
     }
 
@@ -479,7 +497,7 @@ export default function JobOrdersPage() {
 
   const addEditWorkItem = () => {
     const defaultUnit = editFormData.workScope === MANUFACTURING_CATEGORY ? 'LM' : 'Nos'
-    setEditWorkItems([...editWorkItems, { workDescription: '', productType: '', sizePrimary: '', sizeSecondary: '', length: '', thickness: '', quantity: null, unit: defaultUnit, unitPrice: null, totalPrice: null }])
+    setEditWorkItems([...editWorkItems, { workDescription: '', productType: '', finishType: '', sizePrimary: '', sizeSecondary: '', length: '', thickness: '', quantity: null, unit: defaultUnit, unitPrice: null, totalPrice: null }])
   }
 
   const removeEditWorkItem = (index: number) => {
@@ -492,7 +510,7 @@ export default function JobOrdersPage() {
 
     const cur = updated[index]
 
-    if (field === 'productType' || field === 'sizePrimary' || field === 'sizeSecondary' || field === 'length' || field === 'thickness') {
+    if (field === 'productType' || field === 'finishType' || field === 'sizePrimary' || field === 'sizeSecondary' || field === 'length' || field === 'thickness') {
       cur.workDescription = buildProductDescription(cur)
     }
 
@@ -687,7 +705,7 @@ export default function JobOrdersPage() {
         discount: 0,
         roundOff: 0
       })
-      setWorkItems([{ workDescription: '', productType: '', sizePrimary: '', sizeSecondary: '', length: '', thickness: '', quantity: 0, unit: 'LM', unitPrice: 0, totalPrice: 0 }])
+      setWorkItems([{ workDescription: '', productType: '', finishType: '', sizePrimary: '', sizeSecondary: '', length: '', thickness: '', quantity: 0, unit: 'Nos', unitPrice: 0, totalPrice: 0 }])
       setShowForm(false)
       setShowNewClientInput(false)
       setNewClientName('')
@@ -797,7 +815,7 @@ export default function JobOrdersPage() {
     setEditFinalTotalOverride((job as any).finalTotal !== undefined ? (job as any).finalTotal : null)
     setEditWorkItems(job.items && job.items.length > 0
       ? job.items.map((item) => ({ ...item, ...parseProductDescription(item.workDescription) }))
-      : [{ workDescription: '', productType: '', sizePrimary: '', sizeSecondary: '', length: '', thickness: '', quantity: 0, unit: 'LM', unitPrice: 0, totalPrice: 0 }]
+      : [{ workDescription: '', productType: '', finishType: '', sizePrimary: '', sizeSecondary: '', length: '', thickness: '', quantity: 0, unit: 'Nos', unitPrice: 0, totalPrice: 0 }]
     )
 
     // focus job number in modal after small delay
@@ -889,7 +907,26 @@ export default function JobOrdersPage() {
         <div className="mb-4 flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-slate-900 mb-0.5">Job Orders</h1>
-            <p className="text-slate-600 text-xs">Manage workshop job orders</p>
+            <div className="flex items-center gap-3 mt-1">
+              <p className="text-slate-600 text-xs">Manage workshop and manufacturing job orders</p>
+              <div className="flex items-center gap-2">
+                <Label className="text-xs text-slate-600">Division</Label>
+                <select
+                  value={divisionFilter}
+                  onChange={(e) => {
+                    setDivisionFilter(e.target.value)
+                    setSelectedIds([])
+                    setPage(1)
+                  }}
+                  className="h-8 rounded-md border border-slate-300 bg-white px-2 text-xs focus:outline-none focus:ring-2 focus:ring-primary-500"
+                >
+                  <option value="ALL">All</option>
+                  {JO_CATEGORY_OPTIONS.map((option) => (
+                    <option key={option} value={option}>{option}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
           </div>
           <Button 
             onClick={() => setShowForm(!showForm)}
@@ -1224,6 +1261,7 @@ export default function JobOrdersPage() {
                             setWorkItems((prev) => prev.map((item) => ({
                               ...item,
                               productType: '',
+                              finishType: '',
                               sizePrimary: '',
                               sizeSecondary: '',
                               length: '',
@@ -1294,8 +1332,9 @@ export default function JobOrdersPage() {
                   
                   {/* Header row - shown once */}
                   {formData.workScope === MANUFACTURING_CATEGORY ? (
-                    <div className="grid grid-cols-[repeat(18,minmax(0,1fr))] gap-2 mb-2 px-3">
+                    <div className="grid grid-cols-[repeat(21,minmax(0,1fr))] gap-2 mb-2 px-3">
                       <div className="col-span-2"><Label className="text-xs font-semibold text-slate-600">Type *</Label></div>
+                      <div className="col-span-2"><Label className="text-xs font-semibold text-slate-600">Finish</Label></div>
                       <div className="col-span-2"><Label className="text-xs font-semibold text-slate-600">Size</Label></div>
                       <div className="col-span-2"><Label className="text-xs font-semibold text-slate-600">Size 2 (RHS)</Label></div>
                       <div className="col-span-2"><Label className="text-xs font-semibold text-slate-600">Length</Label></div>
@@ -1305,6 +1344,7 @@ export default function JobOrdersPage() {
                       <div className="col-span-2"><Label className="text-xs font-semibold text-slate-600">Unit Price</Label></div>
                       <div className="col-span-2"><Label className="text-xs font-semibold text-slate-600">Total</Label></div>
                       <div className="col-span-1"><Label className="text-xs font-semibold text-slate-600">Wt</Label></div>
+                      <div className="col-span-1"></div>
                     </div>
                   ) : (
                     <div className="grid grid-cols-12 gap-2 mb-2 px-3">
@@ -1319,7 +1359,7 @@ export default function JobOrdersPage() {
 
                   <div className="space-y-2">
                     {workItems.map((item, index) => (
-                      <div key={index} className={formData.workScope === MANUFACTURING_CATEGORY ? 'grid grid-cols-[repeat(18,minmax(0,1fr))] gap-2 items-center bg-slate-50 p-3 rounded' : 'grid grid-cols-12 gap-2 items-center bg-slate-50 p-3 rounded'}>
+                      <div key={index} className={formData.workScope === MANUFACTURING_CATEGORY ? 'grid grid-cols-[repeat(21,minmax(0,1fr))] gap-2 items-center bg-slate-50 p-3 rounded' : 'grid grid-cols-12 gap-2 items-center bg-slate-50 p-3 rounded'}>
                         {formData.workScope === MANUFACTURING_CATEGORY ? (
                           <>
                         <div className="col-span-2">
@@ -1332,6 +1372,18 @@ export default function JobOrdersPage() {
                             <option value="">Type</option>
                             {PRODUCT_TYPE_OPTIONS.map((type) => (
                               <option key={type} value={type}>{type}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="col-span-2">
+                          <select
+                            value={item.finishType || ''}
+                            onChange={(e) => updateWorkItem(index, 'finishType', e.target.value)}
+                            className="h-8 w-full rounded-md border border-slate-300 px-2 text-xs"
+                          >
+                            <option value="">Finish</option>
+                            {FINISH_TYPE_OPTIONS.map((finish) => (
+                              <option key={finish.value} value={finish.value}>{finish.label}</option>
                             ))}
                           </select>
                         </div>
@@ -1731,9 +1783,9 @@ export default function JobOrdersPage() {
                     <div className="col-span-2 flex items-center gap-2">
                       <input
                         type="checkbox"
-                        checked={selectedIds.length === jobOrders.length && jobOrders.length > 0}
+                        checked={selectedIds.length === filteredOrders.length && filteredOrders.length > 0}
                         onChange={(e) => {
-                          if (e.target.checked) setSelectedIds(jobOrders.map(j => j.id))
+                          if (e.target.checked) setSelectedIds(filteredOrders.map(j => j.id))
                           else setSelectedIds([])
                         }}
                       />
@@ -2303,6 +2355,7 @@ export default function JobOrdersPage() {
                               setEditWorkItems((prev) => prev.map((item) => ({
                                 ...item,
                                 productType: '',
+                                finishType: '',
                                 sizePrimary: '',
                                 sizeSecondary: '',
                                 length: '',
@@ -2373,8 +2426,9 @@ export default function JobOrdersPage() {
                     
                     {/* Header row - shown once */}
                     {editFormData.workScope === MANUFACTURING_CATEGORY ? (
-                      <div className="grid grid-cols-[repeat(18,minmax(0,1fr))] gap-2 bg-slate-100 border border-slate-200 rounded-md px-3 py-2 text-[11px] font-semibold text-slate-600 uppercase tracking-wide">
+                      <div className="grid grid-cols-[repeat(21,minmax(0,1fr))] gap-2 bg-slate-100 border border-slate-200 rounded-md px-3 py-2 text-[11px] font-semibold text-slate-600 uppercase tracking-wide">
                         <div className="col-span-2">Type</div>
+                        <div className="col-span-2">Finish</div>
                         <div className="col-span-2">Size</div>
                         <div className="col-span-2">Size 2</div>
                         <div className="col-span-2">Length</div>
@@ -2384,6 +2438,7 @@ export default function JobOrdersPage() {
                         <div className="col-span-2 text-right">Unit Price</div>
                         <div className="col-span-2 text-right">Total</div>
                         <div className="col-span-1 text-right">Wt</div>
+                        <div className="col-span-1"></div>
                       </div>
                     ) : (
                       <div className="grid grid-cols-12 gap-3 bg-slate-100 border border-slate-200 rounded-md px-3 py-2 text-[11px] font-semibold text-slate-600 uppercase tracking-wide">
@@ -2398,7 +2453,7 @@ export default function JobOrdersPage() {
 
                     <div className="space-y-2">
                       {editWorkItems.map((item, index) => (
-                        <div key={index} className={editFormData.workScope === MANUFACTURING_CATEGORY ? 'grid grid-cols-[repeat(18,minmax(0,1fr))] gap-2 items-center bg-white border border-slate-200 rounded-md px-3 py-2' : 'grid grid-cols-12 gap-3 items-center bg-white border border-slate-200 rounded-md px-3 py-2'}>
+                        <div key={index} className={editFormData.workScope === MANUFACTURING_CATEGORY ? 'grid grid-cols-[repeat(21,minmax(0,1fr))] gap-2 items-center bg-white border border-slate-200 rounded-md px-3 py-2' : 'grid grid-cols-12 gap-3 items-center bg-white border border-slate-200 rounded-md px-3 py-2'}>
                           {editFormData.workScope === MANUFACTURING_CATEGORY ? (
                             <>
                           <div className="col-span-2">
@@ -2411,6 +2466,18 @@ export default function JobOrdersPage() {
                               <option value="">Type</option>
                               {PRODUCT_TYPE_OPTIONS.map((type) => (
                                 <option key={type} value={type}>{type}</option>
+                              ))}
+                            </select>
+                          </div>
+                          <div className="col-span-2">
+                            <select
+                              value={item.finishType || ''}
+                              onChange={(e) => updateEditWorkItem(index, 'finishType', e.target.value)}
+                              className="h-8 w-full rounded-md border border-slate-300 px-2 text-xs"
+                            >
+                              <option value="">Finish</option>
+                              {FINISH_TYPE_OPTIONS.map((finish) => (
+                                <option key={finish.value} value={finish.value}>{finish.label}</option>
                               ))}
                             </select>
                           </div>
