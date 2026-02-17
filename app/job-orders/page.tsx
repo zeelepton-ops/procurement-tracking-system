@@ -45,6 +45,11 @@ interface JobOrder {
 interface JobOrderItem {
   id?: string
   workDescription: string
+  productType?: string
+  sizePrimary?: string | null
+  sizeSecondary?: string | null
+  length?: string | null
+  thickness?: string | null
   quantity: number | null
   unit: string
   unitPrice: number | null
@@ -53,25 +58,18 @@ interface JobOrderItem {
 }
 
 const SCOPE_OF_WORKS_OPTIONS = [
-  'Profiling/Cutting',
-  'Plate Rolling & Bending',
-  'Section Bending',
-  'Drilling & Machining',
-  'Storage Tanks & Silos',
-  'Pressure Vessels',
-  'Pipe Spools',
-  'Material Handling Eqpt.',
-  'Primary Structure',
-  'Secondary Steel',
-  'Pipe Supports',
-  'Abrasive Blasting',
-  'Industrial Coating',
-  'Lining Services',
-  'Galvanizing',
-  'Erection & Installation',
-  'Maintenance',
-  'NDT Testing'
+  'Rectangular Hollow Section (RHS)',
+  'Square Hollow Section (SHS)',
+  'Circular Hollow Section (CHS)',
+  'Chequered Plate (CP)',
+  'Mild Steel Plate (MSP)',
+  'Hot Rolled Coil (HRC)',
+  'Slitted Coil (SC)'
 ]
+
+const PRODUCT_TYPE_OPTIONS = ['RHS', 'SHS', 'CHS', 'CP', 'MSP', 'HRC', 'SC']
+const UNIT_OPTIONS = ['mm', 'LM', 'Kgs']
+const JO_CATEGORY_OPTIONS = ['Workshop - Fabrication', 'Manufacturing - Pipe Mill']
 
 export default function JobOrdersPage() {
   const { data: session } = useSession()
@@ -107,14 +105,61 @@ export default function JobOrdersPage() {
     lpoIssueDate: '',
     priority: 'MEDIUM',
     foreman: '',
-    workScope: '',
+    workScope: JO_CATEGORY_OPTIONS[0],
     scopeOfWorks: [] as string[],
     qaQcInCharge: '',
     discount: 0,
     roundOff: 0
   })
+
+  const getSizeLabel = (type?: string) => {
+    if (type === 'CHS') return 'Diameter (mm)'
+    if (type === 'SHS') return 'Side (mm)'
+    if (type === 'RHS') return 'Side A (mm)'
+    if (type === 'CP' || type === 'MSP' || type === 'HRC' || type === 'SC') return 'Width (mm)'
+    return 'Size (mm)'
+  }
+
+  const requiresSecondSize = (type?: string) => type === 'RHS'
+  const requiresLength = (type?: string) => type !== 'HRC' && type !== 'SC'
+
+  const buildProductDescription = (item: JobOrderItem) => {
+    const type = (item.productType || '').trim()
+    const sizeA = (item.sizePrimary || '').trim()
+    const sizeB = (item.sizeSecondary || '').trim()
+    const thickness = (item.thickness || '').trim()
+    const length = (item.length || '').trim()
+    const segments = [type]
+    if (sizeA) segments.push(requiresSecondSize(type) && sizeB ? `${sizeA}x${sizeB}` : sizeA)
+    if (thickness) segments.push(`T${thickness}`)
+    if (requiresLength(type) && length) segments.push(`L${length}`)
+    return segments.filter(Boolean).join(' | ')
+  }
+
+  const parseProductDescription = (value?: string | null) => {
+    const raw = (value || '').trim()
+    if (!raw) {
+      return { productType: '', sizePrimary: '', sizeSecondary: '', thickness: '', length: '', workDescription: '' }
+    }
+
+    const parts = raw.split('|').map((part) => part.trim()).filter(Boolean)
+    const type = PRODUCT_TYPE_OPTIONS.includes(parts[0]) ? parts[0] : ''
+    const sizePart = parts[1] || ''
+    const [sizePrimary, sizeSecondary] = sizePart.includes('x') ? sizePart.split('x').map((s) => s.trim()) : [sizePart, '']
+    const thicknessPart = parts.find((part) => /^T/i.test(part)) || ''
+    const lengthPart = parts.find((part) => /^L/i.test(part)) || ''
+
+    return {
+      productType: type,
+      sizePrimary: sizePrimary || '',
+      sizeSecondary: sizeSecondary || '',
+      thickness: thicknessPart.replace(/^T/i, '').trim(),
+      length: lengthPart.replace(/^L/i, '').trim(),
+      workDescription: raw,
+    }
+  }
   const [workItems, setWorkItems] = useState<JobOrderItem[]>([
-    { workDescription: '', quantity: 0, unit: 'Nos', unitPrice: 0, totalPrice: 0 }
+    { workDescription: '', productType: '', sizePrimary: '', sizeSecondary: '', length: '', thickness: '', quantity: 0, unit: 'LM', unitPrice: 0, totalPrice: 0 }
   ])
   const [currencyDrafts, setCurrencyDrafts] = useState<Record<string, string>>({})
   const [quantityDrafts, setQuantityDrafts] = useState<Record<string, string>>({})
@@ -150,14 +195,14 @@ export default function JobOrdersPage() {
     lpoIssueDate: '',
     priority: 'MEDIUM',
     foreman: '',
-    workScope: '',
+    workScope: JO_CATEGORY_OPTIONS[0],
     scopeOfWorks: [] as string[],
     qaQcInCharge: '',
     discount: 0,
     roundOff: 0
   })
   const [editWorkItems, setEditWorkItems] = useState<JobOrderItem[]>([
-    { workDescription: '', quantity: 0, unit: 'Nos', unitPrice: 0, totalPrice: 0 }
+    { workDescription: '', productType: '', sizePrimary: '', sizeSecondary: '', length: '', thickness: '', quantity: 0, unit: 'LM', unitPrice: 0, totalPrice: 0 }
   ])
   const [editCurrencyDrafts, setEditCurrencyDrafts] = useState<Record<string, string>>({})
   const [editQuantityDrafts, setEditQuantityDrafts] = useState<Record<string, string>>({})
@@ -316,7 +361,7 @@ export default function JobOrdersPage() {
   }, [showForm, recentForemen, recentQaQc, recentContacts])
 
   const addWorkItem = () => {
-    setWorkItems([...workItems, { workDescription: '', quantity: null, unit: 'Nos', unitPrice: null, totalPrice: null }])
+    setWorkItems([...workItems, { workDescription: '', productType: '', sizePrimary: '', sizeSecondary: '', length: '', thickness: '', quantity: null, unit: 'LM', unitPrice: null, totalPrice: null }])
   }
 
   const removeWorkItem = (index: number) => {
@@ -364,6 +409,7 @@ export default function JobOrdersPage() {
 
   const normalizeItem = (item: JobOrderItem) => ({
     ...item,
+    workDescription: buildProductDescription(item) || item.workDescription,
     quantity: normalizeNumber(item.quantity),
     unitPrice: normalizeNumber(item.unitPrice),
     totalPrice: normalizeNumber(item.totalPrice),
@@ -375,6 +421,10 @@ export default function JobOrdersPage() {
     updated[index] = { ...updated[index], [field]: value }
 
     const cur = updated[index]
+
+    if (field === 'productType' || field === 'sizePrimary' || field === 'sizeSecondary' || field === 'length' || field === 'thickness') {
+      cur.workDescription = buildProductDescription(cur)
+    }
 
     // Normalize nulls and numbers
     if (field === 'totalPrice') {
@@ -405,7 +455,7 @@ export default function JobOrdersPage() {
   }
 
   const addEditWorkItem = () => {
-    setEditWorkItems([...editWorkItems, { workDescription: '', quantity: null, unit: 'Nos', unitPrice: null, totalPrice: null }])
+    setEditWorkItems([...editWorkItems, { workDescription: '', productType: '', sizePrimary: '', sizeSecondary: '', length: '', thickness: '', quantity: null, unit: 'LM', unitPrice: null, totalPrice: null }])
   }
 
   const removeEditWorkItem = (index: number) => {
@@ -417,6 +467,10 @@ export default function JobOrdersPage() {
     updated[index] = { ...updated[index], [field]: value }
 
     const cur = updated[index]
+
+    if (field === 'productType' || field === 'sizePrimary' || field === 'sizeSecondary' || field === 'length' || field === 'thickness') {
+      cur.workDescription = buildProductDescription(cur)
+    }
 
     if (field === 'totalPrice') {
       cur.totalPrice = normalizeNumber(value == null ? null : Number(value))
@@ -603,13 +657,13 @@ export default function JobOrdersPage() {
         lpoIssueDate: '',
         priority: 'MEDIUM',
         foreman: '',
-        workScope: '',
+        workScope: JO_CATEGORY_OPTIONS[0],
         scopeOfWorks: [],
         qaQcInCharge: '',
         discount: 0,
         roundOff: 0
       })
-      setWorkItems([{ workDescription: '', quantity: 0, unit: 'Nos', unitPrice: 0, totalPrice: 0 }])
+      setWorkItems([{ workDescription: '', productType: '', sizePrimary: '', sizeSecondary: '', length: '', thickness: '', quantity: 0, unit: 'LM', unitPrice: 0, totalPrice: 0 }])
       setShowForm(false)
       setShowNewClientInput(false)
       setNewClientName('')
@@ -708,7 +762,7 @@ export default function JobOrdersPage() {
       lpoIssueDate: job.lpoIssueDate || '',
       priority: job.priority || 'MEDIUM',
       foreman: job.foreman || '',
-      workScope: job.workScope || '',
+      workScope: job.workScope || JO_CATEGORY_OPTIONS[0],
       scopeOfWorks: scopeOfWorks,
       qaQcInCharge: job.qaQcInCharge || '',
       discount: (job as any).discount || 0,
@@ -717,9 +771,9 @@ export default function JobOrdersPage() {
     setEditClientSearchQuery(job.clientName || '')
     setShowEditClientSuggestions(false)
     setEditFinalTotalOverride((job as any).finalTotal !== undefined ? (job as any).finalTotal : null)
-    setEditWorkItems(job.items && job.items.length > 0 
-      ? job.items 
-      : [{ workDescription: '', quantity: 0, unit: 'Nos', unitPrice: 0, totalPrice: 0 }]
+    setEditWorkItems(job.items && job.items.length > 0
+      ? job.items.map((item) => ({ ...item, ...parseProductDescription(item.workDescription) }))
+      : [{ workDescription: '', productType: '', sizePrimary: '', sizeSecondary: '', length: '', thickness: '', quantity: 0, unit: 'LM', unitPrice: 0, totalPrice: 0 }]
     )
 
     // focus job number in modal after small delay
@@ -1135,14 +1189,17 @@ export default function JobOrdersPage() {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="workScope" className="text-xs font-semibold">Additional Notes</Label>
-                      <Input
+                      <Label htmlFor="workScope" className="text-xs font-semibold">Department Category</Label>
+                      <select
                         id="workScope"
                         value={formData.workScope}
                         onChange={(e) => setFormData({ ...formData, workScope: e.target.value })}
-                        placeholder="Any additional notes or specifications"
-                        className="mt-1 h-9"
-                      />
+                        className="mt-1 h-9 px-2 pr-8 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-primary-500 w-full text-xs"
+                      >
+                        {JO_CATEGORY_OPTIONS.map((option) => (
+                          <option key={option} value={option}>{option}</option>
+                        ))}
+                      </select>
                     </div>
                   </div>
 
@@ -1198,37 +1255,66 @@ export default function JobOrdersPage() {
                   </div>
                   
                   {/* Header row - shown once */}
-                  <div className="grid grid-cols-12 gap-2 mb-2 px-3">
-                    <div className="col-span-4">
-                      <Label className="text-xs font-semibold text-slate-600">Work Description *</Label>
-                    </div>
-                    <div className="col-span-2">
-                      <Label className="text-xs font-semibold text-slate-600">Quantity</Label>
-                    </div>
-                    <div className="col-span-1">
-                      <Label className="text-xs font-semibold text-slate-600">Unit *</Label>
-                    </div>
-                    <div className="col-span-1">
-                      <Label className="text-xs font-semibold text-slate-600">Unit Price</Label>
-                    </div>
-                    <div className="col-span-1">
-                      <Label className="text-xs font-semibold text-slate-600">Total</Label>
-                    </div>
-                    <div className="col-span-1">
-                      <Label className="text-xs font-semibold text-slate-600">Unit Wt (kg)</Label>
-                    </div>
-                    <div className="col-span-2"></div>
+                  <div className="grid grid-cols-[repeat(18,minmax(0,1fr))] gap-2 mb-2 px-3">
+                    <div className="col-span-2"><Label className="text-xs font-semibold text-slate-600">Type *</Label></div>
+                    <div className="col-span-2"><Label className="text-xs font-semibold text-slate-600">Size</Label></div>
+                    <div className="col-span-2"><Label className="text-xs font-semibold text-slate-600">Size 2 (RHS)</Label></div>
+                    <div className="col-span-2"><Label className="text-xs font-semibold text-slate-600">Length</Label></div>
+                    <div className="col-span-2"><Label className="text-xs font-semibold text-slate-600">Thickness</Label></div>
+                    <div className="col-span-2"><Label className="text-xs font-semibold text-slate-600">Quantity</Label></div>
+                    <div className="col-span-1"><Label className="text-xs font-semibold text-slate-600">Unit *</Label></div>
+                    <div className="col-span-2"><Label className="text-xs font-semibold text-slate-600">Unit Price</Label></div>
+                    <div className="col-span-2"><Label className="text-xs font-semibold text-slate-600">Total</Label></div>
+                    <div className="col-span-1"><Label className="text-xs font-semibold text-slate-600">Wt</Label></div>
                   </div>
 
                   <div className="space-y-2">
                     {workItems.map((item, index) => (
-                      <div key={index} className="grid grid-cols-12 gap-2 items-center bg-slate-50 p-3 rounded">
-                        <div className="col-span-4">
-                          <Input
-                            value={item.workDescription}
-                            onChange={(e) => updateWorkItem(index, 'workDescription', e.target.value)}
-                            placeholder="e.g., Fabrication of MS Bollard"
+                      <div key={index} className="grid grid-cols-[repeat(18,minmax(0,1fr))] gap-2 items-center bg-slate-50 p-3 rounded">
+                        <div className="col-span-2">
+                          <select
+                            value={item.productType || ''}
+                            onChange={(e) => updateWorkItem(index, 'productType', e.target.value)}
+                            className="h-8 w-full rounded-md border border-slate-300 px-2 text-xs"
                             required
+                          >
+                            <option value="">Type</option>
+                            {PRODUCT_TYPE_OPTIONS.map((type) => (
+                              <option key={type} value={type}>{type}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="col-span-2">
+                          <Input
+                            value={item.sizePrimary || ''}
+                            onChange={(e) => updateWorkItem(index, 'sizePrimary', e.target.value)}
+                            placeholder={getSizeLabel(item.productType)}
+                            className="h-8 text-xs"
+                          />
+                        </div>
+                        <div className="col-span-2">
+                          <Input
+                            value={item.sizeSecondary || ''}
+                            onChange={(e) => updateWorkItem(index, 'sizeSecondary', e.target.value)}
+                            placeholder="Second side (mm)"
+                            disabled={!requiresSecondSize(item.productType)}
+                            className="h-8 text-xs"
+                          />
+                        </div>
+                        <div className="col-span-2">
+                          <Input
+                            value={item.length || ''}
+                            onChange={(e) => updateWorkItem(index, 'length', e.target.value)}
+                            placeholder="Length"
+                            disabled={!requiresLength(item.productType)}
+                            className="h-8 text-xs"
+                          />
+                        </div>
+                        <div className="col-span-2">
+                          <Input
+                            value={item.thickness || ''}
+                            onChange={(e) => updateWorkItem(index, 'thickness', e.target.value)}
+                            placeholder="Thickness"
                             className="h-8 text-xs"
                           />
                         </div>
@@ -1253,15 +1339,18 @@ export default function JobOrdersPage() {
                           />
                         </div>
                         <div className="col-span-1">
-                          <Input
+                          <select
                             value={item.unit}
                             onChange={(e) => updateWorkItem(index, 'unit', e.target.value)}
-                            placeholder="Nos"
+                            className="h-8 w-full rounded-md border border-slate-300 px-1 text-xs"
                             required
-                            className="h-8 text-xs"
-                          />
+                          >
+                            {UNIT_OPTIONS.map((unit) => (
+                              <option key={unit} value={unit}>{unit}</option>
+                            ))}
+                          </select>
                         </div>
-                        <div className="col-span-1">
+                        <div className="col-span-2">
                           <Input
                             type="text"
                             value={getCurrencyDraft(currencyDrafts, `unitPrice-${index}`, item.unitPrice)}
@@ -1280,7 +1369,7 @@ export default function JobOrdersPage() {
                             className="h-8 text-xs text-right tabular-nums"
                           />
                         </div>
-                        <div className="col-span-1">
+                        <div className="col-span-2">
                           <Input
                             type="text"
                             value={getCurrencyDraft(currencyDrafts, `totalPrice-${index}`, item.totalPrice)}
@@ -1310,7 +1399,7 @@ export default function JobOrdersPage() {
                             className="h-8 text-xs text-right tabular-nums"
                           />
                         </div>
-                        <div className="col-span-2 flex items-center justify-end">
+                        <div className="col-span-1 flex items-center justify-end">
                           {workItems.length > 1 && (
                             <Button
                               type="button"
@@ -1425,7 +1514,7 @@ export default function JobOrdersPage() {
                         lpoIssueDate: '',
                         priority: 'MEDIUM',
                         foreman: '',
-                        workScope: '',
+                        workScope: JO_CATEGORY_OPTIONS[0],
                         scopeOfWorks: [],
                         qaQcInCharge: '',
                         discount: 0,
@@ -1690,7 +1779,7 @@ export default function JobOrdersPage() {
                   <div className="truncate">{selectedJob.productName}</div>
                 </div>
                 <div>
-                  <div className="text-slate-500 text-xs">Additional Notes</div>
+                  <div className="text-slate-500 text-xs">Department Category</div>
                   <div className="truncate">{selectedJob.workScope}</div>
                 </div>
               </div> 
@@ -1703,7 +1792,7 @@ export default function JobOrdersPage() {
                     <table className="w-full text-xs">
                       <thead className="bg-slate-100">
                         <tr>
-                          <th className="text-left p-2 font-semibold w-[60%]">Description</th>
+                          <th className="text-left p-2 font-semibold w-[60%]">Product Description</th>
                           <th className="text-right p-2 font-semibold">Qty</th>
                           <th className="text-left p-2 font-semibold">Unit</th>
                           <th className="text-right p-2 font-semibold">Unit Price</th>
@@ -2060,13 +2149,17 @@ export default function JobOrdersPage() {
                         />
                       </div>
                       <div>
-                        <Label htmlFor="edit-workScope" className="text-xs font-semibold">Additional Notes</Label>
-                        <Input
+                        <Label htmlFor="edit-workScope" className="text-xs font-semibold">Department Category</Label>
+                        <select
                           id="edit-workScope"
                           value={editFormData.workScope}
                           onChange={(e) => setEditFormData({ ...editFormData, workScope: e.target.value })}
-                          className="mt-1 h-9"
-                        />
+                          className="mt-1 h-9 px-2 pr-8 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-primary-500 w-full text-xs"
+                        >
+                          {JO_CATEGORY_OPTIONS.map((option) => (
+                            <option key={option} value={option}>{option}</option>
+                          ))}
+                        </select>
                       </div>
                     </div>
 
@@ -2122,29 +2215,70 @@ export default function JobOrdersPage() {
                     </div>
                     
                     {/* Header row - shown once */}
-                    <div className="grid grid-cols-[minmax(260px,2fr)_110px_80px_120px_120px_110px_40px] gap-3 bg-slate-100 border border-slate-200 rounded-md px-3 py-2 text-[11px] font-semibold text-slate-600 uppercase tracking-wide">
-                      <div>Work Description</div>
-                      <div className="text-right">Quantity</div>
-                      <div>Unit</div>
-                      <div className="text-right">Unit Price</div>
-                      <div className="text-right">Total</div>
-                      <div className="text-right">Unit Wt</div>
-                      <div></div>
+                    <div className="grid grid-cols-[repeat(18,minmax(0,1fr))] gap-2 bg-slate-100 border border-slate-200 rounded-md px-3 py-2 text-[11px] font-semibold text-slate-600 uppercase tracking-wide">
+                      <div className="col-span-2">Type</div>
+                      <div className="col-span-2">Size</div>
+                      <div className="col-span-2">Size 2</div>
+                      <div className="col-span-2">Length</div>
+                      <div className="col-span-2">Thickness</div>
+                      <div className="col-span-2 text-right">Quantity</div>
+                      <div className="col-span-1">Unit</div>
+                      <div className="col-span-2 text-right">Unit Price</div>
+                      <div className="col-span-2 text-right">Total</div>
+                      <div className="col-span-1 text-right">Wt</div>
                     </div>
 
                     <div className="space-y-2">
                       {editWorkItems.map((item, index) => (
-                        <div key={index} className="grid grid-cols-[minmax(260px,2fr)_110px_80px_120px_120px_110px_40px] gap-3 items-center bg-white border border-slate-200 rounded-md px-3 py-2">
-                          <div>
-                            <Input
-                              value={item.workDescription}
-                              onChange={(e) => updateEditWorkItem(index, 'workDescription', e.target.value)}
-                              placeholder="e.g., Fabrication of MS Bollard"
+                        <div key={index} className="grid grid-cols-[repeat(18,minmax(0,1fr))] gap-2 items-center bg-white border border-slate-200 rounded-md px-3 py-2">
+                          <div className="col-span-2">
+                            <select
+                              value={item.productType || ''}
+                              onChange={(e) => updateEditWorkItem(index, 'productType', e.target.value)}
+                              className="h-8 w-full rounded-md border border-slate-300 px-2 text-xs"
                               required
+                            >
+                              <option value="">Type</option>
+                              {PRODUCT_TYPE_OPTIONS.map((type) => (
+                                <option key={type} value={type}>{type}</option>
+                              ))}
+                            </select>
+                          </div>
+                          <div className="col-span-2">
+                            <Input
+                              value={item.sizePrimary || ''}
+                              onChange={(e) => updateEditWorkItem(index, 'sizePrimary', e.target.value)}
+                              placeholder={getSizeLabel(item.productType)}
                               className="h-8 text-xs"
                             />
                           </div>
-                          <div>
+                          <div className="col-span-2">
+                            <Input
+                              value={item.sizeSecondary || ''}
+                              onChange={(e) => updateEditWorkItem(index, 'sizeSecondary', e.target.value)}
+                              placeholder="Second side (mm)"
+                              disabled={!requiresSecondSize(item.productType)}
+                              className="h-8 text-xs"
+                            />
+                          </div>
+                          <div className="col-span-2">
+                            <Input
+                              value={item.length || ''}
+                              onChange={(e) => updateEditWorkItem(index, 'length', e.target.value)}
+                              placeholder="Length"
+                              disabled={!requiresLength(item.productType)}
+                              className="h-8 text-xs"
+                            />
+                          </div>
+                          <div className="col-span-2">
+                            <Input
+                              value={item.thickness || ''}
+                              onChange={(e) => updateEditWorkItem(index, 'thickness', e.target.value)}
+                              placeholder="Thickness"
+                              className="h-8 text-xs"
+                            />
+                          </div>
+                          <div className="col-span-2">
                             <Input
                               type="text"
                               value={getQuantityDraft(editQuantityDrafts, `edit-quantity-${index}`, item.quantity)}
@@ -2164,16 +2298,19 @@ export default function JobOrdersPage() {
                               className="h-8 text-xs text-right tabular-nums"
                             />
                           </div>
-                          <div>
-                            <Input
+                          <div className="col-span-1">
+                            <select
                               value={item.unit}
                               onChange={(e) => updateEditWorkItem(index, 'unit', e.target.value)}
-                              placeholder="Nos"
+                              className="h-8 w-full rounded-md border border-slate-300 px-1 text-xs"
                               required
-                              className="h-8 text-xs"
-                            />
+                            >
+                              {UNIT_OPTIONS.map((unit) => (
+                                <option key={unit} value={unit}>{unit}</option>
+                              ))}
+                            </select>
                           </div>
-                          <div>
+                          <div className="col-span-2">
                             <Input
                               type="text"
                               value={getCurrencyDraft(editCurrencyDrafts, `edit-unitPrice-${index}`, item.unitPrice)}
@@ -2192,7 +2329,7 @@ export default function JobOrdersPage() {
                               className="h-8 text-xs text-right tabular-nums"
                             />
                           </div>
-                          <div>
+                          <div className="col-span-2">
                             <Input
                               type="text"
                               value={getCurrencyDraft(editCurrencyDrafts, `edit-totalPrice-${index}`, item.totalPrice)}
@@ -2211,7 +2348,7 @@ export default function JobOrdersPage() {
                               className="h-8 text-xs text-right tabular-nums"
                             />
                           </div>
-                          <div>
+                          <div className="col-span-1">
                             <Input
                               type="number"
                               step="0.0001"
@@ -2222,7 +2359,7 @@ export default function JobOrdersPage() {
                               className="h-8 text-xs text-right tabular-nums"
                             />
                           </div>
-                          <div className="flex items-center justify-center">
+                          <div className="col-span-1 flex items-center justify-center">
                             {editWorkItems.length > 1 && (
                               <Button
                                 type="button"
