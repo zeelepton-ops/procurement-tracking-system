@@ -57,7 +57,28 @@ interface JobOrderItem {
   unitWeight?: number | null
 }
 
-const SCOPE_OF_WORKS_OPTIONS = [
+const WORKSHOP_SCOPE_OF_WORKS_OPTIONS = [
+  'Profiling/Cutting',
+  'Plate Rolling & Bending',
+  'Section Bending',
+  'Drilling & Machining',
+  'Storage Tanks & Silos',
+  'Pressure Vessels',
+  'Pipe Spools',
+  'Material Handling Eqpt.',
+  'Primary Structure',
+  'Secondary Steel',
+  'Pipe Supports',
+  'Abrasive Blasting',
+  'Industrial Coating',
+  'Lining Services',
+  'Galvanizing',
+  'Erection & Installation',
+  'Maintenance',
+  'NDT Testing'
+]
+
+const MANUFACTURING_SCOPE_OF_WORKS_OPTIONS = [
   'Rectangular Hollow Section (RHS)',
   'Square Hollow Section (SHS)',
   'Circular Hollow Section (CHS)',
@@ -70,6 +91,7 @@ const SCOPE_OF_WORKS_OPTIONS = [
 const PRODUCT_TYPE_OPTIONS = ['RHS', 'SHS', 'CHS', 'CP', 'MSP', 'HRC', 'SC']
 const UNIT_OPTIONS = ['mm', 'LM', 'Kgs']
 const JO_CATEGORY_OPTIONS = ['Workshop - Fabrication', 'Manufacturing - Pipe Mill']
+const MANUFACTURING_CATEGORY = 'Manufacturing - Pipe Mill'
 
 export default function JobOrdersPage() {
   const { data: session } = useSession()
@@ -361,7 +383,8 @@ export default function JobOrdersPage() {
   }, [showForm, recentForemen, recentQaQc, recentContacts])
 
   const addWorkItem = () => {
-    setWorkItems([...workItems, { workDescription: '', productType: '', sizePrimary: '', sizeSecondary: '', length: '', thickness: '', quantity: null, unit: 'LM', unitPrice: null, totalPrice: null }])
+    const defaultUnit = formData.workScope === MANUFACTURING_CATEGORY ? 'LM' : 'Nos'
+    setWorkItems([...workItems, { workDescription: '', productType: '', sizePrimary: '', sizeSecondary: '', length: '', thickness: '', quantity: null, unit: defaultUnit, unitPrice: null, totalPrice: null }])
   }
 
   const removeWorkItem = (index: number) => {
@@ -455,7 +478,8 @@ export default function JobOrdersPage() {
   }
 
   const addEditWorkItem = () => {
-    setEditWorkItems([...editWorkItems, { workDescription: '', productType: '', sizePrimary: '', sizeSecondary: '', length: '', thickness: '', quantity: null, unit: 'LM', unitPrice: null, totalPrice: null }])
+    const defaultUnit = editFormData.workScope === MANUFACTURING_CATEGORY ? 'LM' : 'Nos'
+    setEditWorkItems([...editWorkItems, { workDescription: '', productType: '', sizePrimary: '', sizeSecondary: '', length: '', thickness: '', quantity: null, unit: defaultUnit, unitPrice: null, totalPrice: null }])
   }
 
   const removeEditWorkItem = (index: number) => {
@@ -1193,7 +1217,21 @@ export default function JobOrdersPage() {
                       <select
                         id="workScope"
                         value={formData.workScope}
-                        onChange={(e) => setFormData({ ...formData, workScope: e.target.value })}
+                        onChange={(e) => {
+                          const nextScope = e.target.value
+                          setFormData({ ...formData, workScope: nextScope, scopeOfWorks: [] })
+                          if (nextScope !== MANUFACTURING_CATEGORY) {
+                            setWorkItems((prev) => prev.map((item) => ({
+                              ...item,
+                              productType: '',
+                              sizePrimary: '',
+                              sizeSecondary: '',
+                              length: '',
+                              thickness: '',
+                              unit: item.unit || 'Nos'
+                            })))
+                          }
+                        }}
                         className="mt-1 h-9 px-2 pr-8 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-primary-500 w-full text-xs"
                       >
                         {JO_CATEGORY_OPTIONS.map((option) => (
@@ -1206,7 +1244,7 @@ export default function JobOrdersPage() {
                   <div className="mb-4">
                     <Label className="text-xs font-semibold block mb-3">Scope of Works</Label>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 bg-slate-50 p-3 rounded border border-slate-200">
-                      {SCOPE_OF_WORKS_OPTIONS.map((option) => (
+                      {(formData.workScope === MANUFACTURING_CATEGORY ? MANUFACTURING_SCOPE_OF_WORKS_OPTIONS : WORKSHOP_SCOPE_OF_WORKS_OPTIONS).map((option) => (
                         <div key={option} className="flex items-center gap-2">
                           <input
                             type="checkbox"
@@ -1255,22 +1293,35 @@ export default function JobOrdersPage() {
                   </div>
                   
                   {/* Header row - shown once */}
-                  <div className="grid grid-cols-[repeat(18,minmax(0,1fr))] gap-2 mb-2 px-3">
-                    <div className="col-span-2"><Label className="text-xs font-semibold text-slate-600">Type *</Label></div>
-                    <div className="col-span-2"><Label className="text-xs font-semibold text-slate-600">Size</Label></div>
-                    <div className="col-span-2"><Label className="text-xs font-semibold text-slate-600">Size 2 (RHS)</Label></div>
-                    <div className="col-span-2"><Label className="text-xs font-semibold text-slate-600">Length</Label></div>
-                    <div className="col-span-2"><Label className="text-xs font-semibold text-slate-600">Thickness</Label></div>
-                    <div className="col-span-2"><Label className="text-xs font-semibold text-slate-600">Quantity</Label></div>
-                    <div className="col-span-1"><Label className="text-xs font-semibold text-slate-600">Unit *</Label></div>
-                    <div className="col-span-2"><Label className="text-xs font-semibold text-slate-600">Unit Price</Label></div>
-                    <div className="col-span-2"><Label className="text-xs font-semibold text-slate-600">Total</Label></div>
-                    <div className="col-span-1"><Label className="text-xs font-semibold text-slate-600">Wt</Label></div>
-                  </div>
+                  {formData.workScope === MANUFACTURING_CATEGORY ? (
+                    <div className="grid grid-cols-[repeat(18,minmax(0,1fr))] gap-2 mb-2 px-3">
+                      <div className="col-span-2"><Label className="text-xs font-semibold text-slate-600">Type *</Label></div>
+                      <div className="col-span-2"><Label className="text-xs font-semibold text-slate-600">Size</Label></div>
+                      <div className="col-span-2"><Label className="text-xs font-semibold text-slate-600">Size 2 (RHS)</Label></div>
+                      <div className="col-span-2"><Label className="text-xs font-semibold text-slate-600">Length</Label></div>
+                      <div className="col-span-2"><Label className="text-xs font-semibold text-slate-600">Thickness</Label></div>
+                      <div className="col-span-2"><Label className="text-xs font-semibold text-slate-600">Quantity</Label></div>
+                      <div className="col-span-1"><Label className="text-xs font-semibold text-slate-600">Unit *</Label></div>
+                      <div className="col-span-2"><Label className="text-xs font-semibold text-slate-600">Unit Price</Label></div>
+                      <div className="col-span-2"><Label className="text-xs font-semibold text-slate-600">Total</Label></div>
+                      <div className="col-span-1"><Label className="text-xs font-semibold text-slate-600">Wt</Label></div>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-12 gap-2 mb-2 px-3">
+                      <div className="col-span-4"><Label className="text-xs font-semibold text-slate-600">Work Description *</Label></div>
+                      <div className="col-span-2"><Label className="text-xs font-semibold text-slate-600">Quantity</Label></div>
+                      <div className="col-span-1"><Label className="text-xs font-semibold text-slate-600">Unit *</Label></div>
+                      <div className="col-span-2"><Label className="text-xs font-semibold text-slate-600">Unit Price</Label></div>
+                      <div className="col-span-2"><Label className="text-xs font-semibold text-slate-600">Total</Label></div>
+                      <div className="col-span-1"><Label className="text-xs font-semibold text-slate-600">Wt</Label></div>
+                    </div>
+                  )}
 
                   <div className="space-y-2">
                     {workItems.map((item, index) => (
-                      <div key={index} className="grid grid-cols-[repeat(18,minmax(0,1fr))] gap-2 items-center bg-slate-50 p-3 rounded">
+                      <div key={index} className={formData.workScope === MANUFACTURING_CATEGORY ? 'grid grid-cols-[repeat(18,minmax(0,1fr))] gap-2 items-center bg-slate-50 p-3 rounded' : 'grid grid-cols-12 gap-2 items-center bg-slate-50 p-3 rounded'}>
+                        {formData.workScope === MANUFACTURING_CATEGORY ? (
+                          <>
                         <div className="col-span-2">
                           <select
                             value={item.productType || ''}
@@ -1399,6 +1450,98 @@ export default function JobOrdersPage() {
                             className="h-8 text-xs text-right tabular-nums"
                           />
                         </div>
+                          </>
+                        ) : (
+                          <>
+                            <div className="col-span-4">
+                              <Input
+                                value={item.workDescription}
+                                onChange={(e) => updateWorkItem(index, 'workDescription', e.target.value)}
+                                placeholder="e.g., Fabrication of MS Bollard"
+                                required
+                                className="h-8 text-xs"
+                              />
+                            </div>
+                            <div className="col-span-2">
+                              <Input
+                                type="text"
+                                value={getQuantityDraft(quantityDrafts, `quantity-${index}`, item.quantity)}
+                                onChange={(e) => {
+                                  const nextValue = e.target.value
+                                  setQuantityDrafts((prev) => ({ ...prev, [`quantity-${index}`]: nextValue }))
+                                  updateWorkItem(index, 'quantity', parseDecimalInput(nextValue))
+                                }}
+                                onBlur={(e) => {
+                                  const parsed = parseDecimalInput(e.currentTarget.value)
+                                  setQuantityDrafts((prev) => ({
+                                    ...prev,
+                                    [`quantity-${index}`]: parsed == null ? '' : formatDecimal(parsed, 4)
+                                  }))
+                                }}
+                                inputMode="decimal"
+                                className="h-8 text-xs text-right tabular-nums"
+                              />
+                            </div>
+                            <div className="col-span-1">
+                              <Input
+                                value={item.unit}
+                                onChange={(e) => updateWorkItem(index, 'unit', e.target.value)}
+                                placeholder="Nos"
+                                required
+                                className="h-8 text-xs"
+                              />
+                            </div>
+                            <div className="col-span-2">
+                              <Input
+                                type="text"
+                                value={getCurrencyDraft(currencyDrafts, `unitPrice-${index}`, item.unitPrice)}
+                                onChange={(e) => {
+                                  const nextValue = e.target.value
+                                  setCurrencyDrafts((prev) => ({ ...prev, [`unitPrice-${index}`]: nextValue }))
+                                  updateWorkItem(index, 'unitPrice', parseCurrencyInput(nextValue))
+                                }}
+                                onBlur={(e) => {
+                                  const parsed = parseCurrencyInput(e.currentTarget.value)
+                                  setCurrencyDrafts((prev) => ({
+                                    ...prev,
+                                    [`unitPrice-${index}`]: parsed == null ? '' : formatCurrency(parsed)
+                                  }))
+                                }}
+                                className="h-8 text-xs text-right tabular-nums"
+                              />
+                            </div>
+                            <div className="col-span-2">
+                              <Input
+                                type="text"
+                                value={getCurrencyDraft(currencyDrafts, `totalPrice-${index}`, item.totalPrice)}
+                                onChange={(e) => {
+                                  const nextValue = e.target.value
+                                  setCurrencyDrafts((prev) => ({ ...prev, [`totalPrice-${index}`]: nextValue }))
+                                  updateWorkItem(index, 'totalPrice', parseCurrencyInput(nextValue))
+                                }}
+                                onBlur={(e) => {
+                                  const parsed = parseCurrencyInput(e.currentTarget.value)
+                                  setCurrencyDrafts((prev) => ({
+                                    ...prev,
+                                    [`totalPrice-${index}`]: parsed == null ? '' : formatCurrency(parsed)
+                                  }))
+                                }}
+                                className="h-8 text-xs text-right tabular-nums"
+                              />
+                            </div>
+                            <div className="col-span-1">
+                              <Input
+                                type="number"
+                                step="0.0001"
+                                value={item.unitWeight == null ? '' : String(item.unitWeight)}
+                                onChange={(e) => updateWorkItem(index, 'unitWeight', e.target.value === '' ? null : parseFloat(e.target.value))}
+                                placeholder="0.00"
+                                inputMode="decimal"
+                                className="h-8 text-xs text-right tabular-nums"
+                              />
+                            </div>
+                          </>
+                        )}
                         <div className="col-span-1 flex items-center justify-end">
                           {workItems.length > 1 && (
                             <Button
@@ -2153,7 +2296,21 @@ export default function JobOrdersPage() {
                         <select
                           id="edit-workScope"
                           value={editFormData.workScope}
-                          onChange={(e) => setEditFormData({ ...editFormData, workScope: e.target.value })}
+                          onChange={(e) => {
+                            const nextScope = e.target.value
+                            setEditFormData({ ...editFormData, workScope: nextScope, scopeOfWorks: [] })
+                            if (nextScope !== MANUFACTURING_CATEGORY) {
+                              setEditWorkItems((prev) => prev.map((item) => ({
+                                ...item,
+                                productType: '',
+                                sizePrimary: '',
+                                sizeSecondary: '',
+                                length: '',
+                                thickness: '',
+                                unit: item.unit || 'Nos'
+                              })))
+                            }
+                          }}
                           className="mt-1 h-9 px-2 pr-8 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-primary-500 w-full text-xs"
                         >
                           {JO_CATEGORY_OPTIONS.map((option) => (
@@ -2166,7 +2323,7 @@ export default function JobOrdersPage() {
                     <div className="mb-4">
                       <Label className="text-xs font-semibold block mb-3">Scope of Works</Label>
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 bg-slate-50 p-4 rounded border border-slate-200">
-                        {SCOPE_OF_WORKS_OPTIONS.map((option) => (
+                        {(editFormData.workScope === MANUFACTURING_CATEGORY ? MANUFACTURING_SCOPE_OF_WORKS_OPTIONS : WORKSHOP_SCOPE_OF_WORKS_OPTIONS).map((option) => (
                           <div key={option} className="flex items-center gap-2">
                             <input
                               type="checkbox"
@@ -2215,22 +2372,35 @@ export default function JobOrdersPage() {
                     </div>
                     
                     {/* Header row - shown once */}
-                    <div className="grid grid-cols-[repeat(18,minmax(0,1fr))] gap-2 bg-slate-100 border border-slate-200 rounded-md px-3 py-2 text-[11px] font-semibold text-slate-600 uppercase tracking-wide">
-                      <div className="col-span-2">Type</div>
-                      <div className="col-span-2">Size</div>
-                      <div className="col-span-2">Size 2</div>
-                      <div className="col-span-2">Length</div>
-                      <div className="col-span-2">Thickness</div>
-                      <div className="col-span-2 text-right">Quantity</div>
-                      <div className="col-span-1">Unit</div>
-                      <div className="col-span-2 text-right">Unit Price</div>
-                      <div className="col-span-2 text-right">Total</div>
-                      <div className="col-span-1 text-right">Wt</div>
-                    </div>
+                    {editFormData.workScope === MANUFACTURING_CATEGORY ? (
+                      <div className="grid grid-cols-[repeat(18,minmax(0,1fr))] gap-2 bg-slate-100 border border-slate-200 rounded-md px-3 py-2 text-[11px] font-semibold text-slate-600 uppercase tracking-wide">
+                        <div className="col-span-2">Type</div>
+                        <div className="col-span-2">Size</div>
+                        <div className="col-span-2">Size 2</div>
+                        <div className="col-span-2">Length</div>
+                        <div className="col-span-2">Thickness</div>
+                        <div className="col-span-2 text-right">Quantity</div>
+                        <div className="col-span-1">Unit</div>
+                        <div className="col-span-2 text-right">Unit Price</div>
+                        <div className="col-span-2 text-right">Total</div>
+                        <div className="col-span-1 text-right">Wt</div>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-12 gap-3 bg-slate-100 border border-slate-200 rounded-md px-3 py-2 text-[11px] font-semibold text-slate-600 uppercase tracking-wide">
+                        <div className="col-span-4">Work Description</div>
+                        <div className="col-span-2 text-right">Quantity</div>
+                        <div className="col-span-1">Unit</div>
+                        <div className="col-span-2 text-right">Unit Price</div>
+                        <div className="col-span-2 text-right">Total</div>
+                        <div className="col-span-1 text-right">Wt</div>
+                      </div>
+                    )}
 
                     <div className="space-y-2">
                       {editWorkItems.map((item, index) => (
-                        <div key={index} className="grid grid-cols-[repeat(18,minmax(0,1fr))] gap-2 items-center bg-white border border-slate-200 rounded-md px-3 py-2">
+                        <div key={index} className={editFormData.workScope === MANUFACTURING_CATEGORY ? 'grid grid-cols-[repeat(18,minmax(0,1fr))] gap-2 items-center bg-white border border-slate-200 rounded-md px-3 py-2' : 'grid grid-cols-12 gap-3 items-center bg-white border border-slate-200 rounded-md px-3 py-2'}>
+                          {editFormData.workScope === MANUFACTURING_CATEGORY ? (
+                            <>
                           <div className="col-span-2">
                             <select
                               value={item.productType || ''}
@@ -2359,6 +2529,98 @@ export default function JobOrdersPage() {
                               className="h-8 text-xs text-right tabular-nums"
                             />
                           </div>
+                            </>
+                          ) : (
+                            <>
+                              <div className="col-span-4">
+                                <Input
+                                  value={item.workDescription}
+                                  onChange={(e) => updateEditWorkItem(index, 'workDescription', e.target.value)}
+                                  placeholder="e.g., Fabrication of MS Bollard"
+                                  required
+                                  className="h-8 text-xs"
+                                />
+                              </div>
+                              <div className="col-span-2">
+                                <Input
+                                  type="text"
+                                  value={getQuantityDraft(editQuantityDrafts, `edit-quantity-${index}`, item.quantity)}
+                                  onChange={(e) => {
+                                    const nextValue = e.target.value
+                                    setEditQuantityDrafts((prev) => ({ ...prev, [`edit-quantity-${index}`]: nextValue }))
+                                    updateEditWorkItem(index, 'quantity', parseDecimalInput(nextValue))
+                                  }}
+                                  onBlur={(e) => {
+                                    const parsed = parseDecimalInput(e.currentTarget.value)
+                                    setEditQuantityDrafts((prev) => ({
+                                      ...prev,
+                                      [`edit-quantity-${index}`]: parsed == null ? '' : formatDecimal(parsed, 4)
+                                    }))
+                                  }}
+                                  inputMode="decimal"
+                                  className="h-8 text-xs text-right tabular-nums"
+                                />
+                              </div>
+                              <div className="col-span-1">
+                                <Input
+                                  value={item.unit}
+                                  onChange={(e) => updateEditWorkItem(index, 'unit', e.target.value)}
+                                  placeholder="Nos"
+                                  required
+                                  className="h-8 text-xs"
+                                />
+                              </div>
+                              <div className="col-span-2">
+                                <Input
+                                  type="text"
+                                  value={getCurrencyDraft(editCurrencyDrafts, `edit-unitPrice-${index}`, item.unitPrice)}
+                                  onChange={(e) => {
+                                    const nextValue = e.target.value
+                                    setEditCurrencyDrafts((prev) => ({ ...prev, [`edit-unitPrice-${index}`]: nextValue }))
+                                    updateEditWorkItem(index, 'unitPrice', parseCurrencyInput(nextValue))
+                                  }}
+                                  onBlur={(e) => {
+                                    const parsed = parseCurrencyInput(e.currentTarget.value)
+                                    setEditCurrencyDrafts((prev) => ({
+                                      ...prev,
+                                      [`edit-unitPrice-${index}`]: parsed == null ? '' : formatCurrency(parsed)
+                                    }))
+                                  }}
+                                  className="h-8 text-xs text-right tabular-nums"
+                                />
+                              </div>
+                              <div className="col-span-2">
+                                <Input
+                                  type="text"
+                                  value={getCurrencyDraft(editCurrencyDrafts, `edit-totalPrice-${index}`, item.totalPrice)}
+                                  onChange={(e) => {
+                                    const nextValue = e.target.value
+                                    setEditCurrencyDrafts((prev) => ({ ...prev, [`edit-totalPrice-${index}`]: nextValue }))
+                                    updateEditWorkItem(index, 'totalPrice', parseCurrencyInput(nextValue))
+                                  }}
+                                  onBlur={(e) => {
+                                    const parsed = parseCurrencyInput(e.currentTarget.value)
+                                    setEditCurrencyDrafts((prev) => ({
+                                      ...prev,
+                                      [`edit-totalPrice-${index}`]: parsed == null ? '' : formatCurrency(parsed)
+                                    }))
+                                  }}
+                                  className="h-8 text-xs text-right tabular-nums"
+                                />
+                              </div>
+                              <div className="col-span-1">
+                                <Input
+                                  type="number"
+                                  step="0.0001"
+                                  value={item.unitWeight == null ? '' : String(item.unitWeight)}
+                                  onChange={(e) => updateEditWorkItem(index, 'unitWeight', e.target.value === '' ? null : parseFloat(e.target.value))}
+                                  placeholder="0.00"
+                                  inputMode="decimal"
+                                  className="h-8 text-xs text-right tabular-nums"
+                                />
+                              </div>
+                            </>
+                          )}
                           <div className="col-span-1 flex items-center justify-center">
                             {editWorkItems.length > 1 && (
                               <Button
