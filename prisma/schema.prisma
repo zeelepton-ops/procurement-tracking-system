@@ -716,6 +716,78 @@ model Asset {
   materialRequests MaterialRequest[]
 }
 
+model ManufacturingInventoryItem {
+  id              String   @id @default(cuid())
+  batchNo         String
+  itemType        String
+  size            String?
+  thickness       String?
+  length          String?
+  unit            String
+  grade           String?
+  storageLocation String?
+  currentStock    Float    @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  deliveryEntries ManufacturingDeliveryEntry[]
+  productionEntries ManufacturingProductionEntry[]
+  stockUpdates    ManufacturingStockUpdate[]
+
+  @@index([itemType])
+  @@index([storageLocation])
+}
+
+model ManufacturingDeliveryEntry {
+  id        String   @id @default(cuid())
+  itemId    String
+  item      ManufacturingInventoryItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  date      DateTime @default(now())
+  quantity  Float
+  unit      String
+  client    String?
+  remarks   String?
+  createdBy String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([date])
+  @@index([itemId])
+}
+
+model ManufacturingProductionEntry {
+  id        String   @id @default(cuid())
+  itemId    String
+  item      ManufacturingInventoryItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  date      DateTime @default(now())
+  quantity  Float
+  unit      String
+  remarks   String?
+  createdBy String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([date])
+  @@index([itemId])
+}
+
+model ManufacturingStockUpdate {
+  id            String   @id @default(cuid())
+  itemId        String
+  item          ManufacturingInventoryItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  date          DateTime @default(now())
+  newStock      Float
+  adjustmentQty Float
+  unit          String
+  remarks       String?
+  createdBy     String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([date])
+  @@index([itemId])
+}
+
 model DeliveryNote {
   id                  String               @id @default(cuid())
   deliveryNoteNumber  String               @unique

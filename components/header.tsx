@@ -49,7 +49,18 @@ export default function Header() {
         { href: '/suppliers', label: 'Suppliers', icon: Users },
       ]
     },
-    { href: '/store', label: 'Store', icon: Boxes },
+    {
+      href: '/store',
+      label: 'Store',
+      icon: Boxes,
+      children: [
+        { href: '/store/delivery-notes', label: 'Delivery Notes', icon: FileText },
+        { href: '/store/inventory', label: 'Inventory', icon: Boxes },
+        { href: '/store/assets', label: 'Assets', icon: Package },
+        { href: '/store/workers', label: 'Worker Management', icon: Users },
+        { href: '/store/manufacturing-inventory', label: 'Manufacturing Inventory', icon: Factory },
+      ]
+    },
     { href: '/clients', label: 'Clients', icon: Building2 },
     { href: '/invoices', label: 'Invoicing', icon: Receipt },
   ]

@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Boxes, Warehouse, PackageSearch, FileText, Users } from 'lucide-react'
+import { Boxes, Warehouse, FileText, Users, Factory } from 'lucide-react'
 
 export default function StorePage() {
   return (
@@ -12,6 +12,18 @@ export default function StorePage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <Link href="/store/manufacturing-inventory">
+            <Card className="hover:border-blue-200 hover:shadow-sm transition">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-lg">Manufacturing Inventory</CardTitle>
+                <Factory className="h-5 w-5 text-emerald-600" />
+              </CardHeader>
+              <CardContent className="text-sm text-slate-600">
+                Track manufacturing stock, daily delivery entries, production, and reports.
+              </CardContent>
+            </Card>
+          </Link>
+
           <Link href="/store/inventory">
             <Card className="hover:border-blue-200 hover:shadow-sm transition">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
