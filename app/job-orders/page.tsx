@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { Suspense, useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useSearchParams } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -100,7 +100,7 @@ const UNIT_OPTIONS = ['Nos', 'mm', 'LM', 'Kgs']
 const JO_CATEGORY_OPTIONS = ['Workshop - Fabrication', 'Manufacturing - Pipe Mill']
 const MANUFACTURING_CATEGORY = 'Manufacturing - Pipe Mill'
 
-export default function JobOrdersPage() {
+function JobOrdersPageContent() {
   const { data: session } = useSession()
   const searchParams = useSearchParams()
   const [jobOrders, setJobOrders] = useState<JobOrder[]>([])
@@ -2820,6 +2820,14 @@ export default function JobOrdersPage() {
       </div>
     </div>
     </div>
+  )
+}
+
+export default function JobOrdersPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-slate-50" />}>
+      <JobOrdersPageContent />
+    </Suspense>
   )
 }
 
