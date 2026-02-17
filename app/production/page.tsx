@@ -25,6 +25,7 @@ interface JobOrder {
   id: string
   jobNumber: string
   clientName?: string
+  workScope?: string | null
   items?: Array<{
     id: string
     workDescription: string
@@ -47,6 +48,7 @@ export default function ProductionPage() {
   const [releases, setReleases] = useState<ProductionRelease[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedJobOrder, setSelectedJobOrder] = useState<string>('')
+  const [selectedDivision, setSelectedDivision] = useState<'ALL' | 'Workshop - Fabrication' | 'Manufacturing - Pipe Mill'>('ALL')
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
   const [itpTemplates, setItpTemplates] = useState<ITPTemplate[]>([])
@@ -110,6 +112,18 @@ export default function ProductionPage() {
       fetchReleases()
     }
   }, [selectedJobOrder])
+
+  const filteredJobOrders = selectedDivision === 'ALL'
+    ? jobOrders
+    : jobOrders.filter((job) => (job.workScope || 'Workshop - Fabrication') === selectedDivision)
+
+  useEffect(() => {
+    if (!selectedJobOrder) return
+    const stillVisible = filteredJobOrders.some((job) => job.id === selectedJobOrder)
+    if (!stillVisible) {
+      setSelectedJobOrder('')
+    }
+  }, [selectedDivision, selectedJobOrder, filteredJobOrders])
 
   const fetchJobOrders = async () => {
     try {
@@ -831,19 +845,34 @@ export default function ProductionPage() {
               Select Job Order
             </CardTitle>
           </CardHeader>
-          <CardContent className="pt-0">
+          <CardContent className="pt-0 space-y-2">
+            <div>
+              <Label className="text-xs text-slate-600">Division</Label>
+              <select
+                value={selectedDivision}
+                onChange={(e) => setSelectedDivision(e.target.value as 'ALL' | 'Workshop - Fabrication' | 'Manufacturing - Pipe Mill')}
+                className="mt-1 w-full h-9 px-2 bg-white border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
+              >
+                <option value="ALL">All Divisions</option>
+                <option value="Workshop - Fabrication">Workshop - Fabrication</option>
+                <option value="Manufacturing - Pipe Mill">Manufacturing - Pipe Mill</option>
+              </select>
+            </div>
             <select
               value={selectedJobOrder}
               onChange={(e) => setSelectedJobOrder(e.target.value)}
               className="w-full h-9 px-2 bg-white border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
             >
               <option value="">-- Select a Job Order --</option>
-              {jobOrders.map(jo => (
+              {filteredJobOrders.map(jo => (
                 <option key={jo.id} value={jo.id}>
                   {jo.jobNumber} - {jo.clientName || 'N/A'}
                 </option>
               ))}
             </select>
+            {filteredJobOrders.length === 0 && (
+              <p className="text-xs text-slate-500">No job orders found for selected division.</p>
+            )}
           </CardContent>
         </Card>
 
