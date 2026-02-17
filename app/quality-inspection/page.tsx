@@ -656,8 +656,8 @@ export default function QualityInspectionPage() {
         </div>
 
         {/* Workflow Timeline */}
-        <div className="mb-6 bg-white border border-slate-200 rounded-lg p-4 shadow-sm">
-          <div className="flex items-center justify-between mb-4">
+        <div className="mb-6 bg-gradient-to-r from-slate-50 to-white border border-slate-200 rounded-lg p-4 shadow-sm">
+          <div className="flex items-center justify-between mb-3">
             <div>
               <h3 className="text-sm font-semibold text-slate-900">Production → QC → Store</h3>
               <p className="text-xs text-slate-600">Auto DN requests on approval</p>
@@ -666,16 +666,16 @@ export default function QualityInspectionPage() {
               variant="outline"
               size="sm"
               onClick={() => router.push('/store/delivery-notes')}
-              className="border-slate-300 text-slate-700 hover:bg-slate-50"
+              className="border-emerald-200 text-emerald-700 hover:bg-emerald-50"
             >
               Open Delivery Notes
             </Button>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-3 text-sm">
-            <div className="rounded-lg border border-slate-200 p-3 bg-slate-50">
-              <p className="text-xs text-slate-500">Production Pending</p>
-              <p className="text-lg font-semibold text-slate-900">{pendingInspections.length}</p>
-              <p className="text-xs text-slate-500">Awaiting QC</p>
+            <div className="rounded-lg border border-blue-200 p-3 bg-blue-50">
+              <p className="text-xs text-blue-700">Production Pending</p>
+              <p className="text-lg font-semibold text-blue-900">{pendingInspections.length}</p>
+              <p className="text-xs text-blue-700">Awaiting QC</p>
             </div>
             <div className="rounded-lg border border-emerald-200 p-3 bg-emerald-50">
               <p className="text-xs text-emerald-700">QC Approved</p>

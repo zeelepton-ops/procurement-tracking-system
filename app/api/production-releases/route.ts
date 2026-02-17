@@ -61,7 +61,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { jobOrderItemId, drawingNumber, transmittalNo, releaseQty, releaseItems, itpTemplateId, productionStartDate, productionEndDate, actualCompletionDate, createdBy } = body
+    const { jobOrderItemId, drawingNumber, transmittalNo, releaseQty, releaseWeight, releaseItems, itpTemplateId, productionStartDate, productionEndDate, actualCompletionDate, createdBy } = body
 
     // Validate input
     if (!jobOrderItemId || !createdBy) {
@@ -90,9 +90,19 @@ export async function POST(request: Request) {
           .map((it: any) => ({
             drawingNumber: it.drawingNumber || null,
             transmittalNo: it.transmittalNo || null,
-            releaseQty: Number(it.releaseQty)
+            releaseQty: Number(it.releaseQty),
+            releaseWeight: typeof it.releaseWeight === 'number'
+              ? it.releaseWeight
+              : (it.releaseWeight ? Number(it.releaseWeight) : undefined)
           }))
-      : [{ drawingNumber: drawingNumber || null, transmittalNo: transmittalNo || null, releaseQty: Number(releaseQty) }]
+      : [{
+          drawingNumber: drawingNumber || null,
+          transmittalNo: transmittalNo || null,
+          releaseQty: Number(releaseQty),
+          releaseWeight: typeof releaseWeight === 'number'
+            ? releaseWeight
+            : (releaseWeight ? Number(releaseWeight) : undefined)
+        }]
 
     const totalRequested = items.reduce((sum: number, it: any) => sum + (it.releaseQty || 0), 0)
     if (!totalRequested || totalRequested <= 0) {
@@ -108,7 +118,10 @@ export async function POST(request: Request) {
 
     const created = await prisma.$transaction(
       items.map((item: any) => {
-        const relWeight = jobOrderItem.unitWeight ? item.releaseQty * jobOrderItem.unitWeight : undefined
+        const suppliedWeight = Number.isFinite(item.releaseWeight) ? item.releaseWeight : undefined
+        const relWeight = suppliedWeight !== undefined
+          ? suppliedWeight
+          : (jobOrderItem.unitWeight ? item.releaseQty * jobOrderItem.unitWeight : undefined)
         return prisma.productionRelease.create({
           data: {
             jobOrderItemId,
@@ -151,7 +164,7 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
   try {
     const body = await request.json()
-    const { id, drawingNumber, transmittalNo, releaseQty, itpTemplateId, productionStartDate, productionEndDate, actualCompletionDate } = body
+    const { id, drawingNumber, transmittalNo, releaseQty, releaseWeight, itpTemplateId, productionStartDate, productionEndDate, actualCompletionDate } = body
 
     if (!id || !releaseQty) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
@@ -178,7 +191,9 @@ export async function PUT(request: Request) {
       )
     }
 
-    const releaseWeight = existing.jobOrderItem.unitWeight ? releaseQty * existing.jobOrderItem.unitWeight : undefined
+    const suppliedWeight = Number.isFinite(releaseWeight) ? releaseWeight : undefined
+    const computedWeight = existing.jobOrderItem.unitWeight ? releaseQty * existing.jobOrderItem.unitWeight : undefined
+    const finalWeight = suppliedWeight !== undefined ? suppliedWeight : computedWeight
 
     const updated = await prisma.productionRelease.update({
       where: { id },
@@ -186,7 +201,7 @@ export async function PUT(request: Request) {
         drawingNumber: drawingNumber || null,
         transmittalNo: transmittalNo || null,
         releaseQty,
-        releaseWeight,
+        releaseWeight: finalWeight,
         itpTemplateId: itpTemplateId || null,
         productionStartDate: productionStartDate ? new Date(productionStartDate) : null,
         productionEndDate: productionEndDate ? new Date(productionEndDate) : null,

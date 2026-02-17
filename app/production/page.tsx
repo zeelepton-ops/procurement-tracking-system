@@ -54,8 +54,14 @@ export default function ProductionPage() {
   const [error, setError] = useState<string | null>(null)
   const [editingRelease, setEditingRelease] = useState<ProductionRelease | null>(null)
   const [useMultipleDrawings, setUseMultipleDrawings] = useState(false)
-  const [releaseLines, setReleaseLines] = useState<Array<{ drawingNumber: string; transmittalNo: string; releaseQty: number }>>([
-    { drawingNumber: '', transmittalNo: '', releaseQty: 0 }
+  const [releaseLines, setReleaseLines] = useState<Array<{
+    drawingNumber: string
+    transmittalNo: string
+    releaseQty: number
+    rffNo: string
+    releaseWeight: string
+  }>>([
+    { drawingNumber: '', transmittalNo: '', releaseQty: 0, rffNo: '', releaseWeight: '' }
   ])
   const [reportStatus, setReportStatus] = useState('ALL')
   const [reportTransmittal, setReportTransmittal] = useState('')
@@ -65,8 +71,10 @@ export default function ProductionPage() {
   const [formData, setFormData] = useState({
     jobOrderItemId: '',
     drawingNumber: '',
+    rffNo: '',
     transmittalNo: '',
     releaseQty: 0,
+    releaseWeight: '',
     itpTemplateId: '',
     productionStartDate: '',
     productionEndDate: '',
@@ -77,8 +85,10 @@ export default function ProductionPage() {
     id: '',
     jobOrderItemId: '',
     drawingNumber: '',
+    rffNo: '',
     transmittalNo: '',
     releaseQty: 0,
+    releaseWeight: '',
     itpTemplateId: '',
     productionStartDate: '',
     productionEndDate: '',
@@ -183,7 +193,8 @@ export default function ProductionPage() {
         const qtyLabel = line.releaseQty ? normalizeQtyInput(line.releaseQty.toString()) : ''
         const unitLabel = unit ? ` ${unit}` : ''
         const qtyPart = qtyLabel ? ` (${qtyLabel}${unitLabel})` : ''
-        return `${line.drawingNumber || 'N/A'}${qtyPart}`
+        const rffPart = line.rffNo ? ` RFF ${line.rffNo}` : ''
+        return `${line.drawingNumber || 'N/A'}${qtyPart}${rffPart}`
       })
       .filter(Boolean)
 
@@ -195,6 +206,27 @@ export default function ProductionPage() {
     const date = new Date(value)
     if (Number.isNaN(date.getTime())) return 'N/A'
     return date.toLocaleString()
+  }
+
+  const stripRffFromDrawing = (value: string) =>
+    value.replace(/\s*\|\s*rff\s*[^|]+/i, '').trim()
+
+  const buildDrawingWithRff = (drawing: string, rffNo: string) => {
+    const base = stripRffFromDrawing(drawing || '').trim()
+    if (!rffNo) return base
+    return base ? `${base} | RFF ${rffNo}` : `RFF ${rffNo}`
+  }
+
+  const parseOptionalNumber = (value: string) => {
+    if (!value) return null
+    const parsed = Number(value)
+    return Number.isFinite(parsed) ? parsed : null
+  }
+
+  const getComputedWeight = (qty: number, itemId: string) => {
+    const item = getSelectedJobOrderItem(itemId)
+    if (!item?.unitWeight) return ''
+    return (qty * item.unitWeight).toFixed(2)
   }
 
   const getRffFromDrawing = (value?: string) => {
@@ -303,10 +335,14 @@ export default function ProductionPage() {
         const transmittalNo = third && (!itemUnit || third.toLowerCase() !== itemUnit.toLowerCase())
           ? third
           : ''
+        const rffNo = cols[3] || ''
+        const releaseWeight = cols[4] || ''
         return {
           drawingNumber,
           transmittalNo,
-          releaseQty: parseQtyNumber(qty)
+          releaseQty: parseQtyNumber(qty),
+          rffNo,
+          releaseWeight
         }
       })
       .filter((entry) => entry.drawingNumber || entry.transmittalNo || entry.releaseQty)
@@ -336,7 +372,13 @@ export default function ProductionPage() {
     const remainingQty = calculateRemainingQty(formData.jobOrderItemId)
     const lines = useMultipleDrawings
       ? releaseLines.filter(l => l.releaseQty > 0)
-      : [{ drawingNumber: formData.drawingNumber, transmittalNo: formData.transmittalNo, releaseQty: formData.releaseQty }]
+      : [{
+          drawingNumber: formData.drawingNumber,
+          transmittalNo: formData.transmittalNo,
+          releaseQty: formData.releaseQty,
+          rffNo: formData.rffNo,
+          releaseWeight: formData.releaseWeight
+        }]
 
     if (lines.length === 0) {
       setError('Please add at least one drawing with quantity')
@@ -355,15 +397,31 @@ export default function ProductionPage() {
     }
 
     try {
+      const payload = {
+        jobOrderItemId: formData.jobOrderItemId,
+        drawingNumber: buildDrawingWithRff(formData.drawingNumber, formData.rffNo),
+        transmittalNo: formData.transmittalNo,
+        releaseQty: parseQtyNumber(formData.releaseQty.toString()),
+        releaseWeight: parseOptionalNumber(formData.releaseWeight),
+        itpTemplateId: formData.itpTemplateId,
+        productionStartDate: formData.productionStartDate,
+        productionEndDate: formData.productionEndDate,
+        actualCompletionDate: formData.actualCompletionDate,
+        releaseItems: useMultipleDrawings
+          ? lines.map((line) => ({
+              drawingNumber: buildDrawingWithRff(line.drawingNumber, line.rffNo),
+              transmittalNo: line.transmittalNo,
+              releaseQty: parseQtyNumber(line.releaseQty.toString()),
+              releaseWeight: parseOptionalNumber(line.releaseWeight)
+            }))
+          : undefined,
+        createdBy: session?.user?.email || session?.user?.name || 'System'
+      }
+
       const res = await fetch('/api/production-releases', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formData,
-          releaseQty: parseQtyNumber(formData.releaseQty.toString()),
-          releaseItems: useMultipleDrawings ? lines : undefined,
-          createdBy: session?.user?.email || session?.user?.name || 'System'
-        })
+        body: JSON.stringify(payload)
       })
 
       if (!res.ok) {
@@ -374,12 +432,14 @@ export default function ProductionPage() {
       setSuccess('Production release created successfully!')
       setShowCreateModal(false)
       setUseMultipleDrawings(false)
-      setReleaseLines([{ drawingNumber: '', transmittalNo: '', releaseQty: 0 }])
+      setReleaseLines([{ drawingNumber: '', transmittalNo: '', releaseQty: 0, rffNo: '', releaseWeight: '' }])
       setFormData({
         jobOrderItemId: '',
         drawingNumber: '',
+        rffNo: '',
         transmittalNo: '',
         releaseQty: 0,
+        releaseWeight: '',
         itpTemplateId: '',
         productionStartDate: '',
         productionEndDate: '',
@@ -397,9 +457,11 @@ export default function ProductionPage() {
     setEditFormData({
       id: release.id,
       jobOrderItemId: release.jobOrderItemId,
-      drawingNumber: release.drawingNumber || '',
+      drawingNumber: stripRffFromDrawing(release.drawingNumber || ''),
+      rffNo: getRffFromDrawing(release.drawingNumber || ''),
       transmittalNo: release.transmittalNo || '',
       releaseQty: release.releaseQty,
+      releaseWeight: release.releaseWeight ? release.releaseWeight.toString() : '',
       itpTemplateId: release.itpTemplateId || '',
       productionStartDate: release.productionStartDate ? new Date(release.productionStartDate).toISOString().slice(0, 16) : '',
       productionEndDate: release.productionEndDate ? new Date(release.productionEndDate).toISOString().slice(0, 16) : '',
@@ -430,7 +492,9 @@ export default function ProductionPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...editFormData,
-          releaseQty: parseQtyNumber(editFormData.releaseQty.toString())
+          drawingNumber: buildDrawingWithRff(editFormData.drawingNumber, editFormData.rffNo),
+          releaseQty: parseQtyNumber(editFormData.releaseQty.toString()),
+          releaseWeight: parseOptionalNumber(editFormData.releaseWeight)
         })
       })
 
@@ -912,7 +976,7 @@ export default function ProductionPage() {
         {/* Create Release Modal */}
         {showCreateModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-2">
-            <Card className="w-full max-w-lg bg-white border-slate-200 max-h-[85vh] overflow-y-auto">
+            <Card className="w-full max-w-4xl bg-white border-slate-200 max-h-[85vh] overflow-y-auto">
               <CardHeader className="pb-2 border-b border-slate-200">
                 <CardTitle className="text-base font-semibold text-slate-900">Create Production Release</CardTitle>
                 <CardDescription className="text-slate-600 mt-0.5 text-xs">Add a new release for the selected item</CardDescription>
@@ -948,7 +1012,7 @@ export default function ProductionPage() {
                   {useMultipleDrawings ? (
                     <div className="space-y-2">
                       {releaseLines.map((line, idx) => (
-                        <div key={idx} className="grid grid-cols-4 gap-2">
+                        <div key={idx} className="grid grid-cols-6 gap-2">
                           <div className="col-span-2">
                             <Label className="text-slate-900 text-xs font-semibold">Drawing Number</Label>
                             <Input
@@ -968,10 +1032,23 @@ export default function ProductionPage() {
                               className="bg-white border-slate-300 text-slate-900 focus:ring-primary-500 focus:border-transparent"
                             />
                             {idx === 0 && (
-                              <p className="text-[11px] text-slate-500 mt-1">
-                                Paste rows here (Drawing, Qty, optional Transmittal).
+                                <p className="text-[11px] text-slate-500 mt-1">
+                                  Paste rows here (Drawing, Qty, optional Transmittal, RFF, Weight).
                               </p>
                             )}
+                          </div>
+                          <div>
+                            <Label className="text-slate-900 text-xs font-semibold">RFF No.</Label>
+                            <Input
+                              value={line.rffNo}
+                              onChange={(e) => {
+                                const next = [...releaseLines]
+                                next[idx] = { ...next[idx], rffNo: e.target.value }
+                                setReleaseLines(next)
+                              }}
+                              placeholder="RFF"
+                              className="bg-white border-slate-300 text-slate-900 focus:ring-primary-500 focus:border-transparent"
+                            />
                           </div>
                           <div>
                             <Label className="text-slate-900 text-xs font-semibold">Transmittal</Label>
@@ -1000,6 +1077,20 @@ export default function ProductionPage() {
                               className="bg-white border-slate-300 text-slate-900 focus:ring-primary-500 focus:border-transparent"
                             />
                           </div>
+                          <div>
+                            <Label className="text-slate-900 text-xs font-semibold">Weight</Label>
+                            <Input
+                              type="number"
+                              value={line.releaseWeight}
+                              onChange={(e) => {
+                                const next = [...releaseLines]
+                                next[idx] = { ...next[idx], releaseWeight: e.target.value }
+                                setReleaseLines(next)
+                              }}
+                              placeholder={getComputedWeight(line.releaseQty, formData.jobOrderItemId) || '0'}
+                              className="bg-white border-slate-300 text-slate-900 focus:ring-primary-500 focus:border-transparent"
+                            />
+                          </div>
                         </div>
                       ))}
                       <div className="flex gap-2">
@@ -1007,7 +1098,7 @@ export default function ProductionPage() {
                           type="button"
                           variant="outline"
                           className="border-slate-300 text-slate-700 hover:bg-slate-50"
-                          onClick={() => setReleaseLines([...releaseLines, { drawingNumber: '', transmittalNo: '', releaseQty: 0 }])}
+                          onClick={() => setReleaseLines([...releaseLines, { drawingNumber: '', transmittalNo: '', releaseQty: 0, rffNo: '', releaseWeight: '' }])}
                         >
                           Add Drawing
                         </Button>
@@ -1030,14 +1121,23 @@ export default function ProductionPage() {
                       )}
                     </div>
                   ) : (
-                    <>
-                      {/* Drawing Number */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       <div>
                         <Label className="text-slate-900 text-xs font-semibold">Drawing Number</Label>
                         <Input
                           value={formData.drawingNumber}
                           onChange={(e) => setFormData({ ...formData, drawingNumber: e.target.value })}
                           placeholder="DRW-001"
+                          className="bg-white border-slate-300 text-slate-900 focus:ring-primary-500 focus:border-transparent"
+                        />
+                      </div>
+
+                      <div>
+                        <Label className="text-slate-900 text-xs font-semibold">RFF No.</Label>
+                        <Input
+                          value={formData.rffNo}
+                          onChange={(e) => setFormData({ ...formData, rffNo: e.target.value })}
+                          placeholder="RFF"
                           className="bg-white border-slate-300 text-slate-900 focus:ring-primary-500 focus:border-transparent"
                         />
                       </div>
@@ -1052,7 +1152,6 @@ export default function ProductionPage() {
                         />
                       </div>
 
-                      {/* Release Quantity */}
                       <div>
                         <Label className="text-slate-900 text-xs font-semibold">Release Quantity *</Label>
                         <Input
@@ -1063,7 +1162,18 @@ export default function ProductionPage() {
                           className="bg-white border-slate-300 text-slate-900 focus:ring-primary-500 focus:border-transparent"
                         />
                       </div>
-                    </>
+
+                      <div>
+                        <Label className="text-slate-900 text-xs font-semibold">Release Weight</Label>
+                        <Input
+                          type="number"
+                          value={formData.releaseWeight}
+                          onChange={(e) => setFormData({ ...formData, releaseWeight: e.target.value })}
+                          placeholder={getComputedWeight(formData.releaseQty, formData.jobOrderItemId) || '0'}
+                          className="bg-white border-slate-300 text-slate-900 focus:ring-primary-500 focus:border-transparent"
+                        />
+                      </div>
+                    </div>
                   )}
 
                   {/* ITP Template */}
@@ -1142,42 +1252,65 @@ export default function ProductionPage() {
         {/* Edit Release Modal */}
         {showEditModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-2">
-            <Card className="w-full max-w-lg bg-white border-slate-200 max-h-[85vh] overflow-y-auto">
+            <Card className="w-full max-w-3xl bg-white border-slate-200 max-h-[85vh] overflow-y-auto">
               <CardHeader className="pb-2 border-b border-slate-200">
                 <CardTitle className="text-base font-semibold text-slate-900">Edit Production Release</CardTitle>
                 <CardDescription className="text-slate-600 mt-0.5 text-xs">Update drawing and quantity</CardDescription>
               </CardHeader>
               <CardContent className="pt-3">
                 <form onSubmit={handleUpdateRelease} className="space-y-3">
-                  <div>
-                    <Label className="text-slate-900 text-xs font-semibold">Drawing Number</Label>
-                    <Input
-                      value={editFormData.drawingNumber}
-                      onChange={(e) => setEditFormData({ ...editFormData, drawingNumber: e.target.value })}
-                      placeholder="DRW-001"
-                      className="bg-white border-slate-300 text-slate-900 focus:ring-primary-500 focus:border-transparent"
-                    />
-                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                      <Label className="text-slate-900 text-xs font-semibold">Drawing Number</Label>
+                      <Input
+                        value={editFormData.drawingNumber}
+                        onChange={(e) => setEditFormData({ ...editFormData, drawingNumber: e.target.value })}
+                        placeholder="DRW-001"
+                        className="bg-white border-slate-300 text-slate-900 focus:ring-primary-500 focus:border-transparent"
+                      />
+                    </div>
 
-                  <div>
-                    <Label className="text-slate-900 text-xs font-semibold">Transmittal No.</Label>
-                    <Input
-                      value={editFormData.transmittalNo}
-                      onChange={(e) => setEditFormData({ ...editFormData, transmittalNo: e.target.value })}
-                      placeholder="TR-001"
-                      className="bg-white border-slate-300 text-slate-900 focus:ring-primary-500 focus:border-transparent"
-                    />
-                  </div>
+                    <div>
+                      <Label className="text-slate-900 text-xs font-semibold">RFF No.</Label>
+                      <Input
+                        value={editFormData.rffNo}
+                        onChange={(e) => setEditFormData({ ...editFormData, rffNo: e.target.value })}
+                        placeholder="RFF"
+                        className="bg-white border-slate-300 text-slate-900 focus:ring-primary-500 focus:border-transparent"
+                      />
+                    </div>
 
-                  <div>
-                    <Label className="text-slate-900 text-xs font-semibold">Release Quantity *</Label>
-                    <Input
-                      type="number"
-                      value={editFormData.releaseQty}
-                      onChange={(e) => setEditFormData({ ...editFormData, releaseQty: parseQtyNumber(e.target.value) })}
-                      placeholder="0"
-                      className="bg-white border-slate-300 text-slate-900 focus:ring-primary-500 focus:border-transparent"
-                    />
+                    <div>
+                      <Label className="text-slate-900 text-xs font-semibold">Transmittal No.</Label>
+                      <Input
+                        value={editFormData.transmittalNo}
+                        onChange={(e) => setEditFormData({ ...editFormData, transmittalNo: e.target.value })}
+                        placeholder="TR-001"
+                        className="bg-white border-slate-300 text-slate-900 focus:ring-primary-500 focus:border-transparent"
+                      />
+                    </div>
+
+                    <div>
+                      <Label className="text-slate-900 text-xs font-semibold">Release Quantity *</Label>
+                      <Input
+                        type="number"
+                        value={editFormData.releaseQty}
+                        onChange={(e) => setEditFormData({ ...editFormData, releaseQty: parseQtyNumber(e.target.value) })}
+                        placeholder="0"
+                        className="bg-white border-slate-300 text-slate-900 focus:ring-primary-500 focus:border-transparent"
+                      />
+                    </div>
+
+                    <div>
+                      <Label className="text-slate-900 text-xs font-semibold">Release Weight</Label>
+                      <Input
+                        type="number"
+                        value={editFormData.releaseWeight}
+                        onChange={(e) => setEditFormData({ ...editFormData, releaseWeight: e.target.value })}
+                        placeholder={getComputedWeight(editFormData.releaseQty, editFormData.jobOrderItemId) || '0'}
+                        className="bg-white border-slate-300 text-slate-900 focus:ring-primary-500 focus:border-transparent"
+                      />
+                    </div>
                   </div>
 
                   <div>
