@@ -103,6 +103,7 @@ interface JobOrderOption {
   id: string
   jobNumber: string
   clientName: string | null
+  workScope: string | null
   items: JobOrderItemOption[]
 }
 
@@ -120,6 +121,7 @@ export default function QualityInspectionPage() {
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('ALL')
+  const [selectedDivision, setSelectedDivision] = useState<'ALL' | 'Workshop - Fabrication' | 'Manufacturing - Pipe Mill'>('ALL')
   const [showCreateDialog, setShowCreateDialog] = useState(false)
   const [showTemplateDialog, setShowTemplateDialog] = useState(false)
   const [createSaving, setCreateSaving] = useState(false)
@@ -162,7 +164,20 @@ export default function QualityInspectionPage() {
   })
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
 
-  const selectedJobOrder = jobOrders.find(j => j.id === createForm.jobOrderId) || null
+  const JO_CATEGORY_OPTIONS = ['Workshop - Fabrication', 'Manufacturing - Pipe Mill']
+
+  const filteredJobOrders = selectedDivision === 'ALL'
+    ? jobOrders
+    : jobOrders.filter((job) => (job.workScope || JO_CATEGORY_OPTIONS[0]) === selectedDivision)
+
+  const selectedJobOrder = filteredJobOrders.find(j => j.id === createForm.jobOrderId) || null
+
+  // Reset selected job order if it becomes invisible when changing division
+  useEffect(() => {
+    if (createForm.jobOrderId && !filteredJobOrders.some((job) => job.id === createForm.jobOrderId)) {
+      setCreateForm({ ...createForm, jobOrderId: '' })
+    }
+  }, [selectedDivision])
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -355,6 +370,7 @@ export default function QualityInspectionPage() {
           id: job.id,
           jobNumber: job.jobNumber,
           clientName: job.clientName || null,
+          workScope: job.workScope || null,
           items: (job.items || []).map((item: any) => ({
             id: item.id,
             label: `${item.workDescription}`,
@@ -925,12 +941,12 @@ export default function QualityInspectionPage() {
                         <SelectValue placeholder="Choose a job order..." />
                       </SelectTrigger>
                       <SelectContent>
-                        {jobOrders.length === 0 ? (
+                        {filteredJobOrders.length === 0 ? (
                           <SelectItem value="__none" disabled className="text-slate-500">
-                            No job orders available
+                            No job orders available for this division
                           </SelectItem>
                         ) : (
-                          jobOrders.map(jo => (
+                          filteredJobOrders.map(jo => (
                             <SelectItem key={jo.id} value={jo.id}>
                               <span className="font-semibold">{jo.jobNumber}</span> • {jo.clientName || 'No Client'}
                             </SelectItem>
@@ -1084,6 +1100,16 @@ export default function QualityInspectionPage() {
               className="pl-10"
             />
           </div>
+          <Select value={selectedDivision} onValueChange={(value) => setSelectedDivision(value as 'ALL' | 'Workshop - Fabrication' | 'Manufacturing - Pipe Mill')}>
+            <SelectTrigger className="w-48">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">All Divisions</SelectItem>
+              <SelectItem value="Workshop - Fabrication">Workshop - Fabrication</SelectItem>
+              <SelectItem value="Manufacturing - Pipe Mill">Manufacturing - Pipe Mill</SelectItem>
+            </SelectContent>
+          </Select>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-48">
               <SelectValue />
