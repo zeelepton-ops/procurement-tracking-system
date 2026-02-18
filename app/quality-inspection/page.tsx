@@ -948,7 +948,7 @@ export default function QualityInspectionPage() {
                         ) : (
                           filteredJobOrders.map(jo => (
                             <SelectItem key={jo.id} value={jo.id}>
-                              <span className="font-semibold">{jo.jobNumber}</span> • {jo.clientName || 'No Client'}
+                              <span className="font-semibold">{jo.jobNumber}</span> • {jo.clientName || 'No Client'} • {jo.workScope || 'Workshop - Fabrication'}
                             </SelectItem>
                           ))
                         )}
@@ -1100,16 +1100,6 @@ export default function QualityInspectionPage() {
               className="pl-10"
             />
           </div>
-          <Select value={selectedDivision} onValueChange={(value) => setSelectedDivision(value as 'ALL' | 'Workshop - Fabrication' | 'Manufacturing - Pipe Mill')}>
-            <SelectTrigger className="w-48">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="ALL">All Divisions</SelectItem>
-              <SelectItem value="Workshop - Fabrication">Workshop - Fabrication</SelectItem>
-              <SelectItem value="Manufacturing - Pipe Mill">Manufacturing - Pipe Mill</SelectItem>
-            </SelectContent>
-          </Select>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-48">
               <SelectValue />
