@@ -153,6 +153,7 @@ function JobOrdersPageContent() {
 
   const requiresSecondSize = (type?: string) => type === 'RHS'
   const requiresLength = (type?: string) => type !== 'HRC' && type !== 'SC'
+  const isManufacturingType = (type?: string) => PRODUCT_TYPE_OPTIONS.includes((type || '').trim().toUpperCase())
 
   const buildProductDescription = (item: JobOrderItem) => {
     const type = (item.productType || '').trim()
@@ -161,6 +162,21 @@ function JobOrdersPageContent() {
     const sizeB = (item.sizeSecondary || '').trim()
     const thickness = (item.thickness || '').trim()
     const length = (item.length || '').trim()
+
+    if (isManufacturingType(type)) {
+      const normalizedType = type.toUpperCase()
+      const dimensionParts: string[] = []
+      if (sizeA) dimensionParts.push(sizeA)
+      if (requiresSecondSize(normalizedType) && sizeB) dimensionParts.push(sizeB)
+      if (thickness) dimensionParts.push(thickness)
+
+      const core = [finish.toUpperCase(), normalizedType, dimensionParts.join('*')].filter(Boolean).join(' ').trim()
+      if (requiresLength(normalizedType) && length) {
+        return `${core} - ${length}`.trim()
+      }
+      return core
+    }
+
     const segments = [type]
     if (finish) segments.push(`Finish:${finish}`)
     if (sizeA) segments.push(requiresSecondSize(type) && sizeB ? `${sizeA}x${sizeB}` : sizeA)
@@ -173,6 +189,33 @@ function JobOrdersPageContent() {
     const raw = (value || '').trim()
     if (!raw) {
       return { productType: '', finishType: '', sizePrimary: '', sizeSecondary: '', thickness: '', length: '', workDescription: '' }
+    }
+
+    const modernMatch = raw.match(/^\s*(MS|HDG|PGI)\s+(RHS|SHS|CHS|CP|MSP|HRC|SC)\s+(.+?)(?:\s*-\s*(.+))?\s*$/i)
+    if (modernMatch) {
+      const finishType = modernMatch[1].toUpperCase()
+      const productType = modernMatch[2].toUpperCase()
+      const dimensionsRaw = (modernMatch[3] || '').trim()
+      const lengthRaw = (modernMatch[4] || '').trim()
+      const dimensionParts = dimensionsRaw
+        .split('*')
+        .map((part) => part.trim())
+        .filter(Boolean)
+
+      const sizePrimary = dimensionParts[0] || ''
+      const sizeSecondary = requiresSecondSize(productType) ? (dimensionParts[1] || '') : ''
+      const thicknessIndex = requiresSecondSize(productType) ? 2 : 1
+      const thickness = dimensionParts[thicknessIndex] || ''
+
+      return {
+        productType,
+        finishType,
+        sizePrimary,
+        sizeSecondary,
+        thickness,
+        length: requiresLength(productType) ? lengthRaw : '',
+        workDescription: raw,
+      }
     }
 
     const parts = raw.split('|').map((part) => part.trim()).filter(Boolean)
@@ -251,16 +294,22 @@ function JobOrdersPageContent() {
 
   useEffect(() => {
     const division = (searchParams.get('division') || '').toLowerCase()
+    let nextDivision: 'ALL' | string = 'ALL'
     if (division === 'workshop') {
-      setDivisionFilter('Workshop - Fabrication')
-      return
+      nextDivision = 'Workshop - Fabrication'
+    } else if (division === 'manufacturing') {
+      nextDivision = 'Manufacturing - Pipe Mill'
     }
-    if (division === 'manufacturing') {
-      setDivisionFilter('Manufacturing - Pipe Mill')
-      return
-    }
-    if (division === 'all' || division === '') {
-      setDivisionFilter('ALL')
+
+    setDivisionFilter(nextDivision)
+    setSelectedIds([])
+    setPage(1)
+
+    if (nextDivision !== 'ALL') {
+      setFormData((prev) => ({
+        ...prev,
+        workScope: nextDivision,
+      }))
     }
   }, [searchParams])
 
@@ -943,24 +992,6 @@ function JobOrdersPageContent() {
               </>
             )}
           </Button>
-        </div>
-
-        <div className="mb-3 flex items-center gap-2">
-          <Label className="text-xs text-slate-600">Division</Label>
-          <select
-            value={divisionFilter}
-            onChange={(e) => {
-              setDivisionFilter(e.target.value)
-              setSelectedIds([])
-              setPage(1)
-            }}
-            className="h-8 rounded-md border border-slate-300 bg-white px-2 text-xs focus:outline-none focus:ring-2 focus:ring-primary-500"
-          >
-            <option value="ALL">All</option>
-            {JO_CATEGORY_OPTIONS.map((option) => (
-              <option key={option} value={option}>{option}</option>
-            ))}
-          </select>
         </div>
 
         {/* Filters */}
