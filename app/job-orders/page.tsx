@@ -241,6 +241,31 @@ function JobOrdersPageContent() {
       workDescription: raw,
     }
   }
+
+  const formatWorkDescriptionForDisplay = (value?: string | null) => {
+    const raw = (value || '').trim()
+    if (!raw) return ''
+
+    const parsed = parseProductDescription(raw)
+    if (!parsed.productType) return raw
+
+    const normalized = buildProductDescription({
+      workDescription: raw,
+      productType: parsed.productType,
+      finishType: parsed.finishType,
+      sizePrimary: parsed.sizePrimary,
+      sizeSecondary: parsed.sizeSecondary,
+      thickness: parsed.thickness,
+      length: parsed.length,
+      quantity: null,
+      unit: '',
+      unitPrice: null,
+      totalPrice: null,
+    })
+
+    return normalized || raw
+  }
+
   const [workItems, setWorkItems] = useState<JobOrderItem[]>([
     { workDescription: '', productType: '', finishType: '', sizePrimary: '', sizeSecondary: '', length: '', thickness: '', quantity: 0, unit: 'Nos', unitPrice: 0, totalPrice: 0 }
   ])
@@ -1872,8 +1897,8 @@ function JobOrdersPageContent() {
                       <div className="col-span-4 leading-tight">
                         <div className="truncate" title={order.productName}>{order.productName}</div>
                         {order.items?.[0]?.workDescription && (
-                          <div className="truncate text-slate-500" title={order.items[0].workDescription}>
-                            {order.items[0].workDescription}
+                          <div className="truncate text-slate-500" title={formatWorkDescriptionForDisplay(order.items[0].workDescription)}>
+                            {formatWorkDescriptionForDisplay(order.items[0].workDescription)}
                           </div>
                         )}
                       </div>
@@ -2045,7 +2070,7 @@ function JobOrdersPageContent() {
                         {(Array.isArray(selectedJob.items) ? selectedJob.items : []).map((item, idx) => (
                           <tr key={item.id || idx} className="hover:bg-slate-50">
                             <td className="p-2 max-w-[80ch] two-line align-middle">
-                              <div>{item.workDescription}</div>
+                              <div>{formatWorkDescriptionForDisplay(item.workDescription)}</div>
                               {((item.quantity == null) || (item.totalPrice == null) || (!item.quantity || item.quantity <= 0)) && (
                                 <div className="text-xs text-amber-700 mt-1 italic">Qty/Total Variable - Qty & Invoice based on Drawing Release/Actual Qty while delivery.</div>
                               )}
