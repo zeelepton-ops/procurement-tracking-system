@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { withManufacturingInventorySchema } from '@/lib/manufacturingInventorySchema'
 
 export async function GET(request: Request) {
   try {
@@ -23,10 +24,12 @@ export async function GET(request: Request) {
       ]
     }
 
-    const items = await prisma.manufacturingInventoryItem.findMany({
-      where,
-      orderBy: { updatedAt: 'desc' }
-    })
+    const items = await withManufacturingInventorySchema(() =>
+      prisma.manufacturingInventoryItem.findMany({
+        where,
+        orderBy: { updatedAt: 'desc' }
+      })
+    )
 
     return NextResponse.json(items)
   } catch (error) {
@@ -54,19 +57,21 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    const item = await prisma.manufacturingInventoryItem.create({
-      data: {
-        batchNo,
-        itemType,
-        size: size || null,
-        thickness: thickness || null,
-        length: length || null,
-        unit,
-        grade: grade || null,
-        storageLocation: storageLocation || null,
-        currentStock: Number.isFinite(currentStock) ? Number(currentStock) : 0
-      }
-    })
+    const item = await withManufacturingInventorySchema(() =>
+      prisma.manufacturingInventoryItem.create({
+        data: {
+          batchNo,
+          itemType,
+          size: size || null,
+          thickness: thickness || null,
+          length: length || null,
+          unit,
+          grade: grade || null,
+          storageLocation: storageLocation || null,
+          currentStock: Number.isFinite(currentStock) ? Number(currentStock) : 0
+        }
+      })
+    )
 
     return NextResponse.json(item, { status: 201 })
   } catch (error) {
@@ -95,20 +100,22 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: 'Missing item id' }, { status: 400 })
     }
 
-    const item = await prisma.manufacturingInventoryItem.update({
-      where: { id },
-      data: {
-        batchNo,
-        itemType,
-        size: size || null,
-        thickness: thickness || null,
-        length: length || null,
-        unit,
-        grade: grade || null,
-        storageLocation: storageLocation || null,
-        currentStock: Number.isFinite(currentStock) ? Number(currentStock) : 0
-      }
-    })
+    const item = await withManufacturingInventorySchema(() =>
+      prisma.manufacturingInventoryItem.update({
+        where: { id },
+        data: {
+          batchNo,
+          itemType,
+          size: size || null,
+          thickness: thickness || null,
+          length: length || null,
+          unit,
+          grade: grade || null,
+          storageLocation: storageLocation || null,
+          currentStock: Number.isFinite(currentStock) ? Number(currentStock) : 0
+        }
+      })
+    )
 
     return NextResponse.json(item)
   } catch (error) {
@@ -126,7 +133,7 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'Missing item id' }, { status: 400 })
     }
 
-    await prisma.manufacturingInventoryItem.delete({ where: { id } })
+    await withManufacturingInventorySchema(() => prisma.manufacturingInventoryItem.delete({ where: { id } }))
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Error deleting manufacturing item:', error)

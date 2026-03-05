@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { withManufacturingInventorySchema } from '@/lib/manufacturingInventorySchema'
 
 const parseDate = (value: string | null) => {
   if (!value) return null
@@ -35,11 +36,13 @@ export async function GET(request: Request) {
     if (itemId) where.itemId = itemId
     if (itemType) where.item = { itemType }
 
-    const entries = await prisma.manufacturingDeliveryEntry.findMany({
-      where,
-      include: { item: true },
-      orderBy: { date: 'desc' }
-    })
+    const entries = await withManufacturingInventorySchema(() =>
+      prisma.manufacturingDeliveryEntry.findMany({
+        where,
+        include: { item: true },
+        orderBy: { date: 'desc' }
+      })
+    )
 
     return NextResponse.json(entries)
   } catch (error) {
@@ -60,30 +63,32 @@ export async function POST(request: Request) {
     const entryDate = parseDate(date || null) || new Date()
     const qty = Number(quantity)
 
-    const entry = await prisma.$transaction(async (tx) => {
-      const item = await tx.manufacturingInventoryItem.findUnique({ where: { id: itemId } })
-      if (!item) throw new Error('Item not found')
+    const entry = await withManufacturingInventorySchema(() =>
+      prisma.$transaction(async (tx) => {
+        const item = await tx.manufacturingInventoryItem.findUnique({ where: { id: itemId } })
+        if (!item) throw new Error('Item not found')
 
-      const updatedItem = await tx.manufacturingInventoryItem.update({
-        where: { id: itemId },
-        data: { currentStock: item.currentStock - qty }
+        const updatedItem = await tx.manufacturingInventoryItem.update({
+          where: { id: itemId },
+          data: { currentStock: item.currentStock - qty }
+        })
+
+        const created = await tx.manufacturingDeliveryEntry.create({
+          data: {
+            itemId,
+            date: entryDate,
+            quantity: qty,
+            unit,
+            client: client || null,
+            remarks: remarks || null,
+            createdBy: createdBy || null
+          },
+          include: { item: true }
+        })
+
+        return { entry: created, item: updatedItem }
       })
-
-      const created = await tx.manufacturingDeliveryEntry.create({
-        data: {
-          itemId,
-          date: entryDate,
-          quantity: qty,
-          unit,
-          client: client || null,
-          remarks: remarks || null,
-          createdBy: createdBy || null
-        },
-        include: { item: true }
-      })
-
-      return { entry: created, item: updatedItem }
-    })
+    )
 
     return NextResponse.json(entry.entry, { status: 201 })
   } catch (error) {

@@ -9,7 +9,68 @@ import { Label } from '@/components/ui/label'
 import { LoadingSpinner } from '@/components/ui/loading'
 import { Plus, Edit2, Trash2, ClipboardList, PackageOpen, TrendingUp, Warehouse } from 'lucide-react'
 
-const ITEM_TYPES = ['Pipes/Tubes', 'Chequered Plate', 'MS Plates']
+const ITEM_TYPES = [
+  { value: 'RHS', label: 'Rectangular Hollow Section (RHS)' },
+  { value: 'SHS', label: 'Square Hollow Section (SHS)' },
+  { value: 'CHS', label: 'Circular Hollow Section (CHS)' },
+  { value: 'CP', label: 'Chequered Plate (CP)' },
+  { value: 'MSP', label: 'Mild Steel Plate (MSP)' },
+  { value: 'HRC', label: 'Hot Rolled Coil (HRC)' },
+  { value: 'SC', label: 'Slitted Coil (SC)' }
+] as const
+
+const FINISH_VALUES = ['MS', 'HDG', 'PGI'] as const
+
+const LEGACY_TYPE_CODE_MAP: Record<string, string> = {
+  'Pipes/Tubes': 'CHS',
+  'Chequered Plate': 'CP',
+  'MS Plates': 'MSP',
+  'Rectangular Hollow Section (RHS)': 'RHS',
+  'Square Hollow Section (SHS)': 'SHS',
+  'Circular Hollow Section (CHS)': 'CHS',
+  'Hot Rolled Coil (HRC)': 'HRC',
+  'Slitted Coil (SC)': 'SC',
+}
+
+const normalizeTypeCode = (value?: string | null) => {
+  const raw = (value || '').trim()
+  if (!raw) return ''
+  const upper = raw.toUpperCase()
+  if (ITEM_TYPES.some((item) => item.value === upper)) return upper
+  if (LEGACY_TYPE_CODE_MAP[raw]) return LEGACY_TYPE_CODE_MAP[raw]
+  const match = raw.match(/\((RHS|SHS|CHS|CP|MSP|HRC|SC)\)/i)
+  if (match) return match[1].toUpperCase()
+  return raw
+}
+
+const formatDimensionPart = (value?: string | null) =>
+  (value || '')
+    .replace(/[xX]/g, '*')
+    .replace(/\s+/g, '')
+    .trim()
+
+const buildManufacturingItemName = (item: ManufacturingItem) => {
+  const typeCode = normalizeTypeCode(item.itemType)
+  const finishValue = ((item.grade || '').trim().toUpperCase())
+  const finish = (FINISH_VALUES as readonly string[]).includes(finishValue) ? finishValue : ''
+  const size = formatDimensionPart(item.size)
+  const thickness = (item.thickness || '').trim()
+  const length = (item.length || '').trim()
+
+  const dimensionParts: string[] = []
+  if (size) {
+    if (typeCode === 'RHS') {
+      dimensionParts.push(...size.split('*').filter(Boolean))
+    } else {
+      dimensionParts.push(size)
+    }
+  }
+  if (thickness) dimensionParts.push(thickness)
+
+  const core = [finish, typeCode, dimensionParts.join('*')].filter(Boolean).join(' ').trim()
+  if ((typeCode === 'HRC' || typeCode === 'SC') || !length) return core || item.itemType
+  return `${core} - ${length}`.trim()
+}
 
 interface ManufacturingItem {
   id: string
@@ -60,7 +121,7 @@ interface StockUpdateEntry {
 const emptyItem: ManufacturingItem = {
   id: '',
   batchNo: '',
-  itemType: ITEM_TYPES[0],
+  itemType: ITEM_TYPES[0].value,
   size: null,
   thickness: null,
   length: null,
@@ -166,13 +227,14 @@ export default function ManufacturingInventoryPage() {
 
   const filteredItems = useMemo(() => {
     return items.filter((item) => {
+      const inlineName = buildManufacturingItemName(item).toLowerCase()
       const matchesSearch = searchTerm === '' ||
         item.batchNo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.itemType.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        inlineName.includes(searchTerm.toLowerCase()) ||
         (item.size || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
         (item.thickness || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
         (item.grade || '').toLowerCase().includes(searchTerm.toLowerCase())
-      const matchesType = !filterType || item.itemType === filterType
+      const matchesType = !filterType || normalizeTypeCode(item.itemType) === filterType
       const matchesLocation = !filterLocation || item.storageLocation === filterLocation
       return matchesSearch && matchesType && matchesLocation
     })
@@ -359,7 +421,7 @@ export default function ManufacturingInventoryPage() {
               <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="w-full mt-1 h-9 border border-slate-300 rounded-md text-sm">
                 <option value="">All</option>
                 {ITEM_TYPES.map((type) => (
-                  <option key={type} value={type}>{type}</option>
+                  <option key={type.value} value={type.value}>{type.label}</option>
                 ))}
               </select>
             </div>
@@ -404,7 +466,7 @@ export default function ManufacturingInventoryPage() {
                       <Label className="text-xs">Item Type</Label>
                       <select value={draftItem.itemType} onChange={(e) => setDraftItem({ ...draftItem, itemType: e.target.value })} className="w-full mt-1 h-9 border border-slate-300 rounded-md text-sm">
                         {ITEM_TYPES.map((type) => (
-                          <option key={type} value={type}>{type}</option>
+                          <option key={type.value} value={type.value}>{type.label}</option>
                         ))}
                       </select>
                     </div>
@@ -460,7 +522,7 @@ export default function ManufacturingInventoryPage() {
                     {filteredItems.map((item) => (
                       <div key={item.id} className="grid grid-cols-10 gap-2 px-3 py-2 text-xs text-slate-700 border-t border-slate-100">
                         <div>{item.batchNo}</div>
-                        <div>{item.itemType}</div>
+                        <div>{buildManufacturingItemName(item)}</div>
                         <div>{item.size || '-'}</div>
                         <div>{item.thickness || '-'}</div>
                         <div>{item.length || '-'}</div>
@@ -491,7 +553,7 @@ export default function ManufacturingInventoryPage() {
                       <select value={deliveryDraft.itemId} onChange={(e) => setDeliveryDraft({ ...deliveryDraft, itemId: e.target.value })} className="w-full mt-1 h-9 border border-slate-300 rounded-md text-sm">
                         <option value="">Select item</option>
                         {items.map((item) => (
-                          <option key={item.id} value={item.id}>{item.batchNo} - {item.itemType}</option>
+                          <option key={item.id} value={item.id}>{item.batchNo} - {buildManufacturingItemName(item)}</option>
                         ))}
                       </select>
                     </div>
@@ -534,7 +596,7 @@ export default function ManufacturingInventoryPage() {
                     {deliveryEntries.map((entry) => (
                       <div key={entry.id} className="grid grid-cols-8 gap-2 px-3 py-2 text-xs text-slate-700 border-t border-slate-100">
                         <div>{new Date(entry.date).toLocaleDateString()}</div>
-                        <div>{entry.item.batchNo}</div>
+                        <div>{entry.item.batchNo} - {buildManufacturingItemName(entry.item)}</div>
                         <div>{entry.item.size || '-'}</div>
                         <div>{entry.item.thickness || '-'}</div>
                         <div>{entry.quantity}</div>
@@ -560,7 +622,7 @@ export default function ManufacturingInventoryPage() {
                       <select value={productionDraft.itemId} onChange={(e) => setProductionDraft({ ...productionDraft, itemId: e.target.value })} className="w-full mt-1 h-9 border border-slate-300 rounded-md text-sm">
                         <option value="">Select item</option>
                         {items.map((item) => (
-                          <option key={item.id} value={item.id}>{item.batchNo} - {item.itemType}</option>
+                          <option key={item.id} value={item.id}>{item.batchNo} - {buildManufacturingItemName(item)}</option>
                         ))}
                       </select>
                     </div>
@@ -598,7 +660,7 @@ export default function ManufacturingInventoryPage() {
                     {productionEntries.map((entry) => (
                       <div key={entry.id} className="grid grid-cols-7 gap-2 px-3 py-2 text-xs text-slate-700 border-t border-slate-100">
                         <div>{new Date(entry.date).toLocaleDateString()}</div>
-                        <div>{entry.item.batchNo}</div>
+                        <div>{entry.item.batchNo} - {buildManufacturingItemName(entry.item)}</div>
                         <div>{entry.item.size || '-'}</div>
                         <div>{entry.item.thickness || '-'}</div>
                         <div>{entry.quantity}</div>
@@ -623,7 +685,7 @@ export default function ManufacturingInventoryPage() {
                       <select value={stockDraft.itemId} onChange={(e) => setStockDraft({ ...stockDraft, itemId: e.target.value })} className="w-full mt-1 h-9 border border-slate-300 rounded-md text-sm">
                         <option value="">Select item</option>
                         {items.map((item) => (
-                          <option key={item.id} value={item.id}>{item.batchNo} - {item.itemType}</option>
+                          <option key={item.id} value={item.id}>{item.batchNo} - {buildManufacturingItemName(item)}</option>
                         ))}
                       </select>
                     </div>
@@ -661,7 +723,7 @@ export default function ManufacturingInventoryPage() {
                     {stockUpdates.map((entry) => (
                       <div key={entry.id} className="grid grid-cols-7 gap-2 px-3 py-2 text-xs text-slate-700 border-t border-slate-100">
                         <div>{new Date(entry.date).toLocaleDateString()}</div>
-                        <div>{entry.item.batchNo}</div>
+                        <div>{entry.item.batchNo} - {buildManufacturingItemName(entry.item)}</div>
                         <div>{entry.newStock}</div>
                         <div>{entry.adjustmentQty.toFixed(2)}</div>
                         <div>{entry.unit}</div>
@@ -695,7 +757,7 @@ export default function ManufacturingInventoryPage() {
                     {deliveryEntries.map((entry) => (
                       <div key={entry.id} className="grid grid-cols-9 gap-2 px-3 py-2 text-xs text-slate-700 border-t border-slate-100">
                         <div>{new Date(entry.date).toLocaleDateString()}</div>
-                        <div>{entry.item.batchNo}</div>
+                        <div>{entry.item.batchNo} - {buildManufacturingItemName(entry.item)}</div>
                         <div>{entry.item.size || '-'}</div>
                         <div>{entry.item.thickness || '-'}</div>
                         <div>{entry.quantity}</div>
