@@ -154,25 +154,30 @@ function JobOrdersPageContent() {
   const requiresSecondSize = (type?: string) => type === 'RHS'
   const requiresLength = (type?: string) => type !== 'HRC' && type !== 'SC'
   const isManufacturingType = (type?: string) => PRODUCT_TYPE_OPTIONS.includes((type || '').trim().toUpperCase())
+  const stripMetricUnit = (value?: string | null) => (value || '').replace(/\s*mm\s*$/i, '').trim()
+  const withMetricUnit = (value?: string | null) => {
+    const normalized = stripMetricUnit(value)
+    return normalized ? `${normalized}mm` : ''
+  }
 
   const buildProductDescription = (item: JobOrderItem) => {
     const type = (item.productType || '').trim()
     const finish = (item.finishType || '').trim()
-    const sizeA = (item.sizePrimary || '').trim()
-    const sizeB = (item.sizeSecondary || '').trim()
-    const thickness = (item.thickness || '').trim()
-    const length = (item.length || '').trim()
+    const sizeA = stripMetricUnit(item.sizePrimary)
+    const sizeB = stripMetricUnit(item.sizeSecondary)
+    const thickness = stripMetricUnit(item.thickness)
+    const length = stripMetricUnit(item.length)
 
     if (isManufacturingType(type)) {
       const normalizedType = type.toUpperCase()
       const dimensionParts: string[] = []
-      if (sizeA) dimensionParts.push(sizeA)
-      if (requiresSecondSize(normalizedType) && sizeB) dimensionParts.push(sizeB)
-      if (thickness) dimensionParts.push(thickness)
+      if (sizeA) dimensionParts.push(withMetricUnit(sizeA))
+      if (requiresSecondSize(normalizedType) && sizeB) dimensionParts.push(withMetricUnit(sizeB))
+      if (thickness) dimensionParts.push(withMetricUnit(thickness))
 
       const core = [finish.toUpperCase(), normalizedType, dimensionParts.join('*')].filter(Boolean).join(' ').trim()
       if (requiresLength(normalizedType) && length) {
-        return `${core} - ${length}`.trim()
+        return `${core} - ${withMetricUnit(length)}`.trim()
       }
       return core
     }
@@ -196,10 +201,10 @@ function JobOrdersPageContent() {
       const finishType = modernMatch[1].toUpperCase()
       const productType = modernMatch[2].toUpperCase()
       const dimensionsRaw = (modernMatch[3] || '').trim()
-      const lengthRaw = (modernMatch[4] || '').trim()
+      const lengthRaw = stripMetricUnit(modernMatch[4] || '')
       const dimensionParts = dimensionsRaw
         .split('*')
-        .map((part) => part.trim())
+        .map((part) => stripMetricUnit(part))
         .filter(Boolean)
 
       const sizePrimary = dimensionParts[0] || ''
@@ -236,8 +241,8 @@ function JobOrdersPageContent() {
       finishType: finishType || '',
       sizePrimary: sizePrimary || '',
       sizeSecondary: sizeSecondary || '',
-      thickness: thicknessPart.replace(/^T/i, '').trim(),
-      length: lengthPart.replace(/^L/i, '').trim(),
+      thickness: stripMetricUnit(thicknessPart.replace(/^T/i, '').trim()),
+      length: stripMetricUnit(lengthPart.replace(/^L/i, '').trim()),
       workDescription: raw,
     }
   }
