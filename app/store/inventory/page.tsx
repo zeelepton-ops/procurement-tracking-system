@@ -23,6 +23,11 @@ interface InventoryItem {
   updatedAt?: string
 }
 
+const isLowStock = (item: InventoryItem) => {
+  if (item.minimumStock == null) return false
+  return item.currentStock <= item.minimumStock
+}
+
 const emptyItem: InventoryItem = {
   id: '',
   itemName: '',
@@ -329,6 +334,7 @@ export default function InventoryPage() {
                         <th className="py-1 pr-3">Name</th>
                         <th className="py-1 pr-3">Description</th>
                         <th className="py-1 pr-3">Qty</th>
+                        <th className="py-1 pr-3">Status</th>
                         <th className="py-1 pr-3">Unit</th>
                         <th className="py-1 pr-3">Reorder Level</th>
                         <th className="py-1 pr-3">Location</th>
@@ -346,6 +352,17 @@ export default function InventoryPage() {
                           <td className="py-1 pr-3 font-medium text-slate-900">{item.itemName}</td>
                           <td className="py-1 pr-3 text-xs text-slate-600 max-w-xs truncate">{item.description || '—'}</td>
                           <td className="py-1 pr-3">{item.currentStock}</td>
+                          <td className="py-1 pr-3">
+                            {isLowStock(item) ? (
+                              <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-semibold text-red-700">
+                                LOW STOCK
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
+                                OK
+                              </span>
+                            )}
+                          </td>
                           <td className="py-1 pr-3">{item.unit}</td>
                           <td className="py-1 pr-3">{item.minimumStock ?? '—'}</td>
                           <td className="py-1 pr-3">{item.location || '—'}</td>
@@ -459,6 +476,14 @@ export default function InventoryPage() {
                   <div><span className="text-slate-500">Name:</span> {selectedItem.itemName}</div>
                   <div><span className="text-slate-500">Description:</span> {selectedItem.description || '—'}</div>
                   <div><span className="text-slate-500">Stock:</span> {selectedItem.currentStock} {selectedItem.unit}</div>
+                  <div>
+                    <span className="text-slate-500">Stock Status:</span>{' '}
+                    {isLowStock(selectedItem) ? (
+                      <span className="font-semibold text-red-700">LOW STOCK</span>
+                    ) : (
+                      <span className="font-semibold text-emerald-700">OK</span>
+                    )}
+                  </div>
                   <div><span className="text-slate-500">Reorder Level:</span> {selectedItem.minimumStock ?? '—'}</div>
                   <div><span className="text-slate-500">Location:</span> {selectedItem.location || '—'}</div>
                   <div><span className="text-slate-500">Created:</span> {selectedItem.createdAt ? new Date(selectedItem.createdAt).toLocaleString() : '—'}</div>
