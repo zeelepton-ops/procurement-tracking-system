@@ -9,6 +9,8 @@ import { Textarea } from '@/components/ui/textarea'
 import { LoadingSpinner } from '@/components/ui/loading'
 import { Edit2, Trash2 } from 'lucide-react'
 
+const LOCATION_OPTIONS = ['Fabrication', 'Manufacturing'] as const
+
 interface InventoryItem {
   id: string
   itemName: string
@@ -17,6 +19,7 @@ interface InventoryItem {
   minimumStock: number | null
   location: string | null
   description: string | null
+  createdAt?: string
   updatedAt?: string
 }
 
@@ -26,7 +29,7 @@ const emptyItem: InventoryItem = {
   currentStock: 0,
   unit: '',
   minimumStock: null,
-  location: null,
+  location: LOCATION_OPTIONS[0],
   description: null,
 }
 
@@ -41,6 +44,7 @@ export default function InventoryPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [filterLocation, setFilterLocation] = useState('')
   const [sortBy, setSortBy] = useState('name')
+  const [selectedItemId, setSelectedItemId] = useState<string>('')
   const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   const isEditing = useMemo(() => Boolean(draft.id), [draft.id])
@@ -69,9 +73,9 @@ export default function InventoryPage() {
     return result
   }, [items, searchTerm, filterLocation, sortBy])
 
-  const uniqueLocations = useMemo(
-    () => [...new Set(items.map((i) => i.location).filter((v): v is string => Boolean(v)))].sort(),
-    [items]
+  const selectedItem = useMemo(
+    () => items.find((item) => item.id === selectedItemId) || null,
+    [items, selectedItemId]
   )
 
   const load = async () => {
@@ -89,6 +93,9 @@ export default function InventoryPage() {
       console.log('Inventory data received:', data)
       console.log('Items count:', data?.length || 0)
       setItems(data ?? [])
+      if (!selectedItemId && data?.length) {
+        setSelectedItemId(data[0].id)
+      }
     } catch (err) {
       console.error('Load inventory error:', err)
       setError(err instanceof Error ? err.message : 'Unexpected error')
@@ -144,12 +151,15 @@ export default function InventoryPage() {
         .map((row) => {
           const itemName = pick(row, ['itemName', 'Item Name', 'Name'])
           if (!itemName) return null
+          const rawLocation = pick(row, ['location', 'Location'])
+          const locationValue = String(rawLocation || '').trim().toLowerCase()
+          const normalizedLocation = locationValue === 'manufacturing' ? 'Manufacturing' : 'Fabrication'
           return {
             itemName: String(itemName).trim(),
             currentStock: Number(pick(row, ['currentStock', 'Current Stock', 'Quantity', 'Qty']) || 0),
             unit: String(pick(row, ['unit', 'Unit']) || 'Nos'),
             minimumStock: Number(pick(row, ['minimumStock', 'Min', 'Minimum']) || 0),
-            location: pick(row, ['location', 'Location']) || null,
+            location: normalizedLocation,
             description: pick(row, ['description', 'Description']) || null,
           }
         })
@@ -210,6 +220,7 @@ export default function InventoryPage() {
 
   const handleEdit = (item: InventoryItem) => {
     setDraft({ ...item })
+    setSelectedItemId(item.id)
   }
 
   const handleDelete = async (id: string) => {
@@ -284,7 +295,7 @@ export default function InventoryPage() {
                     className="px-3 py-2 border border-slate-200 rounded text-sm"
                   >
                     <option value="">All Locations</option>
-                    {uniqueLocations.map(l => <option key={l} value={l}>{l}</option>)}
+                    {LOCATION_OPTIONS.map((location) => <option key={location} value={location}>{location}</option>)}
                   </select>
                   <select
                     value={sortBy}
@@ -321,23 +332,27 @@ export default function InventoryPage() {
                         <th className="py-1 pr-3">Unit</th>
                         <th className="py-1 pr-3">Reorder Level</th>
                         <th className="py-1 pr-3">Location</th>
-                        <th className="py-1 pr-3">Updated</th>
+                        <th className="py-1 pr-3">Updated Timestamp</th>
                         <th className="py-1 pr-3">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
                       {filteredItems.map((item) => (
-                        <tr key={item.id} className="align-top">
+                        <tr
+                          key={item.id}
+                          className={`align-top cursor-pointer ${selectedItemId === item.id ? 'bg-primary-50' : 'hover:bg-slate-50'}`}
+                          onClick={() => setSelectedItemId(item.id)}
+                        >
                           <td className="py-1 pr-3 font-medium text-slate-900">{item.itemName}</td>
                           <td className="py-1 pr-3 text-xs text-slate-600 max-w-xs truncate">{item.description || '—'}</td>
                           <td className="py-1 pr-3">{item.currentStock}</td>
                           <td className="py-1 pr-3">{item.unit}</td>
                           <td className="py-1 pr-3">{item.minimumStock ?? '—'}</td>
                           <td className="py-1 pr-3">{item.location || '—'}</td>
-                          <td className="py-1 pr-3 text-slate-500">{item.updatedAt ? new Date(item.updatedAt).toLocaleDateString() : '—'}</td>
+                          <td className="py-1 pr-3 text-slate-500">{item.updatedAt ? new Date(item.updatedAt).toLocaleString() : '—'}</td>
                           <td className="py-1 pr-3 space-x-2 flex items-center">
-                            <button onClick={() => handleEdit(item)} className="p-1 hover:bg-blue-100 rounded text-blue-600 hover:text-blue-700" title="Edit"><Edit2 size={16} /></button>
-                            <button onClick={() => handleDelete(item.id)} className="p-1 hover:bg-red-100 rounded text-red-600 hover:text-red-700" title="Delete"><Trash2 size={16} /></button>
+                            <button onClick={(e) => { e.stopPropagation(); handleEdit(item) }} className="p-1 hover:bg-blue-100 rounded text-blue-600 hover:text-blue-700" title="Edit"><Edit2 size={16} /></button>
+                            <button onClick={(e) => { e.stopPropagation(); handleDelete(item.id) }} className="p-1 hover:bg-red-100 rounded text-red-600 hover:text-red-700" title="Delete"><Trash2 size={16} /></button>
                           </td>
                         </tr>
                       ))}
@@ -387,7 +402,7 @@ export default function InventoryPage() {
                     />
                   </div>
                   <div className="space-y-0.5">
-                    <Label htmlFor="minimumQuantity" className="text-xs">Minimum</Label>
+                    <Label htmlFor="minimumQuantity" className="text-xs">Reorder Level</Label>
                     <Input
                       id="minimumQuantity"
                       type="number"
@@ -403,12 +418,16 @@ export default function InventoryPage() {
 
                 <div className="space-y-0.5">
                   <Label htmlFor="location" className="text-xs">Location</Label>
-                  <Input
+                  <select
                     id="location"
                     value={draft.location ?? ''}
                     onChange={(e) => setDraft({ ...draft, location: e.target.value })}
-                    className="h-8 text-xs"
-                  />
+                    className="h-8 text-xs w-full border border-slate-200 rounded px-2"
+                  >
+                    {LOCATION_OPTIONS.map((location) => (
+                      <option key={location} value={location}>{location}</option>
+                    ))}
+                  </select>
                 </div>
 
                 <div className="space-y-0.5">
@@ -433,6 +452,19 @@ export default function InventoryPage() {
                   )}
                 </div>
               </form>
+
+              {selectedItem && (
+                <div className="mt-4 border-t pt-3 space-y-1 text-xs">
+                  <div className="font-semibold text-slate-800">Selected Item Details</div>
+                  <div><span className="text-slate-500">Name:</span> {selectedItem.itemName}</div>
+                  <div><span className="text-slate-500">Description:</span> {selectedItem.description || '—'}</div>
+                  <div><span className="text-slate-500">Stock:</span> {selectedItem.currentStock} {selectedItem.unit}</div>
+                  <div><span className="text-slate-500">Reorder Level:</span> {selectedItem.minimumStock ?? '—'}</div>
+                  <div><span className="text-slate-500">Location:</span> {selectedItem.location || '—'}</div>
+                  <div><span className="text-slate-500">Created:</span> {selectedItem.createdAt ? new Date(selectedItem.createdAt).toLocaleString() : '—'}</div>
+                  <div><span className="text-slate-500">Updated:</span> {selectedItem.updatedAt ? new Date(selectedItem.updatedAt).toLocaleString() : '—'}</div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
